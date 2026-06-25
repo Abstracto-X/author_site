@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+  <meta name="theme-color" content="#0a0b12">
+  <meta name="description" content="Premium member fiction reader. Read serial fiction, manage access, and continue across the member library.">
+  <title>Member Fiction Reader</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 9v8c0 6 5 10 12 13 7-3 12-7 12-13V9z' fill='%23d4b06a' opacity='.25' stroke='%23d4b06a' stroke-width='1.4'/%3E%3Cpath d='M16 11v10M12 16h8' stroke='%23e7cd97' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background-layer" id="global-bg"></div>
+  <div id="app">
+    <main id="main" aria-live="polite"></main>
+  </div>
+
+  <noscript>
+    <div style="max-width:520px;margin:80px auto;padding:24px;font-family:Georgia,serif;color:#e7e5e0;text-align:center">
+      <h1 style="color:#d4b06a">Member Fiction Reader</h1>
+      <p>This member reader needs JavaScript to run. Please enable it in your browser.</p>
+    </div>
+  </noscript>
+
+  <!-- Configure this independent site before loading the app. -->
+  <script src="js/subscription/site-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/subscription/aether-data.js"></script>
+  <script src="js/subscription/aether-app.js"></script>
+</body>
+</html>

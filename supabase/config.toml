@@ -1,0 +1,5 @@
+[functions.patreon-oauth-callback]
+verify_jwt = false
+
+[functions.provider-webhook]
+verify_jwt = false
