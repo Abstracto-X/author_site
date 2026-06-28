@@ -27,8 +27,6 @@ function emailPasswordEnabled(){ return AUTH_CONFIG.emailPasswordEnabled !== fal
 function patreonEnabled(){ return providerEnabled("patreon") && feature("enablePatreonConnect", false); }
 function accessKeysEnabled(){ return feature("enableAccessKeys", true); }
 function mainArchiveEnabled(){ return feature("enableMainArchiveLinks", false) && !!MAIN_ARCHIVE_URL; }
-function localDemoMode(){ const h=window.location.hostname; return window.location.protocol==="file:" || h==="localhost" || h==="127.0.0.1" || h==="" || new URLSearchParams(window.location.search).has("demo"); }
-function fixtureFallbackAllowed(){ return feature("enableFixtureFallbackInProduction", false) || (FEATURES.enableLocalDemoReaderFeatures !== false && localDemoMode()); }
 function configuredSupabase(){ const cfg=CONFIG.supabase||{}; const joined=`${cfg.url||""} ${cfg.anonKey||""}`; return !!cfg.url && !!cfg.anonKey && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME|YOUR_DOMAIN/i.test(joined); }
 const byId = (id) => { for (const s of D.STORIES){ const c = s.chapters.find(c=>c.id===id); if (c) return { ch:c, story:s, index:s.chapters.indexOf(c) }; } return null; };
 const bySlug = slug => D.STORIES.find(s=>s.slug===slug) || D.STORIES.find(s=>s.id===slug);
@@ -50,35 +48,15 @@ const PERSONA_ACCESS = {
 const defaultStore = () => ({
   personaId: "anon",
   email: "",
-  progress: {
-    "go-3": { pct:62, scene:"the orchard rang â€” a single clear note", storyId:"glass-orchard", updatedAt: now()-3600000 },
-    "nc-1": { pct:100, scene:"streets that aren't there", storyId:"night-cartographer", updatedAt: now()-86400000 },
-    "as-1": { pct:34, scene:"the morning audit", storyId:"ash-saints", updatedAt: now()-7200000 }
-  },
-  history: [
-    { chapterId:"go-3", storyId:"glass-orchard", title:"What the Mulberry Knew", when:"1h ago", kind:"read" },
-    { chapterId:"as-1", storyId:"ash-saints", title:"Prayer Log: Cycle 4471", when:"2h ago", kind:"read" },
-    { chapterId:"go-4", storyId:"glass-orchard", title:"The First Remembering", when:"Yesterday", kind:"preview" },
-    { chapterId:"nc-1", storyId:"night-cartographer", title:"Streets That Aren't There", when:"Yesterday", kind:"completed" }
-  ],
-  bookmarks: [
-    { chapterId:"go-1", storyId:"glass-orchard", label:"The key was warm with remembered heat", when:"Yesterday" },
-    { chapterId:"nc-2", storyId:"night-cartographer", label:"Three nights, she said", when:"2 days ago" }
-  ],
-  quotes: D.QUOTES_SEED.map(q=>({...q})),
+  progress: {},
+  history: [],
+  bookmarks: [],
+  quotes: [],
   notes: {},
-  followed: ["glass-orchard","meridian-gate","ash-saints"],
-  readMarked: { "mk-1":true, "nc-3":true, "nc-1":true },
-  comments: {
-    "go-1": [
-      { id:"c1", para:null, name:"Wren", text:"That first line is going to live in my head. 'Attended to it from the outside' â€” devastating.", time:"2d ago", color:"#c75b6b" },
-      { id:"c2", para:6, name:"Halric", text:"The detail about the key being warm with remembered heat â€” chef's kiss.", time:"1d ago", color:"#5bb8c9" }
-    ],
-    "nc-1": [
-      { id:"c3", para:null, name:"Moth", text:"A complete story I can actually finish. Thank you for these.", time:"3d ago", color:"#9a7ed1" }
-    ]
-  },
-  notifs: D.NOTIFICATIONS_SEED.map(n=>({...n})),
+  followed: [],
+  readMarked: {},
+  comments: {},
+  notifs: [],
   reactions: {},
   grantedKey: false,
   redeemedKeys: [],
@@ -91,15 +69,15 @@ const defaultStore = () => ({
   theme: "aether"
 });
 let store;
-function loadStore(){ try { const raw = LS.getItem("aether-pages-prod-bridge-v1"); store = raw ? Object.assign(defaultStore(), JSON.parse(raw)) : defaultStore(); } catch(e){ store = defaultStore(); } if(!store.settings) store.settings = defaultStore().settings; }
-function saveStore(){ try { LS.setItem("aether-pages-prod-bridge-v1", JSON.stringify(store)); } catch(e){} }
+function loadStore(){ try { const raw = LS.getItem("aether-pages-prod-bridge-v2-realdb"); store = raw ? Object.assign(defaultStore(), JSON.parse(raw)) : defaultStore(); } catch(e){ store = defaultStore(); } if(!store.settings) store.settings = defaultStore().settings; }
+function saveStore(){ try { LS.setItem("aether-pages-prod-bridge-v2-realdb", JSON.stringify(store)); } catch(e){} }
 loadStore();
 
 /* ============ Supabase auth bridge (temporary until full module split) ============ */
 const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || "";
 const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || "";
 let sbClient = null;
-const authState = { user:null, session:null, profile:null, entitlements:[], ready:false, error:null };
+const authState = { user:null, session:null, profile:null, entitlements:[], ready:false, error:null, passwordRecovery:false };
 function getSupabase(){
   if (sbClient) return sbClient;
   if (!configuredSupabase()) return null;
@@ -164,9 +142,15 @@ async function refreshEntitlements(){
   return authState.entitlements;
 }
 const OAUTH_URL_KEYS = [
-  "code", "state", "error", "error_code", "error_description", "sub_auth", "sub_route",
+  "code", "state", "type", "error", "error_code", "error_description", "sub_auth", "sub_route",
   "access_token", "refresh_token", "expires_at", "expires_in", "provider_token", "provider_refresh_token", "token_type"
 ];
+function authRedirectUrl(){
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = "";
+  return url.toString();
+}
 function mergeOAuthParams(target, raw){
   if (!raw) return;
   const cleaned = raw.replace(/^[/#?&]+/, "");
@@ -183,7 +167,7 @@ function oauthCallbackParams(){
   const rawHash = url.hash.slice(1);
   if (rawHash.includes("?")) mergeOAuthParams(params, rawHash.slice(rawHash.indexOf("?") + 1));
   if (rawHash.includes("#")) mergeOAuthParams(params, rawHash.slice(rawHash.lastIndexOf("#") + 1));
-  const marker = rawHash.match(/(?:^|[?#&])(code|access_token|refresh_token|error|error_code|error_description|sub_auth|sub_route)=/);
+  const marker = rawHash.match(/(?:^|[?#&])(code|access_token|refresh_token|type|error|error_code|error_description|sub_auth|sub_route)=/);
   if (marker) mergeOAuthParams(params, rawHash.slice(marker.index).replace(/^[?#&]/, ""));
   return params;
 }
@@ -191,7 +175,7 @@ function cleanHashRoute(hash, fallbackRoute = "vault"){
   const fallback = `#/${String(fallbackRoute || "vault").replace(/^\/?#?\/?/, "")}`;
   if (!hash || hash === "#") return fallback;
   let raw = hash.slice(1);
-  const marker = raw.match(/(?:^|[?#&])(code|access_token|refresh_token|expires_at|expires_in|provider_token|provider_refresh_token|token_type|state|error|error_code|error_description|sub_auth|sub_route)=/);
+  const marker = raw.match(/(?:^|[?#&])(code|access_token|refresh_token|type|expires_at|expires_in|provider_token|provider_refresh_token|token_type|state|error|error_code|error_description|sub_auth|sub_route)=/);
   const cutPoints = [raw.indexOf("?"), raw.indexOf("#"), marker ? marker.index : -1].filter(index => index >= 0);
   if (cutPoints.length) raw = raw.slice(0, Math.min(...cutPoints));
   raw = raw.replace(/[?#&]+$/, "");
@@ -207,6 +191,7 @@ function cleanOAuthCallbackUrl(){
 }
 async function consumeOAuthCallback(client){
   const params = oauthCallbackParams();
+  authState.passwordRecovery = params.get("type") === "recovery";
   const callbackError = params.get("error_description") || params.get("error") || params.get("error_code");
   if (callbackError) {
     cleanOAuthCallbackUrl();
@@ -237,6 +222,7 @@ async function initAuth(){
     if (error) throw error;
     authState.session = callbackSession || data?.session || null;
     authState.user = authState.session?.user || null;
+    if (!authState.user) authState.passwordRecovery = false;
     store.email = authState.user?.email || "";
     await refreshProfile();
     await refreshEntitlements();
@@ -248,6 +234,7 @@ async function initAuth(){
     client.auth.onAuthStateChange(async (_event, session) => {
       authState.session = session || null;
       authState.user = session?.user || null;
+      if (!authState.user) authState.passwordRecovery = false;
       store.email = authState.user?.email || "";
       await refreshProfile();
       await refreshEntitlements();
@@ -260,6 +247,9 @@ async function initAuth(){
   } catch (err) {
     authState.error = err;
     console.error("Aether Pages auth bridge failed:", err);
+    console.dir(err);
+    const details = err.message || (typeof err === "object" ? JSON.stringify(err) : String(err)) || "Unknown auth error";
+    toast("Authentication failed", details, {kind:"bad", icon:"alert", ms:10000});
   } finally {
     authState.ready = true;
   }
@@ -272,6 +262,7 @@ async function signInWithPassword(email, password){
   if (error) throw error;
   authState.session = data?.session || null;
   authState.user = data?.user || authState.session?.user || null;
+  authState.passwordRecovery = false;
   store.email = authState.user?.email || email;
   await refreshProfile();
   await refreshEntitlements();
@@ -282,11 +273,32 @@ async function signUpWithPassword(email, password){
   if (!emailPasswordEnabled()) throw new Error("Email/password sign-up is disabled for this site.");
   const client = getSupabase();
   if (!client) throw new Error("Supabase client unavailable.");
-  const redirect = window.location.href.split("#")[0];
+  const redirect = authRedirectUrl();
   const { data, error } = await client.auth.signUp({ email, password, options:{ emailRedirectTo: redirect } });
   if (error) throw error;
   authState.user = data?.user || null;
+  authState.passwordRecovery = false;
   store.email = email;
+  saveStore();
+  return data;
+}
+async function sendPasswordReset(email){
+  if (!emailPasswordEnabled()) throw new Error("Email/password recovery is disabled for this site.");
+  const client = getSupabase();
+  if (!client) throw new Error("Supabase client unavailable.");
+  const { data, error } = await client.auth.resetPasswordForEmail(email, { redirectTo: authRedirectUrl() });
+  if (error) throw error;
+  return data;
+}
+async function updateReaderPassword(password){
+  const client = getSupabase();
+  if (!client) throw new Error("Supabase client unavailable.");
+  const { data, error } = await client.auth.updateUser({ password });
+  if (error) throw error;
+  authState.passwordRecovery = false;
+  authState.user = data?.user || authState.user;
+  await refreshProfile();
+  await refreshEntitlements();
   saveStore();
   return data;
 }
@@ -338,6 +350,7 @@ async function signOutReader(){
   authState.session = null;
   authState.entitlements = [];
   authState.profile = null;
+  authState.passwordRecovery = false;
   store.email = "";
   store.providerPending = false;
   store.pendingAuthAction = "";
@@ -371,8 +384,7 @@ async function requestPatreonOAuth(){
 }
 
 /* ============ Supabase story/catalog bridge ============ */
-const backendState = { loaded:false, loading:false, error:null, usingFixtures:true };
-const fixtureStories = Array.isArray(D.STORIES) ? D.STORIES.map(s => ({ ...s, chapters:(s.chapters||[]).map(c=>({ ...c })) })) : [];
+const backendState = { loaded:false, loading:false, error:null, usingFixtures:false };
 function estimateReadTime(row){
   const words = Number(row.word_count || row.words || 0);
   return Math.max(1, Math.round(words / 220)) || 6;
@@ -473,7 +485,7 @@ function buildBackendUpdates(stories){
 async function loadBackendLibrary(options = {}){
   const client = getSupabase();
   if (!client || backendState.loading) {
-    if (!client) { backendState.error = new Error("Supabase is not configured. Add your project URL and anon/publishable key to js/subscription/site-config.js."); backendState.usingFixtures = fixtureFallbackAllowed(); }
+    if (!client) { backendState.error = new Error("Supabase is not configured. Add your project URL and anon/publishable key to js/subscription/site-config.js."); backendState.usingFixtures = false; }
     return false;
   }
   if (options.force) backendState.loaded = false;
@@ -488,64 +500,37 @@ async function loadBackendLibrary(options = {}){
     if (storyError) throw storyError;
     const stories = (storyRows || []).map(normalizeBackendStory);
     for (const story of stories) {
-      try {
-        const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
-        if (error) throw error;
-        story.chapters = (data || []).map(row => normalizeBackendChapter(row, story));
-      } catch (catalogErr) {
-        if (!fixtureFallbackAllowed()) { throw catalogErr; }
-        console.warn("Catalog RPC unavailable for subscription story; using direct published chapter metadata fallback", story.slug, catalogErr);
-        try {
-          const { data: fallbackChapters, error: fallbackError } = await client
-            .from("chapters")
-            .select("id, story_id, title, chapter_order, word_count, is_published, created_at, updated_at")
-            .eq("story_id", story.id)
-            .eq("is_published", true)
-            .order("chapter_order", { ascending:true });
-          if (fallbackError) throw fallbackError;
-          story.chapters = (fallbackChapters || []).map(row => normalizeBackendChapter({
-            ...row,
-            access_state:"free",
-            can_read:true,
-            preview_text:""
-          }, story));
-          story.catalogFallback = true;
-        } catch (fallbackErr) {
-          console.warn("Direct chapter metadata fallback failed", story.slug, fallbackErr);
-          story.chapters = [];
-        }
-      }
+      const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
+      if (error) throw error;
+      story.chapters = (data || []).map(row => normalizeBackendChapter(row, story));
     }
-    const withChapters = stories.filter(story => story.chapters.length);
-    if (withChapters.length) {
-      D.STORIES = withChapters;
-      D.UPDATES = buildBackendUpdates(withChapters);
-      D.PRIMARY_SLUG = withChapters[0].slug;
-      D.FEATURED_SLUGS = withChapters.slice(0, 2).map(story => story.slug);
+    if (stories.length) {
+      D.STORIES = stories;
+      D.UPDATES = buildBackendUpdates(stories);
+      D.PRIMARY_SLUG = stories[0].slug;
+      D.FEATURED_SLUGS = stories.slice(0, 2).map(story => story.slug);
       backendState.usingFixtures = false;
       backendState.loaded = true;
+      backendState.error = stories.some(story => story.chapters.length) ? null : new Error("Published stories were found, but no published chapters exist yet.");
       return true;
     }
-    backendState.error = new Error("No published backend stories with catalog rows were found.");
-    backendState.usingFixtures = fixtureFallbackAllowed();
-    if (backendState.usingFixtures) D.STORIES = fixtureStories.map(story => ({ ...story, chapters:(story.chapters||[]).map(ch=>({ ...ch })) }));
+    backendState.error = new Error("No published backend stories were found.");
+    backendState.usingFixtures = false;
+    D.STORIES = [];
+    D.UPDATES = [];
     return false;
   } catch (err) {
     backendState.error = err;
-    if (fixtureFallbackAllowed()) {
-      console.warn("Subscription backend library load failed; using local demo fixtures because fixture fallback is allowed.", err);
-      D.STORIES = fixtureStories.map(story => ({ ...story, chapters:(story.chapters||[]).map(ch=>({ ...ch })) }));
-      backendState.usingFixtures = true;
-    } else {
-      console.error("Subscription backend library load failed and production fixture fallback is disabled.", err);
-      backendState.usingFixtures = false;
-    }
+    console.error("Subscription backend library load failed; no local content fallback will be used.", err);
+    backendState.usingFixtures = false;
+    D.STORIES = [];
+    D.UPDATES = [];
     return false;
   } finally {
     backendState.loading = false;
   }
 }
-async function loadReaderChapterIntoFixture(chapterId){
+async function loadReaderChapterFromBackend(chapterId){
   const client = getSupabase();
   const found = byId(chapterId);
   if (!client || !found || !found.ch.backend) return false;
@@ -773,10 +758,11 @@ function bottomnav(active){
   const items=[["home","/","Home"],["library","/library","Library"],["feed","/updates","Updates"],["shelf","/my-shelf","Shelf"],["vault","/vault","Vault"]];
   return `<nav class="bottomnav">${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}">${I[ic]}<span>${lbl}</span></a>`).join("")}</nav>`;
 }
-function announcement(){
-  if (!patreonEnabled()) return "";
-  return `<div class="announce"><span class="ic">${I.info}</span><div class="t"><b>Provider sync is running smoothly</b><span>New early-access chapters are live. Public releases this week are noted in the calendar.</span></div></div>`;
+function sidenav(active){
+  const items=[["home","/","Home"],["library","/library","Library"],["feed","/updates","Updates"],["shelf","/my-shelf","Shelf"],["vault","/vault","Vault"]];
+  return `<nav class="sidenav" aria-label="Primary">${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}" aria-label="${lbl}">${I[ic]}<span>${lbl}</span></a>`).join("")}<span class="spacer"></span><a href="#/support/check-access" data-nav="/support/check-access" aria-label="Access help">${I.shield}<span>Help</span></a></nav>`;
 }
+function announcement(){ return ""; }
 
 /* ============ sheets ============ */
 let currentSheet = null;
@@ -842,12 +828,12 @@ function parseHash(){
 function nav(path){ if(path===location.hash||( "#"+path)===location.hash){ render(); } else { location.hash = path; } }
 
 
-function backendSetupRequired(){ return !fixtureFallbackAllowed() && !backendState.loaded; }
+function backendSetupRequired(){ return !backendState.loaded; }
 function backendSetupView(){
   const msg = backendState.error?.message || authState.error?.message || "Loading the subscription catalog from Supabase.";
   const configured = configuredSupabase();
   if ((backendState.loading || !authState.ready) && configured) return `<div class="reader-loading"><div class="reader-spinner"></div><h3>Loading member library</h3><p>Fetching stories, chapter catalog, and access state from Supabase.</p></div>`;
-  return `<div class="empty" style="padding-top:90px"><div class="em">${I.alert}</div><h3>Subscription site setup required</h3><p>This production reader is configured to use the real Supabase backend only. Demo fixtures are disabled, so no sample stories will be shown.</p><div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">What to check</div><ol class="muted" style="line-height:1.7;margin:0;padding-left:20px"><li>Set <code>supabase.url</code> and <code>supabase.anonKey</code> in <code>js/subscription/site-config.js</code>.</li><li>Run the SQL files in <code>database/sql/</code> against the new Supabase project.</li><li>Publish at least one story and one chapter, then verify <code>get_chapter_catalog</code>.</li></ol><p class="faint" style="font-size:.78rem;margin:12px 0 0">Current status: ${esc(msg)}</p></div></div>`;
+  return `<div class="empty" style="padding-top:90px"><div class="em">${I.alert}</div><h3>Subscription site setup required</h3><p>This production reader is configured to use the real Supabase backend only. No local sample stories will be shown.</p><div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">What to check</div><ol class="muted" style="line-height:1.7;margin:0;padding-left:20px"><li>Set <code>supabase.url</code> and <code>supabase.anonKey</code> in <code>js/subscription/site-config.js</code>.</li><li>Run the SQL files in <code>database/sql/</code> against the new Supabase project.</li><li>Publish at least one story and one chapter, then verify <code>get_chapter_catalog</code>.</li></ol><p class="faint" style="font-size:.78rem;margin:12px 0 0">Current status: ${esc(msg)}</p></div></div>`;
 }
 function render(){
   route = parseHash();
@@ -894,12 +880,16 @@ function ensureChrome(){
   if (!navEl){ navEl=document.createElement("nav"); app.appendChild(navEl); }
   const active = {home:"home",library:"library",updates:"feed",shelf:"shelf",vault:"vault"}[route.name] || "";
   navEl.outerHTML = bottomnav(active);
+  let sideEl = document.querySelector(".sidenav");
+  if (!sideEl){ sideEl=document.createElement("nav"); app.appendChild(sideEl); }
+  sideEl.outerHTML = sidenav(active);
   chromeBuilt = true;
 }
 function ensureStudioChrome(){
   const app = document.getElementById("app");
   const tb=document.querySelector(".topbar"); if(tb) tb.remove();
   const nv=document.querySelector(".bottomnav"); if(nv) nv.remove();
+  const sn=document.querySelector(".sidenav"); if(sn) sn.remove();
   let st = document.querySelector(".studio-top");
   if(!st){ st=document.createElement("header"); st.className="studio-top"; app.insertBefore(st, document.getElementById("main")); }
   st.outerHTML = studioTop();
@@ -944,11 +934,11 @@ function storyCard(s){
   </a>`;
 }
 function storyCardWide(s){
-  const r = s.chapters.map(chapterResolved);
-  const prog = store.progress[s.chapters[0].id] || store.progress[s.chapters.find(c=>store.progress[c.id])?.id];
+  const firstProgress = s.chapters.find(c=>store.progress[c.id]);
+  const prog = firstProgress ? store.progress[firstProgress.id] : null;
   return `<a class="card tinted" href="#/story/${s.slug}" data-nav="/story/${s.slug}" style="${storyAccentVars(s)};display:flex;gap:13px;align-items:center;">
     <div style="width:54px;height:72px;border-radius:8px;overflow:hidden;flex:0 0 auto;border:1px solid var(--border)">${coverArt(s)}</div>
-    <div style="min-width:0;flex:1"><div style="font-family:var(--serif);font-weight:600">${s.title}</div><div class="faint" style="font-size:.74rem">${s.genre} Â· ${s.status}</div></div>
+    <div style="min-width:0;flex:1"><div style="font-family:var(--serif);font-weight:600">${s.title}</div><div class="faint" style="font-size:.74rem">${s.genre} &middot; ${s.status}${s.chapters.length?"":" &middot; chapters coming soon"}</div>${prog?progressBar(prog.pct):""}</div>
   </a>`;
 }
 
@@ -973,7 +963,6 @@ VIEWS.home = function(){
   ${banner}
   <div class="between" style="margin-bottom:6px">
     <div><h1 class="page-title">${greet}, ${name}.</h1><p class="page-sub">The archive is quiet tonight. ${countReadable()} chapters await you.</p></div>
-    <div class="faint" style="text-align:right;font-size:.72rem;line-height:1.5"><div style="font-family:var(--serif);color:var(--accent-2);font-size:.9rem">Archive Presence</div>5 evenings this month Â· 12 chapters read</div>
   </div>
 
   <div class="home-cols">
@@ -1028,15 +1017,11 @@ VIEWS.home = function(){
       <div class="col-flex">
         ${D.STORIES.slice(1, 3).map(storyCardWide).join("") || `<p class="faint" style="font-size:.8rem">More recommendations will appear as the backend library grows.</p>`}
       </div>
-      <p class="faint" style="font-size:.74rem;margin-top:8px">Read <em>The Night Cartographer</em>? Try these atmospheric completions.</p>
+
     </div>
    </div>
   </div>
 
-  <div class="section">
-    <div class="section-head"><h2>Collections</h2><a class="section-link" data-nav="/collections">Browse all ${I.chevR}</a></div>
-    <div class="chips scroll">${D.COLLECTIONS.slice(0,8).map(c=>`<a class="chip" href="#/collections/${c.slug}" data-nav="/collections/${c.slug}">${I[c.icon]||I.book}<span>${c.name}</span></a>`).join("")}</div>
-  </div>
   `;
 };
 function accessBanner(kind,title,sub,link,label){
@@ -1121,6 +1106,20 @@ VIEWS.story = function(){
   const r=s.chapters.map(chapterResolved);
   const readCount=s.chapters.filter((c,i)=>store.readMarked[c.id]|| (store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
   const total=s.chapters.length;
+  if (!total) {
+    const followed=store.followed.includes(s.id);
+    return `
+  <div class="hero" style="${storyAccentVars(s)}">
+    <div class="bg">${coverArt(s)}</div><div class="grad"></div>
+    <div class="inner">
+      <div class="mini-cover">${coverArt(s)}</div>
+      <div class="htxt"><div class="eyebrow">${s.genre} &middot; ${s.status}</div><h1>${s.title}</h1><div class="author">by ${s.author}</div></div>
+    </div>
+  </div>
+  <p class="muted" style="font-family:var(--serif);font-size:1.02rem;line-height:1.6;margin:0 2px 16px">${s.tagline}</p>
+  <div class="empty"><div class="em">${I.book}</div><h3>No chapters published yet</h3><p>This story is live in the backend, but its chapter shelf is empty. Publish a chapter in the admin CMS to make it readable here.</p></div>
+  <div class="section"><div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div></div>`;
+  }
   const pct=Math.round(readCount/total*100);
   const nextUnread=s.chapters.find(c=>!(store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)));
   const latestEarly=s.chapters.find(c=>c.state==="early");
@@ -1187,6 +1186,11 @@ VIEWS.chapters = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story");
   setStoryAccent(s);
   const view = store.filters.shelfView || "comfortable";
+  if (!s.chapters.length) return `
+  <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
+  <h1 class="page-title">Chapter Shelf</h1>
+  <p class="page-sub">0 chapters published.</p>
+  <div class="empty"><div class="em">${I.book}</div><h3>No chapters yet</h3><p>The story is published, but no chapter rows are published for it yet.</p></div>`;
   // group by arc
   const arcs={}; s.chapters.forEach(c=>{ (arcs[c.arc]=arcs[c.arc]||[]).push(c); });
   const renderRow = c => chapterRow(c,s);
@@ -1238,7 +1242,7 @@ VIEWS.read = function(){
   if (r.state === "preview") return readerPreview(ch, story, index, r);
   if (!isReadable(r)) return readerLocked(ch, story, index, r);
   if (ch.backend && !ch.content) {
-    if (!ch.contentLoading) loadReaderChapterIntoFixture(ch.id).then(() => render());
+    if (!ch.contentLoading) loadReaderChapterFromBackend(ch.id).then(() => render());
     const message = ch.contentError || "Loading secure chapter text from Supabase...";
     return readerShell(`theme-${store.settings.readerTheme} preset-${store.settings.preset}`, `<div class="empty" style="padding-top:120px"><div class="em">${ch.contentError?I.alert:I.sync}</div><h3>${ch.contentError?"Chapter unavailable":"Opening secure chapter"}</h3><p>${esc(message)}</p>${ch.contentError?`<button class="btn story" data-lock="${ch.id}">${I.lockOpen}Check access</button>`:""}</div>`);
   }
@@ -1356,7 +1360,7 @@ function endOfChapter(ch, story, next, nr){
   </div>`;
 }
 const REACTIONS=[{k:"heart",e:"â¤ï¸",l:"Love"},{k:"gasp",e:"ðŸ˜®",l:"Gasp"},{k:"theory",e:"ðŸ’¡",l:"Theory"},{k:"tear",e:"ðŸ˜¢",l:"Tears"},{k:"next",e:"ðŸ”¥",l:"Need next"}];
-const REACTION_SEED={"go-1":{heart:42,gasp:18,theory:9,tear:6,next:23},"nc-1":{heart:31,gasp:7,theory:4,tear:12,next:5},"go-3":{heart:28,gasp:14,theory:11,tear:9,next:19},"as-1":{heart:19,gasp:6,theory:22,tear:3,next:8}};
+const REACTION_SEED={};
 
 function commentsBlock(chId){
   const list = (store.comments[chId]||[]).filter(c=>c.para===null||c.para===undefined);
@@ -1371,6 +1375,7 @@ function commentHTML(c){ return `<div class="cmt"><div class="ava" style="backgr
 /* ============ RECAP ============ */
 VIEWS.recap = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story"); setStoryAccent(s);
+  if (!s.chapters.length) return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a><h1 class="page-title">Story Recap</h1><div class="empty"><div class="em">${I.info}</div><h3>No recap yet</h3><p>Publish chapters first, then the recap page will have chapter context.</p></div>`;
   return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
   <h1 class="page-title">Story Recap</h1>
   <p class="page-sub">Spoiler-controlled. Choose how much you want remembered.</p>
@@ -1383,6 +1388,7 @@ VIEWS.recap = function(){
 /* ============ EXTRAS ============ */
 VIEWS.extras = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story"); setStoryAccent(s);
+  if (!s.chapters.length) return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a><h1 class="page-title">Bonus Materials</h1><div class="empty"><div class="em">${I.spark}</div><h3>No extras yet</h3><p>Bonus materials will appear after chapter content exists.</p></div>`;
   const extras=[
     {t:"Author's Note",d:"Vesper Maren on writing the orchard's first arc.",icon:"msg",state:"unlocked"},
     {t:"Deleted Scene: The Lawyer's Walk Home",d:"What the lawyer did after handing over the key.",icon:"book",state:"unlocked"},
@@ -1422,29 +1428,12 @@ VIEWS.updates = function(){
 
 /* ============ CALENDAR ============ */
 VIEWS.calendar = function(){
-  return `<h1 class="page-title">Release Calendar</h1><p class="page-sub">This week in the archive â€” member drops &amp; public unlocks.</p>
-  <div class="card tinted" style="margin-bottom:18px"><div class="between"><div><div class="eyebrow">Following</div><div style="font-family:var(--serif);margin-top:2px">${store.followed.length} stories</div></div><button class="btn sm" data-nav="/library">Manage</button></div></div>
-  ${D.CALENDAR.map(day=>`<div class="section"><div class="section-head"><div><h2>${day.day}</h2><div class="faint" style="font-size:.74rem">${day.dow}</div></div></div><div class="col-flex">${day.items.map(it=>{const s=bySlug(it.s);const kColor={early:"early",public:"free",drop:"key",key:"key"}[it.k]||"";return `<div class="row" data-read="${s.chapters[0].id}"><span class="ic-col" style="color:var(--${kColor||'text-dim'})">${I[it.k==='early'?'hourglass':it.k==='public'?'sun':it.k==='drop'?'gift':'key']}</span><span class="body"><span class="t"><span class="tt">${it.c}</span>${badge(kColor,{early:"Early",public:"Public",drop:"Drop",key:"Key"}[it.k])}</span><span class="sub">${meta([`<i>${I.clock}</i>${it.t}`,s.title])}</span></span><span class="cta"><span class="faint">${I.chevR}</span></span></div>`;}).join("")}</div></div>`).join("")}`;
+  return `<h1 class="page-title">Release Calendar</h1><p class="page-sub">Release calendar entries are loaded from the backend only.</p>
+  <div class="empty"><div class="em">${I.calendar}</div><h3>No calendar entries</h3><p>No backend-backed calendar feed is configured yet.</p></div>`;
 };
 
 /* ============ COLLECTIONS ============ */
-VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Editor-curated shelves to find your next read.</p><div class="grid-stories stagger" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">${D.COLLECTIONS.map(c=>`<a class="card" data-nav="/collections/${c.slug}" style="text-align:left;display:flex;flex-direction:column;gap:9px;min-height:120px;justify-content:center"><span class="ax preview" style="font-size:1.5rem"><span class="ic" style="width:28px;height:28px">${I[c.icon]||I.book}</span></span><div><div style="font-family:var(--serif);font-weight:600">${c.name}</div><div class="faint" style="font-size:.76rem;margin-top:2px">${c.desc}</div></div></a>`).join("")}</div>`; };
-VIEWS.collection = function(){
-  const c=D.COLLECTIONS.find(x=>x.slug===route.params.slug); if(!c) return notFound("Collection");
-  const q=c.query;
-  const list=D.STORIES.filter(s=>{
-    if(q.free) return s.chapters.some(ch=>ch.state==="free");
-    if(q.state==="early") return s.chapters.some(ch=>ch.state==="early");
-    if(q.state==="preview") return s.chapters.some(ch=>ch.state==="preview");
-    if(q.status) return s.status===q.status;
-    if(q.genre) return s.genre===q.genre;
-    if(q.member) return s.chapters.some(ch=>ch.tier);
-    return true;
-  });
-  return `<a class="section-link" data-nav="/collections" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}Collections</a>
-  <h1 class="page-title">${c.name}</h1><p class="page-sub">${c.desc}</p>
-  <div class="grid-stories stagger" style="margin-top:14px">${list.map(storyCard).join("")}</div>`;
-};
+VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Collections are backend-backed only.</p><div class="empty"><div class="em">${I.layers}</div><h3>No collections</h3><p>No backend collection feed is configured yet.</p></div>`; };
 
 /* ============ VAULT ============ */
 VIEWS.vault = function(){
@@ -1480,7 +1469,7 @@ VIEWS.vault = function(){
     <div class="card">
       <p class="muted" style="font-size:.84rem;margin:0 0 12px">Beta readers, reviewers, gifts &amp; campaigns use keys. Enter one to attach access to your account.</p>
       <div style="display:flex;gap:9px"><input id="key-input" class="pill-input" style="text-align:left;flex:1" placeholder="XXXX-XXXX-XXXX-XXXX"><button class="btn story" data-sheet="redeem">${I.key}Redeem</button></div>
-      <p class="faint" style="font-size:.72rem;margin-top:8px">Try the demo key <span class="kbd">AETHER-ARC2-2026</span></p>
+
     </div>
     ${store.redeemedKeys.length?`<div class="card" style="margin-top:12px"><div class="eyebrow" style="margin-bottom:8px">Redeemed keys</div>${store.redeemedKeys.map(k=>`<div class="between" style="padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.86rem;font-weight:600">${k.label}</div><div class="faint" style="font-size:.72rem;font-family:var(--ui);letter-spacing:.08em">${maskKey(k.code)}</div></div><span class="badge key">${I.key}Active</span></div>`).join("")}</div>`:""}
   </div>
@@ -1659,13 +1648,21 @@ function sheetPersona(){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Account</h2>
   <div class="card tinted" style="margin-bottom:14px;display:flex;gap:12px;align-items:center"><span style="width:42px;height:42px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)">${I.user}</span><div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(accountLabel())}</div><div class="faint" style="font-size:.76rem">${esc(P.tier || status)}</div></div>${signedIn?`<button class="btn sm ghost" data-act="reader-signout">Sign out</button>`:""}</div>
   <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.aa}<span>Preferences</span><small>Reader</small></a>${isAdmin()?`<a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a><a data-nav="/studio/access">${I.overview}<span>Studio Access</span><small>Preview console</small></a>`:""}</div>
-  ${signedIn?`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:7px">Entitlements</div>${active.length?active.map(e=>`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">${esc(e.tier_name || e.name || e.tier || "Reader access")}</span><span class="badge free">active</span></div>`).join(""):`<p class="faint" style="font-size:.8rem;margin:0">No active entitlement returned yet. Connect provider or redeem an access key.</p>`}</div>`:`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">Continue</div><div class="col-flex"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button><div class="faint" style="font-size:.74rem;text-align:center">or use email</div><form data-auth-form="signin"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="current-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Sign in with email</button><button class="btn ghost block" type="button" data-act="show-signup">Create email account</button></div></form></div></div>`}
+  ${signedIn?`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:7px">Entitlements</div>${active.length?active.map(e=>`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">${esc(e.tier_name || e.name || e.tier || "Reader access")}</span><span class="badge free">active</span></div>`).join(""):`<p class="faint" style="font-size:.8rem;margin:0">No active entitlement returned yet. Connect provider or redeem an access key.</p>`}</div>`:`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">Continue</div><div class="col-flex"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button><div class="faint" style="font-size:.74rem;text-align:center">or use email</div><form data-auth-form="signin"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="current-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Sign in with email</button><button class="btn ghost block" type="button" data-act="show-signup">Create email account</button><button class="btn ghost block" type="button" data-act="show-forgot-password">Forgot password?</button></div></form></div></div>`}
   <div class="card" style="margin-top:8px"><div style="font-weight:600;font-size:.86rem">Backend bridge status</div><div class="faint" style="font-size:.74rem;margin-top:4px">Supabase auth, catalog RPCs, chapter RPCs, and entitlement checks are active. Use admin.html for real tier/key/grant management.</div></div>`;
 }
 function sheetSignup(){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Save your library</h2><p class="sheet-sub">Use Google for the fastest setup, or create an email login for key redemption, Patreon linking, and future cross-device shelf sync.</p>
   <div class="card" style="margin-bottom:12px"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button></div>
   <form data-auth-form="signup" class="card"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="new-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Create email login</button><button class="btn ghost block" type="button" data-sheet="persona">Back to sign in</button></div></form>`;
+}
+function sheetForgotPassword(){
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Reset password</h2><p class="sheet-sub">Enter your account email and we will send a secure password reset link.</p>
+  <form data-auth-form="recover" class="card"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.mail}Send reset link</button><button class="btn ghost block" type="button" data-sheet="persona">Back to sign in</button></div></form>`;
+}
+function sheetUpdatePassword(){
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Set new password</h2><p class="sheet-sub">Your reset link is verified. Choose a new password for this reader account.</p>
+  <form data-auth-form="update" class="card"><div class="col-flex"><input class="pill-input" name="password" type="password" autocomplete="new-password" placeholder="New password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.user}Update password</button></div></form>`;
 }
 function sheetLock(chId){
   const f=byId(chId); if(!f) return "<p>Not found.</p>"; const {ch,story}=f; const r=chapterResolved(ch);
@@ -1682,8 +1679,7 @@ function sheetLock(chId){
 }
 function sheetRedeem(){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Redeem an access key</h2><p class="sheet-sub">Keys unlock beta, reviewer, gift &amp; campaign content. Access binds to your account.</p>
-  <form data-redeem-form><div class="col-flex"><input id="key-input-sheet" class="pill-input" name="key" style="text-align:left;letter-spacing:.1em" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><div id="key-error" class="faint" style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.key}Redeem key</button></div></form>
-  <div class="card" style="margin-top:14px"><div class="eyebrow" style="margin-bottom:6px">Temporary local test keys</div><div class="faint" style="font-size:.76rem;line-height:1.7"><div><span class="kbd">AETHER-ARC2-2026</span> â€” Arc II preview</div><div><span class="kbd">REVIEWER-2026</span> â€” reviewer liturgy</div><div><span class="kbd">WRONG-KEY-9999</span> â€” see an error</div></div></div>`;
+  <form data-redeem-form><div class="col-flex"><input id="key-input-sheet" class="pill-input" name="key" style="text-align:left;letter-spacing:.1em" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><div id="key-error" class="faint" style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.key}Redeem key</button></div></form>`;
 }
 function sheetConnectPatreon(){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Activate with Patreon</h2><p class="sheet-sub">Patreon proves membership; your Aether login saves the library, keys, progress, and provider links.</p>
@@ -1838,7 +1834,7 @@ function delegate(){
     if (t.dataset.read!=null){ e.preventDefault(); nav("/read/"+t.dataset.read); return; }
     if (t.dataset.preview!=null){ e.preventDefault(); nav("/read/"+t.dataset.preview); return; }
     if (t.dataset.lock!=null){ e.preventDefault(); rememberReturn(); openSheet(()=>sheetLock(t.dataset.lock)); return; }
-    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,persona:sheetPersona,signup:sheetSignup,redeem:sheetRedeem,"connect-patreon":sheetConnectPatreon,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
+    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,persona:sheetPersona,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-patreon":sheetConnectPatreon,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
     if (t.dataset.follow!=null){ toggleFollow(t.dataset.follow); return; }
     if (t.dataset.react!=null){ if(currentChapter) setReaction(currentChapter.ch.id, t.dataset.react); return; }
     if (t.dataset.persona!=null){ store.personaId=t.dataset.persona; saveStore(); closeSheet(); toast("Viewing as "+(D.PERSONAS.find(p=>p.id===t.dataset.persona)?.label),null,{icon:"user"}); render(); return; }
@@ -1871,11 +1867,27 @@ function delegate(){
       const status=f.querySelector("[data-auth-status]");
       const email=(f.querySelector("[name=email]")?.value||"").trim();
       const password=f.querySelector("[name=password]")?.value||"";
-      if(!email || !password){ if(status){ status.style.color="var(--bad)"; status.textContent="Email and password are required."; } return; }
+      if(f.dataset.authForm==="recover" && !email){ if(status){ status.style.color="var(--bad)"; status.textContent="Email is required."; } return; }
+      if(f.dataset.authForm==="update" && !password){ if(status){ status.style.color="var(--bad)"; status.textContent="New password is required."; } return; }
+      if(f.dataset.authForm!=="recover" && f.dataset.authForm!=="update" && (!email || !password)){ if(status){ status.style.color="var(--bad)"; status.textContent="Email and password are required."; } return; }
       try {
-        if(status){ status.style.color="var(--text-dim)"; status.textContent=f.dataset.authForm==="signup"?"Creating account...":"Signing in..."; }
+        if(status){
+          status.style.color="var(--text-dim)";
+          status.textContent=f.dataset.authForm==="signup"?"Creating account...":f.dataset.authForm==="recover"?"Sending reset link...":f.dataset.authForm==="update"?"Updating password...":"Signing in...";
+        }
         if(f.dataset.authForm==="signup") await signUpWithPassword(email, password);
-        else await signInWithPassword(email, password);
+        else if(f.dataset.authForm==="recover") {
+          await sendPasswordReset(email);
+          if(status){ status.style.color="var(--good)"; status.textContent="Reset email sent. Check your inbox."; }
+          toast("Reset email sent", "Check your inbox for the secure password link.", {icon:"mail", ms:5500});
+          return;
+        } else if(f.dataset.authForm==="update") {
+          await updateReaderPassword(password);
+          if(status){ status.style.color="var(--good)"; status.textContent="Password updated. You can continue reading."; }
+          toast("Password updated", "You can continue reading.", {icon:"checkCirc", ms:4500});
+          setTimeout(()=>{ closeSheet(); render(); }, 1200);
+          return;
+        } else await signInWithPassword(email, password);
         closeSheet();
         toast(f.dataset.authForm==="signup"?"Account created":"Signed in", "Reader account is connected.", {icon:"checkCirc", ms:4500});
         render();
@@ -1904,6 +1916,7 @@ function handleAct(act, el){
     case "google-signin": signInWithGoogle().catch(err=>toast("Google sign-in failed", err.message || "Unable to start Google OAuth.", {icon:"alert", kind:"bad"})); break;
     case "google-then-patreon": signInWithGoogle("connect-patreon").catch(err=>toast("Google sign-in failed", err.message || "Unable to start Google OAuth.", {icon:"alert", kind:"bad"})); break;
     case "show-signup": openSheet(sheetSignup); break;
+    case "show-forgot-password": openSheet(sheetForgotPassword); break;
     case "reader-signout": signOutReader().then(()=>{ closeSheet(); toast("Signed out", null, {icon:"user"}); render(); }).catch(err=>toast("Sign out failed", err.message, {icon:"alert", kind:"bad"})); break;
     case "resync": syncProviderEntitlements().then((data)=>{ const grants = Number(data?.grants || 0); toast("Sync complete", grants ? `${grants} Patreon entitlement${grants===1?"":"s"} active.` : "Patreon linked, but no mapped tier was found.", {icon:"checkCirc", ms:4000}); render(); }).catch(err=>toast("Sync failed", err.message || "Unable to refresh provider entitlements.", {icon:"alert", kind:"bad"})); break;
     case "expected-access": rememberReturn(); openSheet(sheetContext?sheetContext:()=>sheetLock(currentChapter?.ch.id)); break;
@@ -2012,9 +2025,7 @@ VIEWS.studioAnnouncements = function(){
     <textarea placeholder="What should readers know?" style="margin-top:10px"></textarea>
     <div class="between" style="margin-top:10px"><div class="chips"><button class="chip active">All readers</button><button class="chip">Aether Member</button><button class="chip">Archivist</button></div><div style="display:flex;gap:8px"><button class="btn sm ghost" data-act="studio-schedule">${I.calendar}Schedule</button><button class="btn sm story" data-act="studio-publish">${I.play}Publish now</button></div></div>
   </div>
-  <div class="section"><div class="section-head"><h2>Scheduled &amp; live</h2></div>
-    ${D.STUDIO.announcements.map(a=>`<div class="mgr-row"><span class="mi-ic" style="color:var(--${a.state==='live'?'good':'info'})">${I.msg}</span><div class="mi-body"><div class="mi-t"><span>${a.title}</span>${badge(a.state==='live'?'free':'', a.state)}</div><div class="mi-s">${a.body} Â· ${a.target} Â· ${a.when}</div></div><div class="mi-acts"><button class="btn sm ghost" data-act="studio-edit">${I.cog}Edit</button></div></div>`).join("")}
-  </div>`;
+  <div class="section"><div class="section-head"><h2>Scheduled &amp; live</h2></div><div class="empty"><div class="em">${I.msg}</div><h3>No announcements</h3><p>Announcements will appear here after they exist in the backend CMS.</p></div></div>`;
 };
 VIEWS.studioMedia = function(){
   return `<div class="between"><div><h1 class="page-title">Media &amp; Artwork</h1><p class="page-sub">Illustrations, cover concepts and art drops.</p></div><button class="btn story sm" data-act="studio-upload">${I.download}Upload</button></div>
@@ -2067,7 +2078,8 @@ VIEWS.studioSettings = function(){
 VIEWS.home = function(){
   const P = persona();
   const reads = activeReads();
-  const primary = bySlug(D.PRIMARY_SLUG);
+  const primary = bySlug(D.PRIMARY_SLUG) || D.STORIES[0];
+  if (!primary) return backendSetupView();
   const secondary = D.FEATURED_SLUGS.map(bySlug).filter(s=>s && s.slug!==primary.slug)[0];
   const shorter = D.STORIES.filter(s=>!D.FEATURED_SLUGS.includes(s.slug));
   let banner = "";
@@ -2077,9 +2089,9 @@ VIEWS.home = function(){
   else if (!P.signedIn) banner = accessBanner("anon","Browsing as a guest","Read free chapters and previews. Sign in or redeem a key to unlock more.","/vault","Activate access");
   const lastRead = activeReads().find(x=>x.story.id===primary.id);
   const pRead = primary.chapters.filter(c=>store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
-  const pPct = Math.round(pRead/primary.chapters.length*100);
-  const latestCh = primary.chapters[primary.chapters.length-1];
-  const startCh = lastRead?.ch.id || primary.chapters.find(c=>c.state==="free")?.id || primary.chapters[0].id;
+  const pPct = primary.chapters.length ? Math.round(pRead/primary.chapters.length*100) : 0;
+  const latestCh = primary.chapters[primary.chapters.length-1] || null;
+  const startCh = lastRead?.ch.id || primary.chapters.find(c=>c.state==="free")?.id || primary.chapters[0]?.id || null;
   return `
   ${announcement()}
   ${banner}
@@ -2089,7 +2101,6 @@ VIEWS.home = function(){
    <div style="min-width:0">
     <div class="section"><div class="section-head"><h2>What's new â€” ${primary.title}</h2><a class="section-link" data-nav="/story/${primary.slug}/updates">All ${I.chevR}</a></div><div class="feed stagger">${buildBookFeed(primary)}</div></div>
     ${reads.length?`<div class="section"><div class="section-head"><h2>Continue reading</h2><a class="section-link" data-nav="/my-shelf">My shelf ${I.chevR}</a></div><div class="lane stagger">${reads.slice(0,6).map(({ch,story,prog})=>{const next=story.chapters[story.chapters.indexOf(ch)+1];const nr=next?chapterResolved(next):null;return `<button class="card" style="width:220px;text-align:left;${storyAccentVars(story)}" data-read="${ch.id}"><div class="faint" style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em">${story.title}</div><div style="font-family:var(--serif);font-weight:600;margin:2px 0 6px">${ch.title}</div>${progressBar(prog.pct)}<div class="between" style="margin-top:8px"><span class="faint" style="font-size:.72rem">${prog.pct<100?prog.pct+'%':'Done'}</span>${nr?`<span class="faint" style="font-size:.68rem">Next: ${accessTag(nr)[1]}</span>`:""}</div></button>`;}).join("")}</div></div>`:""}
-    <div class="section"><div class="section-head"><h2>This week's releases</h2><a class="section-link" data-nav="/calendar">Calendar ${I.chevR}</a></div><div class="sched">${D.CALENDAR.slice(0,4).map(day=>`<div class="sched-card"><div class="dow">${day.day}</div><div class="dt">${(day.items[0]?.c||day.dow).split('â€”')[0].trim()}</div>${day.items.map(it=>`<div class="dl">${it.t} Â· ${it.k}</div>`).join("")}</div>`).join("")}</div></div>
    </div>
    <div style="min-width:0">
     ${secondary?`<div class="section"><div class="section-head"><h2>Also reading</h2></div><a class="card tinted" data-nav="/story/${secondary.slug}" style="${storyAccentVars(secondary)};display:block"><div style="display:flex;gap:13px;align-items:center"><div style="width:58px;height:78px;border-radius:9px;overflow:hidden;flex:0 0 auto;border:1px solid var(--border)">${coverArt(secondary)}</div><div style="min-width:0;flex:1"><div style="font-family:var(--serif);font-weight:600;font-size:1.05rem">${secondary.title}</div><div class="faint" style="font-size:.76rem;margin-top:2px">${secondary.author} Â· ${secondary.genre}</div><div class="faint" style="font-size:.74rem;margin-top:6px">${secondary.tagline}</div></div></div><button class="btn sm story" style="margin-top:12px;width:100%">${I.book}Open story</button></a></div>`:""}
@@ -2097,20 +2108,16 @@ VIEWS.home = function(){
     <div class="section"><div class="section-head"><h2>Shorter works</h2></div><p class="faint" style="font-size:.76rem;margin:-4px 0 8px">Novellas, prequels &amp; bonus pieces beyond the main serials.</p><div class="lane">${shorter.map(storyCard).join("")}</div></div>
    </div>
   </div>
-  <div class="section"><div class="section-head"><h2>Browse by collection</h2><a class="section-link" data-nav="/collections">All ${I.chevR}</a></div><div class="chips scroll">${D.COLLECTIONS.slice(0,8).map(c=>`<a class="chip" href="#/collections/${c.slug}" data-nav="/collections/${c.slug}">${I[c.icon]||I.book}<span>${c.name}</span></a>`).join("")}</div></div>
   <p class="faint center" style="font-size:.74rem;margin-top:18px">Deep lore, maps &amp; galleries live in the main author archive. <button class="btn sm ghost" data-act="main-archive" style="margin-left:6px">${I.external}Open the configured archive</button></p>`;
 };
 function bookHero(s, o){
-  const r = chapterResolved(o.latestCh);
-  return `<div class="book-hero" style="${storyAccentVars(s)}"><div class="bg">${coverArt(s)}</div><div class="grad"></div><div class="inner"><div class="top"><div class="cover">${coverArt(s)}</div><div class="htxt"><div class="eyebrow">${s.genre} Â· ${s.status} Â· ${s.arc}</div><h1>${s.title}</h1><div class="author">by ${s.author}</div></div></div><div class="progress-line"><div class="between" style="margin-bottom:6px"><span class="faint" style="font-size:.76rem">${o.pRead} / ${s.chapters.length} chapters read</span><span class="faint" style="font-size:.76rem">${o.pPct}%</span></div>${progressBar(o.pPct)}</div><div class="cta-row"><button class="btn primary" data-read="${o.startCh}">${o.lastRead?I.play+"Continue â€” "+o.lastRead.ch.title:I.play+"Start reading"}</button><a class="btn ghost sm" data-nav="/story/${s.slug}/chapters">${I.list}Shelf</a><a class="btn ghost sm" data-nav="/story/${s.slug}/recap">${I.info}Recap</a><a class="btn ghost sm" data-nav="/story/${s.slug}/extras">${I.spark}Extras</a></div><div class="between" style="margin-top:12px"><span class="faint" style="font-size:.74rem">Latest: <b style="color:var(--text)">${o.latestCh.title}</b> Â· ${axInline(r)}</span>${o.latestCh.publicDate?`<span class="badge early">${I.hourglass}Public ${fmtDate(o.latestCh.publicDate)}</span>`:""}</div></div></div>`;
+  const hasChapters = !!o.latestCh;
+  const r = hasChapters ? chapterResolved(o.latestCh) : null;
+  return `<div class="book-hero" style="${storyAccentVars(s)}"><div class="bg">${coverArt(s)}</div><div class="grad"></div><div class="inner"><div class="top"><div class="cover">${coverArt(s)}</div><div class="htxt"><div class="eyebrow">${s.genre} &middot; ${s.status} &middot; ${s.arc}</div><h1>${s.title}</h1><div class="author">by ${s.author}</div></div></div><div class="progress-line"><div class="between" style="margin-bottom:6px"><span class="faint" style="font-size:.76rem">${o.pRead} / ${s.chapters.length} chapters read</span><span class="faint" style="font-size:.76rem">${o.pPct}%</span></div>${progressBar(o.pPct)}</div><div class="cta-row">${hasChapters?`<button class="btn primary" data-read="${o.startCh}">${o.lastRead?I.play+"Continue &mdash; "+o.lastRead.ch.title:I.play+"Start reading"}</button>`:`<button class="btn primary" data-nav="/story/${s.slug}/chapters">${I.book}Chapters coming soon</button>`}<a class="btn ghost sm" data-nav="/story/${s.slug}/chapters">${I.list}Shelf</a><a class="btn ghost sm" data-nav="/story/${s.slug}/recap">${I.info}Recap</a><a class="btn ghost sm" data-nav="/story/${s.slug}/extras">${I.spark}Extras</a></div>${hasChapters?`<div class="between" style="margin-top:12px"><span class="faint" style="font-size:.74rem">Latest: <b style="color:var(--text)">${o.latestCh.title}</b> &middot; ${axInline(r)}</span>${o.latestCh.publicDate?`<span class="badge early">${I.hourglass}Public ${fmtDate(o.latestCh.publicDate)}</span>`:""}</div>`:`<div class="faint" style="font-size:.78rem;margin-top:12px">This story is published. No chapters are published yet.</div>`}</div></div>`;
 }
 function buildBookFeed(s){
   const items = [];
   s.chapters.slice(-3).reverse().forEach(c=>{const r=chapterResolved(c);items.push({icon:I.play,color:"var(--accent)",tone:"accent",title:`New chapter â€” ${c.title}`,desc:`Chapter ${c.n} Â· ${c.readTime} min${c.state==='early'?' Â· early access for members':''}`,meta:[c.arc,isReadable(r)?"Readable now":accessTag(r)[1]],act:`data-read="${c.id}"`,cta:isReadable(r)?"Read":accessTag(r)[3]});});
-  if (backendState.usingFixtures) {
-    D.STUDIO.announcements.slice(0,2).forEach(a=>{items.push({icon:I.msg,color:"var(--info)",tone:"info",title:a.title,desc:a.body,meta:[a.target,a.when],act:`data-act="studio-post"`,cta:"View"});});
-    D.STUDIO.media.filter(m=>m.used>0).slice(0,1).forEach(m=>{items.push({icon:I.spark,color:"var(--key)",tone:"key",thumb:m.fig,title:`New artwork â€” ${m.title}`,desc:`Illustration added to ${m.attached}.`,meta:["Art drop","Today"],act:`data-act="studio-post"`,cta:"See"});});
-  }
   return items.map(it=>`<button class="feed-item" ${it.act||""}>${it.thumb?`<span class="fthumb">${D.FIG[it.thumb]||""}</span>`:`<span class="fico" style="background:color-mix(in srgb,${it.color} 16%, transparent);color:${it.color}">${it.icon}</span>`}<span class="fbody"><span class="ftop"><span class="ft">${it.title}</span></span><span class="fd">${it.desc}</span><span class="fmeta">${(it.meta||[]).map(m=>`<span>${m}</span>`).join("")}</span></span><span class="btn sm ${it.tone==='accent'?'story':''}" style="flex:0 0 auto">${it.cta}</span></button>`).join("");
 }
 
@@ -2127,10 +2134,11 @@ function init(){
   delegate();
   window.addEventListener("hashchange", render);
   render();
-  initAuth().then(async ()=>{ await loadBackendLibrary(); saveStore(); render(); }).catch(err=>console.error("Auth bridge init failed", err));
+  initAuth().then(async ()=>{ await loadBackendLibrary(); saveStore(); render(); if (authState.passwordRecovery && authState.user) setTimeout(() => openSheet(sheetUpdatePassword), 0); }).catch(err=>console.error("Auth bridge init failed", err));
   // welcome toast for first bridge load
   if(!LS.getItem("aether-welcomed")){ LS.setItem("aether-welcomed","1"); setTimeout(()=>toast("Welcome to Aether Pages","This production shell now uses the Aether Pages concept UI; backend wiring comes next.",{icon:"spark",ms:6500}),900); }
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
 
 })();
+

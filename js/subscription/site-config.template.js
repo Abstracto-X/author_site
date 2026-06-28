@@ -31,7 +31,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     enableMainArchiveLinks: false,
     enableStudioPreview: false,
     enableFixtureFallbackInProduction: false,
-    enableLocalDemoReaderFeatures: true,
+    enableLocalDemoReaderFeatures: false,
     enablePatreonConnect: false,
     enableAccessKeys: true,
     enableGoogleOAuth: false

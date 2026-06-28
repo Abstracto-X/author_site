@@ -9,7 +9,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
   },
 
   auth: {
-    googleEnabled: false,
+    googleEnabled: true,
     emailPasswordEnabled: true,
     oauthReturnRoute: "vault"
   },
@@ -31,9 +31,9 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     enableMainArchiveLinks: false,
     enableStudioPreview: false,
     enableFixtureFallbackInProduction: false,
-    enableLocalDemoReaderFeatures: true,
+    enableLocalDemoReaderFeatures: false,
     enablePatreonConnect: false,
     enableAccessKeys: true,
-    enableGoogleOAuth: false
+    enableGoogleOAuth: true
   }
 };
