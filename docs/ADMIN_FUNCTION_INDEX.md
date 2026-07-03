@@ -1,0 +1,172 @@
+# Admin CMS Function Index
+
+Generated from the current codebase. One-line descriptions are intentionally concise so agents can quickly locate ownership before editing.
+
+## `admin.html`
+
+| Line | Function | Purpose |
+|---:|---|---|
+| 1142 | `escapeHtml(unsafe)` | Escapes or normalizes unsafe/display text. |
+| 1151 | `escapeAttr(unsafe)` | Escapes or normalizes unsafe/display text. |
+| 1158 | `formatRelativeDate(dateString)` | Formats a value for display. |
+| 1168 | `isGalleryImagePublished(image)` | Handles image preview/upload/storage URL behavior. |
+| 1169 | `isGalleryImageNsfw(image)` | Handles image preview/upload/storage URL behavior. |
+| 1170 | `normalizeAccessKey(value)` | Admin CMS helper used by the single-file admin app. |
+| 1171 | `generateAccessCode()` | Admin CMS helper used by the single-file admin app. |
+| 1178 | `sha256Hex(value)` | Admin CMS helper used by the single-file admin app. |
+| 1183 | `getImageUploadPayload(file, options = {})` | Loads fresh data/state from Supabase or local runtime state. |
+| 1232 | `uploadImage(file, bucketName, folderPath = '', options = {})` | Loads fresh data/state from Supabase or local runtime state. |
+| 1263 | `imageUploadField(id, label, currentValue, bucketName, multiple = false)` | Loads fresh data/state from Supabase or local runtime state. |
+| 1289 | `handleFileSelection(input, listId, urlInputId)` | Handles a delegated event, route, or async workflow. |
+| 1310 | `handleUrlInput(input, listId)` | Handles a delegated event, route, or async workflow. |
+| 1329 | `clearPreviews(listId, urlInputId)` | Admin CMS helper used by the single-file admin app. |
+| 1341 | `initDragAndDrop(id)` | Admin CMS helper used by the single-file admin app. |
+| 1375 | `initTagComponent(elementId, initialTags = [])` | Admin CMS helper used by the single-file admin app. |
+| 1402 | `renderChips()` | Builds and returns or injects the HTML for this UI section. |
+| 1459 | `initTagAutocomplete(containerId, initialTags = [])` | Admin CMS helper used by the single-file admin app. |
+| 1469 | `render()` | Builds and returns or injects the HTML for this UI section. |
+| 1573 | `highlightItem(items)` | Admin CMS helper used by the single-file admin app. |
+| 1582 | `addTag(tag)` | Admin CMS helper used by the single-file admin app. |
+| 1616 | `getTagValues(containerId)` | Admin CMS helper used by the single-file admin app. |
+| 1638 | `showLoading()` | Loads fresh data/state from Supabase or local runtime state. |
+| 1639 | `hideLoading()` | Loads fresh data/state from Supabase or local runtime state. |
+| 1640 | `showToast(message, type = 'success')` | Displays a transient status message. |
+| 1650 | `setAdminWallpaper(url)` | Admin CMS helper used by the single-file admin app. |
+| 1656 | `applyAdminWallpaper()` | Admin CMS helper used by the single-file admin app. |
+| 1676 | `open(title, bodyHtml, footerHtml = '')` | Opens the related modal, sheet, route, or external flow. |
+| 1688 | `close()` | Closes the related modal, sheet, or transient UI. |
+| 1692 | `confirm(message)` | Admin CMS helper used by the single-file admin app. |
+| 1708 | `init()` | Initializes this module or application surface. |
+| 1742 | `loadProfile()` | Loads fresh data/state from Supabase or local runtime state. |
+| 1778 | `showLoginView()` | Admin CMS helper used by the single-file admin app. |
+| 1783 | `showAdminView()` | Admin CMS helper used by the single-file admin app. |
+| 1789 | `login(email, password)` | Admin CMS helper used by the single-file admin app. |
+| 1806 | `logout()` | Admin CMS helper used by the single-file admin app. |
+| 1819 | `getStories()` | Admin CMS helper used by the single-file admin app. |
+| 1823 | `getStory(id)` | Handles story data or story-facing UI behavior. |
+| 1828 | `saveStory(id, record)` | Persists changes to Supabase or updates local state. |
+| 1840 | `deleteStory(id)` | Deletes/removes the selected item or UI state. |
+| 1847 | `getChapters(storyId)` | Handles chapter catalog, reader, or chapter form behavior. |
+| 1851 | `getChapter(id)` | Handles chapter catalog, reader, or chapter form behavior. |
+| 1856 | `saveChapter(id, record)` | Persists changes to Supabase or updates local state. |
+| 1871 | `deleteChapter(id)` | Deletes/removes the selected item or UI state. |
+| 1878 | `getCharacters(storyId)` | Admin CMS helper used by the single-file admin app. |
+| 1882 | `getCharacter(id)` | Admin CMS helper used by the single-file admin app. |
+| 1887 | `saveCharacter(id, record)` | Persists changes to Supabase or updates local state. |
+| 1899 | `deleteCharacter(id)` | Deletes/removes the selected item or UI state. |
+| 1906 | `getGalleryImages(characterId)` | Handles image preview/upload/storage URL behavior. |
+| 1910 | `getStoryGalleryImages(storyId)` | Handles story data or story-facing UI behavior. |
+| 1922 | `saveGalleryImage(id, record)` | Persists changes to Supabase or updates local state. |
+| 1934 | `deleteGalleryImage(id)` | Deletes/removes the selected item or UI state. |
+| 1941 | `getWallpapers(storyId)` | Admin CMS helper used by the single-file admin app. |
+| 1945 | `saveWallpaper(id, record)` | Persists changes to Supabase or updates local state. |
+| 1957 | `deleteWallpaper(id)` | Deletes/removes the selected item or UI state. |
+| 1964 | `getLoreCategories(storyId)` | Admin CMS helper used by the single-file admin app. |
+| 1968 | `getLoreEntries(storyId)` | Admin CMS helper used by the single-file admin app. |
+| 1973 | `saveLoreEntry(id, record, categoryName, storyId)` | Persists changes to Supabase or updates local state. |
+| 2011 | `deleteLoreEntry(id)` | Deletes/removes the selected item or UI state. |
+| 2017 | `cleanOrphanedCategories()` | Admin CMS helper used by the single-file admin app. |
+| 2033 | `getTimelineEvents(storyId)` | Admin CMS helper used by the single-file admin app. |
+| 2037 | `saveTimelineEvent(id, record)` | Persists changes to Supabase or updates local state. |
+| 2049 | `deleteTimelineEvent(id)` | Deletes/removes the selected item or UI state. |
+| 2056 | `getMaps(storyId)` | Admin CMS helper used by the single-file admin app. |
+| 2060 | `saveMap(id, record)` | Persists changes to Supabase or updates local state. |
+| 2072 | `deleteMap(id)` | Deletes/removes the selected item or UI state. |
+| 2079 | `getMapRequests()` | Admin CMS helper used by the single-file admin app. |
+| 2086 | `getRequestItems(reqId)` | Admin CMS helper used by the single-file admin app. |
+| 2094 | `updateRequestStatus(reqId, status, feedback = '')` | Persists changes to Supabase or updates local state. |
+| 2102 | `deleteMapRequest(reqId)` | Deletes/removes the selected item or UI state. |
+| 2107 | `approveMapRequest(reqId)` | Admin CMS helper used by the single-file admin app. |
+| 2145 | `getAccessTiers()` | Admin CMS helper used by the single-file admin app. |
+| 2150 | `saveAccessTier(id, record)` | Persists changes to Supabase or updates local state. |
+| 2160 | `deleteAccessTier(id)` | Deletes/removes the selected item or UI state. |
+| 2164 | `getAccessKeys()` | Admin CMS helper used by the single-file admin app. |
+| 2172 | `saveAccessKey(record)` | Persists changes to Supabase or updates local state. |
+| 2177 | `updateAccessKey(id, record)` | Persists changes to Supabase or updates local state. |
+| 2182 | `getEntitlements()` | Admin CMS helper used by the single-file admin app. |
+| 2190 | `saveEntitlement(record)` | Persists changes to Supabase or updates local state. |
+| 2195 | `updateEntitlement(id, record)` | Persists changes to Supabase or updates local state. |
+| 2200 | `findProfileForAccess(query)` | Admin CMS helper used by the single-file admin app. |
+| 2213 | `getProviderMappings()` | Admin CMS helper used by the single-file admin app. |
+| 2222 | `saveProviderMapping(id, record)` | Persists changes to Supabase or updates local state. |
+| 2234 | `getSettings()` | Admin CMS helper used by the single-file admin app. |
+| 2238 | `saveSetting(id, record)` | Persists changes to Supabase or updates local state. |
+| 2249 | `deleteSetting(id)` | Deletes/removes the selected item or UI state. |
+| 2255 | `getAuthorProfile()` | Coordinates authentication/session behavior. |
+| 2262 | `saveAuthorProfile(id, record)` | Persists changes to Supabase or updates local state. |
+| 2268 | `saveAuthorLink(id, record)` | Persists changes to Supabase or updates local state. |
+| 2280 | `deleteAuthorLink(id)` | Deletes/removes the selected item or UI state. |
+| 2287 | `getStats()` | Admin CMS helper used by the single-file admin app. |
+| 2308 | `viewMapRequest(reqId)` | Admin CMS helper used by the single-file admin app. |
+| 2366 | `approveMapRequest(reqId)` | Admin CMS helper used by the single-file admin app. |
+| 2376 | `rejectMapRequest(reqId)` | Admin CMS helper used by the single-file admin app. |
+| 2387 | `deleteMapRequest(reqId)` | Deletes/removes the selected item or UI state. |
+| 2399 | `storyForm(id = null)` | Handles story data or story-facing UI behavior. |
+| 2477 | `saveStory(id)` | Persists changes to Supabase or updates local state. |
+| 2519 | `deleteStory(id)` | Deletes/removes the selected item or UI state. |
+| 2551 | `chapterForm(id = null)` | Handles chapter catalog, reader, or chapter form behavior. |
+| 2612 | `saveChapter(id)` | Persists changes to Supabase or updates local state. |
+| 2646 | `deleteChapter(id)` | Deletes/removes the selected item or UI state. |
+| 2663 | `accessTierForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 2677 | `saveAccessTier(id)` | Persists changes to Supabase or updates local state. |
+| 2697 | `deleteAccessTier(id)` | Deletes/removes the selected item or UI state. |
+| 2704 | `accessKeyForm()` | Admin CMS helper used by the single-file admin app. |
+| 2724 | `saveAccessKey()` | Persists changes to Supabase or updates local state. |
+| 2749 | `revokeAccessKey(id)` | Admin CMS helper used by the single-file admin app. |
+| 2756 | `manualGrantForm()` | Admin CMS helper used by the single-file admin app. |
+| 2771 | `saveManualGrant()` | Persists changes to Supabase or updates local state. |
+| 2792 | `revokeEntitlement(id)` | Admin CMS helper used by the single-file admin app. |
+| 2799 | `providerMappingForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 2817 | `saveProviderMapping(id)` | Persists changes to Supabase or updates local state. |
+| 2838 | `characterForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 2870 | `saveCharacter(id)` | Persists changes to Supabase or updates local state. |
+| 2895 | `deleteCharacter(id)` | Deletes/removes the selected item or UI state. |
+| 2912 | `galleryImageForm(id = null, defaultPublished = true)` | Handles image preview/upload/storage URL behavior. |
+| 2987 | `saveGalleryImage(id)` | Persists changes to Supabase or updates local state. |
+| 3048 | `setGalleryImagePublished(id, isPublished)` | Handles image preview/upload/storage URL behavior. |
+| 3061 | `deleteGalleryImage(id)` | Deletes/removes the selected item or UI state. |
+| 3078 | `wallpaperForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 3103 | `saveWallpaper(id)` | Persists changes to Supabase or updates local state. |
+| 3138 | `deleteWallpaper(id)` | Deletes/removes the selected item or UI state. |
+| 3155 | `loreForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 3194 | `saveLoreEntry(id)` | Persists changes to Supabase or updates local state. |
+| 3222 | `deleteLoreEntry(id)` | Deletes/removes the selected item or UI state. |
+| 3239 | `timelineForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 3296 | `saveTimelineEvent(id)` | Persists changes to Supabase or updates local state. |
+| 3336 | `deleteTimelineEvent(id)` | Deletes/removes the selected item or UI state. |
+| 3353 | `mapForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 3384 | `saveMap(id)` | Persists changes to Supabase or updates local state. |
+| 3408 | `deleteMap(id)` | Deletes/removes the selected item or UI state. |
+| 3425 | `settingForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 3452 | `saveSetting(id)` | Persists changes to Supabase or updates local state. |
+| 3477 | `deleteSetting(id)` | Deletes/removes the selected item or UI state. |
+| 3494 | `authorLinkForm(profileId, id = null)` | Coordinates authentication/session behavior. |
+| 3526 | `saveAuthorLink(profileId, id)` | Persists changes to Supabase or updates local state. |
+| 3551 | `deleteAuthorLink(id)` | Deletes/removes the selected item or UI state. |
+| 3572 | `render(viewName)` | Builds and returns or injects the HTML for this UI section. |
+| 3606 | `dashboard(container)` | Admin CMS helper used by the single-file admin app. |
+| 3700 | `stories(container)` | Admin CMS helper used by the single-file admin app. |
+| 3750 | `chapters(container)` | Handles chapter catalog, reader, or chapter form behavior. |
+| 3819 | `characters(container)` | Admin CMS helper used by the single-file admin app. |
+| 3881 | `gallery(container)` | Admin CMS helper used by the single-file admin app. |
+| 3950 | `renderGalleryCards(images, isHiddenPool = false)` | Builds and returns or injects the HTML for this UI section. |
+| 4111 | `wallpapers(container)` | Admin CMS helper used by the single-file admin app. |
+| 4160 | `lore(container)` | Admin CMS helper used by the single-file admin app. |
+| 4222 | `timeline(container)` | Admin CMS helper used by the single-file admin app. |
+| 4284 | `maps(container)` | Admin CMS helper used by the single-file admin app. |
+| 4346 | `mapRequests(container)` | Admin CMS helper used by the single-file admin app. |
+| 4396 | `access(container)` | Admin CMS helper used by the single-file admin app. |
+| 4509 | `settings(container)` | Admin CMS helper used by the single-file admin app. |
+| 4549 | `profile(container)` | Admin CMS helper used by the single-file admin app. |
+| 4622 | `editProfile(id)` | Admin CMS helper used by the single-file admin app. |
+| 4646 | `saveProfile(id)` | Persists changes to Supabase or updates local state. |
+| 4698 | `openSidebar()` | Opens the related modal, sheet, route, or external flow. |
+| 4703 | `closeSidebar()` | Closes the related modal, sheet, or transient UI. |
+| 4729 | `init()` | Initializes this module or application surface. |
+| 4735 | `resize()` | Admin CMS helper used by the single-file admin app. |
+| 4737 | `constructor()` | Admin CMS helper used by the single-file admin app. |
+| 4738 | `reset()` | Admin CMS helper used by the single-file admin app. |
+| 4739 | `update()` | Persists changes to Supabase or updates local state. |
+| 4740 | `draw()` | Admin CMS helper used by the single-file admin app. |
+| 4744 | `animate()` | Admin CMS helper used by the single-file admin app. |
+

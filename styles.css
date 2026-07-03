@@ -1119,3 +1119,1290 @@ body[data-reader-theme="aether"]::before {
   display: none !important;
 }
 
+/* === Aether Author Studio — redesigned editor layout ===================== */
+
+.author-studio {
+  --as-accent: var(--accent, #d4b06a);
+  --as-bg: var(--bg, #090b12);
+  --as-panel: color-mix(in srgb, var(--panel, #11131d) 94%, transparent);
+  --as-panel-strong: color-mix(in srgb, var(--panel, #11131d) 98%, black);
+  --as-soft: color-mix(in srgb, var(--accent, #d4b06a) 12%, transparent);
+  --as-soft-2: color-mix(in srgb, var(--accent, #d4b06a) 7%, transparent);
+  --as-line: color-mix(in srgb, var(--border, rgba(255,255,255,.13)) 84%, transparent);
+  --as-line-strong: color-mix(in srgb, var(--accent, #d4b06a) 36%, var(--as-line));
+  --as-radius: 22px;
+  --as-radius-sm: 14px;
+  --as-shadow: 0 22px 70px rgba(0,0,0,.34);
+  --as-shadow-soft: 0 14px 38px rgba(0,0,0,.22);
+
+  padding-bottom: 44px;
+}
+
+.author-studio,
+.author-studio * {
+  box-sizing: border-box;
+}
+
+.author-studio-top .studio-nav {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.author-studio-top .studio-nav a {
+  min-width: max-content;
+}
+
+/* -------------------------------------------------------------------------
+   Hero
+------------------------------------------------------------------------- */
+
+.as-hero {
+  width: min(100%, 1480px);
+  margin: 0 auto 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+  gap: clamp(14px, 1.6vw, 24px);
+  align-items: stretch;
+}
+
+.as-hero .glass-card,
+.as-current-draft {
+  min-width: 0;
+}
+
+.as-hero .page-title {
+  max-width: 820px;
+}
+
+.as-hero-actions,
+.as-toolbar,
+.as-toolbar-group,
+.as-danger-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+}
+
+.as-current-draft {
+  border: 1px solid var(--as-line);
+  border-radius: var(--as-radius);
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, var(--as-soft), transparent 56%),
+    linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+  box-shadow: inset 0 1px rgba(255,255,255,.08), var(--as-shadow-soft);
+}
+
+.as-current-top {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+.as-current-top span {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--as-accent);
+  background: var(--as-soft);
+}
+
+.as-current-draft p {
+  margin: 0 0 14px;
+  color: var(--text-dim);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.as-current-draft small {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-faint);
+}
+
+/* -------------------------------------------------------------------------
+   KPI / Overview cards
+------------------------------------------------------------------------- */
+
+.as-kpi-grid {
+  width: min(100%, 1480px);
+  margin: 14px auto 20px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.as-kpi {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--as-line);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018)),
+    var(--as-panel);
+  box-shadow: inset 0 1px rgba(255,255,255,.055);
+}
+
+.as-kpi-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--as-soft);
+  color: var(--as-accent);
+  flex: 0 0 auto;
+}
+
+.as-kpi .lbl {
+  color: var(--text-faint);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+.as-kpi .val {
+  font-family: var(--serif);
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  font-weight: 750;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.as-kpi .hint {
+  color: var(--text-dim);
+  font-size: .75rem;
+  margin-top: 3px;
+}
+
+.as-grid-2 {
+  width: min(100%, 1480px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.as-checklist {
+  display: grid;
+  gap: 10px;
+}
+
+.as-checklist > div {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 7px 11px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--as-line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.028);
+}
+
+.as-checklist span {
+  grid-row: span 2;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--as-accent);
+  background: var(--as-soft);
+}
+
+.as-checklist small {
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+/* -------------------------------------------------------------------------
+   Main writing layout
+------------------------------------------------------------------------- */
+
+.as-write {
+  width: min(100%, 1540px);
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 280px)
+    minmax(520px, 880px)
+    minmax(240px, 320px);
+  grid-template-areas: "left editor right";
+  justify-content: center;
+  gap: clamp(12px, 1.35vw, 22px);
+  align-items: start;
+}
+
+.as-write > .as-panel:not(.as-right-panel) {
+  grid-area: left;
+}
+
+.as-editor-shell {
+  grid-area: editor;
+}
+
+.as-right-panel {
+  grid-area: right;
+}
+
+.as-panel,
+.as-editor-shell {
+  min-width: 0;
+  border: 1px solid var(--as-line);
+  border-radius: var(--as-radius);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.014)),
+    var(--as-panel);
+  box-shadow: var(--as-shadow);
+}
+
+.as-panel {
+  padding: 14px;
+  position: sticky;
+  top: calc(var(--top-h, 70px) + 16px);
+  max-height: calc(100vh - var(--top-h, 70px) - 34px);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.as-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.as-panel::-webkit-scrollbar-thumb {
+  background: var(--as-line);
+  border-radius: 999px;
+}
+
+.as-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.as-panel-head h2 {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+  font-family: var(--serif);
+  line-height: 1.15;
+}
+
+.as-panel-head small,
+.as-panel small {
+  color: var(--text-faint);
+}
+
+/* -------------------------------------------------------------------------
+   Form controls
+------------------------------------------------------------------------- */
+
+.as-field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.as-field span {
+  color: var(--text-faint);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-weight: 700;
+}
+
+.as-field input,
+.as-field select,
+.as-field textarea,
+.as-title-input {
+  width: 100%;
+  border: 1px solid var(--as-line);
+  border-radius: 14px;
+  background: rgba(0,0,0,.2);
+  color: var(--text);
+  padding: 11px 12px;
+  font: inherit;
+  outline: none;
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
+}
+
+.as-field textarea {
+  resize: vertical;
+  min-height: 86px;
+  line-height: 1.55;
+}
+
+.as-field input:hover,
+.as-field select:hover,
+.as-field textarea:hover {
+  border-color: color-mix(in srgb, var(--as-accent) 22%, var(--as-line));
+  background: rgba(0,0,0,.24);
+}
+
+.as-field input:focus,
+.as-field select:focus,
+.as-field textarea:focus,
+.as-title-input:focus,
+.as-editor:focus {
+  border-color: color-mix(in srgb, var(--as-accent) 64%, var(--as-line));
+  box-shadow: 0 0 0 3px var(--as-soft);
+}
+
+.as-row-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.as-stats-card {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin: 14px 0 12px;
+}
+
+.as-stats-card > div {
+  min-width: 0;
+  border: 1px solid var(--as-line);
+  border-radius: 14px;
+  padding: 10px 8px;
+  text-align: center;
+  background: rgba(255,255,255,.026);
+}
+
+.as-stats-card b {
+  display: block;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+
+.as-stats-card small {
+  display: block;
+  color: var(--text-faint);
+  font-size: .66rem;
+  margin-top: 4px;
+}
+
+.as-goal {
+  margin-bottom: 10px;
+}
+
+/* -------------------------------------------------------------------------
+   Editor shell
+------------------------------------------------------------------------- */
+
+.as-editor-shell {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 0, rgba(255,255,255,.045), transparent 34%),
+    var(--as-panel-strong);
+}
+
+.as-toolbar {
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--as-line);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(0,0,0,.05));
+}
+
+.as-toolbar-group {
+  gap: 7px;
+}
+
+.as-title-input {
+  display: block;
+  border: 0;
+  border-bottom: 1px solid var(--as-line);
+  border-radius: 0;
+  background: transparent;
+  padding: clamp(22px, 3.2vw, 38px) clamp(20px, 4vw, 48px) 18px;
+  font-family: var(--serif);
+  font-size: clamp(2.15rem, 5vw, 4.6rem);
+  font-weight: 760;
+  line-height: .98;
+  letter-spacing: -.045em;
+  box-shadow: none;
+}
+
+.as-title-input::placeholder {
+  color: color-mix(in srgb, var(--text-faint) 78%, transparent);
+}
+
+.as-editor-wrap {
+  position: relative;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,.018), transparent);
+}
+
+.as-editor {
+  width: 100%;
+  min-height: 72vh;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: clamp(24px, 3.4vw, 44px) clamp(20px, 3.8vw, 48px) 58px;
+  font-family: var(--serif);
+  font-size: clamp(1.08rem, 1.45vw, 1.26rem);
+  line-height: 1.82;
+  outline: none;
+  border: 1px solid transparent;
+  color: var(--text);
+}
+
+.as-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-faint);
+}
+
+.as-editor p {
+  margin: 0 0 1.05em;
+}
+
+.as-editor h2,
+.as-editor h3,
+.as-preview-prose h2,
+.as-preview-prose h3 {
+  margin: 1.55em 0 .48em;
+  font-family: var(--serif);
+  line-height: 1.12;
+  letter-spacing: -.02em;
+}
+
+.as-editor h2,
+.as-preview-prose h2 {
+  font-size: 1.55em;
+}
+
+.as-editor h3,
+.as-preview-prose h3 {
+  font-size: 1.22em;
+}
+
+.as-editor blockquote,
+.as-preview-prose blockquote {
+  margin: 1.35em 0;
+  padding: .95em 1.1em;
+  border-left: 3px solid var(--as-accent);
+  background: linear-gradient(90deg, var(--as-soft), transparent);
+  border-radius: 0 16px 16px 0;
+  color: color-mix(in srgb, var(--text) 88%, var(--text-dim));
+}
+
+.as-editor figure,
+.as-preview-prose figure {
+  margin: 1.45em 0;
+  border: 1px solid var(--as-line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(0,0,0,.2);
+  box-shadow: var(--as-shadow-soft);
+}
+
+.as-editor figure img,
+.as-preview-prose figure img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: cover;
+}
+
+.as-editor figcaption,
+.as-preview-prose figcaption {
+  padding: 10px 13px;
+  color: var(--text-dim);
+  font-size: .82rem;
+  font-family: var(--body, inherit);
+  line-height: 1.45;
+}
+
+.as-editor hr,
+.as-preview-prose hr {
+  border: 0;
+  height: 1px;
+  margin: 2.2em auto;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, var(--as-accent), transparent);
+  opacity: .85;
+}
+
+/* -------------------------------------------------------------------------
+   Reader blocks inside editor
+------------------------------------------------------------------------- */
+
+.reader-callout,
+.reader-lore-card,
+.reader-poll {
+  margin: 1.35em 0;
+  padding: 15px;
+  border: 1px solid var(--as-line);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, var(--as-soft), transparent 60%),
+    rgba(255,255,255,.025);
+  font-family: var(--body, inherit);
+  box-shadow: inset 0 1px rgba(255,255,255,.055);
+}
+
+.reader-poll {
+  display: grid;
+  gap: 9px;
+}
+
+.reader-poll button {
+  text-align: left;
+  border: 1px solid var(--as-line);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 10px 13px;
+  cursor: pointer;
+}
+
+.reader-poll button:hover {
+  border-color: var(--as-line-strong);
+  background: var(--as-soft);
+}
+
+.reader-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 15px;
+  border-radius: 999px;
+  background: var(--as-accent);
+  color: #111;
+  text-decoration: none;
+  font-family: var(--body, inherit);
+  font-weight: 800;
+}
+
+/* -------------------------------------------------------------------------
+   Editor footer
+------------------------------------------------------------------------- */
+
+.as-editor-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--as-line);
+  color: var(--text-faint);
+  font-size: .76rem;
+  background: rgba(0,0,0,.12);
+}
+
+.as-editor-footer kbd {
+  border: 1px solid var(--as-line);
+  border-radius: 7px;
+  padding: 1px 6px;
+  background: rgba(255,255,255,.055);
+  color: var(--text);
+  box-shadow: inset 0 -1px rgba(0,0,0,.24);
+}
+
+/* -------------------------------------------------------------------------
+   Slash command menu
+------------------------------------------------------------------------- */
+
+.as-command-menu {
+  position: absolute;
+  z-index: 80;
+  width: min(350px, calc(100% - 24px));
+  max-height: 320px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--as-line);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--panel, #12131d) 96%, black);
+  box-shadow: 0 24px 90px rgba(0,0,0,.5);
+  backdrop-filter: blur(16px);
+}
+
+.as-command-menu[hidden] {
+  display: none;
+}
+
+.as-command-menu button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 2px 10px;
+  align-items: center;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.as-command-menu button span {
+  grid-row: span 2;
+  color: var(--as-accent);
+  display: grid;
+  place-items: center;
+}
+
+.as-command-menu button small {
+  color: var(--text-faint);
+}
+
+.as-command-menu button.active,
+.as-command-menu button:hover {
+  background: var(--as-soft);
+}
+
+/* -------------------------------------------------------------------------
+   Preview / drafts / media
+------------------------------------------------------------------------- */
+
+.as-preview-card {
+  border: 1px solid var(--as-line);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(0,0,0,.16);
+}
+
+.as-preview-card h1 {
+  margin: 0 0 5px;
+  font-family: var(--serif);
+  line-height: 1.06;
+  letter-spacing: -.03em;
+}
+
+.as-preview-prose {
+  margin-top: 14px;
+  font-family: var(--serif);
+  line-height: 1.74;
+  color: var(--text);
+}
+
+.as-draft-list {
+  display: grid;
+  gap: 8px;
+}
+
+.as-draft-list.small {
+  gap: 7px;
+}
+
+.as-draft-row {
+  width: 100%;
+  border: 1px solid var(--as-line);
+  border-radius: 15px;
+  background: rgba(255,255,255,.028);
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color .18s ease,
+    background .18s ease,
+    transform .18s ease;
+}
+
+.as-draft-row:hover {
+  transform: translateY(-1px);
+}
+
+.as-draft-row:hover,
+.as-draft-row.active {
+  background: var(--as-soft);
+  border-color: var(--as-line-strong);
+}
+
+.as-draft-main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.as-draft-main b,
+.as-draft-main small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.as-draft-main small {
+  color: var(--text-faint);
+}
+
+.as-draft-state {
+  flex: 0 0 auto;
+  color: var(--text-faint);
+}
+
+.as-danger-zone {
+  margin-top: 14px;
+}
+
+.as-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.as-media-card {
+  margin: 0;
+  border: 1px solid var(--as-line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--as-panel);
+  box-shadow: var(--as-shadow-soft);
+}
+
+.as-media-card img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+
+.as-media-card figcaption {
+  padding: 11px;
+  display: grid;
+  gap: 6px;
+}
+
+.as-media-card small {
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.as-hidden-file {
+  display: none !important;
+}
+
+/* -------------------------------------------------------------------------
+   Better generic button behavior inside the studio
+------------------------------------------------------------------------- */
+
+.author-studio button,
+.author-studio .btn,
+.author-studio a.btn {
+  max-width: 100%;
+}
+
+.author-studio .btn {
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+   Responsive layout
+------------------------------------------------------------------------- */
+
+@media (max-width: 1360px) {
+  .as-write {
+    grid-template-columns:
+      minmax(210px, 260px)
+      minmax(0, 1fr)
+      minmax(220px, 290px);
+  }
+
+  .as-editor {
+    max-width: 740px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .as-write {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    grid-template-areas:
+      "left editor"
+      "right editor";
+  }
+
+  .as-panel {
+    position: static;
+    max-height: none;
+  }
+
+  .as-right-panel {
+    align-self: start;
+  }
+
+  .as-editor {
+    max-width: 760px;
+  }
+}
+
+@media (max-width: 920px) {
+  .as-hero,
+  .as-grid-2,
+  .as-write,
+  .as-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .as-write {
+    grid-template-areas:
+      "editor"
+      "left"
+      "right";
+  }
+
+  .as-hero,
+  .as-kpi-grid,
+  .as-grid-2,
+  .as-write {
+    width: 100%;
+  }
+
+  .as-panel,
+  .as-editor-shell,
+  .as-current-draft,
+  .as-kpi,
+  .as-checklist > div {
+    border-radius: 18px;
+  }
+
+  .as-toolbar {
+    align-items: flex-start;
+  }
+
+  .as-title-input {
+    font-size: clamp(2rem, 10vw, 3rem);
+    padding: 22px 18px 15px;
+  }
+
+  .as-editor {
+    min-height: 62vh;
+    max-width: none;
+    padding: 22px 18px 48px;
+    font-size: 1.08rem;
+  }
+
+  .as-editor-footer {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .author-studio {
+    padding-bottom: 28px;
+  }
+
+  .as-hero-actions,
+  .as-toolbar,
+  .as-toolbar-group,
+  .as-danger-zone {
+    gap: 7px;
+  }
+
+  .as-kpi-grid {
+    gap: 10px;
+  }
+
+  .as-kpi {
+    padding: 13px;
+  }
+
+  .as-row-fields,
+  .as-stats-card {
+    grid-template-columns: 1fr;
+  }
+
+  .as-toolbar {
+    padding: 9px;
+  }
+
+  .as-title-input {
+    letter-spacing: -.035em;
+  }
+
+  .as-editor {
+    line-height: 1.75;
+  }
+
+  .as-command-menu {
+    width: calc(100% - 18px);
+  }
+}
+/* === Aether Author Studio — fullscreen write page redesign =============== */
+
+/* Use the full browser width instead of feeling boxed-in */
+.author-studio {
+  width: 100%;
+  max-width: none;
+  padding: 22px clamp(18px, 3vw, 42px) 46px;
+  background:
+    radial-gradient(circle at 22% 10%, rgba(212,176,106,.08), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(255,255,255,.045), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.018), transparent 280px);
+}
+
+/* Kill accidental wrapper constraints */
+.author-studio .container,
+.author-studio .wrap,
+.author-studio .shell,
+.author-studio .content,
+.author-studio main {
+  max-width: none;
+}
+
+/* Top nav should feel lighter and less chunky */
+.author-studio-top {
+  margin-bottom: 14px;
+}
+
+.author-studio-top .studio-nav {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.author-studio-top .studio-nav a {
+  min-width: auto;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-size: .82rem;
+}
+
+/* The actual write workspace */
+.as-write {
+  width: 100%;
+  max-width: none;
+  margin: 10px auto 0;
+  display: grid;
+  grid-template-columns: 310px minmax(680px, 1fr) 330px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* Give every column a real app-like height */
+.as-panel,
+.as-editor-shell {
+  height: calc(100vh - 178px);
+  min-height: 680px;
+  border-radius: 24px;
+}
+
+/* Side panels should support the editor, not compete with it */
+.as-panel {
+  position: sticky;
+  top: 92px;
+  padding: 16px;
+  overflow: auto;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+    color-mix(in srgb, var(--panel, #11131d) 95%, black);
+  border: 1px solid rgba(255,255,255,.11);
+  box-shadow: 0 24px 80px rgba(0,0,0,.28);
+}
+
+/* Editor becomes the visual center */
+.as-editor-shell {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(212,176,106,.08), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+    #11131b;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.38),
+    inset 0 1px rgba(255,255,255,.07);
+}
+
+/* Toolbar: flatter, cleaner, less like random pills floating */
+.as-toolbar {
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  background: rgba(0,0,0,.12);
+  justify-content: space-between;
+}
+
+.as-toolbar-group {
+  gap: 8px;
+}
+
+.as-toolbar .btn,
+.as-toolbar button,
+.author-studio .btn {
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-size: .78rem;
+}
+
+/* Make the title look intentional */
+.as-title-input {
+  flex: 0 0 auto;
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 42px 54px 24px;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: transparent;
+  font-family: var(--serif);
+  font-size: clamp(3.1rem, 5.8vw, 6.4rem);
+  line-height: .92;
+  letter-spacing: -.06em;
+  text-align: left;
+}
+
+.as-title-input:focus {
+  box-shadow: none;
+  border-color: color-mix(in srgb, var(--accent, #d4b06a) 44%, rgba(255,255,255,.12));
+}
+
+/* The editor area now feels like a real manuscript page */
+.as-editor-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,.018), transparent);
+}
+
+.as-editor {
+  width: min(100%, 920px);
+  max-width: none;
+  min-height: auto;
+  margin: 0 auto;
+  padding: 42px 54px 100px;
+  border: 0;
+  font-family: var(--serif);
+  font-size: clamp(1.22rem, 1.35vw, 1.48rem);
+  line-height: 1.82;
+  color: color-mix(in srgb, var(--text, #f4efe4) 96%, white);
+}
+
+.as-editor:focus {
+  box-shadow: none;
+}
+
+.as-editor p {
+  margin: 0 0 1.18em;
+}
+
+/* Footer stays at bottom of editor shell */
+.as-editor-footer {
+  flex: 0 0 auto;
+  padding: 12px 18px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  background: rgba(0,0,0,.16);
+}
+
+/* Left panel fields need more breathing room */
+.as-panel-head {
+  margin-bottom: 16px;
+}
+
+.as-panel-head h2 {
+  font-size: 1.06rem;
+}
+
+.as-field {
+  margin-bottom: 13px;
+}
+
+.as-field span {
+  margin-left: 2px;
+  font-size: .65rem;
+  letter-spacing: .12em;
+}
+
+.as-field input,
+.as-field select,
+.as-field textarea {
+  min-height: 42px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.19);
+}
+
+.as-row-fields {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Right preview should look like a compact phone/book preview */
+.as-right-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.as-preview-card {
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)),
+    rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.11);
+}
+
+.as-preview-card h1 {
+  font-size: clamp(1.9rem, 2vw, 2.45rem);
+  letter-spacing: -.045em;
+}
+
+.as-preview-prose {
+  font-size: .98rem;
+  line-height: 1.72;
+}
+
+/* Draft list cleaner */
+.as-draft-list {
+  gap: 9px;
+}
+
+.as-draft-row {
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255,255,255,.028);
+}
+
+.as-draft-row.active {
+  background:
+    linear-gradient(135deg, rgba(212,176,106,.16), rgba(255,255,255,.035));
+}
+
+/* Remove the goofy giant icon feeling at bottom if it is inside editor footer/helper */
+.as-editor-wrap > svg,
+.as-editor-wrap .empty-icon,
+.as-editor-wrap .placeholder-icon,
+.as-editor-wrap .help-icon {
+  opacity: .22;
+  transform: scale(.72);
+}
+
+/* Command menu polish */
+.as-command-menu {
+  border-radius: 18px;
+  background: rgba(17,19,29,.96);
+  backdrop-filter: blur(18px);
+}
+
+/* Fullscreen breakpoint: make the editor truly breathe on big monitors */
+@media (min-width: 1500px) {
+  .as-write {
+    grid-template-columns: 330px minmax(820px, 1fr) 360px;
+    gap: 22px;
+  }
+
+  .as-title-input,
+  .as-editor {
+    width: min(100%, 1040px);
+  }
+
+  .as-editor {
+    font-size: clamp(1.28rem, 1.2vw, 1.55rem);
+  }
+}
+
+/* Medium screens: right panel drops below so editor stays wide */
+@media (max-width: 1240px) {
+  .as-write {
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-areas:
+      "left editor"
+      "right editor";
+  }
+
+  .as-write > .as-panel:not(.as-right-panel) {
+    grid-area: left;
+  }
+
+  .as-editor-shell {
+    grid-area: editor;
+  }
+
+  .as-right-panel {
+    grid-area: right;
+  }
+
+  .as-panel,
+  .as-editor-shell {
+    height: auto;
+    min-height: auto;
+  }
+
+  .as-editor-shell {
+    min-height: calc(100vh - 180px);
+  }
+}
+
+/* Tablet and mobile: editor first, panels after */
+@media (max-width: 900px) {
+  .author-studio {
+    padding: 14px 12px 30px;
+  }
+
+  .as-write {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "editor"
+      "left"
+      "right";
+    gap: 14px;
+  }
+
+  .as-panel {
+    position: static;
+  }
+
+  .as-editor-shell {
+    min-height: 72vh;
+    border-radius: 20px;
+  }
+
+  .as-toolbar {
+    align-items: flex-start;
+  }
+
+  .as-title-input {
+    width: 100%;
+    padding: 28px 20px 18px;
+    font-size: clamp(2.4rem, 12vw, 4rem);
+  }
+
+  .as-editor {
+    width: 100%;
+    padding: 28px 20px 80px;
+    font-size: 1.12rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 560px) {
+  .as-toolbar .btn,
+  .as-toolbar button,
+  .author-studio .btn {
+    height: 32px;
+    padding: 0 11px;
+    font-size: .74rem;
+  }
+
+  .as-row-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .as-editor-footer {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,16 @@
+Patch package validation performed against the previously generated split refactor bundle.
+
+Commands:
+- node tools/apply-author-studio-patch.mjs /mnt/data/author_studio_test_repo --dry-run
+- node tools/apply-author-studio-patch.mjs /mnt/data/author_studio_test_repo
+- node --check js/subscription/author-studio.js
+- node --check js/subscription/router.js
+- node --check js/subscription/events.js
+- node --check js/subscription/aether-app.js
+
+Result:
+- Patch script applied cleanly.
+- author-studio.js syntax check passed.
+- Existing router/events/bootstrap syntax checks passed after patch.
+- index.html received author-studio.js before aether-app.js.
+- homepage Author Studio button was rerouted to /studio/write.

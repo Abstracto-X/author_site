@@ -1,0 +1,14 @@
+Files created/modified by the patcher when run against the split subscription reader:
+
+CREATED/UPDATED
+- js/subscription/author-studio.js
+
+MODIFIED
+- index.html
+  - Inserts js/subscription/author-studio.js before js/subscription/aether-app.js.
+
+- js/subscription/views/home-library.js
+  - Routes the existing Author Studio button to #/studio/write.
+
+- styles.css
+  - Appends Author Studio styles under a sentinel comment.

@@ -1,0 +1,19 @@
+node --check validation
+
+OK js/subscription/aether-app.js
+OK js/subscription/auth.js
+OK js/subscription/backend.js
+OK js/subscription/chrome.js
+OK js/subscription/config.js
+OK js/subscription/events.js
+OK js/subscription/router.js
+OK js/subscription/sheets.js
+OK js/subscription/state.js
+OK js/subscription/utils.js
+OK js/subscription/views/account-access.js
+OK js/subscription/views/help-support.js
+OK js/subscription/views/home-library.js
+OK js/subscription/views/story-reader.js
+OK js/subscription/views/studio-preview.js
+
+Concatenated dependency-order syntax check: OK
