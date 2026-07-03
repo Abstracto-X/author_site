@@ -48,9 +48,29 @@ const DEFAULT_DATA = {
 };
 const D = window.DATA && typeof window.DATA === "object" ? Object.assign(DEFAULT_DATA, window.DATA) : DEFAULT_DATA;
 window.DATA = D;
-const SITE_NAME = CONFIG.siteName || "Member Fiction Reader";
-const SITE_TAGLINE = CONFIG.siteTagline || "Premium serial fiction member library";
+let SITE_NAME = CONFIG.siteName || "EvilArchives";
+let SITE_TAGLINE = CONFIG.siteTagline || "Premium serial fiction member library";
+let SITE_META_DESCRIPTION = CONFIG.metaDescription || "Premium member fiction reader. Read serial fiction, manage access, and continue across the member library.";
 const MAIN_ARCHIVE_URL = LINKS.mainArchiveUrl || "";
+function settingText(value, fallback){
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (value && typeof value === "object") {
+    const text = value.value || value.text || value.label;
+    if (typeof text === "string" && text.trim()) return text.trim();
+  }
+  return fallback;
+}
+function applySiteSettings(rows){
+  const byKey = {};
+  (Array.isArray(rows) ? rows : []).forEach(row => { if (row && row.setting_key) byKey[row.setting_key] = row.setting_value; });
+  const identity = byKey.site_identity && typeof byKey.site_identity === "object" ? byKey.site_identity : {};
+  SITE_NAME = settingText(identity.siteName || identity.site_name || byKey.site_name, SITE_NAME);
+  SITE_TAGLINE = settingText(identity.siteTagline || identity.site_tagline || byKey.site_tagline, SITE_TAGLINE);
+  SITE_META_DESCRIPTION = settingText(identity.metaDescription || identity.meta_description || byKey.meta_description, SITE_META_DESCRIPTION);
+  document.title = settingText(identity.pageTitle || identity.page_title, SITE_NAME);
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta) meta.setAttribute("content", SITE_META_DESCRIPTION);
+}
 function feature(name, fallback){ return Object.prototype.hasOwnProperty.call(FEATURES, name) ? !!FEATURES[name] : !!fallback; }
 function providerEnabled(name){ return !!PROVIDERS[name]; }
 function googleEnabled(){ return !!AUTH_CONFIG.googleEnabled && feature("enableGoogleOAuth", false); }

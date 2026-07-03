@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Admin Panel</title>
+    <title>EvilArchives Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -963,7 +963,7 @@
     <div id="login-view" style="display:none;">
         <div class="login-container">
             <div class="login-box">
-                <div class="login-logo">AETHER</div>
+                <div class="login-logo">EvilArchives</div>
                 <div class="login-subtitle">Admin Panel</div>
                 <div class="login-error" id="login-error"></div>
                 <form id="login-form">
@@ -1000,7 +1000,7 @@
         <div class="admin-container">
             <!-- SIDEBAR -->
             <aside class="admin-sidebar" id="admin-sidebar">
-                <div class="sidebar-logo">AETHER</div>
+                <div class="sidebar-logo">EvilArchives</div>
                 <div class="sidebar-subtitle">Admin Panel</div>
 
                 <nav>
@@ -2247,6 +2247,24 @@
                     return data;
                 }
             },
+            upsertSettingByKey: async (key, value) => {
+                const { data: existing, error: lookupError } = await supabaseClient
+                    .from('site_settings')
+                    .select('id')
+                    .eq('setting_key', key)
+                    .limit(1)
+                    .maybeSingle();
+                if (lookupError) throw lookupError;
+                const record = { setting_key: key, setting_value: value };
+                if (existing?.id) {
+                    const { data, error } = await supabaseClient.from('site_settings').update(record).eq('id', existing.id).select().single();
+                    if (error) throw error;
+                    return data;
+                }
+                const { data, error } = await supabaseClient.from('site_settings').insert(record).select().single();
+                if (error) throw error;
+                return data;
+            },
             deleteSetting: async (id) => {
                 const { error } = await supabaseClient.from('site_settings').delete().eq('id', id);
                 if (error) throw error;
@@ -2318,7 +2336,7 @@
                         const icon = item.action === 'ADD' ? '<i class="fas fa-plus" style="color:var(--success-color)"></i>' :
                                      item.action === 'UPDATE' ? '<i class="fas fa-edit" style="color:var(--accent-color)"></i>' :
                                      '<i class="fas fa-trash" style="color:var(--danger-color)"></i>';
-                        const name = item.proposed_data?.name || item.proposed_data?.source_name + ' â†’ ' + item.proposed_data?.target_name || 'Unknown Target';
+                        const name = item.proposed_data?.name || item.proposed_data?.source_name + ' → ' + item.proposed_data?.target_name || 'Unknown Target';
                         return `
                             <div style="background:rgba(255,255,255,0.05); padding:0.5rem 1rem; border-radius:6px; margin-bottom:0.5rem; display:flex; align-items:center; gap:10px;">
                                 ${icon} <strong>${item.entity_type}</strong>: ${Utils.escapeHtml(name)}
@@ -3476,6 +3494,31 @@
                 }
             },
 
+            saveSiteIdentity: async () => {
+                try {
+                    UI.showLoading();
+                    const identity = {
+                        siteName: document.getElementById('f-site-name').value.trim() || 'EvilArchives',
+                        siteTagline: document.getElementById('f-site-tagline').value.trim() || 'Premium serial fiction archive',
+                        pageTitle: document.getElementById('f-page-title').value.trim() || 'EvilArchives',
+                        metaDescription: document.getElementById('f-meta-description').value.trim() || 'EvilArchives premium fiction reader.'
+                    };
+                    await DB.upsertSettingByKey('site_identity', identity);
+                    ADMIN_SITE_CONFIG.siteName = identity.siteName;
+                    ADMIN_SITE_CONFIG.siteTagline = identity.siteTagline;
+                    document.title = `${identity.siteName} Admin`;
+                    document.querySelectorAll('.login-logo, .sidebar-logo').forEach(el => {
+                        el.textContent = identity.siteName.slice(0, 24);
+                    });
+                    UI.showToast('Site identity saved.');
+                    Views.render('settings');
+                } catch (err) {
+                    UI.showToast(err.message, 'error');
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
             deleteSetting: async (id) => {
                 if (await Modal.confirm('Delete this setting?')) {
                     try {
@@ -4463,7 +4506,7 @@
                             <thead><tr><th>Prefix</th><th>Tier</th><th>Campaign</th><th>Uses</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>${keys.map(k => `
                                 <tr>
-                                    <td><code>${Utils.escapeHtml(k.key_prefix || '----')}????</code></td>
+                                    <td><code>${Utils.escapeHtml(k.key_prefix || '----')}?</code></td>
                                     <td>${Utils.escapeHtml(k.reader_access_tiers?.name || 'Unknown tier')}</td>
                                     <td>${Utils.escapeHtml(k.campaign || k.label || '-')}</td>
                                     <td>${k.uses_count || 0} / ${k.max_uses || 1}</td>
@@ -4510,16 +4553,46 @@
 
             settings: async (container) => {
                 const settings = await DB.getSettings();
+                const identity = settings.find(s => s.setting_key === 'site_identity')?.setting_value || {};
+                const siteName = identity.siteName || identity.site_name || ADMIN_SITE_CONFIG.siteName || 'EvilArchives';
+                const siteTagline = identity.siteTagline || identity.site_tagline || ADMIN_SITE_CONFIG.siteTagline || 'Premium serial fiction archive';
+                const pageTitle = identity.pageTitle || identity.page_title || siteName;
+                const metaDescription = identity.metaDescription || identity.meta_description || 'EvilArchives premium fiction reader.';
 
                 container.innerHTML = `
                     <div class="page-header">
                         <div>
                             <h1 class="page-title">Site Settings</h1>
-                            <p class="page-subtitle">Global configuration</p>
+                            <p class="page-subtitle">Production reader identity and global JSON configuration</p>
                         </div>
                         <button class="btn btn-primary" onclick="Forms.settingForm()">
                             <i class="fas fa-plus"></i> Add Setting
                         </button>
+                    </div>
+                    <div class="glass-card" style="margin-bottom:1.5rem;">
+                        <div class="card-header">
+                            <h3 class="card-title">Reader Identity</h3>
+                            <span style="color:#777;font-size:0.78rem;">Backed by <code>site_settings.site_identity</code></span>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Site Name</label>
+                                <input class="form-input" id="f-site-name" value="${Utils.escapeAttr(siteName)}" placeholder="EvilArchives">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Browser Page Title</label>
+                                <input class="form-input" id="f-page-title" value="${Utils.escapeAttr(pageTitle)}" placeholder="EvilArchives">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Header Tagline</label>
+                            <input class="form-input" id="f-site-tagline" value="${Utils.escapeAttr(siteTagline)}" placeholder="Premium serial fiction archive">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Meta Description</label>
+                            <textarea class="form-textarea" id="f-meta-description" style="min-height:90px;">${Utils.escapeHtml(metaDescription)}</textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="Forms.saveSiteIdentity()"><i class="fas fa-save"></i> Save Reader Identity</button>
                     </div>
                     <div class="glass-card">
                         <table class="data-table">
@@ -4747,4 +4820,3 @@
     </script>
 </body>
 </html>
-

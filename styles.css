@@ -1,5 +1,5 @@
 /* =====================================================================
-   AETHER PAGES â€” Subscription Reader SPA
+   AETHER PAGES — Subscription Reader SPA
    Design system: premium, desktop/tablet-rich, responsive restrained atmosphere.
    ===================================================================== */
 
@@ -328,6 +328,7 @@ body.has-sheet #main, body.locked-scroll { overflow: hidden; }
 
 /* cover art wrapper */
 .cover-art { position:absolute; inset:0; }
+.cover-art.cover-img { width:100%; height:100%; object-fit:cover; object-position:center center; }
 .cover-art .glow { position:absolute; inset:0; }
 
 /* list rows */
@@ -788,7 +789,7 @@ summary > svg { width:16px; height:16px; transition:transform .2s var(--ease); c
 .quote-fab { transition: opacity .25s var(--ease), transform .25s var(--ease); }
 
 /* =====================================================================
-   SITE THEMES â€” atmospheric literary presets (app-wide)
+   SITE THEMES — atmospheric literary presets (app-wide)
    Applied via <html data-theme="name">. Default (:root) = Aether.
    ===================================================================== */
 :root, [data-theme="aether"] {
@@ -836,7 +837,7 @@ summary > svg { width:16px; height:16px; transition:transform .2s var(--ease); c
   --accent:#8fb98a; --accent-2:#b4d6af; --accent-soft:rgba(143,185,138,.17);
   --chrome:11 16 12; --scrub:rgba(210,235,205,.1);
 }
-/* Light theme â€” Parchment: inverts chrome/surfaces to sit on cream */
+/* Light theme — Parchment: inverts chrome/surfaces to sit on cream */
 [data-theme="parchment"] {
   --bg:#f4efe2; --bg-grad-a: rgba(154,107,63,.10); --bg-grad-b: rgba(120,90,50,.07);
   --surface: rgba(60,40,20,.04); --surface-2: rgba(60,40,20,.065); --surface-3: rgba(60,40,20,.10);
@@ -898,7 +899,7 @@ summary > svg { width:16px; height:16px; transition:transform .2s var(--ease); c
 @media (min-width:680px){ .book-pair { grid-template-columns: 1fr 1fr; } }
 
 /* =====================================================================
-   AETHER STUDIO â€” author CMS (separated area, own chrome)
+   AETHER STUDIO — author CMS (separated area, own chrome)
    ===================================================================== */
 body.in-studio { --top-h: 52px; }
 body.in-studio #main { padding-bottom: 28px; }

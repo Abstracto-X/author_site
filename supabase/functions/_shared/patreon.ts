@@ -29,6 +29,11 @@ const firstString = (...values: unknown[]) => {
   return '';
 };
 
+const normalizeTierName = (value: unknown) => String(value || '')
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, ' ');
+
 const relationIds = (resource: PatreonResource, name: string) => {
   const data = resource.relationships?.[name]?.data;
   if (!data) return [] as string[];
@@ -194,17 +199,25 @@ export const syncPatreonEntitlements = async (
 
   let grants = 0;
   const grantedEntitlementIds: string[] = [];
-  if (identity.tierIds.length) {
+  if (identity.tierIds.length || identity.tiers.length) {
     const { data: mappings, error: mappingError } = await admin
       .from('provider_tier_mappings')
       .select('*')
       .eq('provider', 'patreon')
-      .eq('is_active', true)
-      .in('provider_tier_id', identity.tierIds);
+      .eq('is_active', true);
     if (mappingError) throw mappingError;
 
     for (const mapping of mappings || []) {
-      const tier = identity.tiers.find((item) => item.id === mapping.provider_tier_id);
+      const mappingId = String(mapping.provider_tier_id || '');
+      const mappingLabel = normalizeTierName(mapping.provider_tier_label);
+      const mappingIdAsName = normalizeTierName(mappingId);
+      const tier = identity.tiers.find((item) => {
+        const tierTitle = normalizeTierName(item.title);
+        return item.id === mappingId
+          || (!!mappingLabel && tierTitle === mappingLabel)
+          || (!!mappingIdAsName && tierTitle === mappingIdAsName);
+      });
+      if (!tier && !identity.tierIds.includes(mappingId)) continue;
       const { data: entitlement, error: entitlementError } = await admin
         .from('user_entitlements')
         .insert({
@@ -216,7 +229,7 @@ export const syncPatreonEntitlements = async (
           status: 'active',
           valid_from: now,
           metadata: {
-            patreon_tier_id: mapping.provider_tier_id,
+            patreon_tier_id: tier?.id || mapping.provider_tier_id,
             patreon_tier_label: mapping.provider_tier_label || tier?.title || null,
             patreon_amount_cents: tier?.amount_cents || null,
           },
@@ -232,7 +245,7 @@ export const syncPatreonEntitlements = async (
         source: 'patreon',
         provider: 'patreon',
         entitlement_id: entitlement.id,
-        details: { provider_tier_id: mapping.provider_tier_id, connection_id: connection.id },
+        details: { provider_tier_id: mapping.provider_tier_id, patreon_tier_id: tier?.id || null, connection_id: connection.id },
       });
     }
   }

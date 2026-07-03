@@ -68,10 +68,10 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 |---|---|---|
 | `site-config.js` | Project-specific Supabase URL/anon key and feature flags. | Runtime config file; never put service-role secrets here. |
 | `site-config.template.js` | Copyable config template. | Keep keys blank/safe. |
-| `config.js` | Safe storage wrapper, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks. |
+| `config.js` | Safe storage wrapper, runtime site identity, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks and applies `site_settings.site_identity` when loaded. |
 | `state.js` | Shared reader state objects. | Owns `store`, `authState`, `backendState`, and derived access/persona defaults. |
 | `auth.js` | Supabase auth/session/profile/entitlement bridge. | Handles sign in/up/out, password recovery/update, provider flow helpers, profile/entitlement refresh. |
-| `backend.js` | Supabase story/chapter/catalog data loading. | Owns published story loading and RPC calls like `get_chapter_catalog` and `get_reader_chapter`. |
+| `backend.js` | Supabase site settings, story/chapter/catalog data loading. | Owns reader identity loading from `site_settings`, published story loading, and RPC calls like `get_chapter_catalog` and `get_reader_chapter`. |
 | `utils.js` | Pure-ish UI/data helpers. | Escaping, formatting, icons, cards, access labels, generated cover art, text parsing. |
 | `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
 | `router.js` | Hash route parsing and render dispatch. | Preserves route names and view registry behavior. |
@@ -90,7 +90,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 1. Browser loads `site-config.js`, Supabase CDN, and the reader modules. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
 2. `aether-app.js` bootstraps the app after all module globals exist.
 3. `auth.js` initializes the Supabase client/session and refreshes profile/entitlements when configured.
-4. `backend.js` loads published stories and chapter catalogs from Supabase.
+4. `backend.js` loads `site_settings.site_identity`, then published stories and chapter catalogs from Supabase.
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
 7. `events.js` handles delegated interactions and re-renders or opens sheets as needed.

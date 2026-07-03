@@ -44,11 +44,11 @@ function gateDisplay(ch){
   if (ch.state === "preview") return "preview";
   if (ch.state === "early") return "early";
   if (ch.state === "locked") return "locked";
-  // base "unlocked" means member-tier gated â€” never expose as readable without access
+  // base "unlocked" means member-tier gated — never expose as readable without access
   return "locked";
 }
 function reasonFor(ch, r) {
-  if (r.state === "pending") return "Verifying your access with Patreon â€” usually a moment.";
+  if (r.state === "pending") return "Verifying your access with Patreon — usually a moment.";
   if (r.state === "expired") return "Your Aether Member access has expired. Renew to continue.";
   if (r.noTier) return "Your provider tier does not include Aether Pages access.";
   if (r.state === "key") return "Redeem an access key to read this chapter.";
@@ -121,6 +121,7 @@ function icon(n, cls){ return `<span class="${cls||''}">${I[n]||""}</span>`; }
 
 /* ============ cover art generator ============ */
 function coverArt(s){
+  const imageUrl = s.cover_image_url || s.cover_url || s.cover || "";
   const a=s.accent, a2=s.accent2, dark="#0b0a10";
   const motifs = {
     shards:`<g opacity=".9">${poly(400,200,120,6,a2,.5)}${poly(300,260,80,5,a,.45)}${poly(500,160,90,6,a,.4)}${poly(360,330,70,5,a2,.35)}<g stroke="${a2}" stroke-opacity=".25" fill="none" stroke-width="1">${[...Array(7)].map((_,i)=>`<path d="M${120+i*70} 460 L${200+i*40} 0"/>`).join("")}</g></g>`,
@@ -130,7 +131,7 @@ function coverArt(s){
     key:`<g stroke="${a2}" stroke-width="3" fill="none" stroke-opacity=".55"><circle cx="400" cy="180" r="70"/><circle cx="400" cy="180" r="30" fill="${a}" fill-opacity=".5" stroke="none"/><path d="M400 250 V400 M400 340h40 M400 370h30"/></g><g stroke="${a2}" stroke-opacity=".2" stroke-width="1">${[...Array(8)].map((_,i)=>`<path d="M${400} ${180} L${400+Math.cos(i)*120|0} ${180+Math.sin(i)*120|0}"/>`).join("")}</g>`
   };
   function poly(cx,cy,r,n,fill,op){ const pts=[...Array(n)].map((_,i)=>{const ang=(i/n)*Math.PI*2 - Math.PI/2; return `${cx+Math.cos(ang)*r},${cy+Math.sin(ang)*r}`;}).join(" "); return `<polygon points="${pts}" fill="${fill}" opacity="${op||.4}"/>`; }
-  return `<svg class="cover-art" viewBox="0 0 800 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  const generated = `<svg class="cover-art" viewBox="0 0 800 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs><linearGradient id="cg-${s.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${dark}"/><stop offset="1" stop-color="${a}" stop-opacity=".25"/></linearGradient>
     <radialGradient id="cgR-${s.id}" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="${a}" stop-opacity=".3"/><stop offset="1" stop-color="${dark}" stop-opacity="0"/></radialGradient></defs>
     <rect width="800" height="480" fill="${dark}"/><rect width="800" height="480" fill="url(#cg-${s.id})"/><rect width="800" height="480" fill="url(#cgR-${s.id})"/>
@@ -138,6 +139,8 @@ function coverArt(s){
     <rect width="800" height="480" fill="url(#vg-${s.id})"/>
     <defs><linearGradient id="vg-${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark}" stop-opacity="0"/><stop offset=".7" stop-color="${dark}" stop-opacity=".2"/><stop offset="1" stop-color="${dark}" stop-opacity=".6"/></linearGradient></defs>
   </svg>`;
+  if (!imageUrl) return generated;
+  return `<img class="cover-art cover-img" src="${esc(imageUrl)}" alt="${esc(s.title || "Story cover")}" loading="lazy" onerror="this.nextElementSibling.style.display='block';this.remove();">${generated.replace('class="cover-art"', 'class="cover-art" style="display:none"')}`;
 }
 
 /* ============ UI primitives ============ */
@@ -201,7 +204,7 @@ function storyCard(s){
   const lastUpd = Math.max(0,...s.chapters.map((c,i)=>i));
   return `<a class="story-card" href="#/story/${s.slug}" data-nav="/story/${s.slug}" style="${storyAccentVars(s)}">
     <div class="cover">${coverArt(s)}${memberOnly?`<span class="ribbon">Member</span>`:""}${prog.length?`<div class="progress-pip">${progressBar(prog[0].pct)}</div>`:""}</div>
-    <div class="meta"><h3>${s.title}</h3><div class="by">${s.author} Â· ${s.genre}</div></div>
+    <div class="meta"><h3>${s.title}</h3><div class="by">${s.author} · ${s.genre}</div></div>
   </a>`;
 }
 function storyCardWide(s){

@@ -7,7 +7,7 @@ function brandMark(){ return `<svg class="mark" viewBox="0 0 32 32" xmlns="http:
 function topbar(){
   const P = persona();
   const state = P.expired?"expired":P.pending?"pending":(P.noTier||P.level===0&&P.signedIn)?"none":P.level>0?"active":"anon";
-  const label = !P.signedIn?"Not signed in":P.expired?"Access expired":P.pending?"Sync pending":P.noTier?"No access":P.tier?("Active Â· "+P.tier):"Signed in";
+  const label = !P.signedIn?"Not signed in":P.expired?"Access expired":P.pending?"Sync pending":P.noTier?"No access":P.tier?("Active · "+P.tier):"Signed in";
   const unread = store.notifs.filter(n=>!n.read).length;
   return `<header class="topbar">
     <a class="brand" href="#/" data-nav="/">${brandMark()}<span><span class="serif">${esc(SITE_NAME)}</span><small>${esc(SITE_TAGLINE)}</small></span></a>

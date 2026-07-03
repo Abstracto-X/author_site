@@ -36,7 +36,7 @@ VIEWS.story = function(){
     <div class="inner">
       <div class="mini-cover">${coverArt(s)}</div>
       <div class="htxt">
-        <div class="eyebrow">${s.genre} Â· ${s.status}</div>
+        <div class="eyebrow">${s.genre} · ${s.status}</div>
         <h1>${s.title}</h1>
         <div class="author">by ${s.author}</div>
         <div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>
@@ -45,12 +45,12 @@ VIEWS.story = function(){
   </div>
   <p class="muted" style="font-family:var(--serif);font-size:1.02rem;line-height:1.6;margin:0 2px 16px">${s.tagline}</p>
 
-  <div class="sticky-cta"><button class="btn primary block" data-read="${startCh}">${lastRead?(I.play+"Continue â€” "+lastRead.ch.title):"Start reading"}</button></div>
+  <div class="sticky-cta"><button class="btn primary block" data-read="${startCh}">${lastRead?(I.play+"Continue — "+lastRead.ch.title):"Start reading"}</button></div>
 
   <div class="card tinted" style="margin-bottom:14px">
     <div class="between" style="margin-bottom:12px"><div><div class="eyebrow">Your progress</div><div style="font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-top:2px">${readCount} / ${total} chapters read</div></div>${ring(pct)}</div>
     <div class="faint" style="font-size:.8rem;line-height:1.6">
-      ${nextUnread?`Next unread: <b style="color:var(--text)">${nextUnread.title}</b> Â· `:""}${latestEarly?`Latest: <b style="color:var(--early)">${latestEarly.title}</b> (early access) Â· `:""}${s.chapters.filter(c=>!isReadable(chapterResolved(c))).length} locked for you.
+      ${nextUnread?`Next unread: <b style="color:var(--text)">${nextUnread.title}</b> · `:""}${latestEarly?`Latest: <b style="color:var(--early)">${latestEarly.title}</b> (early access) · `:""}${s.chapters.filter(c=>!isReadable(chapterResolved(c))).length} locked for you.
     </div>
   </div>
 
@@ -75,7 +75,7 @@ VIEWS.story = function(){
   <div class="section">
     <div class="section-head"><h2>Cast &amp; glossary</h2></div>
     <div class="card">
-      ${s.cast.map(c=>`<div style="padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--serif);font-weight:600;color:var(--s2)">${c.n}</span> <span class="faint" style="font-size:.82rem">â€” ${c.r}</span></div>`).join("")}
+      ${s.cast.map(c=>`<div style="padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--serif);font-weight:600;color:var(--s2)">${c.n}</span> <span class="faint" style="font-size:.82rem">— ${c.r}</span></div>`).join("")}
       <dl class="dl" style="margin-top:12px">${s.glossary.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl>
     </div>
   </div>
@@ -99,7 +99,7 @@ VIEWS.chapters = function(){
   return `
   <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
   <h1 class="page-title">Chapter Shelf</h1>
-  <p class="page-sub">${s.chapters.length} chapters Â· ${s.chapters.filter(c=>isReadable(chapterResolved(c))).length} readable for you now</p>
+  <p class="page-sub">${s.chapters.length} chapters · ${s.chapters.filter(c=>isReadable(chapterResolved(c))).length} readable for you now</p>
   <div class="seg story" style="margin:6px 0 18px">
     <button class="${view==='comfortable'?'active':''}" data-shelf-view="comfortable">Comfortable</button>
     <button class="${view==='compact'?'active':''}" data-shelf-view="compact">Compact</button>
@@ -108,7 +108,7 @@ VIEWS.chapters = function(){
   ${view==="arc"? Object.entries(arcs).map(([arc,chs])=>{
     const rd=chs.filter(c=>store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
     const lk=chs.filter(c=>!isReadable(chapterResolved(c))).length;
-    return `<div class="arc"><div class="arc-head"><h3>${arc}</h3><div class="arc-bar">${progressBar(rd/chs.length*100)}</div><span class="arc-meta">${rd}/${chs.length}${lk?` Â· ${lk} locked`:""}</span></div><div class="col-flex">${chs.map(renderRow).join("")}</div></div>`;
+    return `<div class="arc"><div class="arc-head"><h3>${arc}</h3><div class="arc-bar">${progressBar(rd/chs.length*100)}</div><span class="arc-meta">${rd}/${chs.length}${lk?` · ${lk} locked`:""}</span></div><div class="col-flex">${chs.map(renderRow).join("")}</div></div>`;
   }).join("") : `<div class="col-flex">${s.chapters.map(renderRow).join("")}</div>`}
   `;
 };
@@ -157,7 +157,7 @@ function readerShell(themeClass, inner, settings){
     <div class="reader-progress"><i id="rprog" style="width:0%"></i></div>
     <header class="reader-top" id="rtop">
       <button class="rback" data-nav="/story/${currentChapter.story.slug}/chapters" aria-label="Back">${I.chevL}</button>
-      <div class="ctx"><div class="s">${currentChapter.story.title} Â· Ch ${currentChapter.ch.n}</div><div class="c">${currentChapter.ch.title}</div></div>
+      <div class="ctx"><div class="s">${currentChapter.story.title} · Ch ${currentChapter.ch.n}</div><div class="c">${currentChapter.ch.title}</div></div>
       <button class="rset" data-sheet="settings" aria-label="Reader settings">${I.aa}</button>
     </header>
     <div class="reader-stage" id="rstage">${inner}</div>
@@ -179,7 +179,7 @@ function readerBar(){
 }
 function renderBlocks(blocks, chId){
   return blocks.map((b,i)=>{
-    if(b.t==="scene") return `<div class="scene">âœ¦ âœ¦ âœ¦</div>`;
+    if(b.t==="scene") return `<div class="scene">✦ ✦ ✦</div>`;
     if(b.t==="img") return `<figure data-fig="${b.fig}" style="cursor:pointer">${D.FIG[b.fig]||""}<figcaption>${b.cap||""}</figcaption></figure>`;
     if(b.t==="p"){
       const pc = paraComments(chId,i);
@@ -196,7 +196,7 @@ function readerFull(ch, story, index, r){
   const nr = next?chapterResolved(next):null;
   return readerShell(themeClass, `
     <h1 class="ch-title">${ch.title}</h1>
-    <div class="ch-by">${story.title} Â· Chapter ${ch.n} Â· ${ch.readTime} min Â· ${r.isEarly?'Early access until '+fmtDate(ch.publicDate):'Unlocked'}</div>
+    <div class="ch-by">${story.title} · Chapter ${ch.n} · ${ch.readTime} min · ${r.isEarly?'Early access until '+fmtDate(ch.publicDate):'Unlocked'}</div>
     ${ch.arc?`<div class="faint" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:24px">${ch.arc}</div>`:""}
     <div class="prose" id="prose">${renderBlocks(blocks, ch.id)}</div>
     ${endOfChapter(ch, story, next, nr)}
@@ -209,13 +209,13 @@ function readerPreview(ch, story, index, r){
   return readerShell(themeClass, `
     <div class="badge preview" style="margin-bottom:14px">${I.eye}Preview</div>
     <h1 class="ch-title">${ch.title}</h1>
-    <div class="ch-by">${story.title} Â· Chapter ${ch.n} Â· preview Â· ${ch.tier||"Aether Member"} to unlock full chapter</div>
+    <div class="ch-by">${story.title} · Chapter ${ch.n} · preview · ${ch.tier||"Aether Member"} to unlock full chapter</div>
     <div class="prose" id="prose">${renderBlocks(ch.preview||[], ch.id)}</div>
     <div class="preview-wall" style="${storyAccentVars(story)}">
       <div class="top"></div>
       <div class="inner">
         <h3>You've reached the end of the preview</h3>
-        <p>Unlock the full chapter â€” and ${countReadable()} others â€” to continue ${story.title}. The complete text loads only after access is verified; nothing is hidden behind a blur.</p>
+        <p>Unlock the full chapter — and ${countReadable()} others — to continue ${story.title}. The complete text loads only after access is verified; nothing is hidden behind a blur.</p>
         <div class="col-flex" style="gap:9px;max-width:340px;margin:0 auto">
           <button class="btn story block" data-lock="${ch.id}">${I.lockOpen}Unlock with ${ch.tier||"Aether Member"}</button>
           <button class="btn ghost block" data-sheet="redeem">${I.key}Redeem an access key</button>
@@ -229,7 +229,7 @@ function readerLocked(ch, story, index, r){
   return `<div class="locked-fallback" style="${storyAccentVars(story)}">
     <div class="emblem" style="width:84px;height:84px">${r.state==='expired'?I.lockOpen:r.state==='pending'?I.sync:r.state==='key'?I.key:I.lock}</div>
     <h1>${ch.title}</h1>
-    <div class="sub">${story.title} Â· Chapter ${ch.n}</div>
+    <div class="sub">${story.title} · Chapter ${ch.n}</div>
     <div class="card" style="max-width:420px;margin:0 auto 18px;text-align:left">
       <div class="ax ${accessTag(r)[0]}" style="font-size:1rem;margin-bottom:8px"><span class="ic" style="width:20px;height:20px">${accessTag(r)[2]}</span>${accessTag(r)[1]}</div>
       <p class="muted" style="font-size:.86rem;margin:0 0 4px">${reasonFor(ch,r)}</p>
@@ -247,28 +247,28 @@ function endOfChapter(ch, story, next, nr){
   const st=store.settings;
   const reac = REACTIONS; const mine = store.reactions[ch.id]?.picked;
   return `<div class="eoc">
-    <div class="done"><div class="orn">âœ¦</div><p>Chapter complete</p></div>
+    <div class="done"><div class="orn">✦</div><p>Chapter complete</p></div>
     ${st.showReactions?`<div class="faint center" style="font-size:.74rem;margin-bottom:10px">How did this chapter land?</div>
     <div class="reactions">${reac.map(rk=>{const n=(REACTION_SEED[ch.id]?.[rk.k]||0)+(mine===rk.k?1:0);return `<button class="react ${mine===rk.k?'picked':''}" data-react="${rk.k}"><span class="e">${rk.e}</span><span class="n">${n}</span></button>`;}).join("")}</div>`:""}
     <div class="between" style="max-width:420px;margin:0 auto 18px">
       <button class="btn sm ghost" data-act="reader-bookmark">${I.bookmark}Bookmark</button>
       <button class="btn sm ghost" data-act="reader-savequote">${I.quote}Save quote</button>
-      <button class="btn sm ghost" data-act="reader-markread">${store.readMarked[ch.id]?I.check:'âœ“'}Mark read</button>
+      <button class="btn sm ghost" data-act="reader-markread">${store.readMarked[ch.id]?I.check:'✓'}Mark read</button>
     </div>
     <div class="card tinted" style="max-width:440px;margin:0 auto">
-      ${next?`<div class="between"><div style="min-width:0"><div class="faint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em">Next chapter</div><div style="font-family:var(--serif);font-weight:600;margin-top:2px">${next.title}</div><div class="faint" style="font-size:.74rem;margin-top:2px">${axInline(nr)} Â· ${next.readTime} min</div></div>${isReadable(nr)?`<button class="btn sm story" data-read="${next.id}">${I.play}Read</button>`:`<button class="btn sm" data-lock="${next.id}">${accessTag(nr)[3]}</button>`}</div>`
+      ${next?`<div class="between"><div style="min-width:0"><div class="faint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em">Next chapter</div><div style="font-family:var(--serif);font-weight:600;margin-top:2px">${next.title}</div><div class="faint" style="font-size:.74rem;margin-top:2px">${axInline(nr)} · ${next.readTime} min</div></div>${isReadable(nr)?`<button class="btn sm story" data-read="${next.id}">${I.play}Read</button>`:`<button class="btn sm" data-lock="${next.id}">${accessTag(nr)[3]}</button>`}</div>`
       :`<div class="center"><div class="faint" style="font-size:.74rem">You've reached the latest chapter.</div><button class="btn sm" data-nav="/story/${story.slug}/chapters" style="margin-top:8px">${I.list}Back to shelf</button></div>`}
     </div>
   </div>`;
 }
-const REACTIONS=[{k:"heart",e:"â¤ï¸",l:"Love"},{k:"gasp",e:"ðŸ˜®",l:"Gasp"},{k:"theory",e:"ðŸ’¡",l:"Theory"},{k:"tear",e:"ðŸ˜¢",l:"Tears"},{k:"next",e:"ðŸ”¥",l:"Need next"}];
+const REACTIONS=[{k:"heart",e:"❤️",l:"Love"},{k:"gasp",e:"😮",l:"Gasp"},{k:"theory",e:"💡",l:"Theory"},{k:"tear",e:"😢",l:"Tears"},{k:"next",e:"🔥",l:"Need next"}];
 const REACTION_SEED={};
 
 function commentsBlock(chId){
   const list = (store.comments[chId]||[]).filter(c=>c.para===null||c.para===undefined);
   return `<div class="comments" id="cmtblock">
     <div class="section-head"><h2>Reader notes</h2><span class="faint" style="font-size:.74rem">${(store.comments[chId]||[]).length} total</span></div>
-    <form class="cmt-form" data-cmt-form="${chId}"><input name="name" placeholder="Your name" style="max-width:130px"><input name="text" placeholder="Add a note about this chapterâ€¦" required><button class="btn sm story" type="submit">${I.msg}Post</button></form>
+    <form class="cmt-form" data-cmt-form="${chId}"><input name="name" placeholder="Your name" style="max-width:130px"><input name="text" placeholder="Add a note about this chapter…" required><button class="btn sm story" type="submit">${I.msg}Post</button></form>
     <div>${list.slice().reverse().map(c=>commentHTML(c)).join("")||`<p class="faint" style="font-size:.82rem">Be the first to leave a note.</p>`}</div>
   </div>`;
 }

@@ -1,6 +1,6 @@
 window.SUBSCRIPTION_SITE_CONFIG = {
-  siteName: "Member Fiction Reader",
-  siteTagline: "Premium serial fiction member library",
+  siteName: "EvilArchives",
+  siteTagline: "Premium serial fiction archive",
   publicBaseUrl: "./",
 
   supabase: {
@@ -15,7 +15,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
   },
 
   providers: {
-    patreon: false,
+    patreon: true,
     kofi: false,
     paypal: false,
     discord: false
@@ -32,7 +32,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     enableStudioPreview: false,
     enableFixtureFallbackInProduction: false,
     enableLocalDemoReaderFeatures: false,
-    enablePatreonConnect: false,
+    enablePatreonConnect: true,
     enableAccessKeys: true,
     enableGoogleOAuth: true
   }

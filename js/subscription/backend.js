@@ -100,6 +100,22 @@ function buildBackendUpdates(stories){
   }));
   return rows.slice(-12).reverse();
 }
+async function loadSiteSettings(){
+  const client = getSupabase();
+  if (!client) return [];
+  try {
+    const { data, error } = await client
+      .from("site_settings")
+      .select("setting_key, setting_value")
+      .in("setting_key", ["site_identity", "site_name", "site_tagline", "meta_description"]);
+    if (error) throw error;
+    applySiteSettings(data || []);
+    return data || [];
+  } catch (err) {
+    console.warn("Unable to load site settings; using local site-config.js values.", err);
+    return [];
+  }
+}
 async function loadBackendLibrary(options = {}){
   const client = getSupabase();
   if (!client || backendState.loading) {
@@ -110,6 +126,7 @@ async function loadBackendLibrary(options = {}){
   backendState.loading = true;
   backendState.error = null;
   try {
+    await loadSiteSettings();
     const { data: storyRows, error: storyError } = await client
       .from("stories")
       .select("*")

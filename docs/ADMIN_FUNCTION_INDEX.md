@@ -91,6 +91,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 2222 | `saveProviderMapping(id, record)` | Persists changes to Supabase or updates local state. |
 | 2234 | `getSettings()` | Admin CMS helper used by the single-file admin app. |
 | 2238 | `saveSetting(id, record)` | Persists changes to Supabase or updates local state. |
+| 2250 | `upsertSettingByKey(key, value)` | Persists a named site setting without creating duplicate keys. |
 | 2249 | `deleteSetting(id)` | Deletes/removes the selected item or UI state. |
 | 2255 | `getAuthorProfile()` | Coordinates authentication/session behavior. |
 | 2262 | `saveAuthorProfile(id, record)` | Persists changes to Supabase or updates local state. |
@@ -139,6 +140,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 3408 | `deleteMap(id)` | Deletes/removes the selected item or UI state. |
 | 3425 | `settingForm(id = null)` | Admin CMS helper used by the single-file admin app. |
 | 3452 | `saveSetting(id)` | Persists changes to Supabase or updates local state. |
+| 3496 | `saveSiteIdentity()` | Persists the production reader name/tagline/meta settings. |
 | 3477 | `deleteSetting(id)` | Deletes/removes the selected item or UI state. |
 | 3494 | `authorLinkForm(profileId, id = null)` | Coordinates authentication/session behavior. |
 | 3526 | `saveAuthorLink(profileId, id)` | Persists changes to Supabase or updates local state. |
@@ -169,4 +171,3 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 4739 | `update()` | Persists changes to Supabase or updates local state. |
 | 4740 | `draw()` | Admin CMS helper used by the single-file admin app. |
 | 4744 | `animate()` | Admin CMS helper used by the single-file admin app. |
-

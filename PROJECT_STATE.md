@@ -2,6 +2,81 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-04 00:48 Asia/Kolkata — Manual browser verification for EvilArchives reader polish
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- admin
+
+Files touched:
+- `index.html`
+- `admin.html`
+- `styles.css`
+- `js/subscription/config.js`
+- `js/subscription/backend.js`
+- `js/subscription/utils.js`
+- `js/subscription/chrome.js`
+- `js/subscription/events.js`
+- `js/subscription/sheets.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/site-config.js`
+- `database/sql/2026-07-04_site_settings_identity_unique.sql`
+- `supabase/migrations/20260704004800_site_settings_identity_unique.sql`
+
+Summary:
+- Mojibake strings were corrected in active reader/admin files.
+- Site identity was changed to `EvilArchives` and persisted in `site_settings.site_identity`.
+- Reader cover art now prefers real story cover URLs and falls back to generated SVG art on image load failure.
+- Admin settings now has a Reader Identity form for production-facing site metadata.
+- `site_settings.setting_key` now has a unique index to avoid duplicate global settings.
+
+Remaining work:
+- Open the reader in a normal browser session and confirm the header, updates feed, chapter metadata, and support pages show proper punctuation/emoji with no mojibake.
+- Open Admin CMS Settings and confirm the Reader Identity form saves/refreshes as expected.
+
+Risks / notes:
+- The in-app browser could not complete localhost verification due browser-side blocking/refusal, so manual browser verification is still needed.
+- Supabase cover URL was directly verified with HTTP 200.
+
+Verification needed:
+- Reader: home/library/story/chapter/vault/support pages.
+- Admin: Settings page Reader Identity form.
+
+## 2026-07-03 23:03 Asia/Kolkata — Patreon webhook/native update follow-up
+
+Status: TODO
+
+Area:
+- database
+- reader
+
+Files touched:
+- `js/subscription/site-config.js`
+- `supabase/functions/_shared/patreon.ts`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+
+Summary:
+- Patreon OAuth/connect was enabled and title-based tier matching was deployed for `Resident Licker` and `Resident Tyrant`.
+- The generic `provider-webhook` function was intentionally not reworked yet because the user asked to check item 6 after the rest was done.
+
+Remaining work:
+- Review whether Patreon-native webhook payloads should be parsed directly instead of requiring the current normalized `provider`, `provider_user_id`, `provider_tier_id`, and `status` payload shape.
+- If needed, update `provider-webhook` to verify Patreon signatures and map Patreon webhook events to entitlement grants/revokes.
+
+Risks / notes:
+- OAuth + manual resync should use `patreon-oauth-*` and `sync-provider-entitlements`.
+- Automatic Patreon revokes/pledge changes may still need webhook adaptation if no external normalizer sends the expected generic payload.
+
+Verification needed:
+- Perform a real reader OAuth connect with a Patreon account in `Resident Licker` or `Resident Tyrant`.
+- Confirm `/vault` shows the entitlement and gated chapters unlock.
+
 ## 2026-06-29 01:06 Asia/Kolkata - Clean up `aether-data.js`
 
 Status: DONE

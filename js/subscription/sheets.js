@@ -69,7 +69,7 @@ function sheetUpdatePassword(){
 function sheetLock(chId){
   const f=byId(chId); if(!f) return "<p>Not found.</p>"; const {ch,story}=f; const r=chapterResolved(ch);
   return `<span class="close-x" data-act="close-sheet">${I.x}</span>
-  <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px"><span class="ax ${accessTag(r)[0]}" style="font-size:1.5rem"><span class="ic" style="width:28px;height:28px">${accessTag(r)[2]}</span></span><div><h2>${ch.title}</h2><div class="sheet-sub" style="margin:0">${story.title} Â· Chapter ${ch.n}</div></div></div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px"><span class="ax ${accessTag(r)[0]}" style="font-size:1.5rem"><span class="ic" style="width:28px;height:28px">${accessTag(r)[2]}</span></span><div><h2>${ch.title}</h2><div class="sheet-sub" style="margin:0">${story.title} · Chapter ${ch.n}</div></div></div>
   <div class="card" style="margin-bottom:14px"><p class="muted" style="font-size:.86rem;margin:0">${reasonFor(ch,r)}</p></div>
   <div class="col-flex" style="gap:9px">
     ${ch.state==='preview'?`<button class="btn story block" data-preview="${ch.id}" data-act="close-sheet">${I.eye}Read the preview</button>`:""}
@@ -93,7 +93,7 @@ function sheetContext(){
   const f=currentChapter; if(!f) return "<p>Open a chapter first.</p>"; const {ch,story,index}=f;
   const prog=store.progress[ch.id];
   const next=story.chapters[index+1]; const nr=next?chapterResolved(next):null;
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>${ch.title}</h2><div class="sheet-sub">${story.title} Â· Chapter ${ch.n} Â· ${ch.arc||""}</div>
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>${ch.title}</h2><div class="sheet-sub">${story.title} · Chapter ${ch.n} · ${ch.arc||""}</div>
   <div class="card" style="margin-bottom:12px">${prog?`<div class="between"><span class="faint" style="font-size:.78rem">Progress</span><span style="font-size:.8rem;font-weight:600">${prog.pct}%</span></div>${progressBar(prog.pct)}`:`<p class="faint" style="font-size:.8rem;margin:0">Not started. Est. ${ch.readTime} min read.</p>`}</div>
   <div class="col-flex" style="gap:8px">
     <button class="btn ghost block" data-act="reader-bookmark">${I.bookmark}${store.bookmarks.find(b=>b.chapterId===ch.id)?'Remove bookmark':'Bookmark chapter'}</button>
@@ -109,7 +109,7 @@ function sheetParaComments(chId, p){
   const list=paraComments(chId,p);
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Paragraph note</h2><div class="sheet-sub">${list.length} note${list.length===1?'':'s'} on this paragraph</div>
   <div style="margin-bottom:14px">${list.map(commentHTML).join("")||`<p class="faint" style="font-size:.82rem">No notes yet.</p>`}</div>
-  <form data-para-form="${chId}" data-para-index="${p}"><div class="col-flex"><input name="name" placeholder="Your name" style="max-width:140px"><input name="text" placeholder="Add a note on this paragraphâ€¦" required><button class="btn sm story" type="submit">${I.msg}Post</button></div></form>`;
+  <form data-para-form="${chId}" data-para-index="${p}"><div class="col-flex"><input name="name" placeholder="Your name" style="max-width:140px"><input name="text" placeholder="Add a note on this paragraph…" required><button class="btn sm story" type="submit">${I.msg}Post</button></div></form>`;
 }
 function sheetImage(fig, cap){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><div style="border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">${D.FIG[fig]||""}</div><p class="muted center" style="font-size:.82rem;margin-top:10px;font-style:italic">${cap||""}</p>`;

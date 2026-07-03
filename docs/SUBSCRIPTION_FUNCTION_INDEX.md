@@ -8,14 +8,16 @@ Generated from the current codebase. One-line descriptions are intentionally con
 |---:|---|---|
 | 5 | `MemStore(()` | Helper used by this module. |
 | 6 | `getStore()` | Helper used by this module. |
-| 54 | `feature(name, fallback)` | Helper used by this module. |
-| 55 | `providerEnabled(name)` | Helper used by this module. |
-| 56 | `googleEnabled()` | Helper used by this module. |
-| 57 | `emailPasswordEnabled()` | Coordinates authentication/session behavior. |
-| 58 | `patreonEnabled()` | Helper used by this module. |
-| 59 | `accessKeysEnabled()` | Helper used by this module. |
-| 60 | `mainArchiveEnabled()` | Helper used by this module. |
-| 61 | `configuredSupabase()` | Helper used by this module. |
+| 55 | `settingText(value, fallback)` | Normalizes site setting values from JSON or strings. |
+| 63 | `applySiteSettings(rows)` | Applies `site_settings` identity values to the reader name, tagline, title, and meta description. |
+| 74 | `feature(name, fallback)` | Helper used by this module. |
+| 75 | `providerEnabled(name)` | Helper used by this module. |
+| 76 | `googleEnabled()` | Helper used by this module. |
+| 77 | `emailPasswordEnabled()` | Coordinates authentication/session behavior. |
+| 78 | `patreonEnabled()` | Helper used by this module. |
+| 79 | `accessKeysEnabled()` | Helper used by this module. |
+| 80 | `mainArchiveEnabled()` | Helper used by this module. |
+| 81 | `configuredSupabase()` | Helper used by this module. |
 | 62 | `byId(id)` | Returns a DOM element by id. |
 | 64 | `now()` | Helper used by this module. |
 
@@ -156,8 +158,9 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 48 | `textToBlocks(value)` | Helper used by this module. |
 | 63 | `normalizeBackendChapter(row, story)` | Handles chapter catalog, reader, or chapter form behavior. |
 | 88 | `buildBackendUpdates(stories)` | Persists changes to Supabase or updates local state. |
-| 103 | `loadBackendLibrary(options = {})` | Loads fresh data/state from Supabase or local runtime state. |
-| 151 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
+| 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
+| 119 | `loadBackendLibrary(options = {})` | Loads fresh data/state from Supabase or local runtime state. |
+| 168 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
 
 ## `js/subscription/utils.js`
 
@@ -317,4 +320,3 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | Line | Function | Purpose |
 |---:|---|---|
 | 5 | `init()` | Initializes this module or application surface. |
-

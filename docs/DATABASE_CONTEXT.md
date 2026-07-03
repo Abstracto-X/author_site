@@ -8,7 +8,28 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Application schema: `public`; storage metadata/policies live under `storage`.
 - Browser clients use the anon key only. Admin writes are protected by RLS policies and `public.is_admin()`.
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
+- Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates `user_entitlements` from active `provider_tier_mappings`.
+- Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; this allows configured title mappings such as `Resident Licker` and `Resident Tyrant` while preserving ID-based mappings when IDs are known.
 - After durable schema changes, run `NOTIFY pgrst, 'reload schema';`.
+
+## Configured access/provider tiers
+
+As of 2026-07-03, the linked project has these active Patreon-facing access tiers:
+
+| Internal slug | Internal name | Rank | Provider | Provider tier mapping |
+|---|---|---:|---|---|
+| `resident-licker` | Resident Licker | 10 | `patreon` | `Resident Licker` |
+| `resident-tyrant` | Resident Tyrant | 20 | `patreon` | `Resident Tyrant` |
+
+## Configured site settings
+
+The reader now consumes `public.site_settings` for production site identity:
+
+| Setting key | Shape | Purpose |
+|---|---|---|
+| `site_identity` | JSON object with `siteName`, `siteTagline`, `pageTitle`, and `metaDescription` | Controls the reader/admin-facing site name and browser metadata. Current site name: `EvilArchives`. |
+
+`site_settings.setting_key` is protected by the unique index `site_settings_setting_key_key` so Admin CMS saves update the existing setting instead of creating duplicates.
 
 ## Storage buckets
 
@@ -943,4 +964,3 @@ $function$
 ```
 
 </details>
-
