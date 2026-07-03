@@ -44,8 +44,26 @@ async function refreshProfile(){
 }
 function persona(){
   if (!authState.user) return Object.assign({}, PERSONA_ACCESS.anon);
-  const level = entitlementLevel();
-  if (level > 0) return { level, signedIn:true, provider:"Supabase", tier: level > 1 ? "Archivist Tier" : "Aether Member", since:"" };
+  const active = activeEntitlements();
+  if (active.length > 0) {
+    // Sort active entitlements by tier_rank descending to get the best tier
+    const sorted = [...active].sort((a, b) => {
+      const rA = Number(a.tier_rank || 0);
+      const rB = Number(b.tier_rank || 0);
+      return rB - rA;
+    });
+    const best = sorted[0];
+    return {
+      level: best.tier_rank || 1,
+      signedIn: true,
+      provider: best.provider || "Supabase",
+      tier: best.tier_name || "Aether Member",
+      tierRank: best.tier_rank || 10,
+      tierSlug: best.tier_slug || "aether-member",
+      validUntil: best.valid_until || null,
+      since: best.created_at || ""
+    };
+  }
   if (store.grantedKey) return Object.assign({}, PERSONA_ACCESS["key-holder"], { signedIn:true });
   if (store.providerPending) return Object.assign({}, PERSONA_ACCESS.pending, { signedIn:true });
   return Object.assign({}, PERSONA_ACCESS["no-access"], { signedIn:true });
@@ -59,9 +77,14 @@ async function refreshEntitlements(){
     authState.entitlements = Array.isArray(data) ? data : [];
   } catch (err) {
     try {
-      const { data, error } = await client.from("user_entitlements").select("*, reader_access_tiers(name, slug)").eq("user_id", authState.user.id);
+      const { data, error } = await client.from("user_entitlements").select("*, reader_access_tiers(name, slug, tier_rank)").eq("user_id", authState.user.id);
       if (error) throw error;
-      authState.entitlements = (data || []).map(row => ({ ...row, tier_name: row.reader_access_tiers?.name || row.tier_name }));
+      authState.entitlements = (data || []).map(row => ({
+        ...row,
+        tier_name: row.reader_access_tiers?.name || row.tier_name,
+        tier_slug: row.reader_access_tiers?.slug || row.tier_slug,
+        tier_rank: row.reader_access_tiers?.tier_rank || row.tier_rank
+      }));
     } catch (fallbackErr) {
       authState.entitlements = [];
       authState.error = fallbackErr;

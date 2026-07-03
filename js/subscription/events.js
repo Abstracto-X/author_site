@@ -96,9 +96,8 @@ function setupReader(){
   // tap zones
   if(stage && !stage.dataset.wired){ stage.dataset.wired="1"; stage.addEventListener("click",(e)=>{
     if(e.target.closest("button,a,figure,.pchip,.react,input,textarea,.cmt-form")) return;
-    const x=e.clientX/window.innerWidth;
     if(settings.focusMode){ document.getElementById("reader").classList.toggle("ui-on"); return; }
-    if(x<0.28){ goReaderChapter(-1); } else if(x>0.72){ goReaderChapter(1); } else { top&&top.classList.toggle("hidden"); }
+    top&&top.classList.toggle("hidden");
   }); }
 }
 let readerScrollHandler=null;
@@ -129,6 +128,7 @@ function delegate(){
     if (t.dataset.filter!=null){ const k=t.dataset.filter; const i=store.filters.chips.indexOf(k); if(i>=0) store.filters.chips.splice(i,1); else store.filters.chips.push(k); saveStore(); renderHeaderless(); return; }
     if (t.dataset.toggle!=null){ store.settings[t.dataset.toggle]=!store.settings[t.dataset.toggle]; saveStore(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(route.name==="read") renderReaderOnly(); return; }
     if (t.dataset.shelfView!=null){ store.filters.shelfView=t.dataset.shelfView; saveStore(); render(); return; }
+    if (t.dataset.chapterSort!=null){ store.filters.chapterSort=t.dataset.chapterSort; saveStore(); render(); return; }
     if (t.dataset.setTheme!=null){ store.settings.readerTheme=t.dataset.setTheme; saveStore(); openSheet(currentSheet.builder,currentSheet.opts); renderReaderOnly(); return; }
     if (t.dataset.setPreset!=null){ store.settings.preset=t.dataset.setPreset; if(t.dataset.setPreset==="dyslexia"){/*keep*/} saveStore(); openSheet(currentSheet.builder,currentSheet.opts); renderReaderOnly(); return; }
     if (t.dataset.fig!=null){ openSheet(()=>sheetImage(t.dataset.fig, t.closest("figure")?.querySelector("figcaption")?.textContent)); return; }

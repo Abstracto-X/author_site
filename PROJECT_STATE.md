@@ -1,4 +1,4 @@
-﻿# Project State
+# Project State
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
@@ -38,13 +38,17 @@ Summary:
 Remaining work:
 - Open the reader in a normal browser session and confirm the header, updates feed, chapter metadata, and support pages show proper punctuation/emoji with no mojibake.
 - Open Admin CMS Settings and confirm the Reader Identity form saves/refreshes as expected.
+- Open the Chapter Catalog page (from the story view) and verify that the chapters are displayed in a clean grid format, sorted newest first by default, with locked chapters highlighted in a gold/orange glowing card border. Verify clicking anywhere on the card opens/unlocks the chapter correctly.
+- Open a story details page (Story Hub) on desktop and confirm that the two-column layout renders correctly: left sidebar containing cover, title, progress bar, follow button; right column containing tagline, Continue CTA, quicklinks, detailed progress card, latest chapters, and cast & glossary. Confirm that the Cast displays characters added in the DB.
+- Confirm word counts are shown instead of reading minutes on all screens (story detail latest chapters, tonights reading, catalog cards, reader headers, end-of-chapter next card, and sheets settings).
+- Verify the Library page has all quick select chips and Collections link removed.
 
 Risks / notes:
 - The in-app browser could not complete localhost verification due browser-side blocking/refusal, so manual browser verification is still needed.
 - Supabase cover URL was directly verified with HTTP 200.
 
 Verification needed:
-- Reader: home/library/story/chapter/vault/support pages.
+- Reader: redesigned home layout, library/story/chapter/vault/support pages.
 - Admin: Settings page Reader Identity form.
 
 ## 2026-07-03 23:03 Asia/Kolkata — Patreon webhook/native update follow-up

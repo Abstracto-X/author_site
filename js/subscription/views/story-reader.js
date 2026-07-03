@@ -8,110 +8,260 @@ VIEWS.story = function(){
   const r=s.chapters.map(chapterResolved);
   const readCount=s.chapters.filter((c,i)=>store.readMarked[c.id]|| (store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
   const total=s.chapters.length;
+  const followed=store.followed.includes(s.id);
+
   if (!total) {
-    const followed=store.followed.includes(s.id);
     return `
-  <div class="hero" style="${storyAccentVars(s)}">
-    <div class="bg">${coverArt(s)}</div><div class="grad"></div>
-    <div class="inner">
-      <div class="mini-cover">${coverArt(s)}</div>
-      <div class="htxt"><div class="eyebrow">${s.genre} &middot; ${s.status}</div><h1>${s.title}</h1><div class="author">by ${s.author}</div></div>
+<div class="story-hub" style="${storyAccentVars(s)}">
+  <!-- Left Sidebar -->
+  <div class="story-sidebar">
+    <div class="story-cover-card">
+      ${coverArt(s)}
+    </div>
+    <div class="story-sidebar-meta">
+      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
+      <h1 class="story-sidebar-title">${s.title}</h1>
+      <div class="author">by ${s.author}</div>
+      <div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>
+    </div>
+    <div class="story-sidebar-actions col-flex" style="gap: 8px; width: 100%;">
+      <button class="btn block ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button>
     </div>
   </div>
-  <p class="muted" style="font-family:var(--serif);font-size:1.02rem;line-height:1.6;margin:0 2px 16px">${s.tagline}</p>
-  <div class="empty"><div class="em">${I.book}</div><h3>No chapters published yet</h3><p>This story is live in the backend, but its chapter shelf is empty. Publish a chapter in the admin CMS to make it readable here.</p></div>
-  <div class="section"><div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div></div>`;
+
+  <!-- Right Main Column -->
+  <div class="story-main">
+    <div class="story-mobile-header">
+      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
+      <h1 class="story-title">${s.title}</h1>
+      <div class="author">by ${s.author}</div>
+      <div class="tags" style="margin-top: 8px;">${s.tags.map(t=>badge("",t)).join("")}</div>
+    </div>
+
+    <div class="story-tagline-section">
+      <p class="story-tagline">${s.tagline}</p>
+    </div>
+
+    <div class="empty" style="margin-top: 16px;">
+      <div class="em">${I.book}</div>
+      <h3>No chapters published yet</h3>
+      <p>This story is live in the backend, but its chapter catalog is empty. Publish a chapter in the admin CMS to make it readable here.</p>
+    </div>
+
+    <div class="section story-mobile-only">
+      <div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div>
+      <p class="faint" style="font-size:.78rem;margin-top:-4px">${followed?"We'll notify you when new chapters unlock for you.":"Get notified when new chapters unlock for your access."}</p>
+    </div>
+  </div>
+</div>`;
   }
+
   const pct=Math.round(readCount/total*100);
   const nextUnread=s.chapters.find(c=>!(store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)));
   const latestEarly=s.chapters.find(c=>c.state==="early");
-  const followed=store.followed.includes(s.id);
   const firstFree=s.chapters.find(c=>c.state==="free");
   const lastRead=activeReads().find(x=>x.story.id===s.id);
   const startCh = lastRead?.ch.id || (firstFree?.id) || s.chapters[0].id;
-  const startR = chapterResolved(byId(startCh).ch);
+  
   return `
-  <div class="hero" style="${storyAccentVars(s)}">
-    <div class="bg">${coverArt(s)}</div><div class="grad"></div>
-    <div class="inner">
-      <div class="mini-cover">${coverArt(s)}</div>
-      <div class="htxt">
-        <div class="eyebrow">${s.genre} · ${s.status}</div>
-        <h1>${s.title}</h1>
-        <div class="author">by ${s.author}</div>
-        <div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>
+<div class="story-hub" style="${storyAccentVars(s)}">
+  <!-- Left Sidebar -->
+  <div class="story-sidebar">
+    <div class="story-cover-card">
+      ${coverArt(s)}
+    </div>
+    <div class="story-sidebar-meta">
+      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
+      <h1 class="story-sidebar-title">${s.title}</h1>
+      <div class="author">by ${s.author}</div>
+      <div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>
+    </div>
+    
+    <div class="story-sidebar-progress card tinted">
+      <div class="between" style="align-items: center; margin-bottom: 8px;">
+        <span class="faint" style="font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;">Your progress</span>
+        <span style="font-family: var(--serif); font-size: .84rem; font-weight: 600;">${readCount}/${total} read</span>
+      </div>
+      ${progressBar(pct)}
+    </div>
+
+    <div class="story-sidebar-actions col-flex" style="gap: 8px; width: 100%;">
+      <button class="btn block ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button>
+      <button class="btn ghost block" data-nav="/story/${s.slug}/chapters">${I.list}All chapters</button>
+    </div>
+  </div>
+
+  <!-- Right Main Column -->
+  <div class="story-main">
+    <div class="story-mobile-header">
+      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
+      <h1 class="story-title">${s.title}</h1>
+      <div class="author">by ${s.author}</div>
+      <div class="tags" style="margin-top: 8px;">${s.tags.map(t=>badge("",t)).join("")}</div>
+    </div>
+
+    <div class="story-tagline-section">
+      <p class="story-tagline">${s.tagline}</p>
+    </div>
+
+    <div class="story-actions-group">
+      <div class="primary-cta-wrap">
+        <button class="btn primary block lg-cta" data-read="${startCh}">
+          ${lastRead ? `${I.play} Continue &mdash; ${lastRead.ch.title}` : `${I.play} Start reading`}
+        </button>
+      </div>
+      
+      <div class="quicklinks" style="margin-top: 12px; margin-bottom: 24px;">
+        <a data-read="${firstFree?.id||s.chapters[0].id}">${I.play}<span>Chapter 1</span><small>From the beginning</small></a>
+        <a data-read="${startCh}">${I.book}<span>Continue</span><small>${lastRead?lastRead.ch.title:"Where you left off"}</small></a>
+        <a data-nav="/story/${s.slug}/recap">${I.list}<span>Recap</span><small>Catch up first</small></a>
+        <a data-nav="/story/${s.slug}/extras">${I.spark}<span>Extras</span><small>Bonus materials</small></a>
       </div>
     </div>
-  </div>
-  <p class="muted" style="font-family:var(--serif);font-size:1.02rem;line-height:1.6;margin:0 2px 16px">${s.tagline}</p>
 
-  <div class="sticky-cta"><button class="btn primary block" data-read="${startCh}">${lastRead?(I.play+"Continue — "+lastRead.ch.title):"Start reading"}</button></div>
-
-  <div class="card tinted" style="margin-bottom:14px">
-    <div class="between" style="margin-bottom:12px"><div><div class="eyebrow">Your progress</div><div style="font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-top:2px">${readCount} / ${total} chapters read</div></div>${ring(pct)}</div>
-    <div class="faint" style="font-size:.8rem;line-height:1.6">
-      ${nextUnread?`Next unread: <b style="color:var(--text)">${nextUnread.title}</b> · `:""}${latestEarly?`Latest: <b style="color:var(--early)">${latestEarly.title}</b> (early access) · `:""}${s.chapters.filter(c=>!isReadable(chapterResolved(c))).length} locked for you.
+    <div class="card tinted" style="margin-bottom: 24px;">
+      <div class="between" style="align-items: center; gap: 16px;">
+        <div>
+          <div class="eyebrow" style="font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;">Detailed Progress</div>
+          <div style="font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-top:4px">${readCount} / ${total} chapters read</div>
+          <div class="faint" style="font-size:.8rem;line-height:1.6;margin-top:6px;">
+            ${nextUnread?`Next unread: <b style="color:var(--text)">${nextUnread.title}</b> &middot; `:""}${latestEarly?`Latest: <b style="color:var(--early)">${latestEarly.title}</b> (early access) &middot; `:""}${s.chapters.filter(c=>!isReadable(chapterResolved(c))).length} locked.
+          </div>
+        </div>
+        <div>
+          ${ring(pct)}
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="section-head"><h2>Where should I start?</h2></div>
-  <div class="quicklinks" style="margin-bottom:18px">
-    <a data-read="${firstFree?.id||s.chapters[0].id}">${I.play}<span>Chapter 1</span><small>From the beginning</small></a>
-    <a data-read="${startCh}">${I.book}<span>Continue</span><small>${lastRead?lastRead.ch.title:"Where you left off"}</small></a>
-    <a data-nav="/story/${s.slug}/recap">${I.list}<span>Recap</span><small>Catch up first</small></a>
-    <a data-nav="/story/${s.slug}/extras">${I.spark}<span>Extras</span><small>Bonus materials</small></a>
-  </div>
-
-  <div class="section">
-    <div class="section-head"><h2>Latest chapters</h2><a class="section-link" data-nav="/story/${s.slug}/chapters">Full shelf ${I.chevR}</a></div>
-    <div class="col-flex">${s.chapters.slice(-3).reverse().map(c=>chapterRow(c,s)).join("")}</div>
-  </div>
-
-  <div class="section">
-    <div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div>
-    <p class="faint" style="font-size:.78rem;margin-top:-4px">${followed?"We'll notify you when new chapters unlock for you.":"Get notified when new chapters unlock for your access."}</p>
-  </div>
-
-  <div class="section">
-    <div class="section-head"><h2>Cast &amp; glossary</h2></div>
-    <div class="card">
-      ${s.cast.map(c=>`<div style="padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--serif);font-weight:600;color:var(--s2)">${c.n}</span> <span class="faint" style="font-size:.82rem">— ${c.r}</span></div>`).join("")}
-      <dl class="dl" style="margin-top:12px">${s.glossary.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl>
+    <div class="section">
+      <div class="section-head">
+        <h2>Latest chapters</h2>
+        <a class="section-link" data-nav="/story/${s.slug}/chapters">All chapters ${I.chevR}</a>
+      </div>
+      <div class="col-flex">
+        ${s.chapters.slice(-3).reverse().map(c=>chapterRow(c,s)).join("")}
+      </div>
     </div>
+
+    <div class="section story-mobile-only">
+      <div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div>
+      <p class="faint" style="font-size:.78rem;margin-top:-4px">${followed?"We'll notify you when new chapters unlock for you.":"Get notified when new chapters unlock for your access."}</p>
+    </div>
+
+    ${(s.cast.length > 0 || s.glossary.length > 0) ? `
+    <div class="section">
+      <div class="section-head"><h2>Cast &amp; glossary</h2></div>
+      ${s.cast.length > 0 ? `
+      <div class="cast-grid" style="margin-bottom:24px;">
+        ${s.cast.map(c=>`
+          <div class="cast-tile">
+            ${c.img ? 
+              `<img src="${c.img}" alt="${c.n}" onerror="this.nextElementSibling.style.display='grid';this.remove();" />` : 
+              ''
+            }
+            <div class="cast-fallback" style="display:${c.img ? 'none' : 'grid'}">
+              ${esc(c.n.slice(0, 1).toUpperCase())}
+            </div>
+            <div class="cast-label">
+              <div>${c.n}</div>
+              <div class="cast-role">${c.r}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      ` : ''}
+      ${s.glossary.length > 0 ? `
+      <div class="card">
+        <dl class="dl">${s.glossary.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl>
+      </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
   </div>
-  ${mainArchiveEnabled()?``:""}
-  `;
+</div>`;
 };
 
-/* ============ CHAPTER SHELF ============ */
+/* ============ CHAPTER CATALOG ============ */
 VIEWS.chapters = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story");
   setStoryAccent(s);
-  const view = store.filters.shelfView || "comfortable";
+  
   if (!s.chapters.length) return `
   <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
-  <h1 class="page-title">Chapter Shelf</h1>
+  <h1 class="page-title">Chapter Catalog</h1>
   <p class="page-sub">0 chapters published.</p>
-  <div class="empty"><div class="em">${I.book}</div><h3>No chapters yet</h3><p>The story is published, but no chapter rows are published for it yet.</p></div>`;
-  // group by arc
-  const arcs={}; s.chapters.forEach(c=>{ (arcs[c.arc]=arcs[c.arc]||[]).push(c); });
-  const renderRow = c => chapterRow(c,s);
+  <div class="empty"><div class="em">${I.book}</div><h3>No chapters yet</h3><p>The story is published, but no chapters are published for it yet.</p></div>`;
+
+  // Default order is Newest first (descending)
+  const chapters = [...s.chapters].reverse();
+  
   return `
   <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
-  <h1 class="page-title">Chapter Shelf</h1>
+  <h1 class="page-title">Chapter Catalog</h1>
   <p class="page-sub">${s.chapters.length} chapters · ${s.chapters.filter(c=>isReadable(chapterResolved(c))).length} readable for you now</p>
-  <div class="seg story" style="margin:6px 0 18px">
-    <button class="${view==='comfortable'?'active':''}" data-shelf-view="comfortable">Comfortable</button>
-    <button class="${view==='compact'?'active':''}" data-shelf-view="compact">Compact</button>
-    <button class="${view==='arc'?'active':''}" data-shelf-view="arc">By arc</button>
+  
+  <div class="chapter-catalog-grid">
+    ${chapters.map(c => chapterGridCard(c, s)).join("")}
   </div>
-  ${view==="arc"? Object.entries(arcs).map(([arc,chs])=>{
-    const rd=chs.filter(c=>store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
-    const lk=chs.filter(c=>!isReadable(chapterResolved(c))).length;
-    return `<div class="arc"><div class="arc-head"><h3>${arc}</h3><div class="arc-bar">${progressBar(rd/chs.length*100)}</div><span class="arc-meta">${rd}/${chs.length}${lk?` · ${lk} locked`:""}</span></div><div class="col-flex">${chs.map(renderRow).join("")}</div></div>`;
-  }).join("") : `<div class="col-flex">${s.chapters.map(renderRow).join("")}</div>`}
   `;
 };
+
+function getLockTierClass(ch) {
+  const t = String(ch.tier || ch.required_tier_name || "").toLowerCase().trim();
+  if (t.includes("tyrant")) return "tier-tyrant";
+  if (t.includes("licker")) return "tier-licker";
+  return "tier-standard";
+}
+
+function getLockColor(ch) {
+  const t = String(ch.tier || ch.required_tier_name || "").toLowerCase().trim();
+  if (t.includes("tyrant")) return "#ffc107";
+  if (t.includes("licker")) return "#9a7ed1";
+  return "rgba(255, 255, 255, 0.35)";
+}
+
+function chapterGridCard(ch, story) {
+  const r = chapterResolved(ch);
+  const prog = store.progress[ch.id];
+  const read = store.readMarked[ch.id] || (prog && prog.pct >= 100);
+  const now_ = prog && prog.pct > 0 && prog.pct < 100;
+  const illus = hasImages(ch);
+  const locked = !isReadable(r);
+  const act = isReadable(r) ? `data-read="${ch.id}"` : (r.state === 'preview' ? `data-preview="${ch.id}"` : `data-lock="${ch.id}"`);
+  
+  const statusIcon = read
+    ? `<span style="color:var(--good); display:inline-flex;">${I.check}</span>`
+    : (locked
+      ? `<span style="color:${getLockColor(ch)}; display:inline-flex;">${I.lock}</span>`
+      : `<span style="opacity:0.35; display:inline-flex;">${I.book}</span>`);
+  
+  const tierClass = locked ? getLockTierClass(ch) : "";
+  
+  return `
+  <div class="chapter-card ${read?'read':''} ${locked?'locked':''} ${tierClass} ${now_?'now':''}" style="${story?storyAccentVars(story):''}" ${act}>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; width:100%;">
+      <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border-2); color:var(--text-dim);">
+        ${statusIcon}
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        ${locked && ch.required_tier_name ? `<span class="badge ${tierClass}" style="font-size:0.68rem; padding:2px 8px; border-radius:12px; border:1px solid currentColor;">${ch.required_tier_name}</span>` : ''}
+        ${r.isEarly ? `<span class="badge early" style="background:rgba(224,138,74,0.12); color:var(--early); border:1px solid rgba(224,138,74,0.2); font-size:0.68rem; padding:2px 8px; border-radius:12px;">Early</span>` : ''}
+        ${illus ? `<span class="badge illus" style="background:rgba(111,182,201,0.12); color:var(--frost, #6fb6c9); border:1px solid rgba(111,182,201,0.2); font-size:0.68rem; padding:2px 8px; border-radius:12px;">Illus</span>` : ''}
+      </div>
+    </div>
+    <div class="chapter-card-body" style="display:flex; flex-direction:column; flex-grow:1;">
+      <div class="chapter-card-title">${ch.title}</div>
+      <div class="chapter-card-meta">
+        <span style="display:inline-flex; align-items:center; gap:4px;">${icon('clock')}${ch.wordCount || (ch.readTime * 220)} words</span>
+        ${ch.state === 'key' ? `<span style="color:var(--key); display:inline-flex; align-items:center; gap:4px;">${icon('key')}Key</span>` : ''}
+      </div>
+      ${locked && reasonFor(ch, r) ? `<div class="chapter-card-reason">${reasonFor(ch, r)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
 function chapterRow(ch, story){
   const r=chapterResolved(ch);
   const prog=store.progress[ch.id];
@@ -119,18 +269,33 @@ function chapterRow(ch, story){
   const now_ = prog && prog.pct>0 && prog.pct<100;
   const cmt = commentCount(ch.id);
   const illus = hasImages(ch);
-  const tag=accessTag(r);
   const act = isReadable(r)?`data-read="${ch.id}"`:(r.state==='preview'?`data-preview="${ch.id}"`:`data-lock="${ch.id}"`);
   const compact = (store.filters.shelfView==="compact");
-  return `<button class="row ${read?'read':''} ${now_?'now':''}" style="${story?storyAccentVars(story):''}" ${act}>
-    <span class="num">${read?'<span style="color:var(--good)">'+I.check+'</span>':ch.n}</span>
+  const locked = !isReadable(r);
+  
+  const statusIcon = read 
+    ? `<span style="color:var(--good); display:inline-flex;">${I.check}</span>`
+    : (locked 
+      ? `<span style="color:${getLockColor(ch)}; display:inline-flex;">${I.lock}</span>`
+      : `<span style="opacity:0.25; display:inline-flex;">${I.book}</span>`);
+      
+  const tierClass = locked ? getLockTierClass(ch) : "";
+  const tierBadge = (locked && ch.required_tier_name)
+    ? `<span class="badge ${tierClass}" style="margin-right:8px; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:12px; border:1px solid currentColor; display:inline-flex; align-items:center;">${ch.required_tier_name}</span>`
+    : '';
+      
+  return `<div class="row ${read?'read':''} ${now_?'now':''} ${locked?'locked':''} ${tierClass}" style="${story?storyAccentVars(story):''}" ${act}>
+    <span class="num">${statusIcon}</span>
     <span class="body">
       <span class="t"><span class="tt">${ch.title}</span>${r.isEarly?badge('early','Early'):''}${illus?badge('illus','Illus'):''}${ch.state==='key'?badge('key','Key'):''}</span>
-      <span class="sub">${meta([axInline(r),`<i>${I.clock}</i>${ch.readTime} min`,cmt?`<i>${I.msg}</i>${cmt}`:"",ch.publicDate?`<i>${I.calendar}</i>Public ${fmtDate(ch.publicDate)}`:""])}</span>
+      <span class="sub">${meta([axInline(r),`${ch.wordCount || (ch.readTime * 220)} words`,cmt?`<i>${I.msg}</i>${cmt}`:"",ch.publicDate?`<i>${I.calendar}</i>Public ${fmtDate(ch.publicDate)}`:""])}</span>
       ${(!compact && reasonFor(ch,r))?`<span class="reason">${reasonFor(ch,r)}</span>`:""}
     </span>
-    <span class="cta">${ctaFor(ch,r,story,{small:true})}</span>
-  </button>`;
+    <span class="cta" style="display:flex; align-items:center;">
+      ${tierBadge}
+      ${ctaFor(ch,r,story,{small:true})}
+    </span>
+  </div>`;
 }
 
 /* ============ READER ============ */
@@ -146,7 +311,17 @@ VIEWS.read = function(){
   if (ch.backend && !ch.content) {
     if (!ch.contentLoading) loadReaderChapterFromBackend(ch.id).then(() => render());
     const message = ch.contentError || "Loading secure chapter text from Supabase...";
-    return readerShell(`theme-${store.settings.readerTheme} preset-${store.settings.preset}`, `<div class="empty" style="padding-top:120px"><div class="em">${ch.contentError?I.alert:I.sync}</div><h3>${ch.contentError?"Chapter unavailable":"Opening secure chapter"}</h3><p>${esc(message)}</p>${ch.contentError?`<button class="btn story" data-lock="${ch.id}">${I.lockOpen}Check access</button>`:""}</div>`);
+    return readerShell(`theme-${store.settings.readerTheme} preset-${store.settings.preset}`, `
+      <div class="reader-loading" style="padding-top:120px">
+        ${ch.contentError 
+          ? `<div class="em" style="font-size:2.5rem; color:var(--bad); margin-bottom:12px;">${I.alert}</div>` 
+          : `<div class="reader-spinner" style="margin-bottom:12px;"></div>`
+        }
+        <h3>${ch.contentError ? "Chapter unavailable" : "Opening secure chapter"}</h3>
+        <p>${esc(message)}</p>
+        ${ch.contentError ? `<button class="btn story" style="margin-top:16px;" data-lock="${ch.id}">${I.lockOpen}Check access</button>` : ""}
+      </div>
+    `);
   }
   return readerFull(ch, story, index, r);
 };
@@ -156,8 +331,8 @@ function readerShell(themeClass, inner, settings){
   return `<div class="reader ${themeClass}" id="reader" style="--fs:${fs};--lh:${st.lineHeight}">
     <div class="reader-progress"><i id="rprog" style="width:0%"></i></div>
     <header class="reader-top" id="rtop">
-      <button class="rback" data-nav="/story/${currentChapter.story.slug}/chapters" aria-label="Back">${I.chevL}</button>
-      <div class="ctx"><div class="s">${currentChapter.story.title} · Ch ${currentChapter.ch.n}</div><div class="c">${currentChapter.ch.title}</div></div>
+      <button class="rback" data-nav="/story/${currentChapter.story.slug}" aria-label="Back">${I.chevL}</button>
+      <div class="ctx"><div class="s">${currentChapter.story.title}</div><div class="c">${currentChapter.ch.title}</div></div>
       <button class="rset" data-sheet="settings" aria-label="Reader settings">${I.aa}</button>
     </header>
     <div class="reader-stage" id="rstage">${inner}</div>
@@ -188,6 +363,27 @@ function renderBlocks(blocks, chId){
     return "";
   }).join("");
 }
+function readerNavButtons(ch, story, index) {
+  const prev = story.chapters[index-1];
+  const next = story.chapters[index+1];
+  
+  const prevAct = prev ? (isReadable(chapterResolved(prev)) ? `data-read="${prev.id}"` : `data-lock="${prev.id}"`) : 'disabled';
+  const nextAct = next ? (isReadable(chapterResolved(next)) ? `data-read="${next.id}"` : `data-lock="${next.id}"`) : 'disabled';
+  
+  return `
+    <div class="reader-nav-buttons" style="display:flex; justify-content:center; align-items:center; gap:12px; margin: 24px 0 32px; width:100%;">
+      <button class="btn sm ghost" ${prevAct} style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface); ${!prev ? 'opacity:0.3; pointer-events:none;' : ''}">
+        ${I.chevL} Previous
+      </button>
+      <button class="btn sm ghost" data-nav="/story/${story.slug}" style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);">
+        ${I.book} Book Hub
+      </button>
+      <button class="btn sm ghost" ${nextAct} style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface); ${!next ? 'opacity:0.3; pointer-events:none;' : ''}">
+        Next ${I.chevR}
+      </button>
+    </div>
+  `;
+}
 function readerFull(ch, story, index, r){
   const st=store.settings;
   const themeClass=`theme-${st.readerTheme} preset-${st.preset} ${st.showImages?'':'no-img'} ${st.showParaComments?'':'no-pchip'} ${st.focusMode?'focus':''}`;
@@ -196,9 +392,15 @@ function readerFull(ch, story, index, r){
   const nr = next?chapterResolved(next):null;
   return readerShell(themeClass, `
     <h1 class="ch-title">${ch.title}</h1>
-    <div class="ch-by">${story.title} · Chapter ${ch.n} · ${ch.readTime} min · ${r.isEarly?'Early access until '+fmtDate(ch.publicDate):'Unlocked'}</div>
+    <div class="ch-by">${story.title} &middot; ${ch.wordCount || (ch.readTime * 220)} words &middot; ${r.isEarly?'Early access until '+fmtDate(ch.publicDate):'Unlocked'}</div>
     ${ch.arc?`<div class="faint" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:24px">${ch.arc}</div>`:""}
+    
+    ${readerNavButtons(ch, story, index)}
+    
     <div class="prose" id="prose">${renderBlocks(blocks, ch.id)}</div>
+    
+    ${readerNavButtons(ch, story, index)}
+    
     ${endOfChapter(ch, story, next, nr)}
     ${commentsBlock(ch.id)}
   `);
@@ -209,8 +411,12 @@ function readerPreview(ch, story, index, r){
   return readerShell(themeClass, `
     <div class="badge preview" style="margin-bottom:14px">${I.eye}Preview</div>
     <h1 class="ch-title">${ch.title}</h1>
-    <div class="ch-by">${story.title} · Chapter ${ch.n} · preview · ${ch.tier||"Aether Member"} to unlock full chapter</div>
+    <div class="ch-by">${story.title} &middot; preview &middot; ${ch.tier||"Aether Member"} to unlock full chapter</div>
+    
+    ${readerNavButtons(ch, story, index)}
+    
     <div class="prose" id="prose">${renderBlocks(ch.preview||[], ch.id)}</div>
+    
     <div class="preview-wall" style="${storyAccentVars(story)}">
       <div class="top"></div>
       <div class="inner">
@@ -223,13 +429,15 @@ function readerPreview(ch, story, index, r){
         </div>
       </div>
     </div>
+    
+    ${readerNavButtons(ch, story, index)}
   `);
 }
 function readerLocked(ch, story, index, r){
   return `<div class="locked-fallback" style="${storyAccentVars(story)}">
     <div class="emblem" style="width:84px;height:84px">${r.state==='expired'?I.lockOpen:r.state==='pending'?I.sync:r.state==='key'?I.key:I.lock}</div>
     <h1>${ch.title}</h1>
-    <div class="sub">${story.title} · Chapter ${ch.n}</div>
+    <div class="sub">${story.title}</div>
     <div class="card" style="max-width:420px;margin:0 auto 18px;text-align:left">
       <div class="ax ${accessTag(r)[0]}" style="font-size:1rem;margin-bottom:8px"><span class="ic" style="width:20px;height:20px">${accessTag(r)[2]}</span>${accessTag(r)[1]}</div>
       <p class="muted" style="font-size:.86rem;margin:0 0 4px">${reasonFor(ch,r)}</p>
@@ -239,7 +447,7 @@ function readerLocked(ch, story, index, r){
       ${ch.state==='preview'?`<button class="btn story block" data-preview="${ch.id}">${I.eye}Read the preview</button>`:""}
       <button class="btn ${ch.state==='preview'?'ghost':'story'} block" data-lock="${ch.id}">${I.lockOpen}${r.state==='expired'?'Renew access':'Unlock options'}</button>
       <button class="btn ghost block" data-act="expected-access">${I.help}Expected this to be unlocked?</button>
-      <button class="btn ghost" data-nav="/story/${story.slug}/chapters">${I.list}Back to shelf</button>
+      <button class="btn ghost" data-nav="/story/${story.slug}">${I.book}Back to book</button>
     </div>
   </div>`;
 }
@@ -256,8 +464,8 @@ function endOfChapter(ch, story, next, nr){
       <button class="btn sm ghost" data-act="reader-markread">${store.readMarked[ch.id]?I.check:'✓'}Mark read</button>
     </div>
     <div class="card tinted" style="max-width:440px;margin:0 auto">
-      ${next?`<div class="between"><div style="min-width:0"><div class="faint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em">Next chapter</div><div style="font-family:var(--serif);font-weight:600;margin-top:2px">${next.title}</div><div class="faint" style="font-size:.74rem;margin-top:2px">${axInline(nr)} · ${next.readTime} min</div></div>${isReadable(nr)?`<button class="btn sm story" data-read="${next.id}">${I.play}Read</button>`:`<button class="btn sm" data-lock="${next.id}">${accessTag(nr)[3]}</button>`}</div>`
-      :`<div class="center"><div class="faint" style="font-size:.74rem">You've reached the latest chapter.</div><button class="btn sm" data-nav="/story/${story.slug}/chapters" style="margin-top:8px">${I.list}Back to shelf</button></div>`}
+      ${next?`<div class="between"><div style="min-width:0"><div class="faint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em">Next chapter</div><div style="font-family:var(--serif);font-weight:600;margin-top:2px">${next.title}</div><div class="faint" style="font-size:.74rem;margin-top:2px">${axInline(nr)} &middot; ${next.wordCount || (next.readTime * 220)} words</div></div>${isReadable(nr)?`<button class="btn sm story" data-read="${next.id}">${I.play}Read</button>`:`<button class="btn sm" data-lock="${next.id}">${accessTag(nr)[3]}</button>`}</div>`
+      :`<div class="center"><div class="faint" style="font-size:.74rem">You've reached the latest chapter.</div><button class="btn sm" data-nav="/story/${story.slug}" style="margin-top:8px">${I.book}Back to book</button></div>`}
     </div>
   </div>`;
 }

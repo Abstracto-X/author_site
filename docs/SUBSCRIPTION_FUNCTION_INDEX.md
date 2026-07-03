@@ -240,16 +240,20 @@ Generated from the current codebase. One-line descriptions are intentionally con
 
 | Line | Function | Purpose |
 |---:|---|---|
-| 115 | `chapterRow(ch, story)` | Handles chapter catalog, reader, or chapter form behavior. |
-| 153 | `readerShell(themeClass, inner, settings)` | Helper used by this module. |
-| 167 | `readerBar()` | Helper used by this module. |
-| 180 | `renderBlocks(blocks, chId)` | Builds and returns or injects the HTML for this UI section. |
-| 191 | `readerFull(ch, story, index, r)` | Helper used by this module. |
-| 206 | `readerPreview(ch, story, index, r)` | Helper used by this module. |
-| 228 | `readerLocked(ch, story, index, r)` | Helper used by this module. |
-| 246 | `endOfChapter(ch, story, next, nr)` | Handles chapter catalog, reader, or chapter form behavior. |
-| 267 | `commentsBlock(chId)` | Helper used by this module. |
-| 275 | `commentHTML(c)` | Helper used by this module. |
+| 211 | `getLockTierClass(ch)` | Helper to get CSS class name (`tier-tyrant`/`tier-licker`/`tier-standard`) based on chapter required access tier. |
+| 218 | `getLockColor(ch)` | Helper to get border/shadow/icon color based on chapter required access tier. |
+| 225 | `chapterGridCard(ch, story)` | Renders a premium card for the chapter catalog grid. |
+| 264 | `chapterRow(ch, story)` | Renders a table row in the story hub chapter list. |
+| 321 | `readerShell(themeClass, inner, settings)` | Renders the global layout/shell for the reader stage. |
+| 335 | `readerBar()` | Renders the bottom navigation bar for settings/reactions/comments. |
+| 348 | `renderBlocks(blocks, chId)` | Builds and returns or injects the HTML for the chapter blocks. |
+| 359 | `readerNavButtons(ch, story, index)` | Renders standard next/previous/book navigation buttons at start/end of chapter. |
+| 380 | `readerFull(ch, story, index, r)` | Renders full unlocked chapter contents and comments. |
+| 401 | `readerPreview(ch, story, index, r)` | Renders chapter preview mode with preview-wall. |
+| 429 | `readerLocked(ch, story, index, r)` | Renders lock fallback state when reader lacks tier access. |
+| 447 | `endOfChapter(ch, story, next, nr)` | Renders comments/bookmarks/reactions footer under chapter content. |
+| 468 | `commentsBlock(chId)` | Renders reader notes list and submission form. |
+| 476 | `commentHTML(c)` | Renders individual reader note comment card. |
 
 ## `js/subscription/views/account-access.js`
 

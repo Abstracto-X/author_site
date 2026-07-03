@@ -63,6 +63,7 @@ function textToBlocks(value){
 function normalizeBackendChapter(row, story){
   const state = backendStateToAether(row);
   const preview = row.preview_text ? textToBlocks(row.preview_text) : [];
+  const wordCount = Number(row.word_count || row.words || 0);
   return {
     id: row.id,
     backend: true,
@@ -76,6 +77,7 @@ function normalizeBackendChapter(row, story){
     required_tier_name: row.required_tier_name || "",
     publicDate: row.public_release_at || row.public_release_date || "",
     readTime: estimateReadTime(row),
+    wordCount,
     excerpt: row.preview_text || "",
     preview,
     content: null,
@@ -88,14 +90,19 @@ function normalizeBackendChapter(row, story){
 function buildBackendUpdates(stories){
   const rows = [];
   stories.forEach(story => (story.chapters || []).forEach(ch => {
+    const rawState = ch.access_state_backend || ch.state;
+    const isFree = rawState === "free";
+    const isEarly = rawState === "early_access" || rawState === "early" || ch.state === "early";
+    const isUnlocked = rawState === "unlocked";
+    
     rows.push({
       id:`be-${ch.id}`,
       when: ch.publicDate ? fmtDate(ch.publicDate) : "Latest",
-      kind: ch.state === "free" ? "public-unlock" : ch.state === "early" ? "early" : ch.state === "preview" ? "member-drop" : "note",
+      kind: isFree ? "public-unlock" : isEarly ? "early" : "member-drop",
       story: story.slug,
       chapter: ch.id,
       title: ch.title,
-      note: ch.state === "free" ? "Published for all readers." : ch.state === "unlocked" ? "Available through your current access." : "Member access required."
+      note: isFree ? "Published for all readers." : isUnlocked ? "Available through your current access." : "Member access required."
     });
   }));
   return rows.slice(-12).reverse();
@@ -133,11 +140,44 @@ async function loadBackendLibrary(options = {}){
       .eq("is_published", true)
       .order("created_at", { ascending:false });
     if (storyError) throw storyError;
+
+    // Load characters (cast)
+    let castRows = [];
+    try {
+      const { data, error } = await client
+        .from("characters")
+        .select("id, story_id, name, role_title, profile_image_url")
+        .order("sort_order", { ascending: true });
+      if (!error) castRows = data || [];
+    } catch (e) {
+      console.warn("Could not load characters:", e);
+    }
+
+    // Load glossary (lore entries)
+    let loreRows = [];
+    try {
+      const { data, error } = await client
+        .from("lore_entries")
+        .select("id, story_id, title, description, slug")
+        .order("title", { ascending: true });
+      if (!error) loreRows = data || [];
+    } catch (e) {
+      console.warn("Could not load lore entries:", e);
+    }
+
     const stories = (storyRows || []).map(normalizeBackendStory);
     for (const story of stories) {
       const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
       if (error) throw error;
       story.chapters = (data || []).map(row => normalizeBackendChapter(row, story));
+      
+      story.cast = castRows
+        .filter(c => c.story_id === story.id)
+        .map(c => ({ id: c.id, n: c.name, r: c.role_title || "", img: c.profile_image_url || "" }));
+        
+      story.glossary = loreRows
+        .filter(l => l.story_id === story.id)
+        .map(l => ({ id: l.id, t: l.title, d: l.description || "", slug: l.slug || "" }));
     }
     if (stories.length) {
       D.STORIES = stories;

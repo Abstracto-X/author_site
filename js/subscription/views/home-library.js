@@ -33,7 +33,7 @@ VIEWS.home = function(){
         <div style="flex:1;min-width:0">
           <div class="faint" style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase">Continue · ${tonights.story.title}</div>
           <div style="font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:2px 0">${tonights.ch.title}</div>
-          <div class="faint" style="font-size:.78rem;margin-bottom:8px">${tonights.ch.readTime-2} min left · you stopped near “${tonights.prog.scene}”</div>
+          <div class="faint" style="font-size:.78rem;margin-bottom:8px">${tonights.ch.wordCount || (tonights.ch.readTime * 220)} words &middot; you stopped near &ldquo;${tonights.prog.scene}&rdquo;</div>
           ${progressBar(tonights.prog.pct)}
         </div>
         <button class="btn story sm" data-read="${tonights.ch.id}">${I.play}Resume</button>
@@ -124,36 +124,21 @@ function updateRow(u){
 
 /* ============ LIBRARY ============ */
 VIEWS.library = function(){
-  const q=store.filters.q||""; const chips=store.filters.chips||[];
-  const timeFilters=[["under10","Under 10 min"],["10-20","10–20 min"],["binge","Bingeable"]];
-  const stateFilters=[["readable","Readable now"],["free","Free starts"],["preview","Previews"],["early","Early access"],["member","Member"],["key","Key content"]];
-  const statusFilters=[["ongoing","Ongoing"],["completed","Completed"]];
+  const q=store.filters.q||"";
   function matches(s){
     if(q){ const t=(s.title+" "+s.author+" "+s.genre+" "+s.tags.join(" ")).toLowerCase(); if(!t.includes(q.toLowerCase())) return false; }
-    if(chips.includes("ongoing")&&s.status!=="ongoing") return false;
-    if(chips.includes("completed")&&s.status!=="completed") return false;
-    if(chips.includes("free")&&!s.chapters.some(c=>c.state==="free")) return false;
-    if(chips.includes("member")&&!s.chapters.some(c=>c.tier)) return false;
-    if(chips.includes("early")&&!s.chapters.some(c=>c.state==="early")) return false;
-    if(chips.includes("preview")&&!s.chapters.some(c=>c.state==="preview")) return false;
-    if(chips.includes("key")&&!s.chapters.some(c=>c.state==="key")) return false;
-    if(chips.includes("readable")&&!s.chapters.some(c=>isReadable(chapterResolved(c)))) return false;
-    if(chips.includes("under10")&&!s.chapters.some(c=>c.readTime<10)) return false;
-    if(chips.includes("10-20")&&!s.chapters.some(c=>c.readTime>=10&&c.readTime<=20)) return false;
     return true;
   }
   const list=D.STORIES.filter(matches);
   return `
   <h1 class="page-title">The Library</h1>
   <p class="page-sub">${D.STORIES.length} stories across fantasy, gothic, and the far future.</p>
-  <div style="position:relative;margin:6px 0 14px">
+  <div style="position:relative;margin:6px 0 18px">
     <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-faint);display:flex">${I.search}</span>
     <input id="lib-search" class="pill-input" style="text-align:left;padding-left:42px" placeholder="Search stories, authors, genres…" value="${esc(q)}">
   </div>
-  <div class="chips scroll" style="margin-bottom:8px">${stateFilters.map(([k,l])=>chip(l,"filter="+k,chips.includes(k))).join("")}${statusFilters.map(([k,l])=>chip(l,"filter="+k,chips.includes(k))).join("")}</div>
-  <div class="chips scroll" style="margin-bottom:18px">${timeFilters.map(([k,l])=>chip(l,"filter="+k,chips.includes(k))).join("")}<a class="chip" data-nav="/collections">${I.layers}<span>Collections</span></a></div>
-  <div class="section-head"><h2>${chips.length||q?"Results":"All stories"}</h2><span class="faint" style="font-size:.78rem">${list.length} shown</span></div>
-  ${list.length?`<div class="grid-stories stagger">${list.map(storyCard).join("")}</div>`:`<div class="empty"><div class="em">📚</div><h3>No stories match</h3><p>Try clearing a filter or searching for something broader.</p><button class="btn" data-act="clear-filters">Clear filters</button></div>`}
+  <div class="section-head"><h2>${q?"Results":"All stories"}</h2><span class="faint" style="font-size:.78rem">${list.length} shown</span></div>
+  ${list.length?`<div class="grid-stories stagger">${list.map(storyCard).join("")}</div>`:`<div class="empty"><div class="em">📚</div><h3>No stories match</h3><p>Try searching for something broader.</p></div>`}
   <div class="section"><div class="section-head"><h2>Pinned to My Shelf</h2></div><div class="lane">${store.followed.map(id=>{const s=bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
   `;
 };
@@ -166,32 +151,195 @@ VIEWS.home = function(){
   if (!primary) return backendSetupView();
   const secondary = D.FEATURED_SLUGS.map(bySlug).filter(s=>s && s.slug!==primary.slug)[0];
   const shorter = D.STORIES.filter(s=>!D.FEATURED_SLUGS.includes(s.slug));
+  
   let banner = "";
   if (P.expired) banner = accessBanner("expired","Your Aether Member access has expired","Some chapters are now locked. Renew to continue reading.","/vault","Renew access");
   else if (P.pending) banner = accessBanner("pending","We're verifying your access","Your Provider connection is syncing — we'll update automatically.","/support/check-access","Check status");
   else if (P.noTier) banner = accessBanner("none","Your provider tier doesn't include access","You're connected, but your tier doesn't unlock Aether Pages.","/benefits","See what unlocks");
   else if (!P.signedIn) banner = accessBanner("anon","Browsing as a guest","Read free chapters and previews. Sign in or redeem a key to unlock more.","/vault","Activate access");
+
+  // Continue Reading fallback logic:
+  // 1. Use active/last-read chapter if one exists.
+  // 2. Else use first readable chapter.
+  // 3. Else use first previewable/locked chapter and open lock sheet.
+  // 4. Else link to story page.
+  let resolvedChapterId = null;
+  let continueLabel = "Start reading";
   const lastRead = activeReads().find(x=>x.story.id===primary.id);
-  const pRead = primary.chapters.filter(c=>store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
-  const pPct = primary.chapters.length ? Math.round(pRead/primary.chapters.length*100) : 0;
-  const latestCh = primary.chapters[primary.chapters.length-1] || null;
-  const startCh = lastRead?.ch.id || primary.chapters.find(c=>c.state==="free")?.id || primary.chapters[0]?.id || null;
+  if (lastRead && lastRead.ch) {
+    resolvedChapterId = lastRead.ch.id;
+    continueLabel = `Resume — ${lastRead.ch.title}`;
+  } else if (primary.chapters && primary.chapters.length > 0) {
+    const firstReadable = primary.chapters.find(c => c.can_read_backend || c.state === "free" || c.state === "unlocked");
+    if (firstReadable) {
+      resolvedChapterId = firstReadable.id;
+      continueLabel = "Start reading";
+    } else {
+      const firstLocked = primary.chapters[0];
+      if (firstLocked) {
+        resolvedChapterId = firstLocked.id;
+        continueLabel = "Unlock chapters";
+      }
+    }
+  }
+
+  // Resolve chapter counts
+  const unlockedCount = primary.chapters.filter(c => c.access_state_backend === 'free' || c.access_state_backend === 'unlocked').length;
+  const lockedCount = primary.chapters.length - unlockedCount;
+
+  // Resolve reading progress/status
+  const pRead = primary.chapters.filter(c => store.readMarked[c.id] || (store.progress[c.id] && store.progress[c.id].pct >= 100)).length;
+  const pPct = primary.chapters.length ? Math.round(pRead / primary.chapters.length * 100) : 0;
+
+  // Resolve current tier details
+  const tierName = P.tier || "Guest (No active tier)";
+  let expirationInfo = "Sign in or connect to unlock access";
+  if (P.signedIn) {
+    if (P.validUntil) {
+      expirationInfo = `Expires on ${fmtDate(P.validUntil)}`;
+    } else if (P.provider === "patreon" || P.provider === "Patreon") {
+      expirationInfo = "Auto-renewed via Patreon";
+    } else if (P.hasKey) {
+      expirationInfo = "Access via key grant";
+    } else if (P.level > 0) {
+      expirationInfo = "Active Aether Member";
+    } else {
+      expirationInfo = "No active entitlements";
+    }
+  }
+
+  const updatesHtml = D.UPDATES.length
+    ? D.UPDATES.slice(0, 10).map(updateRow).join("")
+    : `<div class="empty-state-card" style="text-align:center;padding:32px 16px"><span style="font-size:2rem;display:block;margin-bottom:8px">🔔</span><p class="faint" style="margin:0">No updates in the archive yet.</p></div>`;
+
   return `
   ${announcement()}
   ${banner}
   <div class="area-switch" style="margin:0 0 14px"><button class="active">${I.book}Reader</button>${isAdmin()?`<button data-nav="/studio/write">${I.overview}Author Studio</button><a class="btn sm ghost" href="admin.html">${I.shield}Admin CMS</a>`:""}</div>
-  ${bookHero(primary, { startCh, lastRead, pPct, pRead, latestCh })}
-  <div class="home-cols">
-   <div style="min-width:0">
-    <div class="section"><div class="section-head"><h2>What's new — ${primary.title}</h2><a class="section-link" data-nav="/story/${primary.slug}/updates">All ${I.chevR}</a></div><div class="feed stagger">${buildBookFeed(primary)}</div></div>
-    ${reads.length?`<div class="section"><div class="section-head"><h2>Continue reading</h2><a class="section-link" data-nav="/my-shelf">My shelf ${I.chevR}</a></div><div class="lane stagger">${reads.slice(0,6).map(({ch,story,prog})=>{const next=story.chapters[story.chapters.indexOf(ch)+1];const nr=next?chapterResolved(next):null;return `<button class="card" style="width:220px;text-align:left;${storyAccentVars(story)}" data-read="${ch.id}"><div class="faint" style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em">${story.title}</div><div style="font-family:var(--serif);font-weight:600;margin:2px 0 6px">${ch.title}</div>${progressBar(prog.pct)}<div class="between" style="margin-top:8px"><span class="faint" style="font-size:.72rem">${prog.pct<100?prog.pct+'%':'Done'}</span>${nr?`<span class="faint" style="font-size:.68rem">Next: ${accessTag(nr)[1]}</span>`:""}</div></button>`;}).join("")}</div></div>`:""}
-   </div>
-   <div style="min-width:0">
-    ${secondary?`<div class="section"><div class="section-head"><h2>Also reading</h2></div><a class="card tinted" data-nav="/story/${secondary.slug}" style="${storyAccentVars(secondary)};display:block"><div style="display:flex;gap:13px;align-items:center"><div style="width:58px;height:78px;border-radius:9px;overflow:hidden;flex:0 0 auto;border:1px solid var(--border)">${coverArt(secondary)}</div><div style="min-width:0;flex:1"><div style="font-family:var(--serif);font-weight:600;font-size:1.05rem">${secondary.title}</div><div class="faint" style="font-size:.76rem;margin-top:2px">${secondary.author} · ${secondary.genre}</div><div class="faint" style="font-size:.74rem;margin-top:6px">${secondary.tagline}</div></div></div><button class="btn sm story" style="margin-top:12px;width:100%">${I.book}Open story</button></a></div>`:""}
-    ${memberArchivePanel()}
-    <div class="section"><div class="section-head"><h2>Shorter works</h2></div><p class="faint" style="font-size:.76rem;margin:-4px 0 8px">Novellas, prequels &amp; bonus pieces beyond the main serials.</p><div class="lane">${shorter.map(storyCard).join("")}</div></div>
-   </div>
+  
+  <div class="home-grid" style="${storyAccentVars(primary)}">
+    <!-- Left Column: Book & Tier Status -->
+    <div class="home-sidebar-col">
+      <!-- Book Cover Card (Full Card Cover) -->
+      <div class="card book-cover-card" style="padding: 0; overflow: hidden; position: relative; aspect-ratio: 2 / 3; width: 100%; max-width: 220px; margin: 0 auto 16px; border-radius: 12px; border: 1px solid var(--border-2); box-shadow: 0 10px 25px rgba(0,0,0,0.45), 0 0 15px var(--s-soft);">
+        ${coverArt(primary)}
+      </div>
+
+      <!-- Book Info and Reading Status Under Card -->
+      <div class="book-info-under" style="margin-bottom: 16px;">
+        <h3 style="font-family: var(--serif); font-size: 1.22rem; font-weight: 700; margin: 0 0 4px; color: var(--text); text-align: center; line-height: 1.25;">${primary.title}</h3>
+        <div class="author-label" style="font-size: 0.8rem; color: var(--text-dim); text-align: center; margin-bottom: 12px;">by ${primary.author}</div>
+        
+        <!-- Reading Status / Progress Bar -->
+        <div class="reading-status" style="margin-bottom: 14px; background: var(--surface); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+          <div class="between" style="margin-bottom:6px; font-size:.74rem;">
+            <span class="faint">Reading Status</span>
+            <span class="faint" style="font-weight: 600; color: var(--accent);">${pPct}% read (${pRead}/${primary.chapters.length} ch)</span>
+          </div>
+          ${progressBar(pPct)}
+        </div>
+        
+        <div class="faint" style="font-size:0.74rem; text-align: center; margin-bottom: 12px;">${primary.genre} &middot; ${primary.status}</div>
+      </div>
+
+      <!-- Book Actions -->
+      <div class="book-actions" style="margin-bottom: 18px;">
+        <a class="btn ghost sm" href="#/story/${primary.slug}">${I.book}Book Page</a>
+        ${resolvedChapterId 
+          ? `<button class="btn primary sm" data-read="${resolvedChapterId}">${I.play}${continueLabel}</button>`
+          : `<button class="btn sm" disabled>${I.lock}No chapters</button>`
+        }
+      </div>
+
+      <!-- Current Tier Panel -->
+      <div class="card tier-status-card">
+        <div class="between" style="align-items: center; margin-bottom: 8px;">
+          <div class="eyebrow" style="margin:0">Current Tier</div>
+          <button class="btn sm ghost" data-sheet="connect-patreon" style="padding: 0 10px; height: 26px; font-size: 0.72rem;">
+            ${P.level > 0 ? "Upgrade" : "Get Access"}
+          </button>
+        </div>
+        <div class="tier-name">${tierName}</div>
+        <div class="faint" style="font-size:0.76rem;margin-top:4px">${expirationInfo}</div>
+      </div>
+
+      <!-- Benefits / Access Stats Card -->
+      <div class="card benefits-list-card">
+        <div class="eyebrow" style="margin-bottom: 12px">Access Statistics</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="stat-row">
+            <span class="stat-badge green">${I.checkCirc}</span>
+            <div class="stat-detail">
+              <div class="stat-title">Chapters Available</div>
+              <div class="stat-value">${unlockedCount} unlocked</div>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-badge orange">${I.lock}</span>
+            <div class="stat-detail">
+              <div class="stat-title">Chapters Locked</div>
+              <div class="stat-value">${lockedCount} remaining</div>
+            </div>
+          </div>
+        </div>
+        <div class="provider-status-bar" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.74rem; display: flex; align-items: center; justify-content: space-between;">
+          <span class="faint">Provider connection:</span>
+          <span class="status-val" style="font-weight: 600; color: ${P.provider ? 'var(--good)' : 'var(--text-faint)'}">
+            ${P.provider ? P.provider : 'None linked'}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Latest Updates -->
+    <div class="home-main-col">
+      <div class="card updates-list-card">
+        <div class="section-head">
+          <h2>Latest Updates</h2>
+          <button class="btn ghost sm" data-nav="/updates" style="height: 28px; padding: 0 10px; font-size: 0.72rem; border-radius: 99px;">All updates ${I.chevR}</button>
+        </div>
+        <div class="updates-scroller col-flex" style="gap:10px">
+          ${updatesHtml}
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Bottom Row: Announcement & Access Tools -->
+  <div class="home-bottom-row" style="${storyAccentVars(primary)}">
+    <!-- Latest Announcement Card -->
+    <div class="card announcement-card">
+      <div class="eyebrow" style="margin-bottom:12px">Latest Announcement</div>
+      <div class="empty-announcement">
+        <span class="empty-icon">${I.msg}</span>
+        <p>No author announcements yet.</p>
+      </div>
+    </div>
+
+    <!-- Access & Account Tools -->
+    <div class="card access-account-card">
+      <div class="eyebrow" style="margin-bottom:12px">Access & Account</div>
+      <div class="account-summary" style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-weight:700;color:var(--accent);border:1px solid var(--border)">
+          ${accountLabel().slice(0,2).toUpperCase()}
+        </span>
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.92rem">${accountLabel()}</div>
+          <div class="faint" style="font-size:.76rem">${P.signedIn ? 'Signed in' : 'Guest reader'}</div>
+        </div>
+      </div>
+      <div class="quicklinks" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <a data-sheet="redeem" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.key}<span style="margin-top:4px">Redeem Key</span></a>
+        <a data-act="resync" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.sync}<span style="margin-top:4px">Sync Patreon</span></a>
+        <a data-sheet="settings" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.aa}<span style="margin-top:4px">Preferences</span></a>
+        ${P.signedIn
+          ? `<a data-act="reader-signout" style="padding:10px;font-size:0.8rem;cursor:pointer;color:var(--bad)">${I.x}<span style="margin-top:4px">Sign Out</span></a>`
+          : `<a data-sheet="persona" style="padding:10px;font-size:0.8rem;cursor:pointer;color:var(--accent)">${I.user}<span style="margin-top:4px">Sign In</span></a>`
+        }
+      </div>
+    </div>
+  </div>
+
   <p class="faint center" style="font-size:.74rem;margin-top:18px">Deep lore, maps &amp; galleries live in the main author archive. <button class="btn sm ghost" data-act="main-archive" style="margin-left:6px">${I.external}Open the configured archive</button></p>`;
 };
 function bookHero(s, o){
@@ -201,7 +349,7 @@ function bookHero(s, o){
 }
 function buildBookFeed(s){
   const items = [];
-  s.chapters.slice(-3).reverse().forEach(c=>{const r=chapterResolved(c);items.push({icon:I.play,color:"var(--accent)",tone:"accent",title:`New chapter — ${c.title}`,desc:`Chapter ${c.n} · ${c.readTime} min${c.state==='early'?' · early access for members':''}`,meta:[c.arc,isReadable(r)?"Readable now":accessTag(r)[1]],act:`data-read="${c.id}"`,cta:isReadable(r)?"Read":accessTag(r)[3]});});
+  s.chapters.slice(-3).reverse().forEach(c=>{const r=chapterResolved(c);items.push({icon:I.play,color:"var(--accent)",tone:"accent",title:`New chapter — ${c.title}`,desc:`Chapter ${c.n} · ${c.wordCount || (c.readTime * 220)} words${c.state==='early'?' · early access for members':''}`,meta:[c.arc,isReadable(r)?"Readable now":accessTag(r)[1]],act:`data-read="${c.id}"`,cta:isReadable(r)?"Read":accessTag(r)[3]});});
   return items.map(it=>`<button class="feed-item" ${it.act||""}>${it.thumb?`<span class="fthumb">${D.FIG[it.thumb]||""}</span>`:`<span class="fico" style="background:color-mix(in srgb,${it.color} 16%, transparent);color:${it.color}">${it.icon}</span>`}<span class="fbody"><span class="ftop"><span class="ft">${it.title}</span></span><span class="fd">${it.desc}</span><span class="fmeta">${(it.meta||[]).map(m=>`<span>${m}</span>`).join("")}</span></span><span class="btn sm ${it.tone==='accent'?'story':''}" style="flex:0 0 auto">${it.cta}</span></button>`).join("");
 }
 

@@ -94,7 +94,7 @@ function sheetContext(){
   const prog=store.progress[ch.id];
   const next=story.chapters[index+1]; const nr=next?chapterResolved(next):null;
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>${ch.title}</h2><div class="sheet-sub">${story.title} · Chapter ${ch.n} · ${ch.arc||""}</div>
-  <div class="card" style="margin-bottom:12px">${prog?`<div class="between"><span class="faint" style="font-size:.78rem">Progress</span><span style="font-size:.8rem;font-weight:600">${prog.pct}%</span></div>${progressBar(prog.pct)}`:`<p class="faint" style="font-size:.8rem;margin:0">Not started. Est. ${ch.readTime} min read.</p>`}</div>
+  <div class="card" style="margin-bottom:12px">${prog?`<div class="between"><span class="faint" style="font-size:.78rem">Progress</span><span style="font-size:.8rem;font-weight:600">${prog.pct}%</span></div>${progressBar(prog.pct)}`:`<p class="faint" style="font-size:.8rem;margin:0">Not started. Est. ${ch.wordCount || (ch.readTime * 220)} words.</p>`}</div>
   <div class="col-flex" style="gap:8px">
     <button class="btn ghost block" data-act="reader-bookmark">${I.bookmark}${store.bookmarks.find(b=>b.chapterId===ch.id)?'Remove bookmark':'Bookmark chapter'}</button>
     <button class="btn ghost block" data-act="reader-savequote">${I.quote}Save a quote</button>

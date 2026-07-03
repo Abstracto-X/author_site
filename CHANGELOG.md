@@ -1,6 +1,102 @@
-﻿# Changelog
+# Changelog
 
 Completed durable project changes only. Unfinished/deferred/risky work belongs in `PROJECT_STATE.md`.
+
+## 2026-07-04 02:51 Asia/Kolkata - Polished reader navigation, added start/end buttons, removed chapter index numbers, fixed cast images, locked tier coloring, and added dynamic required tier tags
+
+Area: reader
+
+Summary:
+- Corrected the Cast & Glossary view bug to display dynamic, big rectangular character tiles (`.cast-grid` / `.cast-tile`) with cover-like initials fallback for missing profiles.
+- Polished the Chapter Catalog grid and Chapter lists to remove raw index numbers (`Ch. X`) since titles are already numbered in this book context. Added clean status badges (green checkmark for read, lock icon for locked, faint book for readable but unread) in their place.
+- Resolved dynamic lock styles based on required Patreon access tier: locked cards and rows now get a prominent gold border/glow for `Resident Tyrant` tier (rank 20) and a purple border/glow for `Resident Licker` tier (rank 10), while standard locks remain uncolored (grey).
+- Added a dynamic database-backed required tier badge tag (e.g. `[Resident Licker]`, `[Resident Tyrant]`) on the left of the "Unlock" button in locked list rows and on the top-right of locked grid cards.
+- Refined back navigation so that going back from a chapter reader view, locked fallback, or catalog footer returns the reader directly to the Book page (Story Hub), instead of automatically navigating to the Chapter Catalog.
+- Added explicit, premium "Previous", "Book Hub", and "Next" navigation buttons at both the start and end of chapter contents.
+- Replaced the static placeholder loader during secure chapter opening with a beautiful rotating `.reader-spinner` indicator.
+- Disabled edge-tap chapter transition zones in the reading stage click handler to prevent accidental navigation while scrolling.
+
+Files changed:
+- `styles.css`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/events.js`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+
+## 2026-07-04 02:30 Asia/Kolkata - Redesigned Chapter Catalog to a grid, enabled DB cast loading, migrated to word counts, and cleaned Library filters
+
+Area: reader | database
+
+Summary:
+- Redesigned Chapter Catalog page from a list to a cards grid (`.chapter-catalog-grid`). Removed Chapter Comfort/Compact/Arc view segment controls and sorting toggles.
+- Sorted chapters in the catalog newest first by default. Removed the individual chapter row read buttons, allowing clicking anywhere on the card to read/preview/unlock.
+- Highlighted locked chapters in the grid card catalog with a distinct orange/gold glowing layout (`.chapter-card.locked`).
+- Added database queries to `loadBackendLibrary` in `backend.js` to fetch and populate `characters` (cast) and `lore_entries` (glossary) dynamically from Supabase.
+- Migrated reading minutes display to word counts across the application (tonight's reading card, feed updates, chapter catalog, reader header, end-of-chapter card, and sheets settings).
+- Cleaned up the Library view by removing all quick select filter chips and Collections links, leaving a cleaner search experience.
+
+Files changed:
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/backend.js`
+- `js/subscription/sheets.js`
+- `js/subscription/author-studio.js`
+- `styles.css`
+- `CHANGELOG.md`
+
+## 2026-07-04 02:22 Asia/Kolkata - Redesigned Book (Story Hub) page layout to a two-column desktop grid
+
+Area: reader
+
+Summary:
+- Redesigned the Book (Story Hub) page from a single-column mobile-first scroll layout into a beautiful two-column responsive desktop layout (collapses on < 900px wide screens).
+- Moved the cover art to a wide left sidebar, including cover art, title, author, genre/status eyebrow, tags, a horizontal reading progress bar, and primary side action buttons (Follow/All chapters).
+- Designed a main right column containing the tagline, a large prominent primary CTA button (Start Reading / Continue), a horizontal quickactions row, a detailed progress card with a progress ring, the latest chapters list, and cast & glossary grid tiles.
+- Cleaned up the empty state (no chapters published) to use the same matching split grid.
+
+Files changed:
+- `js/subscription/views/story-reader.js`
+- `styles.css`
+- `CHANGELOG.md`
+
+## 2026-07-04 01:57 Asia/Kolkata - Renamed Chapter Shelf to Catalog and fixed rendering bugs
+
+Area: reader
+
+Summary:
+- Renamed the "Chapter Shelf" view to "Chapter Catalog" to avoid confusion with the global "Shelf" navigation tab.
+- Replaced the outer `<button>` container in `chapterRow` with a `<div class="row">` to resolve a nested button HTML rendering bug that was breaking layout rendering in browsers.
+- Added sorting toggles ("Oldest first" and "Newest first") to let readers easily view the chapters list chronologically or in reverse chronological order.
+- Renamed reader "Back to shelf" buttons and placeholders to "Back to chapters" and "chapter catalog".
+
+Files changed:
+- `js/subscription/views/story-reader.js`
+- `js/subscription/events.js`
+- `CHANGELOG.md`
+
+## 2026-07-04 01:30 Asia/Kolkata - Redesigned subscriber portal home page layout
+
+Area: reader
+
+Summary:
+- Replaced the full-screen cinematic book cover hero banner with a clean, responsive grid layout.
+- Restructured the Book Cover Card so the book cover image fills the full card (padding: 0, overflow: hidden) and placed the book information, actions, and reading status below the card.
+- Added a dedicated "Reading Status" progress bar section under the cover card to display the percentage read and chapter counts.
+- Added explicit "Continue Reading" fallback logic (last read chapter -> first readable -> first previewable/locked -> story page).
+- Integrated dynamic tier and connection resolution in `auth.js` `persona()` to pull real Patreon tier titles (e.g. `Resident Licker` or `Resident Tyrant`) from Supabase entitlements.
+- Fixed access stats counters and updates notes to verify raw `access_state_backend` from Supabase, ensuring that admin accounts show correct tier-based access status.
+- Fixed locked chapter updates mapping to "Member drop" instead of falling back to "Author note".
+- Stretched the "Latest Updates" list card down to the bottom panels (`height: 100%` on container, removing `max-height` constraints on `.updates-scroller` to let the updates feed fill the entire vertical space) and expanded the scroller limit to show up to 10 updates, resolving the weird empty space in the right column.
+- Created "Latest Announcement" section displaying honest empty state when no announcement data exists.
+- Renamed account settings to "Access & Account" panel featuring quick actions (key redemption, Patreon resync, settings, sign out).
+- Styled the "All updates" navigation link as a proper rounded ghost button in the card header.
+- Added responsive styling with `.home-grid` using CSS grid minmax bounds and `align-items: stretch` to force equal column heights and trigger scrolling overflow.
+
+Files changed:
+- `js/subscription/auth.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/backend.js`
+- `styles.css`
+- `CHANGELOG.md`
 
 ## 2026-07-04 00:48 Asia/Kolkata - Fixed reader mojibake, site identity, and cover images
 
