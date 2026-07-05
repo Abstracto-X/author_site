@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -124,10 +124,11 @@
         .admin-main { flex: 1; margin-left: 260px; padding: 2rem; min-height: 100vh; }
 
         .page-header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
             margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border);
             position: relative;
         }
+        .page-header > * { min-width: 0; }
         .page-header::after {
             content: ''; position: absolute; bottom: -1px; left: 0; width: 80px; height: 1px;
             background: linear-gradient(to right, var(--accent-color), transparent);
@@ -140,7 +141,9 @@
             padding: 0.6rem 1.2rem; font-family: var(--font-ui); font-size: 0.85rem;
             border: none; border-radius: 6px; cursor: pointer; transition: all 0.25s;
             display: inline-flex; align-items: center; gap: 0.5rem; letter-spacing: 0.5px;
+            max-width: 100%; min-width: 0; justify-content: center; text-align: center;
         }
+        .btn i { flex: 0 0 auto; }
         .btn:active { transform: scale(0.97); }
         .btn-primary { background: var(--accent-color); color: #000; font-weight: 600; }
         .btn-primary:hover { box-shadow: 0 0 20px rgba(255,215,0,0.5), 0 4px 15px rgba(255,215,0,0.2); transform: translateY(-2px); }
@@ -162,9 +165,10 @@
         .glass-card:hover { border-color: rgba(255,255,255,0.2); box-shadow: 0 8px 40px rgba(0,0,0,0.4); }
 
         .card-header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
             margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border);
         }
+        .card-header > * { min-width: 0; }
         .card-title { font-family: var(--font-header); font-size: 1.1rem; color: var(--accent-color); }
 
         .data-table { width: 100%; border-collapse: collapse; }
@@ -198,7 +202,55 @@
         }
         .status-published { background: rgba(68,255,136,0.15); color: var(--success-color); border: 1px solid rgba(68,255,136,0.3); }
         .status-draft { background: rgba(255,215,0,0.12); color: var(--accent-color); border: 1px solid rgba(255,215,0,0.3); }
-        .action-btns { display: flex; gap: 0.5rem; }
+        .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; min-width: 0; }
+
+        /* --- CMS REBUILD: writer cockpit --- */
+        .pill-row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
+        .admin-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .65rem; border:1px solid var(--glass-border); border-radius:999px; color:#aaa; background:rgba(255,255,255,.04); font-size:.72rem; }
+        .admin-pill.gold { color:var(--accent-color); border-color:rgba(255,215,0,.28); background:rgba(255,215,0,.08); }
+        .admin-pill.danger { color:var(--danger-color); border-color:rgba(255,68,68,.28); background:rgba(255,68,68,.08); }
+        .writer-shell { display: flex; gap: 1rem; align-items: start; position: relative; }
+        .writer-sidebar { width: 300px; flex-shrink: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: hidden; display: flex; flex-direction: column; }
+        .writer-list { overflow: auto; padding-right: .25rem; display: grid; gap: .45rem; }
+        .writer-item { border: 1px solid var(--glass-border); border-radius: 10px; padding: .55rem .7rem; background: rgba(0,0,0,.22); cursor: pointer; transition: .18s ease; }
+        .writer-item:hover, .writer-item.active { border-color: rgba(255,215,0,.45); background: rgba(255,215,0,.07); }
+        .writer-item-title { display: block; font-weight: 700; color: #f3f3f3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .writer-item-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .45rem; color: #888; font-size: .78rem; }
+        
+        /* Collapsed Sidebar Extensions */
+        .writer-sidebar.collapsed { width: 50px; }
+        .writer-sidebar.collapsed .sidebar-full-content { display: none; }
+        .writer-sidebar.collapsed:hover { width: 320px; position: absolute; z-index: 100; background: #0c0c0c; box-shadow: 0 12px 40px rgba(0,0,0,0.65); border-color: var(--accent-color); }
+        .writer-sidebar.collapsed:hover .sidebar-full-content { display: flex; flex-direction: column; height: 100%; width: 100%; }
+        .writer-sidebar.collapsed .collapsed-handle { display: flex; flex-direction: column; align-items: center; justify-content: start; height: 100%; gap: 1.5rem; padding: 1.5rem 0; color: #888; cursor: pointer; width: 100%; }
+        .writer-sidebar.collapsed:hover .collapsed-handle { display: none; }
+        .writer-sidebar .collapsed-handle { display: none; }
+        .writer-editor-card { min-height:calc(100vh - 12rem); padding:0; overflow:hidden; }
+        .writer-topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.25rem; border-bottom:1px solid var(--glass-border); background:rgba(0,0,0,.22); }
+        .writer-tabs { display:flex; gap:.4rem; flex-wrap:wrap; padding:.75rem 1.25rem 0; background:rgba(0,0,0,.14); }
+        .writer-tab { padding:.55rem .8rem; border:1px solid var(--glass-border); border-bottom-color:transparent; border-radius:10px 10px 0 0; background:rgba(255,255,255,.04); color:#aaa; cursor:pointer; }
+        .writer-tab.active { color:var(--accent-color); background:rgba(255,215,0,.1); border-color:rgba(255,215,0,.3); }
+        .writer-panel { display:none; padding:1.25rem; }
+        .writer-panel.active { display:block; }
+        .writer-workspace { max-width:920px; margin:0 auto; }
+        .manuscript-title { width:100%; border:0; border-bottom:1px solid rgba(255,255,255,.12); background:transparent; color:#fff; font-family:var(--font-header); font-size:clamp(1.9rem, 4vw, 3.4rem); padding:.5rem 0 1rem; outline:none; }
+        .manuscript-title::placeholder { color:rgba(255,255,255,.28); }
+        .editor-toolbar { display:flex; gap:.4rem; flex-wrap:wrap; padding:.65rem; border:1px solid var(--glass-border); border-radius:10px 10px 0 0; background:rgba(0,0,0,.44); position:sticky; top:0; z-index:2; backdrop-filter:blur(10px); }
+        .editor-toolbar button { padding:.4rem .6rem; border-radius:6px; border:1px solid var(--glass-border); background:rgba(255,255,255,.06); color:#ddd; cursor:pointer; }
+        .chapter-canvas { min-height:64vh; padding:clamp(1.25rem, 4vw, 3.5rem); border:1px solid var(--glass-border); border-top:0; border-radius:0 0 14px 14px; background:linear-gradient(180deg, rgba(6,6,6,.88), rgba(0,0,0,.96)); box-shadow:0 24px 70px rgba(0,0,0,.42); color:#f3eee4; font-family:var(--font-body); font-size:1.12rem; line-height:1.95; outline:none; overflow:auto; }
+        .chapter-canvas:empty:before { content:'Start writing. Paste from docs, format scenes, then save a draft or publish when ready.'; color:#666; }
+        .chapter-canvas p { margin:0 0 1.05rem; }
+        .chapter-canvas h2, .chapter-canvas h3 { color:var(--accent-color); font-family:var(--font-header); margin:1rem 0 .5rem; }
+        .chapter-canvas blockquote { margin:1rem 0; padding:.8rem 1rem; border-left:3px solid var(--accent-color); background:rgba(255,215,0,.06); color:#ddd; }
+        .chapter-canvas hr { border:0; text-align:center; margin:1.5rem 0; }
+        .chapter-canvas hr:after { content:'✦ ✦ ✦'; color:var(--accent-color); letter-spacing:.5rem; }
+        .matrix-grid { display:grid; gap:.55rem; }
+        .matrix-row { display:grid; grid-template-columns:70px 1fr 170px 110px; gap:.75rem; align-items:center; padding:.7rem .85rem; border:1px solid var(--glass-border); border-radius:10px; background:rgba(255,255,255,.035); }
+        .matrix-row.nsfw { border-color:rgba(255,68,68,.28); }
+        .subnav-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.9rem; }
+        .subnav-card { cursor:pointer; border:1px solid var(--glass-border); border-radius:12px; padding:1rem; background:rgba(255,255,255,.035); transition:.2s; }
+        .subnav-card:hover { border-color:rgba(255,215,0,.45); transform:translateY(-2px); }
+        @media (max-width: 980px) { .writer-shell { grid-template-columns:1fr; } .writer-sidebar { position:static; max-height:none; } .matrix-row { grid-template-columns:1fr; } }
 
         /* --- FORMS --- */
         .form-group { margin-bottom: 1.5rem; }
@@ -712,6 +764,26 @@
             .gallery-sections { grid-template-columns: 1fr; }
         }
 
+        @media (max-width: 640px) {
+            .page-header,
+            .card-header,
+            .action-btns,
+            .modal-footer {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+            .page-title { font-size: 1.45rem; overflow-wrap: anywhere; }
+            .btn { white-space: normal; line-height: 1.25; }
+            .quick-actions,
+            .stats-grid { grid-template-columns: 1fr; }
+            .data-table { min-width: 680px; }
+            .glass-card,
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .modal-content { width: calc(100vw - 1.5rem); max-height: calc(100dvh - 1.5rem); }
+            .modal-footer .btn,
+            .card-header .btn { flex: 1 1 160px; }
+        }
+
         /* --- DROPZONE --- */
         .upload-dropzone {
             border: 2px dashed var(--glass-border);
@@ -1005,67 +1077,25 @@
 
                 <nav>
                     <div class="nav-section">
-                        <div class="nav-section-title">Overview</div>
-                        <div class="nav-item active" data-view="dashboard">
-                            <i class="fas fa-home"></i> Dashboard
-                        </div>
+                        <div class="nav-section-title">Cockpit</div>
+                        <div class="nav-item active" data-view="dashboard"><i class="fas fa-home"></i> Dashboard</div>
+                        <div class="nav-item" data-view="stories"><i class="fas fa-book"></i> Stories</div>
+                        <div class="nav-item" data-view="chapters"><i class="fas fa-pen-nib"></i> Writer / Chapters</div>
+                        <div class="nav-item" data-view="rollingAccess"><i class="fas fa-layer-group"></i> Rolling Access</div>
                     </div>
 
                     <div class="nav-section">
-                        <div class="nav-section-title">Content</div>
-                        <div class="nav-item" data-view="stories">
-                            <i class="fas fa-book"></i> Stories
-                        </div>
-                        <div class="nav-item" data-view="chapters">
-                            <i class="fas fa-file-alt"></i> Chapters
-                        </div>
-                        <div class="nav-item" data-view="characters">
-                            <i class="fas fa-users"></i> Characters
-                        </div>
+                        <div class="nav-section-title">Audience</div>
+                        <div class="nav-item" data-view="readers"><i class="fas fa-address-book"></i> Readers / CRM</div>
+                        <div class="nav-item" data-view="community"><i class="fas fa-comments"></i> Community</div>
+                        <div class="nav-item" data-view="access"><i class="fas fa-key"></i> Access Tools</div>
                     </div>
 
                     <div class="nav-section">
-                        <div class="nav-section-title">World Building</div>
-                        <div class="nav-item" data-view="lore">
-                            <i class="fas fa-scroll"></i> Lore
-                        </div>
-                        <div class="nav-item" data-view="timeline">
-                            <i class="fas fa-stream"></i> Timeline
-                        </div>
-                        <div class="nav-item" data-view="maps">
-                            <i class="fas fa-map"></i> Maps
-                        </div>
-                        <!-- NEW INBOX TAB -->
-                        <div class="nav-item" data-view="mapRequests">
-                            <i class="fas fa-inbox"></i> Map Requests
-                        </div>
-                    </div>
-
-                    <div class="nav-section">
-                        <div class="nav-section-title">Media</div>
-                        <div class="nav-item" data-view="gallery">
-                            <i class="fas fa-images"></i> Gallery
-                        </div>
-                        <div class="nav-item" data-view="wallpapers">
-                            <i class="fas fa-paint-brush"></i> Wallpapers
-                        </div>
-                    </div>
-
-                    <div class="nav-section">
-                        <div class="nav-section-title">Member Access</div>
-                        <div class="nav-item" data-view="access">
-                            <i class="fas fa-key"></i> Access Control
-                        </div>
-                    </div>
-
-                    <div class="nav-section">
-                        <div class="nav-section-title">Settings</div>
-                        <div class="nav-item" data-view="settings">
-                            <i class="fas fa-cog"></i> Site Settings
-                        </div>
-                        <div class="nav-item" data-view="profile">
-                            <i class="fas fa-user-edit"></i> Author Profile
-                        </div>
+                        <div class="nav-section-title">Site</div>
+                        <div class="nav-item" data-view="settings"><i class="fas fa-cog"></i> Site Settings</div>
+                        <div class="nav-item" data-view="storyExtras"><i class="fas fa-sparkles"></i> Story Extras</div>
+                        <div class="nav-item" data-view="profile"><i class="fas fa-user-edit"></i> Author Profile</div>
                     </div>
                 </nav>
 
@@ -1120,21 +1150,53 @@
         // ==============================================
         // STATE
         // ==============================================
-        const State = {
+        const _State = {
             user: null,
             profile: null,
-            currentView: 'dashboard',
+            currentView: localStorage.getItem('ea-admin-last-view') || 'dashboard',
             stories: [],
             characters: [],
-            selectedStoryId: null,
-            selectedCharacterId: null,
+            selectedStoryId: localStorage.getItem('ea-admin-last-story-id') || null,
+            selectedCharacterId: localStorage.getItem('ea-admin-last-character-id') || null,
             gallerySearch: '',
             galleryVisibilityFilter: 'published',
             accessTiers: [],
             accessKeys: [],
             entitlements: [],
-            providerMappings: []
+            providerMappings: [],
+            editingChapterId: localStorage.getItem('ea-admin-last-chapter-id') || null,
+            writerPanel: localStorage.getItem('ea-admin-last-writer-panel') || 'write',
+            writerSidebarCollapsed: localStorage.getItem('ea-admin-writer-sidebar-collapsed') === 'true',
+            readerSearch: ''
         };
+
+        const State = new Proxy(_State, {
+            set(target, prop, value) {
+                target[prop] = value;
+                if (prop === 'currentView') {
+                    if (value) localStorage.setItem('ea-admin-last-view', value);
+                    else localStorage.removeItem('ea-admin-last-view');
+                } else if (prop === 'selectedStoryId') {
+                    if (value) localStorage.setItem('ea-admin-last-story-id', value);
+                    else localStorage.removeItem('ea-admin-last-story-id');
+                } else if (prop === 'selectedCharacterId') {
+                    if (value) localStorage.setItem('ea-admin-last-character-id', value);
+                    else localStorage.removeItem('ea-admin-last-character-id');
+                } else if (prop === 'editingChapterId') {
+                    if (value) localStorage.setItem('ea-admin-last-chapter-id', value);
+                    else localStorage.removeItem('ea-admin-last-chapter-id');
+                } else if (prop === 'writerPanel') {
+                    if (value) localStorage.setItem('ea-admin-last-writer-panel', value);
+                    else localStorage.removeItem('ea-admin-last-writer-panel');
+                } else if (prop === 'writerSidebarCollapsed') {
+                    localStorage.setItem('ea-admin-writer-sidebar-collapsed', value ? 'true' : 'false');
+                }
+                return true;
+            },
+            get(target, prop) {
+                return target[prop];
+            }
+        });
 
         // ==============================================
         // UTILS
@@ -1165,6 +1227,138 @@
                     month: 'short',
                     day: 'numeric'
                 });
+            },
+            htmlToPlainText: (html) => {
+                const div = document.createElement('div');
+                div.innerHTML = html || '';
+                div.querySelectorAll('br').forEach(el => el.replaceWith('\n'));
+                div.querySelectorAll('p,div,h2,h3,h4,blockquote,li').forEach(el => {
+                    el.appendChild(document.createTextNode('\n'));
+                });
+                div.querySelectorAll('hr').forEach(el => el.replaceWith('\n---\n'));
+                return (div.textContent || div.innerText || '').trim();
+            },
+            markdownInlineToHtml: (text) => {
+                let out = Utils.escapeHtml(text || '');
+                out = out.replace(/`([^`]+)`/g, '$1');
+                out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+                out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+                out = out.replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+                return out;
+            },
+            markdownToChapterHtml: (markdown) => {
+                const lines = (markdown || '').replace(/\r\n?/g, '\n').split('\n');
+                const blocks = [];
+                let paragraph = [];
+                let list = null;
+                const flushParagraph = () => {
+                    if (!paragraph.length) return;
+                    blocks.push(`<p>${paragraph.map(line => Utils.markdownInlineToHtml(line)).join('<br>')}</p>`);
+                    paragraph = [];
+                };
+                const flushList = () => {
+                    if (!list) return;
+                    blocks.push(`<${list.type}>${list.items.map(item => `<li>${Utils.markdownInlineToHtml(item)}</li>`).join('')}</${list.type}>`);
+                    list = null;
+                };
+                lines.forEach(rawLine => {
+                    const line = rawLine.trimEnd();
+                    const trimmed = line.trim();
+                    if (!trimmed) { flushParagraph(); flushList(); return; }
+                    if (/^(\*\s*){3,}$|^(-\s*){3,}$|^_{3,}$/.test(trimmed)) {
+                        flushParagraph(); flushList(); blocks.push('<hr>'); return;
+                    }
+                    const heading = trimmed.match(/^(#{2,4})\s+(.+)$/);
+                    if (heading) {
+                        flushParagraph(); flushList();
+                        blocks.push(`<h${heading[1].length}>${Utils.markdownInlineToHtml(heading[2])}</h${heading[1].length}>`);
+                        return;
+                    }
+                    const quote = trimmed.match(/^>\s?(.+)$/);
+                    if (quote) {
+                        flushParagraph(); flushList();
+                        blocks.push(`<blockquote>${Utils.markdownInlineToHtml(quote[1])}</blockquote>`);
+                        return;
+                    }
+                    const unordered = trimmed.match(/^[-*+]\s+(.+)$/);
+                    const ordered = trimmed.match(/^\d+[.)]\s+(.+)$/);
+                    if (unordered || ordered) {
+                        flushParagraph();
+                        const type = unordered ? 'ul' : 'ol';
+                        if (!list || list.type !== type) flushList();
+                        if (!list) list = { type, items: [] };
+                        list.items.push((unordered || ordered)[1]);
+                        return;
+                    }
+                    flushList();
+                    paragraph.push(line);
+                });
+                flushParagraph();
+                flushList();
+                return Utils.sanitizeChapterHtml(blocks.join(''));
+            },
+            sanitizeChapterHtml: (html) => {
+                const template = document.createElement('template');
+                template.innerHTML = html || '';
+                const allowed = new Set(['P','DIV','BR','STRONG','B','EM','I','BLOCKQUOTE','H2','H3','H4','HR','UL','OL','LI']);
+                const walk = (node) => {
+                    [...node.childNodes].forEach(child => {
+                        if (child.nodeType === Node.ELEMENT_NODE) {
+                            if (!allowed.has(child.tagName)) {
+                                const frag = document.createDocumentFragment();
+                                while (child.firstChild) frag.appendChild(child.firstChild);
+                                child.replaceWith(frag);
+                                walk(node);
+                                return;
+                            }
+                            [...child.attributes].forEach(attr => child.removeAttribute(attr.name));
+                            if (child.tagName === 'B') child.outerHTML = `<strong>${child.innerHTML}</strong>`;
+                            if (child.tagName === 'I') child.outerHTML = `<em>${child.innerHTML}</em>`;
+                            if (child.tagName === 'DIV') {
+                                const p = document.createElement('p');
+                                p.innerHTML = child.innerHTML || '<br>';
+                                child.replaceWith(p);
+                                walk(p);
+                                return;
+                            }
+                        } else if (child.nodeType === Node.COMMENT_NODE) {
+                            child.remove();
+                            return;
+                        } else if (child.nodeType === Node.TEXT_NODE && child.textContent.includes('\n')) {
+                            const frag = document.createDocumentFragment();
+                            child.textContent.split(/\n{2,}/).forEach((part, index) => {
+                                if (index) frag.appendChild(document.createElement('br'));
+                                if (part) frag.appendChild(document.createTextNode(part));
+                            });
+                            child.replaceWith(frag);
+                            return;
+                        }
+                        walk(child);
+                    });
+                };
+                walk(template.content);
+                let output = template.innerHTML.trim();
+                if (output && !/<(p|h2|h3|h4|blockquote|ul|ol|hr|br)\b/i.test(output)) {
+                    output = `<p>${output}</p>`;
+                }
+                return output;
+            },
+            normalizeEditorHtml: (html) => {
+                const raw = html || '';
+                const emptyish = raw
+                    .replace(/&nbsp;/gi, ' ')
+                    .replace(/\u00a0/g, ' ')
+                    .replace(/<br\s*\/?>/gi, '')
+                    .replace(/<\/?(p|div)[^>]*>/gi, '')
+                    .trim();
+                if (!emptyish) return '';
+                const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
+                return looksLikeHtml ? Utils.sanitizeChapterHtml(raw) : Utils.markdownToChapterHtml(raw);
+            },
+            makePreviewFromHtml: (html, max = 340) => {
+                const text = Utils.htmlToPlainText(html).replace(/\s+/g, ' ').trim();
+                return text.length > max ? text.slice(0, max).replace(/\s+\S*$/, '') + '…' : text;
             },
             isGalleryImagePublished: (image) => image?.is_published !== false,
             isGalleryImageNsfw: (image) => Array.isArray(image?.image_tags) && image.image_tags.includes('NSFW'),
@@ -1689,6 +1883,7 @@
 
             close: () => {
                 document.getElementById('modal-overlay').classList.remove('active');
+                document.getElementById('modal-content').style.maxWidth = '';
             },
 
             confirm: (message) => {
@@ -1785,7 +1980,7 @@
             showAdminView: () => {
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('admin-view').style.display = 'block';
-                Views.render('dashboard');
+                Views.render(State.currentView || 'dashboard');
             },
 
             login: async (email, password) => {
@@ -1855,19 +2050,20 @@
                 return data;
             },
 
-            saveChapter: async (id, record) => {
-                // Calculate word count
-                record.word_count = record.content ? record.content.split(/\s+/).filter(w => w).length : 0;
-                
+            saveChapter: async (id, record, options = {}) => {
+                record.word_count = Utils.htmlToPlainText(record.content || '').split(/\s+/).filter(w => w).length;
+                let saved;
                 if (id) {
                     const { data, error } = await supabaseClient.from('chapters').update(record).eq('id', id).select().single();
                     if (error) throw error;
-                    return data;
+                    saved = data;
                 } else {
                     const { data, error } = await supabaseClient.from('chapters').insert(record).select().single();
                     if (error) throw error;
-                    return data;
+                    saved = data;
                 }
+                if (!options.skipRolling && saved?.story_id) await DB.recalculateStoryAccess(saved.story_id).catch(err => console.warn('Rolling access recalculation skipped:', err));
+                return saved;
             },
 
             deleteChapter: async (id) => {
@@ -2319,6 +2515,79 @@
             }
         };
 
+        Object.assign(DB, {
+            getStoryAccessPolicy: async (storyId) => {
+                const { data, error } = await supabaseClient.from('story_access_policies').select('*').eq('story_id', storyId).maybeSingle();
+                if (error) throw error;
+                return data;
+            },
+            getStoryAccessPolicies: async () => {
+                const { data, error } = await supabaseClient.from('story_access_policies').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                return data || [];
+            },
+            saveStoryAccessPolicy: async (storyId, rules, enabled = true) => {
+                const existing = await DB.getStoryAccessPolicy(storyId).catch(() => null);
+                const record = { story_id: storyId, rules, enabled, updated_at: new Date().toISOString() };
+                if (existing?.id) {
+                    const { data, error } = await supabaseClient.from('story_access_policies').update(record).eq('id', existing.id).select().single();
+                    if (error) throw error;
+                    return data;
+                }
+                const { data, error } = await supabaseClient.from('story_access_policies').insert(record).select().single();
+                if (error) throw error;
+                return data;
+            },
+            recalculateStoryAccess: async (storyId) => {
+                const [policy, tiers, chapters] = await Promise.all([DB.getStoryAccessPolicy(storyId).catch(() => null), DB.getAccessTiers().catch(() => []), DB.getChapters(storyId)]);
+                if (!policy?.enabled) return [];
+                const windows = Array.isArray(policy.rules?.windows) ? policy.rules.windows : [];
+                const byId = Object.fromEntries(tiers.map(t => [t.id, t]));
+                const ranked = [...windows].filter(w => w.tier_id && Number(w.count) > 0).sort((a,b) => (byId[b.tier_id]?.tier_rank || 0) - (byId[a.tier_id]?.tier_rank || 0));
+                const published = chapters.filter(c => c.is_published).sort((a,b) => (Number(b.chapter_order)||0) - (Number(a.chapter_order)||0));
+                const updates = [];
+                let cursor = 0;
+                for (const win of ranked) {
+                    const count = Math.max(0, Number(win.count)||0);
+                    published.slice(cursor, cursor + count).forEach(ch => { if (!ch.is_nsfw) updates.push({ id: ch.id, required_tier_id: win.tier_id }); });
+                    cursor += count;
+                }
+                published.slice(cursor).forEach(ch => { if (!ch.is_nsfw) updates.push({ id: ch.id, required_tier_id: null }); });
+                for (const update of updates) await supabaseClient.from('chapters').update({ required_tier_id: update.required_tier_id }).eq('id', update.id);
+                return updates;
+            },
+            getReaderProfiles: async () => {
+                const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }).limit(100);
+                if (error) throw error;
+                return data || [];
+            },
+            getProviderConnections: async () => {
+                const { data, error } = await supabaseClient.from('provider_connections').select('*, profiles(display_name, username)').order('updated_at', { ascending: false }).limit(100);
+                if (error) throw error;
+                return data || [];
+            },
+            getAccessRedemptions: async () => {
+                const { data, error } = await supabaseClient.from('access_key_redemptions').select('*, access_keys(key_prefix, campaign, label)').order('redeemed_at', { ascending: false }).limit(100);
+                if (error) throw error;
+                return data || [];
+            },
+            getEntitlementAuditLog: async () => {
+                const { data, error } = await supabaseClient.from('entitlement_audit_log').select('*').order('created_at', { ascending: false }).limit(100);
+                if (error) throw error;
+                return data || [];
+            },
+            getCommunityComments: async () => {
+                const { data, error } = await supabaseClient.from('comments').select('*').order('created_at', { ascending: false }).limit(150);
+                if (error) throw error;
+                return data || [];
+            },
+            getReactionTotals: async () => {
+                const { data, error } = await supabaseClient.from('chapter_reactions').select('chapter_id,reaction,chapters(title)').limit(1000);
+                if (error) throw error;
+                return data || [];
+            }
+        });
+
         // ==============================================
         // FORMS (CRUD Modals)
         // ==============================================
@@ -2568,7 +2837,7 @@
 
             // CHAPTER FORM
             chapterForm: async (id = null) => {
-                let chapter = { title: '', content: '', chapter_order: 0, is_published: false, story_id: State.selectedStoryId, required_tier_id: null, public_release_at: '', preview_text: '' };
+                let chapter = { title: '', content: '', chapter_order: 0, is_published: false, story_id: State.selectedStoryId, required_tier_id: null, public_release_at: '', preview_text: '', is_nsfw: false, external_url: '' };
                 const tiers = await DB.getAccessTiers().catch(() => []);
                 
                 if (id) {
@@ -2588,8 +2857,19 @@
                         <input type="text" class="form-input" id="f-title" value="${chapter.title || ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Content *</label>
-                        <textarea class="form-textarea" id="f-content" style="min-height:300px">${chapter.content || ''}</textarea>
+                        <label class="form-label">Rich Chapter Content *</label>
+                        <div class="editor-toolbar">
+                            <button type="button" onclick="Forms.editorCommand('bold')"><b>B</b></button>
+                            <button type="button" onclick="Forms.editorCommand('italic')"><i>I</i></button>
+                            <button type="button" onclick="Forms.editorBlock('h2')">H2</button>
+                            <button type="button" onclick="Forms.editorBlock('h3')">H3</button>
+                            <button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button>
+                            <button type="button" onclick="Forms.insertSceneBreak()">Scene break</button>
+                            <button type="button" onclick="Forms.convertMarkdownEditor()">Markdown → HTML</button>
+                            <button type="button" onclick="Forms.clearEditorFormatting()">Clear</button>
+                        </div>
+                        <div class="chapter-canvas" id="f-content" contenteditable="true" spellcheck="true">${Utils.normalizeEditorHtml(chapter.content || '')}</div>
+                        <div class="pill-row" style="margin-top:.6rem"><span class="admin-pill gold" id="editor-word-count">0 words</span><span class="admin-pill">Markdown, rich HTML, and line breaks are saved as safe HTML</span></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Subscription Access Tier</label>
@@ -2618,6 +2898,18 @@
                             </label>
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-checkbox">
+                                <input type="checkbox" id="f-is_nsfw" ${chapter.is_nsfw ? 'checked' : ''}>
+                                NSFW / external-only chapter
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">External URL</label>
+                            <input type="url" class="form-input" id="f-external_url" value="${Utils.escapeAttr(chapter.external_url || '')}" placeholder="https://...">
+                        </div>
+                    </div>
                 `;
 
                 const footer = `
@@ -2627,6 +2919,51 @@
                 `;
 
                 Modal.open(id ? 'Edit Chapter' : 'Add Chapter', html, footer);
+                document.getElementById('modal-content').style.maxWidth = 'min(1280px, 96vw)';
+                const editor = document.getElementById('f-content');
+                const updateCount = () => {
+                    const plain = Utils.htmlToPlainText(editor.innerHTML).replace(/\u00a0/g, ' ').trim();
+                    const count = plain.split(/\s+/).filter(Boolean).length;
+                    document.getElementById('editor-word-count').textContent = `${count} words`;
+                    const draftKey = `ea-chapter-draft:${id || 'new'}:${chapter.story_id || State.selectedStoryId}`;
+                    if (plain) localStorage.setItem(draftKey, editor.innerHTML);
+                    else localStorage.removeItem(draftKey);
+                };
+                editor.addEventListener('paste', Forms.handleEditorPaste);
+                editor.addEventListener('input', updateCount);
+                updateCount();
+            },
+
+            editorCommand: (cmd) => { document.execCommand(cmd, false, null); document.getElementById('f-content')?.focus(); },
+            editorBlock: (tag) => { document.execCommand('formatBlock', false, tag); document.getElementById('f-content')?.focus(); },
+            insertSceneBreak: () => { document.execCommand('insertHTML', false, '<hr><p><br></p>'); document.getElementById('f-content')?.focus(); },
+            clearEditorFormatting: () => { document.execCommand('removeFormat', false, null); },
+            handleEditorPaste: (event) => {
+                const editor = document.getElementById('f-content');
+                if (!editor) return;
+                const clipboard = event.clipboardData;
+                if (!clipboard) return;
+                const html = clipboard.getData('text/html');
+                const text = clipboard.getData('text/plain');
+                if (!html && !text) return;
+                event.preventDefault();
+                const payload = html ? Utils.sanitizeChapterHtml(html) : Utils.markdownToChapterHtml(text);
+                document.execCommand('insertHTML', false, payload);
+                editor.dispatchEvent(new Event('input', { bubbles: true }));
+            },
+            normalizeEditorNow: () => {
+                const editor = document.getElementById('f-content');
+                if (!editor) return '';
+                editor.innerHTML = Utils.normalizeEditorHtml(editor.innerHTML);
+                return editor.innerHTML;
+            },
+            isMeaningfulEditorHtml: (html) => !!Utils.htmlToPlainText(html || '').replace(/\u00a0/g, ' ').trim(),
+            convertMarkdownEditor: () => {
+                const editor = document.getElementById('f-content');
+                if (!editor) return;
+                editor.innerHTML = Utils.markdownToChapterHtml(Utils.htmlToPlainText(editor.innerHTML));
+                editor.dispatchEvent(new Event('input', { bubbles: true }));
+                editor.focus();
             },
 
             saveChapter: async (id) => {
@@ -2642,19 +2979,25 @@
 
                     const requiredTierId = document.getElementById('f-required_tier_id')?.value || null;
                     const publicReleaseValue = document.getElementById('f-public_release_at')?.value || '';
+                    const isNsfw = document.getElementById('f-is_nsfw')?.checked || false;
+                    const externalUrl = document.getElementById('f-external_url')?.value.trim() || null;
+                    if (isNsfw && !externalUrl) throw new Error('NSFW/external-only chapters need an external URL.');
                     const record = {
                         story_id: State.selectedStoryId,
                         title: document.getElementById('f-title').value,
-                        content: document.getElementById('f-content').value,
+                        content: Forms.normalizeEditorNow(),
                         chapter_order: orderValue,
                         is_published: document.getElementById('f-is_published').checked,
                         required_tier_id: requiredTierId,
                         public_release_at: publicReleaseValue ? new Date(publicReleaseValue).toISOString() : null,
-                        preview_text: document.getElementById('f-preview_text')?.value || null
+                        preview_text: document.getElementById('f-preview_text')?.value || Utils.makePreviewFromHtml(document.getElementById('f-content').innerHTML),
+                        is_nsfw: isNsfw,
+                        external_url: externalUrl
                     };
                     await DB.saveChapter(id || null, record);
+                    localStorage.removeItem(`ea-chapter-draft:${id || 'new'}:${State.selectedStoryId}`);
                     Modal.close();
-                    UI.showToast('Chapter saved!');
+                    UI.showToast(record.is_published ? 'Chapter saved and rolling access recalculated!' : 'Chapter draft saved!');
                     Views.render('chapters');
                 } catch (err) {
                     UI.showToast(err.message, 'error');
@@ -3519,6 +3862,24 @@
                 }
             },
 
+            saveReaderBehavior: async () => {
+                try {
+                    UI.showLoading();
+                    const behavior = {
+                        enableReaderGuides: document.getElementById('f-enable-reader-guides').checked,
+                        globalExternalUrl: document.getElementById('f-global-external-url').value.trim(),
+                        providerNote: document.getElementById('f-provider-note').value.trim()
+                    };
+                    await DB.upsertSettingByKey('reader_behavior', behavior);
+                    UI.showToast('Reader behavior defaults saved.');
+                    Views.render('settings');
+                } catch (err) {
+                    UI.showToast(err.message, 'error');
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
             deleteSetting: async (id) => {
                 if (await Modal.confirm('Delete this setting?')) {
                     try {
@@ -3727,12 +4088,12 @@
                             <tbody>
                                 ${stories.slice(0, 5).map(s => `
                                     <tr>
-                                        <td style="cursor:pointer" onclick="Forms.storyForm('${s.id}')"><img src="${s.cover_image_url || 'https://via.placeholder.com/50x50?text=?'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
+                                        <td style="cursor:pointer" onclick="Forms.storyForm('${s.id}')"><img src="${s.cover_image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"%3E%3Crect width="50" height="50" fill="%231d1d1d"/%3E%3Cpath d="M15 34h20M18 29l5-6 4 4 3-3 5 5" stroke="%23888" fill="none" stroke-width="2" stroke-linecap="round"/%3E%3C/svg%3E'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
                                         <td style="cursor:pointer" onclick="Forms.storyForm('${s.id}')"><strong>${Utils.escapeHtml(s.title)}</strong></td>
                                         <td style="cursor:pointer" onclick="Forms.storyForm('${s.id}')"><span class="status-badge ${s.is_published ? 'status-published' : 'status-draft'}">${s.is_published ? 'Published' : 'Draft'}</span></td>
                                         <td style="cursor:pointer" onclick="Forms.storyForm('${s.id}')">${new Date(s.updated_at).toLocaleDateString()}</td>
                                         <td>
-                                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); window.location.href='writer.html?story_id=${s.id}'" title="Write"><i class="fas fa-pen"></i> Writer IDE</button>
+                                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); State.selectedStoryId='${s.id}'; State.editingChapterId=null; Views.render('chapters')" title="Write"><i class="fas fa-pen"></i> Writer</button>
                                         </td>
                                     </tr>
                                 `).join('') || '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-book-open"></i><p>No stories yet</p><button class="btn btn-primary btn-sm" onclick="Forms.storyForm()"><i class="fas fa-plus"></i> Create your first story</button></div></td></tr>'}
@@ -3773,7 +4134,7 @@
                             <tbody>
                                 ${stories.map(s => `
                                     <tr>
-                                        <td><img src="${s.cover_image_url || 'https://via.placeholder.com/50x50?text=?'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
+                                        <td><img src="${s.cover_image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"%3E%3Crect width="50" height="50" fill="%231d1d1d"/%3E%3Cpath d="M15 34h20M18 29l5-6 4 4 3-3 5 5" stroke="%23888" fill="none" stroke-width="2" stroke-linecap="round"/%3E%3C/svg%3E'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
                                         <td><strong>${Utils.escapeHtml(s.title)}</strong></td>
                                         <td><code style="font-size:0.8rem;color:#888">${Utils.escapeHtml(s.slug)}</code></td>
                                         <td>${Utils.escapeHtml(s.genre || '-')}</td>
@@ -3781,7 +4142,7 @@
                                         <td>
                                             <div class="action-btns">
                                                 <button class="btn btn-secondary btn-sm" onclick="Forms.storyForm('${s.id}')" title="Edit Properties"><i class="fas fa-edit"></i></button>
-                                                <button class="btn btn-secondary btn-sm" onclick="window.location.href='writer.html?story_id=${s.id}'" title="Writer IDE"><i class="fas fa-pen"></i></button>
+                                                <button class="btn btn-secondary btn-sm" onclick="State.selectedStoryId='${s.id}'; State.editingChapterId=null; Views.render('chapters')" title="Writer"><i class="fas fa-pen"></i></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -3837,6 +4198,8 @@
                                     <th>Title</th>
                                     <th>Words</th>
                                     <th>Status</th>
+                                    <th>Access</th>
+                                    <th>External</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -3848,13 +4211,14 @@
                                         <td>${c.word_count || 0}</td>
                                         <td><span class="status-badge ${c.is_published ? 'status-published' : 'status-draft'}">${c.is_published ? 'Published' : 'Draft'}</span></td>
                                         <td>${c.required_tier_id ? `<span class="status-badge status-draft"><i class="fas fa-lock"></i> ${Utils.escapeHtml(tierLookup[c.required_tier_id]?.name || 'Tier required')}</span>` : '<span class="status-badge status-published">Free</span>'}</td>
+                                        <td>${c.is_nsfw ? `<span class="status-badge status-draft"><i class="fas fa-external-link-alt"></i> NSFW</span>` : '-'}</td>
                                         <td>
                                             <div class="action-btns">
                                                 <button class="btn btn-secondary btn-sm" onclick="Forms.chapterForm('${c.id}')" title="Edit"><i class="fas fa-edit"></i></button>
                                             </div>
                                         </td>
                                     </tr>
-                                `).join('') || '<tr><td colspan="6" style="text-align:center;color:#666">No chapters yet</td></tr>'}
+                                `).join('') || '<tr><td colspan="7" style="text-align:center;color:#666">No chapters yet</td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -3907,7 +4271,7 @@
                             <tbody>
                                 ${characters.map(c => `
                                     <tr>
-                                        <td><img src="${c.profile_image_url || 'https://via.placeholder.com/50x50?text=?'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
+                                        <td><img src="${c.profile_image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"%3E%3Crect width="50" height="50" fill="%231d1d1d"/%3E%3Cpath d="M15 34h20M18 29l5-6 4 4 3-3 5 5" stroke="%23888" fill="none" stroke-width="2" stroke-linecap="round"/%3E%3C/svg%3E'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
                                         <td><strong>${Utils.escapeHtml(c.name)}</strong></td>
                                         <td>${Utils.escapeHtml(c.role_title || '-')}</td>
                                         <td>
@@ -4248,7 +4612,7 @@
                             <tbody>
                                 ${entries.map(e => `
                                     <tr>
-                                        <td><img src="${e.image_url || 'https://via.placeholder.com/50x50?text=?'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
+                                        <td><img src="${e.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"%3E%3Crect width="50" height="50" fill="%231d1d1d"/%3E%3Cpath d="M15 34h20M18 29l5-6 4 4 3-3 5 5" stroke="%23888" fill="none" stroke-width="2" stroke-linecap="round"/%3E%3C/svg%3E'}" alt="" loading="lazy" decoding="async" fetchpriority="low"></td>
                                         <td><strong>${Utils.escapeHtml(e.title)}</strong></td>
                                         <td>${Utils.escapeHtml(e.lore_categories?.name || '-')}</td>
                                         <td>
@@ -4558,6 +4922,7 @@
                 const siteTagline = identity.siteTagline || identity.site_tagline || ADMIN_SITE_CONFIG.siteTagline || 'Premium serial fiction archive';
                 const pageTitle = identity.pageTitle || identity.page_title || siteName;
                 const metaDescription = identity.metaDescription || identity.meta_description || 'EvilArchives premium fiction reader.';
+                const behavior = settings.find(s => s.setting_key === 'reader_behavior')?.setting_value || {};
 
                 container.innerHTML = `
                     <div class="page-header">
@@ -4593,6 +4958,42 @@
                             <textarea class="form-textarea" id="f-meta-description" style="min-height:90px;">${Utils.escapeHtml(metaDescription)}</textarea>
                         </div>
                         <button class="btn btn-primary" onclick="Forms.saveSiteIdentity()"><i class="fas fa-save"></i> Save Reader Identity</button>
+                    </div>
+                    <div class="glass-card" style="margin-bottom:1.5rem;">
+                        <div class="card-header">
+                            <h3 class="card-title">Subscription Behavior Defaults</h3>
+                            <span style="color:#777;font-size:0.78rem;">Backed by <code>site_settings.reader_behavior</code></span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="f-enable-reader-guides" ${behavior.enableReaderGuides !== false ? 'checked' : ''}>
+                                    Enable reader guide / onboarding hints
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Global external fallback URL (optional)</label>
+                                <input class="form-input" id="f-global-external-url" value="${Utils.escapeAttr(behavior.globalExternalUrl || '')}" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Provider/settings display note</label>
+                            <textarea class="form-textarea" id="f-provider-note" style="min-height:90px;">${Utils.escapeHtml(behavior.providerNote || 'Provider entitlements are managed by Edge Functions and provider tier mappings.')}</textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="Forms.saveReaderBehavior()"><i class="fas fa-save"></i> Save Behavior Defaults</button>
+                    </div>
+                    <div class="glass-card" style="margin-bottom:1.5rem;">
+                        <div class="card-header">
+                            <h3 class="card-title">Provider Settings Display</h3>
+                            <span style="color:#777;font-size:0.78rem;">Runtime provider flags from <code>js/subscription/site-config.js</code></span>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card"><i class="fab fa-patreon stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.providers?.patreon ? 'On' : 'Off'}</div><div class="stat-label">Patreon Provider</div></div>
+                            <div class="stat-card"><i class="fas fa-plug stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.features?.enablePatreonConnect ? 'On' : 'Off'}</div><div class="stat-label">Patreon Connect</div></div>
+                            <div class="stat-card"><i class="fab fa-google stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.auth?.googleEnabled ? 'On' : 'Off'}</div><div class="stat-label">Google Sign-in</div></div>
+                            <div class="stat-card"><i class="fas fa-key stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.features?.enableAccessKeys !== false ? 'On' : 'Off'}</div><div class="stat-label">Access Keys</div></div>
+                        </div>
+                        <p style="color:#aaa;line-height:1.7;margin-top:1rem;">Provider tier mappings, manual grants, and access keys remain managed in <button class="btn btn-secondary btn-sm" onclick="Views.render('access')"><i class="fas fa-key"></i> Access Tools</button></p>
                     </div>
                     <div class="glass-card">
                         <table class="data-table">
@@ -4648,7 +5049,7 @@
                             </button>
                         </div>
                         <div style="display:flex;gap:2rem;align-items:flex-start">
-                            <img src="${author.avatar_url || 'https://via.placeholder.com/120x120?text=Avatar'}" decoding="async"
+                            <img src="${author.avatar_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"%3E%3Crect width="120" height="120" rx="60" fill="%231d1d1d"/%3E%3Ccircle cx="60" cy="46" r="18" fill="%23888"/%3E%3Cpath d="M28 98c6-20 58-20 64 0" fill="%23888"/%3E%3C/svg%3E'}" decoding="async"
                                  style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--accent-color)">
                             <div>
                                 <h2 style="font-family:var(--font-header);color:var(--accent-color);margin-bottom:0.5rem">${author.display_name || 'No name set'}</h2>
@@ -4677,7 +5078,7 @@
                             <tbody>
                                 ${author.links.map(l => `
                                     <tr>
-                                        <td><img src="${l.icon_url || 'https://via.placeholder.com/40?text=?'}" loading="lazy" decoding="async" fetchpriority="low" style="width:40px;height:40px;border-radius:8px"></td>
+                                        <td><img src="${l.icon_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"%3E%3Crect width="40" height="40" rx="8" fill="%231d1d1d"/%3E%3Cpath d="M12 27h16M14 23l4-5 4 4 3-3 3 4" stroke="%23888" fill="none" stroke-width="2" stroke-linecap="round"/%3E%3C/svg%3E'}" loading="lazy" decoding="async" fetchpriority="low" style="width:40px;height:40px;border-radius:8px"></td>
                                         <td><strong>${Utils.escapeHtml(l.platform_name)}</strong></td>
                                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis"><a href="${l.url}" target="_blank" style="color:var(--accent-color)">${l.url}</a></td>
                                         <td>${Utils.escapeHtml(l.note || '-')}</td>
@@ -4740,6 +5141,274 @@
                     UI.hideLoading();
                 }
             }
+        };
+
+        // ==============================================
+        // CMS REBUILD EXTENSIONS
+        // ==============================================
+        const OriginalViewsRender = Views.render.bind(Views);
+        Views.render = async (viewName) => {
+            const extensionViews = new Set(['rollingAccess', 'readers', 'community', 'storyExtras']);
+            if (!extensionViews.has(viewName)) return OriginalViewsRender(viewName);
+            State.currentView = viewName;
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === viewName));
+            UI.showLoading();
+            const content = document.getElementById('admin-content');
+            try { await Views[viewName](content); }
+            catch (err) { console.error('View render error:', err); content.innerHTML = `<div class="glass-card"><p>Error loading view: ${Utils.escapeHtml(err.message)}</p></div>`; }
+            finally { UI.hideLoading(); }
+        };
+
+
+        Views.chapters = async (container) => {
+            const stories = await DB.getStories();
+            State.stories = stories;
+            if (stories.length === 0) {
+                container.innerHTML = `<div class="page-header"><div><h1 class="page-title">Writer / Chapters</h1></div></div><div class="glass-card"><p style="text-align:center;color:#666">Create a story first to add chapters.</p></div>`;
+                return;
+            }
+            State.selectedStoryId = State.selectedStoryId || stories[0].id;
+            State.writerPanel = State.writerPanel || 'write';
+            const [chapters, tiers] = await Promise.all([DB.getChapters(State.selectedStoryId), DB.getAccessTiers().catch(() => [])]);
+            const tierLookup = Object.fromEntries(tiers.map(t => [t.id, t]));
+            const sortedChapters = [...chapters].sort((a,b) => (Number(b.chapter_order)||0) - (Number(a.chapter_order)||0));
+            const editingId = State.editingChapterId || null;
+            const chapter = editingId === 'new'
+                ? { title:'', content:'', chapter_order:(chapters.length + 1), is_published:false, story_id:State.selectedStoryId, required_tier_id:null, public_release_at:'', preview_text:'', is_nsfw:false, external_url:'' }
+                : (chapters.find(c => c.id === editingId) || null);
+            const tierOptions = ['<option value="">Free / public when published</option>', ...tiers.map(t => `<option value="${t.id}" ${chapter?.required_tier_id === t.id ? 'selected' : ''}>${Utils.escapeHtml(t.name)} (rank ${t.tier_rank})</option>`)].join('');
+            const publicReleaseValue = chapter?.public_release_at ? new Date(chapter.public_release_at).toISOString().slice(0, 16) : '';
+            const chapterTitle = chapter?.title || '';
+            const tabButton = (panel, icon, label) => `<button type="button" class="writer-tab ${State.writerPanel === panel ? 'active' : ''}" data-writer-tab="${panel}" onclick="Forms.showWriterPanel('${panel}')"><i class="fas fa-${icon}"></i> ${label}</button>`;
+            container.innerHTML = `
+                <div class="page-header">
+                    <div><h1 class="page-title">Writer / Chapters</h1><p class="page-subtitle">Focused manuscript editor. Publishing, access, and teaser tools live in their own tabs instead of choking the writing page.</p></div>
+                    <button class="btn btn-primary" onclick="State.editingChapterId='new'; State.writerPanel='write'; Views.render('chapters')"><i class="fas fa-plus"></i> New Chapter</button>
+                </div>
+                <div class="glass-card" style="margin-bottom:1rem"><label class="form-label">Story</label><select class="form-select" id="story-select" onchange="State.selectedStoryId=this.value; State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">${stories.map(s => `<option value="${s.id}" ${s.id === State.selectedStoryId ? 'selected' : ''}>${Utils.escapeHtml(s.title)}</option>`).join('')}</select></div>
+                <div class="writer-shell">
+                    <aside class="glass-card writer-sidebar ${State.writerSidebarCollapsed ? 'collapsed' : ''}" style="margin:0" id="writer-sidebar">
+                        <div class="collapsed-handle" onclick="Forms.toggleWriterSidebar(event)">
+                            <i class="fas fa-chevron-right" style="font-size:1.1rem; color:var(--accent-color)"></i>
+                            <span style="writing-mode: vertical-rl; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 2px; font-weight: 700; margin-top: 1.5rem;">Chapters</span>
+                        </div>
+                        <div class="sidebar-full-content" style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
+                            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                                <h3 class="card-title">Chapters</h3>
+                                <div style="display:flex; align-items:center; gap:0.5rem">
+                                    <span class="admin-pill">${chapters.length} total</span>
+                                    <button class="btn btn-secondary btn-sm sidebar-toggle-btn" onclick="Forms.toggleWriterSidebar(event)" style="padding:4px 8px; font-size:0.75rem; min-width:0; background:rgba(255,255,255,0.06); border:1px solid var(--glass-border);" title="Toggle Sidebar">
+                                        <i class="fas ${State.writerSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="writer-list">
+                                ${sortedChapters.map(c => `
+                                    <div class="writer-item ${editingId === c.id ? 'active' : ''}" onclick="State.editingChapterId='${c.id}'; State.writerPanel='write'; Views.render('chapters')" style="padding: 0.5rem 0.65rem;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem">
+                                            <span class="writer-item-title" style="font-size:0.88rem; font-weight:700;">#${c.chapter_order || 0}. ${Utils.escapeHtml(c.title || 'Untitled')}</span>
+                                            <span class="status-badge ${c.is_published ? 'status-published' : 'status-draft'}" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0;">${c.is_published ? 'Live' : 'Draft'}</span>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:#888; margin-top:0.35rem">
+                                            <span>${c.word_count || 0} words</span>
+                                            <div style="display:flex; gap:0.25rem; align-items:center;">
+                                                ${c.required_tier_id ? `<span class="admin-pill gold" style="font-size:0.65rem; padding:1px 6px; border-radius:4px;"><i class="fas fa-lock" style="font-size:0.55rem"></i> ${Utils.escapeHtml(tierLookup[c.required_tier_id]?.name || 'Tier')}</span>` : '<span class="admin-pill" style="font-size:0.65rem; padding:1px 6px; border-radius:4px;">Free</span>'}
+                                                ${c.is_nsfw ? '<span class="admin-pill danger" style="font-size:0.65rem; padding:1px 6px; border-radius:4px;">NSFW</span>' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') || '<p style="color:#777;text-align:center;padding:1rem 0;">No chapters yet.</p>'}
+                            </div>
+                        </div>
+                    </aside>
+                    <section class="glass-card writer-editor-card" style="margin:0">
+                        ${chapter ? `
+                            <div class="writer-topbar">
+                                <div><h3 class="card-title">${editingId === 'new' ? 'New Chapter' : 'Editing Chapter'}</h3><p style="color:#777;font-size:.85rem;margin-top:.25rem">${editingId === 'new' ? 'Draft not saved yet' : '#' + (chapter.chapter_order || 0) + ' · ' + (chapter.word_count || 0) + ' words'}</p></div>
+                                <div class="action-btns"><button class="btn btn-secondary btn-sm" onclick="Forms.saveInlineChapter('${editingId === 'new' ? '' : chapter.id}', false)"><i class="fas fa-save"></i> Save Draft</button><button class="btn btn-primary btn-sm" onclick="Forms.saveInlineChapter('${editingId === 'new' ? '' : chapter.id}', true)"><i class="fas fa-upload"></i> Publish</button></div>
+                            </div>
+                            <nav class="writer-tabs">${tabButton('write','pen-nib','Write')}${tabButton('details','sliders','Details')}${tabButton('access','lock','Access')}${tabButton('teaser','wand-magic-sparkles','Teaser')}</nav>
+                            <div class="writer-panel ${State.writerPanel === 'write' ? 'active' : ''}" data-writer-panel="write">
+                                <div class="writer-workspace">
+                                    <input class="manuscript-title" id="f-title" value="${Utils.escapeAttr(chapterTitle)}" placeholder="Chapter title">
+                                    <div class="editor-toolbar"><button type="button" onclick="Forms.editorCommand('bold')"><b>B</b></button><button type="button" onclick="Forms.editorCommand('italic')"><i>I</i></button><button type="button" onclick="Forms.editorBlock('h2')">H2</button><button type="button" onclick="Forms.editorBlock('h3')">H3</button><button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button><button type="button" onclick="Forms.insertSceneBreak()">Scene break</button><button type="button" onclick="Forms.convertMarkdownEditor()">Markdown → HTML</button><button type="button" onclick="Forms.clearEditorFormatting()">Clear</button></div>
+                                    <div class="chapter-canvas" id="f-content" contenteditable="true" spellcheck="true">${Utils.normalizeEditorHtml(chapter.content || '')}</div>
+                                    <div class="pill-row" style="margin-top:.8rem"><span class="admin-pill gold" id="editor-word-count">0 words</span><span class="admin-pill">Markdown, rich HTML, and line breaks supported</span><span class="admin-pill">Autosaves locally</span><button class="btn btn-secondary btn-sm" onclick="State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">Close editor</button></div>
+                                </div>
+                            </div>
+                            <div class="writer-panel ${State.writerPanel === 'details' ? 'active' : ''}" data-writer-panel="details">
+                                <div class="form-grid"><div class="form-group"><label class="form-label">Chapter Order</label><input class="form-input" type="number" id="f-chapter_order" value="${chapter.chapter_order || 0}"></div><div class="form-group"><label class="form-label">Published state</label><label class="form-checkbox"><input type="checkbox" id="f-is_published" ${chapter.is_published ? 'checked' : ''}> Published / visible in reader</label></div></div>
+                                <p style="color:#777">Keep ordering and publish state here; the Write tab stays clean for actual drafting.</p>
+                            </div>
+                            <div class="writer-panel ${State.writerPanel === 'access' ? 'active' : ''}" data-writer-panel="access">
+                                <div class="form-grid"><div class="form-group"><label class="form-label">Tier State</label><select class="form-select" id="f-required_tier_id">${tierOptions}</select></div><div class="form-group"><label class="form-label">Public Release</label><input class="form-input" type="datetime-local" id="f-public_release_at" value="${publicReleaseValue}"></div></div>
+                                <div class="form-grid"><div class="form-group"><label class="form-checkbox"><input type="checkbox" id="f-is_nsfw" ${chapter.is_nsfw ? 'checked' : ''}> NSFW / external-only chapter</label></div><div class="form-group"><label class="form-label">External URL</label><input class="form-input" id="f-external_url" value="${Utils.escapeAttr(chapter.external_url || '')}" placeholder="https://..."></div></div>
+                                <p style="color:#777">External-only chapters expose the link but never send local chapter content to the reader RPC.</p>
+                            </div>
+                            <div class="writer-panel ${State.writerPanel === 'teaser' ? 'active' : ''}" data-writer-panel="teaser">
+                                <div class="form-group"><label class="form-label">Preview / Teaser</label><textarea class="form-textarea" id="f-preview_text" style="min-height:180px">${Utils.escapeHtml(chapter.preview_text || '')}</textarea><button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="document.getElementById('f-preview_text').value=Utils.makePreviewFromHtml(document.getElementById('f-content').innerHTML)"><i class="fas fa-wand-magic-sparkles"></i> Generate from chapter</button></div>
+                            </div>
+                        ` : `<div class="empty-state"><i class="fas fa-pen-nib"></i><p>Select a chapter or create a new one to open a focused writing workspace.</p><button class="btn btn-primary" onclick="State.editingChapterId='new'; State.writerPanel='write'; Views.render('chapters')"><i class="fas fa-plus"></i> New Chapter</button></div>`}
+                    </section>
+                </div>`;
+            const editor = document.getElementById('f-content');
+            if (editor) {
+                const draftKey = `ea-chapter-draft:${editingId || 'new'}:${State.selectedStoryId}`;
+                const draft = localStorage.getItem(draftKey);
+                if (draft && editingId !== null && Forms.isMeaningfulEditorHtml(draft)) {
+                    editor.innerHTML = Utils.normalizeEditorHtml(draft);
+                } else if (draft && !Forms.isMeaningfulEditorHtml(draft)) {
+                    localStorage.removeItem(draftKey);
+                }
+                const updateCount = () => {
+                    const plain = Utils.htmlToPlainText(editor.innerHTML).replace(/\u00a0/g, ' ').trim();
+                    document.getElementById('editor-word-count').textContent = `${plain.split(/\s+/).filter(Boolean).length} words`;
+                    if (plain) localStorage.setItem(draftKey, editor.innerHTML);
+                    else localStorage.removeItem(draftKey);
+                };
+                editor.addEventListener('paste', Forms.handleEditorPaste);
+                editor.addEventListener('input', updateCount); updateCount();
+            }
+        };
+
+        Forms.showWriterPanel = (panel = 'write') => {
+            State.writerPanel = panel;
+            document.querySelectorAll('[data-writer-tab]').forEach(tab => tab.classList.toggle('active', tab.dataset.writerTab === panel));
+            document.querySelectorAll('[data-writer-panel]').forEach(section => section.classList.toggle('active', section.dataset.writerPanel === panel));
+        };
+
+        Forms.saveInlineChapter = async (id, publishOverride = null) => {
+            try {
+                UI.showLoading();
+                const orderValue = parseInt(document.getElementById('f-chapter_order').value) || 0;
+                const chapters = await DB.getChapters(State.selectedStoryId);
+                const conflict = chapters.find(c => c.chapter_order === orderValue && c.id !== (id || null));
+                if (conflict) throw new Error(`Chapter Order ${orderValue} is already used by "${conflict.title}". Please choose a different order.`);
+                const isNsfw = document.getElementById('f-is_nsfw')?.checked || false;
+                const externalUrl = document.getElementById('f-external_url')?.value.trim() || null;
+                if (isNsfw && !externalUrl) throw new Error('NSFW/external-only chapters need an external URL.');
+                const publicReleaseValue = document.getElementById('f-public_release_at')?.value || '';
+                const record = {
+                    story_id: State.selectedStoryId,
+                    title: document.getElementById('f-title').value.trim() || 'Untitled chapter',
+                    content: Forms.normalizeEditorNow(),
+                    chapter_order: orderValue,
+                    is_published: publishOverride === null ? document.getElementById('f-is_published').checked : !!publishOverride,
+                    required_tier_id: document.getElementById('f-required_tier_id')?.value || null,
+                    public_release_at: publicReleaseValue ? new Date(publicReleaseValue).toISOString() : null,
+                    preview_text: document.getElementById('f-preview_text')?.value || Utils.makePreviewFromHtml(document.getElementById('f-content').innerHTML),
+                    is_nsfw: isNsfw,
+                    external_url: externalUrl
+                };
+                const saved = await DB.saveChapter(id || null, record);
+                localStorage.removeItem(`ea-chapter-draft:${id || 'new'}:${State.selectedStoryId}`);
+                State.editingChapterId = saved.id;
+                UI.showToast(record.is_published ? 'Chapter saved and rolling access recalculated.' : 'Chapter draft saved.');
+                Views.render('chapters');
+            } catch (err) { UI.showToast(err.message, 'error'); } finally { UI.hideLoading(); }
+        };
+        Forms.chapterForm = (id = null) => {
+            State.editingChapterId = id || 'new';
+            Views.render('chapters');
+        };
+        Forms.toggleWriterSidebar = (event) => {
+            if (event) event.stopPropagation();
+            State.writerSidebarCollapsed = !State.writerSidebarCollapsed;
+            const sidebar = document.getElementById('writer-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed', State.writerSidebarCollapsed);
+                // Update header chevron icon
+                const headerIcon = sidebar.querySelector('.sidebar-toggle-btn i');
+                if (headerIcon) {
+                    headerIcon.className = State.writerSidebarCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+                }
+                // Update handle chevron icon
+                const handleIcon = sidebar.querySelector('.collapsed-handle i');
+                if (handleIcon) {
+                    handleIcon.className = State.writerSidebarCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+                }
+            }
+        };
+
+        Views.rollingAccess = async (container) => {
+            const [stories, tiers, policies] = await Promise.all([DB.getStories(), DB.getAccessTiers().catch(() => []), DB.getStoryAccessPolicies().catch(() => [])]);
+            State.selectedStoryId = State.selectedStoryId || stories[0]?.id || null;
+            const storyId = State.selectedStoryId;
+            const chapters = storyId ? await DB.getChapters(storyId) : [];
+            const policy = policies.find(p => p.story_id === storyId) || { enabled:true, rules:{ windows:[] } };
+            const windows = Array.isArray(policy.rules?.windows) ? policy.rules.windows : [];
+            const tierLookup = Object.fromEntries(tiers.map(t => [t.id, t]));
+            const rankedWindows = [...windows].sort((a,b)=>(tierLookup[b.tier_id]?.tier_rank||0)-(tierLookup[a.tier_id]?.tier_rank||0));
+            const matrix = chapters.filter(c => c.is_published).sort((a,b)=>(Number(b.chapter_order)||0)-(Number(a.chapter_order)||0)).map((ch, index) => {
+                let cursor = 0, tier = null;
+                for (const win of rankedWindows) {
+                    const count = Number(win.count)||0;
+                    if (index >= cursor && index < cursor + count) { tier = tierLookup[win.tier_id]; break; }
+                    cursor += count;
+                }
+                return { ch, tier };
+            });
+            container.innerHTML = `
+                <div class="page-header"><div><h1 class="page-title">Rolling Access</h1><p class="page-subtitle">Per-story chapter windows: newest chapters for top tiers, older non-NSFW chapters become free.</p></div><button class="btn btn-primary" onclick="Forms.saveRollingPolicy()"><i class="fas fa-save"></i> Save & Recalculate</button></div>
+                <div class="glass-card"><label class="form-label">Story</label><select class="form-select" id="rolling-story" onchange="State.selectedStoryId=this.value; Views.render('rollingAccess')">${stories.map(s=>`<option value="${s.id}" ${s.id===storyId?'selected':''}>${Utils.escapeHtml(s.title)}</option>`).join('')}</select></div>
+                <div class="glass-card"><div class="card-header"><h3 class="card-title">Tier Windows</h3><label class="form-checkbox"><input id="rolling-enabled" type="checkbox" ${policy.enabled !== false ? 'checked' : ''}> Enabled</label></div>
+                    <div class="form-grid">${tiers.map(t => `<div class="form-group"><label class="form-label">${Utils.escapeHtml(t.name)} latest chapters</label><input class="form-input rolling-window" data-tier-id="${t.id}" type="number" min="0" value="${windows.find(w=>w.tier_id===t.id)?.count || 0}"><small style="color:#666">Rank ${t.tier_rank}; higher ranks are applied first.</small></div>`).join('') || '<p style="color:#777">Create access tiers first.</p>'}</div>
+                </div>
+                <div class="glass-card"><div class="card-header"><h3 class="card-title">Live Matrix</h3><button class="btn btn-secondary btn-sm" onclick="Forms.recalculateRollingNow()"><i class="fas fa-rotate"></i> Recalculate now</button></div><div class="matrix-grid">${matrix.map((row, i)=>`<div class="matrix-row ${row.ch.is_nsfw?'nsfw':''}"><div>#${row.ch.chapter_order}</div><div><strong>${Utils.escapeHtml(row.ch.title)}</strong><div class="pill-row" style="margin-top:.35rem"><span class="admin-pill">Position ${i+1}</span>${row.ch.is_nsfw?'<span class="admin-pill danger">NSFW external-only</span>':''}</div></div><div>${row.ch.is_nsfw ? 'External locked' : row.tier ? Utils.escapeHtml(row.tier.name) : 'Free / public'}</div><div>${row.ch.word_count || 0} words</div></div>`).join('') || '<p style="color:#777">No published chapters for this story.</p>'}</div></div>`;
+        };
+
+        Views.readers = async (container) => {
+            const [profiles, entitlements, connections, redemptions, audit] = await Promise.all([DB.getReaderProfiles(), DB.getEntitlements().catch(()=>[]), DB.getProviderConnections().catch(()=>[]), DB.getAccessRedemptions().catch(()=>[]), DB.getEntitlementAuditLog().catch(()=>[])]);
+            const readers = profiles.filter(p => p.role !== 'admin');
+            const query = (State.readerSearch || '').toLowerCase().trim();
+            const filteredReaders = query ? readers.filter(p => [p.id, p.display_name, p.username, p.email].some(v => String(v || '').toLowerCase().includes(query))) : readers;
+            const profileLabel = (id) => {
+                const p = profiles.find(profile => profile.id === id);
+                return p?.display_name || p?.username || id || '-';
+            };
+            container.innerHTML = `<div class="page-header"><div><h1 class="page-title">Readers / CRM</h1><p class="page-subtitle">Profiles, grants, provider links, redemptions, and access audit history.</p></div><button class="btn btn-primary" onclick="Forms.manualGrantForm()"><i class="fas fa-user-check"></i> Manual Grant</button></div>
+            <div class="stats-grid"><div class="stat-card"><i class="fas fa-users stat-icon"></i><div class="stat-value">${readers.length}</div><div class="stat-label">Readers</div></div><div class="stat-card"><i class="fas fa-user-check stat-icon"></i><div class="stat-value">${entitlements.filter(e=>e.status==='active').length}</div><div class="stat-label">Active Grants</div></div><div class="stat-card"><i class="fas fa-plug stat-icon"></i><div class="stat-value">${connections.length}</div><div class="stat-label">Provider Links</div></div><div class="stat-card"><i class="fas fa-key stat-icon"></i><div class="stat-value">${redemptions.length}</div><div class="stat-label">Key Redemptions</div></div></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Reader Profile Search</h3></div><div class="form-row"><div class="form-group"><label class="form-label">Search by name, username, or UUID</label><input class="form-input" id="reader-search" value="${Utils.escapeAttr(State.readerSearch || '')}" placeholder="Reader name, username, or UUID"></div><div class="form-group" style="display:flex;align-items:flex-end;gap:.5rem"><button class="btn btn-primary" onclick="State.readerSearch=document.getElementById('reader-search').value; Views.render('readers')"><i class="fas fa-search"></i> Search</button><button class="btn btn-secondary" onclick="State.readerSearch=''; Views.render('readers')">Clear</button></div></div><table class="data-table"><thead><tr><th>Name</th><th>Username</th><th>User ID</th><th>Joined</th><th>Actions</th></tr></thead><tbody>${filteredReaders.map(p=>`<tr id="reader-${p.id}"><td><strong>${Utils.escapeHtml(p.display_name || p.id)}</strong></td><td>${Utils.escapeHtml(p.username || '-')}</td><td><code>${Utils.escapeHtml(p.id)}</code></td><td>${Utils.formatRelativeDate(p.created_at)}</td><td><button class="btn btn-secondary btn-sm" onclick="State.readerSearch='${p.id}'; Views.render('readers')"><i class="fas fa-filter"></i> Focus</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#666">No matching reader profiles.</td></tr>'}</tbody></table></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Entitlements</h3><button class="btn btn-primary btn-sm" onclick="Forms.manualGrantForm()"><i class="fas fa-user-check"></i> Manual Grant</button></div><table class="data-table"><thead><tr><th>Reader</th><th>Tier</th><th>Source</th><th>Status</th><th>Valid Until</th><th>Actions</th></tr></thead><tbody>${entitlements.filter(e => !query || String(e.user_id || '').toLowerCase().includes(query) || String(e.profiles?.display_name || '').toLowerCase().includes(query) || String(e.profiles?.username || '').toLowerCase().includes(query)).map(e=>`<tr><td><a href="#reader-${e.user_id}" onclick="State.readerSearch='${e.user_id}'; Views.render('readers')" style="color:var(--accent-color)">${Utils.escapeHtml(e.profiles?.display_name || e.profiles?.username || profileLabel(e.user_id))}</a></td><td>${Utils.escapeHtml(e.reader_access_tiers?.name || 'Unknown tier')}</td><td>${Utils.escapeHtml(e.provider || e.source || 'manual')}</td><td><span class="status-badge ${e.status === 'active' ? 'status-published' : 'status-draft'}">${Utils.escapeHtml(e.status || 'active')}</span></td><td>${Utils.formatRelativeDate(e.valid_until)}</td><td>${e.status === 'active' ? `<button class="btn btn-danger btn-sm" onclick="Forms.revokeEntitlement('${e.id}')"><i class="fas fa-user-slash"></i> Revoke</button>` : '-'}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#666">No entitlements found.</td></tr>'}</tbody></table></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Provider Connections</h3></div><table class="data-table"><thead><tr><th>Reader</th><th>Provider</th><th>Account</th><th>Status</th><th>Synced</th></tr></thead><tbody>${connections.map(c=>`<tr><td><a href="#reader-${c.user_id}" onclick="State.readerSearch='${c.user_id}'; Views.render('readers')" style="color:var(--accent-color)">${Utils.escapeHtml(c.profiles?.display_name || profileLabel(c.user_id))}</a></td><td>${Utils.escapeHtml(c.provider)}</td><td>${Utils.escapeHtml(c.provider_account_label || c.provider_user_id || '-')}</td><td>${Utils.escapeHtml(c.status)}</td><td>${Utils.formatRelativeDate(c.last_synced_at || c.updated_at)}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#666">No provider connections.</td></tr>'}</tbody></table></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Access Key Redemptions</h3></div><table class="data-table"><thead><tr><th>When</th><th>Reader</th><th>Key</th><th>Campaign</th><th>Entitlement</th></tr></thead><tbody>${redemptions.map(r=>`<tr><td>${Utils.formatRelativeDate(r.redeemed_at)}</td><td><a href="#reader-${r.user_id}" onclick="State.readerSearch='${r.user_id}'; Views.render('readers')" style="color:var(--accent-color)">${Utils.escapeHtml(profileLabel(r.user_id))}</a></td><td><code>${Utils.escapeHtml(r.access_keys?.key_prefix || r.key_id || '-')}</code></td><td>${Utils.escapeHtml(r.access_keys?.campaign || r.access_keys?.label || '-')}</td><td><code>${Utils.escapeHtml(r.entitlement_id || '-')}</code></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#666">No key redemptions.</td></tr>'}</tbody></table></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Entitlement Audit Log</h3></div><table class="data-table"><thead><tr><th>When</th><th>User</th><th>Action</th><th>Source</th><th>Details</th></tr></thead><tbody>${audit.map(a=>`<tr><td>${Utils.formatRelativeDate(a.created_at)}</td><td><a href="#reader-${a.user_id}" onclick="State.readerSearch='${a.user_id || ''}'; Views.render('readers')" style="color:var(--accent-color)">${Utils.escapeHtml(profileLabel(a.user_id))}</a></td><td>${Utils.escapeHtml(a.action)}</td><td>${Utils.escapeHtml(a.provider || a.source || '-')}</td><td><code>${Utils.escapeHtml(JSON.stringify(a.details || {}))}</code></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#666">No audit events.</td></tr>'}</tbody></table></div>`;
+        };
+
+        Views.community = async (container) => {
+            const [comments, reactions, stories, profiles] = await Promise.all([DB.getCommunityComments().catch(()=>[]), DB.getReactionTotals().catch(()=>[]), DB.getStories().catch(()=>[]), DB.getReaderProfiles().catch(()=>[])]);
+            const chapterLookup = {};
+            for (const story of stories) {
+                const chapters = await DB.getChapters(story.id).catch(() => []);
+                chapters.forEach(ch => { chapterLookup[ch.id] = { ...ch, story }; });
+            }
+            const profileLabel = (id, meta = {}) => profiles.find(p => p.id === id)?.display_name || meta.display_name || meta.username || id || 'Reader';
+            const totals = {};
+            reactions.forEach(r => { const key = `${r.chapter_id}:${r.reaction}`; totals[key] = (totals[key] || 0) + 1; });
+            container.innerHTML = `<div class="page-header"><div><h1 class="page-title">Community</h1><p class="page-subtitle">Reader notes moderation/read view and reaction totals by story/chapter.</p></div></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Recent Comments</h3></div><table class="data-table"><thead><tr><th>When</th><th>Reader</th><th>Chapter</th><th>Comment</th><th>Links</th></tr></thead><tbody>${comments.map(c=>{ const chapter=chapterLookup[c.target_id]; return `<tr><td>${Utils.formatRelativeDate(c.created_at)}</td><td><a href="#" onclick="State.readerSearch='${c.user_id || ''}'; Views.render('readers'); return false;" style="color:var(--accent-color)">${Utils.escapeHtml(profileLabel(c.user_id, c.metadata || {}))}</a></td><td>${Utils.escapeHtml(chapter?.story?.title || c.target_type || '-')}${chapter ? `<br><strong>${Utils.escapeHtml(chapter.title)}</strong>` : `<br><code>${Utils.escapeHtml(c.target_id || '')}</code>`}</td><td>${Utils.escapeHtml(c.content)}</td><td><div class="action-btns">${chapter ? `<a class="btn btn-secondary btn-sm" href="index.html#/read/${chapter.id}" target="_blank"><i class="fas fa-book-open"></i> Reader</a>` : ''}<button class="btn btn-secondary btn-sm" onclick="navigator.clipboard?.writeText('${c.id}')"><i class="fas fa-copy"></i> ID</button></div></td></tr>`; }).join('') || '<tr><td colspan="5" style="text-align:center;color:#666">No reader comments yet.</td></tr>'}</tbody></table></div>
+            <div class="glass-card"><div class="card-header"><h3 class="card-title">Reaction Totals</h3></div><table class="data-table"><thead><tr><th>Story</th><th>Chapter</th><th>Reaction</th><th>Total</th><th>Link</th></tr></thead><tbody>${Object.entries(totals).map(([key,total])=>{ const [chapterId,reaction]=key.split(':'); const row=reactions.find(r=>r.chapter_id===chapterId); const chapter=chapterLookup[chapterId]; return `<tr><td>${Utils.escapeHtml(chapter?.story?.title || '-')}</td><td>${Utils.escapeHtml(row?.chapters?.title || chapter?.title || chapterId)}</td><td>${Utils.escapeHtml(reaction)}</td><td>${total}</td><td><a class="btn btn-secondary btn-sm" href="index.html#/read/${chapterId}" target="_blank"><i class="fas fa-book-open"></i> Reader</a></td></tr>`; }).join('') || '<tr><td colspan="5" style="text-align:center;color:#666">No reactions yet.</td></tr>'}</tbody></table></div>`;
+        };
+
+        Views.storyExtras = async (container) => {
+            const cards = [['characters','users','Characters and cast roster'],['gallery','images','Character/gallery images'],['lore','scroll','Lore encyclopedia'],['maps','map','Maps'],['timeline','stream','Timeline'],['wallpapers','paint-brush','Wallpapers'],['mapRequests','inbox','Map request queue']];
+            container.innerHTML = `<div class="page-header"><div><h1 class="page-title">Story Extras</h1><p class="page-subtitle">Secondary world-building tools moved out of the main cockpit.</p></div></div><div class="subnav-grid">${cards.map(([view,icon,label])=>`<div class="subnav-card" onclick="Views.render('${view}')"><i class="fas fa-${icon}" style="color:var(--accent-color);font-size:1.4rem;margin-bottom:.75rem"></i><h3>${label}</h3><p style="color:#777;margin-top:.35rem;font-size:.82rem">Open editor</p></div>`).join('')}</div>`;
+        };
+
+        Forms.saveRollingPolicy = async () => {
+            try {
+                UI.showLoading();
+                const storyId = document.getElementById('rolling-story')?.value || State.selectedStoryId;
+                const windows = [...document.querySelectorAll('.rolling-window')].map(input => ({ tier_id: input.dataset.tierId, count: Number(input.value)||0 })).filter(w => w.count > 0);
+                await DB.saveStoryAccessPolicy(storyId, { windows }, document.getElementById('rolling-enabled')?.checked !== false);
+                await DB.recalculateStoryAccess(storyId);
+                UI.showToast('Rolling access policy saved and applied.');
+                Views.render('rollingAccess');
+            } catch (err) { UI.showToast(err.message, 'error'); } finally { UI.hideLoading(); }
+        };
+        Forms.recalculateRollingNow = async () => {
+            try { UI.showLoading(); await DB.recalculateStoryAccess(State.selectedStoryId); UI.showToast('Rolling access recalculated.'); Views.render('rollingAccess'); }
+            catch (err) { UI.showToast(err.message, 'error'); } finally { UI.hideLoading(); }
         };
 
         // ==============================================

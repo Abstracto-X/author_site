@@ -12,6 +12,6 @@ function init(){
   render();
   initAuth().then(async ()=>{ await loadBackendLibrary(); saveStore(); render(); if (authState.passwordRecovery && authState.user) setTimeout(() => openSheet(sheetUpdatePassword), 0); }).catch(err=>console.error("Auth bridge init failed", err));
   // welcome toast for first bridge load
-  if(!LS.getItem("aether-welcomed")){ LS.setItem("aether-welcomed","1"); setTimeout(()=>toast("Welcome to Aether Pages","Loading the published member library from Supabase.",{icon:"spark",ms:6500}),900); }
+  if(!LS.getItem("aether-welcomed")){ LS.setItem("aether-welcomed","1"); setTimeout(()=>toast(`Welcome to ${SITE_NAME}`,"Loading the published member library.",{icon:"spark",ms:6500}),900); }
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();

@@ -6,6 +6,41 @@ Generated from the current codebase. One-line descriptions are intentionally con
 
 | Line | Function | Purpose |
 |---:|---|---|
+| n/a | `Utils.htmlToPlainText(html)` | Extracts text for editor word counts and previews. |
+| n/a | `Utils.markdownInlineToHtml(text)` | Converts safe inline Markdown emphasis/code markers into editor HTML. |
+| n/a | `Utils.markdownToChapterHtml(markdown)` | Converts pasted/plain Markdown chapter input into sanitized chapter HTML with paragraphs, breaks, headings, quotes, lists, and scene breaks. |
+| n/a | `Utils.sanitizeChapterHtml(html)` | Whitelists safe chapter formatting before saving/rendering. |
+| n/a | `Utils.normalizeEditorHtml(html)` | Normalizes editor HTML or plain/Markdown text before displaying or saving chapter content. |
+| n/a | `Utils.makePreviewFromHtml(html, max = 340)` | Builds a teaser from rich chapter HTML. |
+| n/a | `DB.getStoryAccessPolicy(storyId)` | Loads a story rolling-access policy. |
+| n/a | `DB.getStoryAccessPolicies()` | Loads rolling-access policies for the Admin cockpit. |
+| n/a | `DB.saveStoryAccessPolicy(storyId, rules, enabled = true)` | Persists per-story rolling-access rules. |
+| n/a | `DB.recalculateStoryAccess(storyId)` | Applies rolling tier windows to published non-NSFW chapters. |
+| n/a | `DB.getReaderProfiles()` | Loads reader profiles for CRM. |
+| n/a | `DB.getProviderConnections()` | Loads provider connection visibility for CRM. |
+| n/a | `DB.getAccessRedemptions()` | Loads access key redemption history. |
+| n/a | `DB.getEntitlementAuditLog()` | Loads entitlement audit events. |
+| n/a | `DB.getCommunityComments()` | Loads recent reader comments for moderation/read view. |
+| n/a | `DB.getReactionTotals()` | Loads chapter reaction rows for aggregate display. |
+| n/a | `Forms.editorCommand(cmd)` | Runs rich editor inline formatting commands. |
+| n/a | `Forms.editorBlock(tag)` | Applies rich editor block styles. |
+| n/a | `Forms.insertSceneBreak()` | Inserts a scene break into the rich chapter editor. |
+| n/a | `Forms.clearEditorFormatting()` | Removes rich editor inline formatting. |
+| n/a | `Forms.handleEditorPaste(event)` | Handles chapter editor paste, preserving rich HTML or converting plain Markdown/text into safe chapter HTML. |
+| n/a | `Forms.normalizeEditorNow()` | Normalizes the active chapter editor to safe HTML immediately before save. |
+| n/a | `Forms.isMeaningfulEditorHtml(html)` | Detects whether editor/autosave content contains real text instead of only browser filler like non-breaking spaces. |
+| n/a | `Forms.convertMarkdownEditor()` | Converts the current editor text from Markdown into safe chapter HTML on demand. |
+| n/a | `Forms.showWriterPanel(panel = 'write')` | Switches Writer / Chapters between focused Write, Details, Access, and Teaser panels without re-rendering. |
+| n/a | `Forms.saveRollingPolicy()` | Saves and applies rolling-access policy inputs. |
+| n/a | `Forms.recalculateRollingNow()` | Reapplies the selected story rolling-access policy. |
+| n/a | `Forms.saveReaderBehavior()` | Persists reader guide/provider/external fallback behavior defaults. |
+| n/a | `Forms.saveInlineChapter(id, publishOverride = null)` | Saves the inline/fullscreen Writer / Chapters editor and triggers rolling access recalculation. |
+| n/a | `Forms.chapterForm(id = null)` | Redirects legacy chapter form calls into the inline/fullscreen Writer / Chapters editor. |
+| n/a | `Views.rollingAccess(container)` | Renders per-story tier window editor and chapter access matrix. |
+| n/a | `Views.readers(container)` | Renders reader CRM, provider, redemption, and audit data. |
+| n/a | `Views.community(container)` | Renders comments and reaction totals. |
+| n/a | `Views.storyExtras(container)` | Renders secondary links for world-building/extras tools. |
+| n/a | `Views.chapters(container)` | Rebuilt Writer / Chapters view with story selector, scrollable chapter list, focused manuscript editor, and tabbed Details/Access/Teaser panels. |
 | 1142 | `escapeHtml(unsafe)` | Escapes or normalizes unsafe/display text. |
 | 1151 | `escapeAttr(unsafe)` | Escapes or normalizes unsafe/display text. |
 | 1158 | `formatRelativeDate(dateString)` | Formats a value for display. |

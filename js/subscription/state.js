@@ -5,10 +5,10 @@
 const PERSONA_ACCESS = {
   anon:       { level:0, signedIn:false },
   "no-access":{ level:0, signedIn:true },
-  patron:     { level:1, signedIn:true, provider:"Patreon", tier:"Aether Member", since:"2025-03-12" },
+  patron:     { level:1, signedIn:true, provider:"Patreon", tier:"Member access", since:"2025-03-12" },
   archivist:  { level:2, signedIn:true, provider:"Patreon", tier:"Archivist Tier", since:"2024-11-02" },
   "key-holder":{ level:0, signedIn:true, hasKey:true },
-  lapsed:     { level:0, signedIn:true, provider:"Patreon", tier:"Aether Member", expired:true, prevLevel:1 },
+  lapsed:     { level:0, signedIn:true, provider:"Patreon", tier:"Member access", expired:true, prevLevel:1 },
   pending:    { level:0, signedIn:true, provider:"Patreon", pending:true, pendingLevel:1 },
   "no-tier":  { level:0, signedIn:true, provider:"Patreon", noTier:true }
 };

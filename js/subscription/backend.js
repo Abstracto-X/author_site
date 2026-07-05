@@ -3,6 +3,7 @@
 
 /* ============ Supabase story/catalog bridge ============ */
 const backendState = { loaded:false, loading:false, error:null, usingFixtures:false };
+const communityState = { commentsLoaded:{}, reactionsLoaded:{} };
 function estimateReadTime(row){
   const words = Number(row.word_count || row.words || 0);
   return Math.max(1, Math.round(words / 220)) || 6;
@@ -52,8 +53,23 @@ function textToBlocks(value){
   if (/<\/?(p|div|br|h[1-6]|li|blockquote)\b/i.test(withoutImports)) {
     const container = document.createElement("div");
     container.innerHTML = withoutImports;
-    const nodes = Array.from(container.querySelectorAll("p, li, blockquote, h1, h2, h3, h4, h5, h6"));
-    const blocks = nodes.map(node => ({ t:"p", v: esc(node.textContent || "") })).filter(b => b.v.trim());
+    container.querySelectorAll("script,style,iframe,object,embed,link,meta").forEach(node => node.remove());
+    container.querySelectorAll("*").forEach(node => {
+      if (!["P","BR","STRONG","B","EM","I","BLOCKQUOTE","H2","H3","H4","HR","UL","OL","LI"].includes(node.tagName)) {
+        const frag = document.createDocumentFragment();
+        while (node.firstChild) frag.appendChild(node.firstChild);
+        node.replaceWith(frag);
+        return;
+      }
+      [...node.attributes].forEach(attr => node.removeAttribute(attr.name));
+    });
+    const nodes = Array.from(container.children);
+    const blocks = nodes.map(node => {
+      if (node.tagName === "HR") return { t:"scene" };
+      if (["H2","H3","H4"].includes(node.tagName)) return { t:"html", tag:node.tagName.toLowerCase(), v:node.innerHTML };
+      if (node.tagName === "BLOCKQUOTE") return { t:"html", tag:"blockquote", v:node.innerHTML };
+      return { t:"p", v:node.innerHTML || esc(node.textContent || "") };
+    }).filter(b => b.t === "scene" || String(b.v || "").trim());
     if (blocks.length) return blocks;
     const text = (container.textContent || "").trim();
     return text ? text.split(/\n{2,}/).map(part => ({ t:"p", v: esc(part.trim()) })).filter(b=>b.v) : [];
@@ -72,7 +88,7 @@ function normalizeBackendChapter(row, story){
     arc: row.arc || story.arc || "Member archive",
     title: row.title || "Untitled chapter",
     state,
-    tier: row.required_tier_name || row.required_tier_slug || "Aether Member",
+    tier: row.required_tier_name || row.required_tier_slug || "member access",
     required_tier_id: row.required_tier_id || null,
     required_tier_name: row.required_tier_name || "",
     publicDate: row.public_release_at || row.public_release_date || "",
@@ -81,6 +97,8 @@ function normalizeBackendChapter(row, story){
     excerpt: row.preview_text || "",
     preview,
     content: null,
+    is_nsfw: !!row.is_nsfw,
+    external_url: row.external_url || "",
     can_read_backend: !!row.can_read,
     access_state_backend: row.access_state || state,
     created_at: row.created_at,
@@ -107,6 +125,116 @@ function buildBackendUpdates(stories){
   }));
   return rows.slice(-12).reverse();
 }
+function relativeTime(iso){
+  if (!iso) return "just now";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(diff) || diff < 60000) return "just now";
+  const mins = Math.round(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return fmtDate(iso);
+}
+function normalizeBackendComment(row){
+  const meta = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+  const name = meta.display_name || meta.name || meta.username || "Reader";
+  const color = meta.color || "#d4b06a";
+  const para = Number.isFinite(Number(meta.para)) ? Number(meta.para) : null;
+  return {
+    id: row.id,
+    backend: true,
+    para,
+    name,
+    text: row.content || "",
+    time: relativeTime(row.created_at),
+    color,
+    avatar: meta.avatar_url || ""
+  };
+}
+function applyReactionRows(chapterId, rows){
+  const counts = {};
+  let picked = null;
+  (rows || []).forEach(row => {
+    const key = row.reaction;
+    if (!key) return;
+    counts[key] = (counts[key] || 0) + 1;
+    if (authState.user && row.user_id === authState.user.id) picked = key;
+  });
+  store.reactions[chapterId] = { picked, counts };
+}
+async function loadChapterCommunity(chapterId, options = {}){
+  const client = getSupabase();
+  if (!client || !chapterId) return false;
+  if (!options.force && communityState.commentsLoaded[chapterId] && communityState.reactionsLoaded[chapterId]) return true;
+  try {
+    const [{ data: comments, error: commentError }, reactionResult] = await Promise.all([
+      client.from("comments")
+        .select("id,user_id,target_id,target_type,content,metadata,created_at")
+        .eq("target_type", "chapter")
+        .eq("target_id", chapterId)
+        .order("created_at", { ascending:true }),
+      client.from("chapter_reactions")
+        .select("user_id,chapter_id,reaction")
+        .eq("chapter_id", chapterId)
+    ]);
+    if (commentError) throw commentError;
+    store.comments[chapterId] = (comments || []).map(normalizeBackendComment);
+    communityState.commentsLoaded[chapterId] = true;
+    if (!reactionResult.error) {
+      applyReactionRows(chapterId, reactionResult.data || []);
+    } else {
+      console.warn("Chapter reactions are not available yet.", reactionResult.error);
+    }
+    communityState.reactionsLoaded[chapterId] = true;
+    saveStore();
+    return true;
+  } catch (err) {
+    console.warn("Unable to load reader notes from Supabase.", err);
+    return false;
+  }
+}
+async function postChapterComment(chapterId, text, para){
+  const client = getSupabase();
+  if (!client || !authState.user) throw new Error("Sign in before posting a reader note.");
+  const profile = authState.profile || {};
+  const display = accountLabel();
+  const metadata = {
+    display_name: display,
+    username: profile.username || "",
+    avatar_url: profile.avatar_url || "",
+    para: Number.isFinite(Number(para)) ? Number(para) : null,
+    color: "#d4b06a"
+  };
+  const { error } = await client.from("comments").insert({
+    user_id: authState.user.id,
+    target_type: "chapter",
+    target_id: chapterId,
+    content: text,
+    metadata
+  });
+  if (error) throw error;
+  communityState.commentsLoaded[chapterId] = false;
+  await loadChapterCommunity(chapterId, { force:true });
+}
+async function saveChapterReaction(chapterId, reaction){
+  const client = getSupabase();
+  if (!client || !authState.user) throw new Error("Sign in before reacting.");
+  const current = store.reactions[chapterId]?.picked || null;
+  if (current === reaction) {
+    const { error } = await client.from("chapter_reactions").delete().eq("chapter_id", chapterId).eq("user_id", authState.user.id);
+    if (error) throw error;
+  } else {
+    const { error } = await client.from("chapter_reactions").upsert({
+      chapter_id: chapterId,
+      user_id: authState.user.id,
+      reaction,
+      updated_at: new Date().toISOString()
+    }, { onConflict:"user_id,chapter_id" });
+    if (error) throw error;
+  }
+  communityState.reactionsLoaded[chapterId] = false;
+  await loadChapterCommunity(chapterId, { force:true });
+}
 async function loadSiteSettings(){
   const client = getSupabase();
   if (!client) return [];
@@ -114,7 +242,7 @@ async function loadSiteSettings(){
     const { data, error } = await client
       .from("site_settings")
       .select("setting_key, setting_value")
-      .in("setting_key", ["site_identity", "site_name", "site_tagline", "meta_description"]);
+      .in("setting_key", ["site_identity", "reader_behavior", "site_name", "site_tagline", "meta_description"]);
     if (error) throw error;
     applySiteSettings(data || []);
     return data || [];
@@ -216,7 +344,16 @@ async function loadReaderChapterFromBackend(chapterId){
     const { data, error } = await client.rpc("get_reader_chapter", { target_chapter_id: chapterId });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
-    if (!row || !row.can_read || !row.content) throw new Error("This chapter is still locked for this account.");
+    if (!row || !row.can_read) throw new Error("This chapter is still locked for this account.");
+    found.ch.is_nsfw = !!row.is_nsfw;
+    found.ch.external_url = row.external_url || found.ch.external_url || "";
+    if (found.ch.is_nsfw) {
+      found.ch.content = [];
+      found.ch.state = row.access_state === "free" ? "free" : "unlocked";
+      found.ch.can_read_backend = true;
+      return true;
+    }
+    if (!row.content) throw new Error("This chapter is still locked for this account.");
     found.ch.content = textToBlocks(row.content);
     found.ch.state = row.access_state === "free" ? "free" : "unlocked";
     found.ch.can_read_backend = true;

@@ -106,7 +106,7 @@
       dek: "",
       chapterOrder: nextChapterOrder(story),
       accessState: "early_access",
-      requiredTierName: "Aether Member",
+      requiredTierName: "Member access",
       publicReleaseAt: "",
       status: "draft",
       wordGoal: 2500,

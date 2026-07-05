@@ -3,7 +3,15 @@
 
 /* ============ ACTIONS ============ */
 function toggleFollow(id){ const i=store.followed.indexOf(id); if(i>=0) store.followed.splice(i,1); else store.followed.push(id); saveStore(); toast(store.followed.includes(id)?"Following":"Unfollowed", null, {icon: store.followed.includes(id)?'checkCirc':'bell'}); render(); }
-function setReaction(chId,k){ const cur=store.reactions[chId]?.picked; store.reactions[chId]={picked: cur===k?null:k}; saveStore(); renderReaderOnly(); }
+async function setReaction(chId,k){
+  if (!authState.user){ openSheet(sheetPersona); toast("Sign in to react", "Reactions are synced to your reader profile.", {icon:"user", ms:3500}); return; }
+  try {
+    await saveChapterReaction(chId, k);
+    renderReaderOnly();
+  } catch (err) {
+    toast("Reaction not saved", err.message || "Please try again.", {icon:"alert", kind:"bad"});
+  }
+}
 function toggleBookmark(){ const f=currentChapter; if(!f) return; const id=f.ch.id; const i=store.bookmarks.findIndex(b=>b.chapterId===id); if(i>=0){ store.bookmarks.splice(i,1); toast("Bookmark removed"); } else { store.bookmarks.unshift({chapterId:id, storyId:f.story.id, label:"A passage in "+f.ch.title, when:"just now"}); toast("Bookmarked", f.ch.title, {icon:'bookmarkFill'}); } saveStore(); updateReaderBar(); }
 function toggleMarkRead(){ const f=currentChapter; if(!f) return; const id=f.ch.id; store.readMarked[id]=!store.readMarked[id]; saveStore(); if(store.readMarked[id]){ const exists=store.history.find(h=>h.chapterId===id&&h.kind==='completed'); if(!exists) store.history.unshift({chapterId:id, storyId:f.story.id, title:f.ch.title, when:"just now", kind:"completed"}); saveStore(); toast("Marked as read"); } updateReaderBar(); }
 function saveQuote(){ const sel=window.getSelection(); const text=sel?sel.toString().trim():""; if(text.length<4){ toast("Select some text first","Highlight a line in the chapter, then save.",{kind:"bad",icon:"quote",ms:3000}); return; } const f=currentChapter; store.quotes.unshift({id:"q"+now(), chapterId:f.ch.id, story:f.story.id, text, when:"just now"}); saveStore(); sel.removeAllRanges(); toast("Quote saved", text.slice(0,50)+(text.length>50?"…":""), {icon:"quoteFill" in I?"quote":"quote"}); }
@@ -71,6 +79,7 @@ function afterRender(){
     // home search etc handled globally
   }
   if (isReader){ setupReader(); }
+  if (window.ReaderGuides && typeof window.ReaderGuides.afterRender === "function") window.ReaderGuides.afterRender();
 }
 function setupReader(){
   const stage=document.getElementById("rstage");
@@ -146,8 +155,26 @@ function delegate(){
   });
   document.addEventListener("submit", async (e)=>{
     const f=e.target;
-    if(f.dataset.cmtForm!=null){ e.preventDefault(); const name=(f.querySelector("[name=name]")?.value||"Reader").trim()||"Reader"; const text=f.querySelector("[name=text]").value.trim(); if(!text) return; const chId=f.dataset.cmtForm; (store.comments[chId]=store.comments[chId]||[]).push({id:"c"+now(),para:null,name,text,time:"just now",color:"#d4b06a"}); saveStore(); renderReaderOnly(); toast("Note posted",null,{icon:"msg"}); return; }
-    if(f.dataset.paraForm!=null){ e.preventDefault(); const name=(f.querySelector("[name=name]")?.value||"Reader").trim()||"Reader"; const text=f.querySelector("[name=text]").value.trim(); if(!text) return; const chId=f.dataset.paraForm; const p=parseInt(f.dataset.paraIndex); (store.comments[chId]=store.comments[chId]||[]).push({id:"c"+now(),para:p,name,text,time:"just now",color:"#5bb8c9"}); saveStore(); closeSheet(); renderReaderOnly(); toast("Paragraph note added",null,{icon:"msg"}); return; }
+    if(f.dataset.cmtForm!=null){
+      e.preventDefault();
+      if(!authState.user){ openSheet(sheetPersona); return; }
+      const text=f.querySelector("[name=text]").value.trim();
+      if(!text) return;
+      const chId=f.dataset.cmtForm;
+      try { await postChapterComment(chId, text, null); renderReaderOnly(); toast("Note posted",null,{icon:"msg"}); }
+      catch(err){ toast("Note not posted", err.message || "Please try again.", {icon:"alert", kind:"bad"}); }
+      return;
+    }
+    if(f.dataset.paraForm!=null){
+      e.preventDefault();
+      if(!authState.user){ closeSheet(); openSheet(sheetPersona); return; }
+      const text=f.querySelector("[name=text]").value.trim();
+      if(!text) return;
+      const chId=f.dataset.paraForm; const p=parseInt(f.dataset.paraIndex);
+      try { await postChapterComment(chId, text, p); closeSheet(); renderReaderOnly(); toast("Paragraph note added",null,{icon:"msg"}); }
+      catch(err){ toast("Note not posted", err.message || "Please try again.", {icon:"alert", kind:"bad"}); }
+      return;
+    }
     if(f.dataset.redeemForm!=null){ e.preventDefault(); const v=f.querySelector("[name=key]").value; const ok=await redeemKey(v); if(ok===false){ /* error shown */ } return; }
 
     if(f.dataset.authForm!=null){
@@ -214,24 +241,23 @@ function handleAct(act, el){
     case "reader-markread": toggleMarkRead(); break;
     case "reader-savequote": saveQuote(); break;
     case "reader-comments": { const c=document.getElementById("cmtblock"); if(c){ c.scrollIntoView({behavior:"smooth"}); } break; }
-    case "offline-queue": toast("Saved for offline","Available while your access is active (concept).",{icon:"download",ms:4000}); break;
+    case "offline-queue": toast("Offline reading unavailable","This site currently streams chapters after access is verified.",{icon:"download",ms:4000}); break;
     case "extra-open": toast("Opening bonus material","Author note · reader format.",{icon:"spark"}); break;
-    case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); else toast("Archive link disabled","Set links.mainArchiveUrl and enableMainArchiveLinks in site-config.js to show archive links.",{icon:"info",ms:3500}); break;
-    case "external-discord": toast("Opening Discord","#aether-pages-help (concept).",{icon:"msg"}); break;
-    case "simulate-notif": { const n={id:"n"+now(),t:"New chapter available",d:"A new early-access chapter just dropped.",k:"chapter",time:"just now",read:false,story:"glass-orchard",chapter:"go-5"}; store.notifs.unshift(n); saveStore(); render(); toast("Notice added",null,{icon:"bell"}); break; }
+    case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); break;
+    case "external-discord": toast("Community link unavailable","No community link is configured for this site.",{icon:"msg"}); break;
     case "mark-all-read": store.notifs.forEach(n=>n.read=true); saveStore(); render(); break;
-    case "notif-prefs": toast("Notification preferences","Manage email & push in account settings (concept).",{icon:"cog",ms:3500}); break;
+    case "notif-prefs": toast("Notification preferences","Email and push preferences are not available yet.",{icon:"cog",ms:3500}); break;
     case "studio-publish": toast("Published","Chapter is live for readers with access.",{icon:"checkCirc",ms:4000}); break;
     case "studio-save-draft": toast("Draft saved","Auto-saved to your drafts.",{icon:"book"}); break;
     case "studio-schedule": toast("Scheduled","Post queued for its release time.",{icon:"calendar"}); break;
-    case "studio-new-chapter": case "studio-new-post": case "studio-new-campaign": case "studio-upload": toast("Opening composer","This would open the full editor (concept).",{icon:"plus"}); break;
-    case "studio-edit": toast("Opening editor","Edit details in the full studio (concept).",{icon:"cog"}); break;
+    case "studio-new-chapter": case "studio-new-post": case "studio-new-campaign": case "studio-upload": toast("Open Admin CMS","Use the admin CMS for production publishing.",{icon:"plus"}); break;
+    case "studio-edit": toast("Open Admin CMS","Use the admin CMS to edit production content.",{icon:"cog"}); break;
     case "studio-preview": toast("Preview","Showing how readers will see this chapter.",{icon:"eye"}); break;
     case "studio-grant": toast("Manual grant","Access granted to this reader.",{icon:"gift"}); break;
     case "studio-approve": toast("Comment approved","Now visible to readers.",{icon:"check"}); render(); break;
     case "studio-hide": toast("Comment hidden","Removed from reader view.",{icon:"x",kind:"bad"}); render(); break;
-    case "studio-media-open": toast("Asset details","Manage attachments & visibility (concept).",{icon:"spark"}); break;
-    case "studio-post": toast("Opening post","Full announcement in the reader (concept).",{icon:"msg"}); break;
+    case "studio-media-open": toast("Open Admin CMS","Manage media in the admin CMS.",{icon:"spark"}); break;
+    case "studio-post": toast("Post unavailable","No reader post is linked here.",{icon:"msg"}); break;
     default: break;
   }
 }

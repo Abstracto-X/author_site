@@ -8,17 +8,17 @@ VIEWS.updates = function(){
   const rendered = Object.entries(groups).map(([g,items])=>`<div class="section"><div class="section-head"><h2>${g}</h2></div><div class="col-flex">${items.map(updateRow).join("")}</div></div>`).join("");
   return `<h1 class="page-title">Updates</h1><p class="page-sub">Everything new across the archive, access-aware.</p>
   <div class="chips scroll" style="margin:8px 0 18px"><a class="chip active">${I.feed}<span>All</span></a><a class="chip" data-nav="/calendar">${I.calendar}<span>Calendar</span></a></div>
-  ${rendered || `<div class="empty"><div class="em">${I.feed}</div><h3>No updates yet</h3><p>Publish backend-backed updates or chapters before this feed shows entries.</p></div>`}`;
+  ${rendered || `<div class="empty"><div class="em">${I.feed}</div><h3>No updates yet</h3><p>New chapter and access updates will appear here when they are posted.</p></div>`}`;
 };
 
 /* ============ CALENDAR ============ */
 VIEWS.calendar = function(){
-  return `<h1 class="page-title">Release Calendar</h1><p class="page-sub">Release calendar entries are loaded from the backend only.</p>
-  <div class="empty"><div class="em">${I.calendar}</div><h3>No calendar entries</h3><p>No backend-backed calendar feed is configured yet.</p></div>`;
+  return `<h1 class="page-title">Release Calendar</h1><p class="page-sub">Upcoming public and member releases.</p>
+  <div class="empty"><div class="em">${I.calendar}</div><h3>No calendar entries</h3><p>No release dates have been posted yet.</p></div>`;
 };
 
 /* ============ COLLECTIONS ============ */
-VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Collections are backend-backed only.</p><div class="empty"><div class="em">${I.layers}</div><h3>No collections</h3><p>No backend collection feed is configured yet.</p></div>`; };
+VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Curated story groups.</p><div class="empty"><div class="em">${I.layers}</div><h3>No collections</h3><p>Collections have not been posted yet. Browse the Library for all available stories.</p><button class="btn story" data-nav="/library">${I.library}Open Library</button></div>`; };
 
 /* ============ VAULT ============ */
 VIEWS.vault = function(){
@@ -31,7 +31,7 @@ VIEWS.vault = function(){
   const providerConnected = P.provider && !P.expired && !P.pending && !P.noTier;
   return `
   <h1 class="page-title">The Vault</h1>
-  <p class="page-sub">One place for every kind of access. Patreon, keys, grants — all just “access.”</p>
+  <p class="page-sub">One place for every kind of access: Patreon memberships, access keys, and direct grants.</p>
   <div class="card tinted" style="margin:14px 0;display:flex;gap:14px;align-items:center">
     <span class="ax ${state==='active'?'unlocked':state==='expired'?'expired':state==='pending'?'pending':'locked'}" style="font-size:1.6rem"><span class="ic" style="width:30px;height:30px">${state==='active'?I.checkCirc:state==='expired'?I.lock:state==='pending'?I.sync:I.lock}</span></span>
     <div style="flex:1"><div class="eyebrow">Current access</div><div style="font-family:var(--serif);font-size:1.3rem;font-weight:700">${stateLabel}</div><div class="faint" style="font-size:.8rem">${P.tier?("via "+P.provider+" · "+P.tier):P.signedIn?"Signed in, no active access":"Browsing as guest"}</div></div>
@@ -43,10 +43,7 @@ VIEWS.vault = function(){
 
   <div class="section"><div class="section-head"><h2>Providers</h2></div>
     <div class="col-flex">
-      ${providerCard("Patreon","patreon",providerConnected,P.tier||null,P.since)}
-      ${providerCard("Ko-fi","kofi",false,null,null,"Coming soon")}
-      ${providerCard("Discord","discord",false,null,null,"Coming soon")}
-      ${providerCard("PayPal","paypal",false,null,null,"Coming soon")}
+      ${patreonEnabled()?providerCard("Patreon","patreon",providerConnected,P.tier||null,P.since):`<div class="empty"><div class="em">${I.vault}</div><h3>No providers enabled</h3><p>Use an access key or contact support if you expected member access.</p></div>`}
     </div>
   </div>
 
@@ -61,7 +58,7 @@ VIEWS.vault = function(){
 
   <div class="section"><div class="section-head"><h2>Access timeline</h2></div>
     <div class="card"><div class="timeline">
-      ${store.redeemedKeys.length?store.redeemedKeys.map(k=>`<div class="tl-item"><div class="when">${esc(k.when || "Redeemed")}</div><div class="what">Access key redeemed${k.label?`: ${esc(k.label)}`:""}</div></div>`).join(""):`<p class="faint" style="font-size:.82rem;margin:0">No backend access events have been recorded for this browser session.</p>`}
+      ${store.redeemedKeys.length?store.redeemedKeys.map(k=>`<div class="tl-item"><div class="when">${esc(k.when || "Redeemed")}</div><div class="what">Access key redeemed${k.label?`: ${esc(k.label)}`:""}</div></div>`).join(""):`<p class="faint" style="font-size:.82rem;margin:0">No access events have been recorded for this account yet.</p>`}
     </div></div>
   </div>
 
@@ -73,7 +70,7 @@ VIEWS.vault = function(){
       <a data-nav="/help">${I.info}<span>Help Center</span><small>Access glossary</small></a>
     </div>
   </div>
-  <div class="card" style="display:flex;gap:11px;align-items:center;margin-top:8px"><span class="faint">${I.cog}</span><div style="flex:1"><div style="font-weight:600;font-size:.86rem">Account access</div><div class="faint" style="font-size:.74rem">Supabase auth and Provider sync will replace the temporary local access model in the backend integration phase.</div></div><button class="btn sm" data-nav="/vault">Access hub</button></div>
+  <div class="card" style="display:flex;gap:11px;align-items:center;margin-top:8px"><span class="faint">${I.cog}</span><div style="flex:1"><div style="font-weight:600;font-size:.86rem">Account access</div><div class="faint" style="font-size:.74rem">If something looks wrong, run the access health check or reconnect Patreon.</div></div><button class="btn sm" data-nav="/support/check-access">Health check</button></div>
   `;
 };
 function providerCard(name, key, connected, tier, since, note){
@@ -112,28 +109,28 @@ VIEWS.notifications = function(){
   const items=store.notifs;
   const kIcon={access:I.vault,chapter:I.bell};
   return `<div class="between"><div><h1 class="page-title">Notifications</h1><p class="page-sub">${items.filter(n=>!n.read).length} unread</p></div><button class="btn sm ghost" data-act="notif-prefs">${I.cog}Preferences</button></div>
-  <div class="chips scroll" style="margin:8px 0 16px"><button class="chip active" data-act="simulate-notif">${I.plus}<span>Simulate new notice</span></button><button class="btn sm ghost" data-act="mark-all-read">Mark all read</button></div>
+  <div class="chips scroll" style="margin:8px 0 16px"><button class="btn sm ghost" data-act="mark-all-read">Mark all read</button></div>
   <div class="col-flex stagger">${items.map(n=>`<div class="card" style="display:flex;gap:12px;align-items:flex-start;${n.read?'opacity:.65':''}"><span style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent)">${kIcon[n.k]||I.bell}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.9rem">${n.t}</div><div class="faint" style="font-size:.8rem;margin-top:1px">${n.d}</div><div class="faint" style="font-size:.7rem;margin-top:4px">${n.time}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">${n.chapter?`<button class="btn sm" data-read="${n.chapter}">Open</button>`:""}<button class="tb-btn" style="width:30px;height:30px" data-dismiss="${n.id}" aria-label="Dismiss">${I.x}</button></div></div>`).join("")}</div>`;
 };
 
 /* ============ BENEFITS ============ */
 VIEWS.benefits = function(){
   const b=[{i:"hourglass",t:"Early access",d:"Read new chapters before public release."},{i:"book",t:"Member chapters",d:"Exclusive chapters not available on the public archive."},{i:"spark",t:"Bonus materials",d:"Author notes, deleted scenes, lore & art drops."},{i:"layers",t:"Complete seasons",d:"Binge finished stories start to end."},{i:"eye",t:"Previews",d:"Sample locked chapters before deciding."},{i:"msg",t:"Supporter notes",d:"Author notes attached to releases."}];
-  return `<h1 class="page-title">Membership Benefits</h1><p class="page-sub">What Aether Member access unlocks — clearly.</p>
+  return `<h1 class="page-title">Membership Benefits</h1><p class="page-sub">What member access unlocks.</p>
   <div class="grid-stories" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px">${b.map(x=>`<div class="benefit-card"><span class="ic">${I[x.i]}</span><div><h4>${x.t}</h4><p>${x.d}</p></div></div>`).join("")}</div>
-  <div class="section"><div class="section-head"><h2>Your milestones</h2></div><div class="col-flex">${D.MILESTONES.length?D.MILESTONES.map(m=>`<div class="card" style="display:flex;gap:12px;align-items:center;${m.held?'':'opacity:.5'}"><span class="ax ${m.held?'unlocked':'locked'}" style="font-size:1.2rem"><span class="ic" style="width:22px;height:22px">${m.held?I.checkCirc:I.lock}</span></span><div style="flex:1"><div style="font-family:var(--serif);font-weight:600">${m.t}</div><div class="faint" style="font-size:.76rem">${m.d}</div></div>${m.held?badge("gold","Earned"):badge("","Locked")}</div>`).join(""):`<div class="empty"><div class="em">${I.spark}</div><h3>No milestones yet</h3><p>Milestones will appear when backed by real account data.</p></div>`}</div></div>
+  <div class="section"><div class="section-head"><h2>Your milestones</h2></div><div class="col-flex">${D.MILESTONES.length?D.MILESTONES.map(m=>`<div class="card" style="display:flex;gap:12px;align-items:center;${m.held?'':'opacity:.5'}"><span class="ax ${m.held?'unlocked':'locked'}" style="font-size:1.2rem"><span class="ic" style="width:22px;height:22px">${m.held?I.checkCirc:I.lock}</span></span><div style="flex:1"><div style="font-family:var(--serif);font-weight:600">${m.t}</div><div class="faint" style="font-size:.76rem">${m.d}</div></div>${m.held?badge("gold","Earned"):badge("","Locked")}</div>`).join(""):`<div class="empty"><div class="em">${I.spark}</div><h3>No milestones yet</h3><p>Milestones will appear as your account history grows.</p></div>`}</div></div>
   <div class="card tinted" style="text-align:center"><div style="font-family:var(--serif);font-size:1.05rem;margin-bottom:8px">Want to unlock the archive?</div><button class="btn primary" data-sheet="connect-patreon">${I.vault}Connect provider</button></div>`;
 };
 
 /* ============ ONBOARDING ============ */
 VIEWS.onboarding = function(){
-  return `<h1 class="page-title">Welcome to Aether Pages</h1><p class="page-sub">A quiet reading lounge for members of the archive.</p>
+  return `<h1 class="page-title">Welcome to ${esc(SITE_NAME)}</h1><p class="page-sub">A quiet reading lounge for members of the archive.</p>
   <div class="section"><div class="section-head"><h2>Choose your first door</h2></div>
     <div class="quicklinks">
-      <a data-nav="/collections/dark-fantasy">${I.moon}<span>Gothic fantasy</span><small>Atmospheric &amp; slow-burn</small></a>
-      <a data-nav="/collections/scifi">${I.orbit}<span>Sci-fi mystery</span><small>Colonies &amp; orbitals</small></a>
-      <a data-nav="/collections/complete-seasons">${I.check}<span>A complete story</span><small>Finish in one sitting</small></a>
-      <a data-nav="/collections/short-reads">${I.clock}<span>Only 10 minutes</span><small>Quick reads</small></a>
+      <a data-nav="/library">${I.library}<span>Browse Library</span><small>All available stories</small></a>
+      <a data-nav="/vault">${I.vault}<span>Check access</span><small>Patreon and keys</small></a>
+      <a data-nav="/updates">${I.feed}<span>Latest updates</span><small>New chapters</small></a>
+      <a data-nav="/help">${I.info}<span>Need help?</span><small>Access guide</small></a>
     </div>
   </div>
   <div class="section"><div class="section-head"><h2>How it works</h2></div>
@@ -143,3 +140,4 @@ VIEWS.onboarding = function(){
   </div>
   <button class="btn primary block" data-nav="/">Enter the archive</button>`;
 };
+

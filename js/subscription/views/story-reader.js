@@ -247,6 +247,7 @@ function chapterGridCard(ch, story) {
       </div>
       <div style="display:flex; gap:6px; align-items:center;">
         ${locked && ch.required_tier_name ? `<span class="badge ${tierClass}" style="font-size:0.68rem; padding:2px 8px; border-radius:12px; border:1px solid currentColor;">${ch.required_tier_name}</span>` : ''}
+        ${ch.is_nsfw ? `<span class="badge external" style="background:rgba(255,68,68,0.12); color:var(--bad); border:1px solid rgba(255,68,68,0.22); font-size:0.68rem; padding:2px 8px; border-radius:12px;">External</span>` : ''}
         ${r.isEarly ? `<span class="badge early" style="background:rgba(224,138,74,0.12); color:var(--early); border:1px solid rgba(224,138,74,0.2); font-size:0.68rem; padding:2px 8px; border-radius:12px;">Early</span>` : ''}
         ${illus ? `<span class="badge illus" style="background:rgba(111,182,201,0.12); color:var(--frost, #6fb6c9); border:1px solid rgba(111,182,201,0.2); font-size:0.68rem; padding:2px 8px; border-radius:12px;">Illus</span>` : ''}
       </div>
@@ -288,7 +289,7 @@ function chapterRow(ch, story){
     <span class="num">${statusIcon}</span>
     <span class="body">
       <span class="t"><span class="tt">${ch.title}</span>${r.isEarly?badge('early','Early'):''}${illus?badge('illus','Illus'):''}${ch.state==='key'?badge('key','Key'):''}</span>
-      <span class="sub">${meta([axInline(r),`${ch.wordCount || (ch.readTime * 220)} words`,cmt?`<i>${I.msg}</i>${cmt}`:"",ch.publicDate?`<i>${I.calendar}</i>Public ${fmtDate(ch.publicDate)}`:""])}</span>
+      <span class="sub">${meta([ch.is_nsfw?`<i>${I.external}</i>External-only`:axInline(r),`${ch.wordCount || (ch.readTime * 220)} words`,cmt?`<i>${I.msg}</i>${cmt}`:"",ch.publicDate?`<i>${I.calendar}</i>Public ${fmtDate(ch.publicDate)}`:""])}</span>
       ${(!compact && reasonFor(ch,r))?`<span class="reason">${reasonFor(ch,r)}</span>`:""}
     </span>
     <span class="cta" style="display:flex; align-items:center;">
@@ -306,6 +307,9 @@ VIEWS.read = function(){
   const {ch, story, index} = found; currentChapter = found;
   setStoryAccent(story);
   const r = chapterResolved(ch);
+  if (ch.is_nsfw) {
+    return isReadable(r) ? readerExternalChapter(ch, story, index, r) : readerLocked(ch, story, index, r);
+  }
   if (r.state === "preview") return readerPreview(ch, story, index, r);
   if (!isReadable(r)) return readerLocked(ch, story, index, r);
   if (ch.backend && !ch.content) {
@@ -355,6 +359,10 @@ function readerBar(){
 function renderBlocks(blocks, chId){
   return blocks.map((b,i)=>{
     if(b.t==="scene") return `<div class="scene">✦ ✦ ✦</div>`;
+    if(b.t==="html"){
+      const tag = ["h2","h3","h4","blockquote"].includes(b.tag) ? b.tag : "p";
+      return `<${tag} class="${tag === 'blockquote' ? 'quote-block' : 'chapter-heading'}">${b.v}</${tag}>`;
+    }
     if(b.t==="img") return `<figure data-fig="${b.fig}" style="cursor:pointer">${D.FIG[b.fig]||""}<figcaption>${b.cap||""}</figcaption></figure>`;
     if(b.t==="p"){
       const pc = paraComments(chId,i);
@@ -387,6 +395,10 @@ function readerNavButtons(ch, story, index) {
 function readerFull(ch, story, index, r){
   const st=store.settings;
   const themeClass=`theme-${st.readerTheme} preset-${st.preset} ${st.showImages?'':'no-img'} ${st.showParaComments?'':'no-pchip'} ${st.focusMode?'focus':''}`;
+  if (ch.is_nsfw) return readerExternalChapter(ch, story, index, r);
+  if (typeof loadChapterCommunity === "function" && !(communityState.commentsLoaded[ch.id] && communityState.reactionsLoaded[ch.id])) {
+    loadChapterCommunity(ch.id).then(ok => { if (ok && currentChapter?.ch?.id === ch.id) renderReaderOnly(); });
+  }
   const blocks = ch.content || ch.preview || (ch.excerpt ? [{t:"p",v:ch.excerpt}] : [{t:"p",v:"The full text of this chapter will appear here once it is published."}]);
   const next = story.chapters[index+1];
   const nr = next?chapterResolved(next):null;
@@ -405,13 +417,34 @@ function readerFull(ch, story, index, r){
     ${commentsBlock(ch.id)}
   `);
 }
+function readerExternalChapter(ch, story, index, r){
+  const st=store.settings;
+  const themeClass=`theme-${st.readerTheme} preset-${st.preset}`;
+  const url = ch.external_url || (typeof readerExternalUrl === "function" ? readerExternalUrl("") : "");
+  return readerShell(themeClass, `
+    <div class="locked-fallback" style="${storyAccentVars(story)};min-height:auto;padding:70px 18px 90px">
+      <div class="emblem" style="width:84px;height:84px">${I.external || I.lock}</div>
+      <h1>${esc(ch.title)}</h1>
+      <div class="sub">${esc(story.title)}</div>
+      <div class="card" style="max-width:520px;margin:0 auto 18px;text-align:left">
+        <div class="ax early" style="font-size:1rem;margin-bottom:8px"><span class="ic" style="width:20px;height:20px">${I.alert}</span>External-only chapter</div>
+        <p class="muted" style="font-size:.9rem;margin:0 0 8px">This chapter is marked NSFW/external and is not rendered in the member reader. Use the author-provided external link to continue.</p>
+        <p class="faint" style="font-size:.76rem;margin:0">Access state is still tracked here, but local chapter content is intentionally withheld.</p>
+      </div>
+      <div class="col-flex" style="gap:9px;max-width:360px;margin:0 auto">
+        ${url ? `<a class="btn story block" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${I.external || ""}Open external chapter</a>` : `<button class="btn story block" disabled>${I.alert}External URL missing</button>`}
+        <button class="btn ghost" data-nav="/story/${story.slug}">${I.book}Back to book</button>
+      </div>
+    </div>
+  `);
+}
 function readerPreview(ch, story, index, r){
   const st=store.settings;
   const themeClass=`theme-${st.readerTheme} preset-${st.preset}`;
   return readerShell(themeClass, `
     <div class="badge preview" style="margin-bottom:14px">${I.eye}Preview</div>
     <h1 class="ch-title">${ch.title}</h1>
-    <div class="ch-by">${story.title} &middot; preview &middot; ${ch.tier||"Aether Member"} to unlock full chapter</div>
+    <div class="ch-by">${story.title} &middot; preview &middot; ${ch.tier||"member access"} to unlock full chapter</div>
     
     ${readerNavButtons(ch, story, index)}
     
@@ -423,7 +456,7 @@ function readerPreview(ch, story, index, r){
         <h3>You've reached the end of the preview</h3>
         <p>Unlock the full chapter — and ${countReadable()} others — to continue ${story.title}. The complete text loads only after access is verified; nothing is hidden behind a blur.</p>
         <div class="col-flex" style="gap:9px;max-width:340px;margin:0 auto">
-          <button class="btn story block" data-lock="${ch.id}">${I.lockOpen}Unlock with ${ch.tier||"Aether Member"}</button>
+          <button class="btn story block" data-lock="${ch.id}">${I.lockOpen}Unlock with ${ch.tier||"member access"}</button>
           <button class="btn ghost block" data-sheet="redeem">${I.key}Redeem an access key</button>
           ${ch.publicDate?`<div class="faint" style="font-size:.76rem">Or wait for the public release on <b style="color:var(--text)">${fmtDate(ch.publicDate)}</b> (in ${daysUntil(ch.publicDate)} days).</div>`:""}
         </div>
@@ -454,10 +487,11 @@ function readerLocked(ch, story, index, r){
 function endOfChapter(ch, story, next, nr){
   const st=store.settings;
   const reac = REACTIONS; const mine = store.reactions[ch.id]?.picked;
+  const counts = store.reactions[ch.id]?.counts || {};
   return `<div class="eoc">
     <div class="done"><div class="orn">✦</div><p>Chapter complete</p></div>
     ${st.showReactions?`<div class="faint center" style="font-size:.74rem;margin-bottom:10px">How did this chapter land?</div>
-    <div class="reactions">${reac.map(rk=>{const n=(REACTION_SEED[ch.id]?.[rk.k]||0)+(mine===rk.k?1:0);return `<button class="react ${mine===rk.k?'picked':''}" data-react="${rk.k}"><span class="e">${rk.e}</span><span class="n">${n}</span></button>`;}).join("")}</div>`:""}
+    <div class="reactions">${reac.map(rk=>{const n=counts[rk.k]||0;return `<button class="react ${mine===rk.k?'picked':''}" data-react="${rk.k}"><span class="e">${rk.e}</span><span class="n">${n}</span></button>`;}).join("")}</div>`:""}
     <div class="between" style="max-width:420px;margin:0 auto 18px">
       <button class="btn sm ghost" data-act="reader-bookmark">${I.bookmark}Bookmark</button>
       <button class="btn sm ghost" data-act="reader-savequote">${I.quote}Save quote</button>
@@ -474,9 +508,13 @@ const REACTION_SEED={};
 
 function commentsBlock(chId){
   const list = (store.comments[chId]||[]).filter(c=>c.para===null||c.para===undefined);
+  const signedIn = !!authState.user;
+  const label = signedIn ? accountLabel() : "";
   return `<div class="comments" id="cmtblock">
     <div class="section-head"><h2>Reader notes</h2><span class="faint" style="font-size:.74rem">${(store.comments[chId]||[]).length} total</span></div>
-    <form class="cmt-form" data-cmt-form="${chId}"><input name="name" placeholder="Your name" style="max-width:130px"><input name="text" placeholder="Add a note about this chapter…" required><button class="btn sm story" type="submit">${I.msg}Post</button></form>
+    ${signedIn
+      ? `<form class="cmt-form" data-cmt-form="${chId}"><div class="comment-as">Posting as <b>${esc(label)}</b></div><input name="text" placeholder="Add a note about this chapter…" required><button class="btn sm story" type="submit">${I.msg}Post</button></form>`
+      : `<div class="card" style="margin-bottom:12px"><p class="faint" style="font-size:.82rem;margin:0 0 10px">Sign in to leave reader notes synced to your account.</p><button class="btn sm story" data-sheet="persona">${I.user}Sign in to comment</button></div>`}
     <div>${list.slice().reverse().map(c=>commentHTML(c)).join("")||`<p class="faint" style="font-size:.82rem">Be the first to leave a note.</p>`}</div>
   </div>`;
 }
@@ -499,7 +537,7 @@ VIEWS.extras = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story"); setStoryAccent(s);
   return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
   <h1 class="page-title">Bonus Materials</h1>
-  <p class="page-sub">Author notes, deleted scenes, lore, and art are backend-backed only.</p>
+  <p class="page-sub">Author notes, deleted scenes, lore, and art posted for this story.</p>
   <div class="empty"><div class="em">${I.spark}</div><h3>No extras yet</h3><p>No backend bonus-material feed is configured for this story yet.</p></div>`;
 };
 
@@ -510,5 +548,5 @@ VIEWS.storyUpdates = function(){
   return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
   <h1 class="page-title">Story Updates</h1>
   <p class="page-sub">Releases, notes &amp; schedule for this story.</p>
-  <div class="timeline">${items.map(u=>`<div class="tl-item"><div class="when">${u.when}</div><div class="what">${u.title}</div><div class="faint" style="font-size:.78rem">${u.note}</div></div>`).join("") || `<div class="empty"><div class="em">${I.feed}</div><h3>No story updates yet</h3><p>Updates will appear when this story has backend-backed release activity.</p></div>`}</div>`;
+  <div class="timeline">${items.map(u=>`<div class="tl-item"><div class="when">${u.when}</div><div class="what">${u.title}</div><div class="faint" style="font-size:.78rem">${u.note}</div></div>`).join("") || `<div class="empty"><div class="em">${I.feed}</div><h3>No story updates yet</h3><p>Updates will appear when this story has release activity.</p></div>`}</div>`;
 };

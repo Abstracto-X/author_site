@@ -28,6 +28,7 @@ The reader now consumes `public.site_settings` for production site identity:
 | Setting key | Shape | Purpose |
 |---|---|---|
 | `site_identity` | JSON object with `siteName`, `siteTagline`, `pageTitle`, and `metaDescription` | Controls the reader/admin-facing site name and browser metadata. Current site name: `EvilArchives`. |
+| `reader_behavior` | JSON object with `enableReaderGuides`, `globalExternalUrl`, and `providerNote` | Admin-authored defaults/notes for onboarding, provider display, and optional global external fallback. The reader loads this setting at startup; per-chapter `chapters.external_url` remains source of truth for NSFW/external chapters, with `globalExternalUrl` used only as a fallback link. |
 
 `site_settings.setting_key` is protected by the unique index `site_settings_setting_key_key` so Admin CMS saves update the existing setting instead of creating duplicates.
 
@@ -110,6 +111,10 @@ The reader now consumes `public.site_settings` for production site identity:
 | `background_image_url` | text | YES |  |
 | `referenced_image_urls` | ARRAY / `_text` | NO | '{}'::text[] |
 | `media` | jsonb | NO | '[]'::jsonb |
+| `is_nsfw` | boolean / `bool` | NO | false |
+| `external_url` | text | YES |  |
+
+`is_nsfw = true` chapters are external-only in the reader: local `content` is not returned by `get_reader_chapter`; the reader shows an external prompt using `external_url`.
 
 ### `public.character_gallery_images`
 
@@ -149,6 +154,19 @@ The reader now consumes `public.site_settings` for production site identity:
 | `referenced_image_url` | text | YES |  |
 | `metadata` | jsonb | NO | '{}'::jsonb |
 | `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+### `public.chapter_reactions`
+
+Reader chapter-end reactions. One reaction per user per chapter; selecting the same reaction again removes it in the reader UI.
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `id` | uuid | NO | gen_random_uuid() |
+| `user_id` | uuid | NO |  |
+| `chapter_id` | uuid | NO |  |
+| `reaction` | text | NO |  |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+| `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
 ### `public.entitlement_audit_log`
 
@@ -351,6 +369,23 @@ The reader now consumes `public.site_settings` for production site identity:
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 | `loader_theme` | text | NO | 'lightsaber'::text |
 | `world_title` | text | YES |  |
+
+### `public.story_access_policies`
+
+Rolling subscription access rules for Admin CMS. One policy per story. Admin can write; published-story policies can be read publicly for transparency/config-driven UI.
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `id` | uuid | NO | gen_random_uuid() |
+| `story_id` | uuid | NO |  |
+| `enabled` | boolean / `bool` | NO | true |
+| `rules` | jsonb | NO | '{}'::jsonb |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+| `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+Rule JSON currently uses `{"windows":[{"tier_id":"<reader_access_tiers.id>","count":10}]}`. Admin applies higher-rank tiers first to newest published chapters by `chapter_order`; non-NSFW chapters beyond configured windows become free by setting `chapters.required_tier_id = null`.
+
+Policies: `story_access_policies_admin_all` permits admin write/manage access through `public.is_admin()`; `story_access_policies_public_read` permits read access for enabled policies belonging to published stories.
 
 ### `public.story_wallpapers`
 
@@ -555,6 +590,10 @@ The reader now consumes `public.site_settings` for production site identity:
 | `public` | `comments` | `parent_compat_comments_own_insert` | INSERT | public |  | (auth.uid() = user_id) |
 | `public` | `comments` | `parent_compat_comments_own_update` | UPDATE | public | ((auth.uid() = user_id) OR is_admin()) | ((auth.uid() = user_id) OR is_admin()) |
 | `public` | `comments` | `parent_compat_comments_public_read` | SELECT | public | true |  |
+| `public` | `chapter_reactions` | `chapter_reactions_public_read` | SELECT | public | true |  |
+| `public` | `chapter_reactions` | `chapter_reactions_own_insert` | INSERT | public |  | (auth.uid() = user_id) |
+| `public` | `chapter_reactions` | `chapter_reactions_own_update` | UPDATE | public | ((auth.uid() = user_id) OR is_admin()) | ((auth.uid() = user_id) OR is_admin()) |
+| `public` | `chapter_reactions` | `chapter_reactions_own_delete` | DELETE | public | ((auth.uid() = user_id) OR is_admin()) |  |
 | `public` | `entitlement_audit_log` | `entitlement_audit_admin_insert` | INSERT | public |  | is_admin() |
 | `public` | `entitlement_audit_log` | `entitlement_audit_admin_read` | SELECT | public | is_admin() |  |
 | `public` | `image_votes` | `parent_compat_image_votes_own_delete` | DELETE | public | ((auth.uid() = user_id) OR is_admin()) |  |
@@ -630,13 +669,15 @@ $function$
 
 ### `public.get_chapter_catalog(target_story_id uuid)`
 
-Returns: `TABLE(id uuid, story_id uuid, title text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, required_tier_slug text, required_tier_rank integer, public_release_at timestamp with time zone, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone)`
+Returns: `TABLE(id uuid, story_id uuid, title text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, required_tier_slug text, required_tier_rank integer, public_release_at timestamp with time zone, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone, is_nsfw boolean, external_url text)`
+
+CMS rebuild note: this RPC now includes `is_nsfw` and `external_url` so the reader can show external-only chapter prompts from catalog data.
 
 <details><summary>Definition</summary>
 
 ```sql
 CREATE OR REPLACE FUNCTION public.get_chapter_catalog(target_story_id uuid)
- RETURNS TABLE(id uuid, story_id uuid, title text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, required_tier_slug text, required_tier_rank integer, public_release_at timestamp with time zone, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone)
+ RETURNS TABLE(id uuid, story_id uuid, title text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, required_tier_slug text, required_tier_rank integer, public_release_at timestamp with time zone, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone, is_nsfw boolean, external_url text)
  LANGUAGE sql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
@@ -662,7 +703,9 @@ AS $function$
         END AS access_state,
         (public.chapter_is_public(c) OR public.is_admin() OR public.has_active_entitlement(auth.uid(), c.required_tier_id)) AS can_read,
         c.created_at,
-        c.updated_at
+        c.updated_at,
+        c.is_nsfw,
+        c.external_url
     FROM public.chapters c
     LEFT JOIN public.reader_access_tiers t ON t.id = c.required_tier_id
     JOIN public.stories s ON s.id = c.story_id
@@ -714,13 +757,15 @@ $function$
 
 ### `public.get_reader_chapter(target_chapter_id uuid)`
 
-Returns: `TABLE(id uuid, story_id uuid, title text, content text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone)`
+Returns: `TABLE(id uuid, story_id uuid, title text, content text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone, is_nsfw boolean, external_url text)`
+
+CMS rebuild note: this RPC returns `content = NULL` for `is_nsfw` chapters even when `can_read = true`; clients must use `external_url`.
 
 <details><summary>Definition</summary>
 
 ```sql
 CREATE OR REPLACE FUNCTION public.get_reader_chapter(target_chapter_id uuid)
- RETURNS TABLE(id uuid, story_id uuid, title text, content text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone)
+ RETURNS TABLE(id uuid, story_id uuid, title text, content text, chapter_order integer, word_count integer, preview_text text, required_tier_id uuid, required_tier_name text, access_state text, can_read boolean, created_at timestamp with time zone, updated_at timestamp with time zone, is_nsfw boolean, external_url text)
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
@@ -731,7 +776,11 @@ BEGIN
         c.id,
         c.story_id,
         c.title,
-        CASE WHEN (public.chapter_is_public(c) OR public.is_admin() OR public.has_active_entitlement(auth.uid(), c.required_tier_id)) THEN c.content ELSE NULL END AS content,
+        CASE
+            WHEN c.is_nsfw THEN NULL
+            WHEN (public.chapter_is_public(c) OR public.is_admin() OR public.has_active_entitlement(auth.uid(), c.required_tier_id)) THEN c.content
+            ELSE NULL
+        END AS content,
         c.chapter_order,
         c.word_count,
         c.preview_text,
@@ -746,7 +795,9 @@ BEGIN
         END AS access_state,
         (public.chapter_is_public(c) OR public.is_admin() OR public.has_active_entitlement(auth.uid(), c.required_tier_id)) AS can_read,
         c.created_at,
-        c.updated_at
+        c.updated_at,
+        c.is_nsfw,
+        c.external_url
     FROM public.chapters c
     LEFT JOIN public.reader_access_tiers t ON t.id = c.required_tier_id
     JOIN public.stories s ON s.id = c.story_id

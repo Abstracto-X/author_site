@@ -56,9 +56,8 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 13. `js/subscription/views/help-support.js`
 14. `js/subscription/sheets.js`
 15. `js/subscription/events.js`
-16. `js/subscription/views/studio-preview.js`
-17. `js/subscription/author-studio.js`
-18. `js/subscription/aether-app.js`
+16. `js/subscription/onboarding.js`
+17. `js/subscription/aether-app.js`
 
 `aether-app.js` is now only the small bootstrap/init file and must stay last.
 
@@ -68,7 +67,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 |---|---|---|
 | `site-config.js` | Project-specific Supabase URL/anon key and feature flags. | Runtime config file; never put service-role secrets here. |
 | `site-config.template.js` | Copyable config template. | Keep keys blank/safe. |
-| `config.js` | Safe storage wrapper, runtime site identity, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks and applies `site_settings.site_identity` when loaded. |
+| `config.js` | Safe storage wrapper, runtime site identity, reader behavior settings, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks and applies `site_settings.site_identity` plus `site_settings.reader_behavior` when loaded. |
 | `state.js` | Shared reader state objects. | Owns `store`, `authState`, `backendState`, and derived access/persona defaults. |
 | `auth.js` | Supabase auth/session/profile/entitlement bridge. | Handles sign in/up/out, password recovery/update, provider flow helpers, profile/entitlement refresh. |
 | `backend.js` | Supabase site settings, story/chapter/catalog data loading. | Owns reader identity loading from `site_settings`, published story loading, and RPC calls like `get_chapter_catalog` and `get_reader_chapter`. |
@@ -79,10 +78,11 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 | `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering. |
 | `views/account-access.js` | Updates, calendar, collections, vault, shelf, notifications, benefits, onboarding. | Must not render hardcoded fake backend content. |
 | `views/help-support.js` | Help/support routes. | Mostly static support copy/forms. |
-| `views/studio-preview.js` | Studio/preview route registration. | Reader-side preview/studio route support. |
-| `author-studio.js` | Reader-side author/studio helpers. | Separate from `admin.html`; do not confuse with CMS internals. |
+| `views/studio-preview.js` | Archived/inactive studio placeholder module. | Not loaded by `index.html`; `/studio/*` redirects to `admin.html`. |
+| `author-studio.js` | Archived/inactive reader-side author/studio prototype helpers. | Not loaded by `index.html`; useful ideas were ported into Admin CMS. |
 | `sheets.js` | Sheet/modal builders. | Account/auth/access/settings/reader sheets. |
 | `events.js` | Delegated DOM events and after-render hooks. | Owns `data-act`, `data-nav`, `data-sheet`, reader settings, and global listeners. |
+| `onboarding.js` | Feature-gated reader guide overlay. | Modular highlighted walkthrough controlled by `features.enableReaderGuides` and local dismiss state. |
 | `aether-app.js` | Bootstrap/init. | Initializes auth/backend/router/events once dependencies are loaded. |
 
 ### Reader data flow
@@ -90,10 +90,12 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 1. Browser loads `site-config.js`, Supabase CDN, and the reader modules. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
 2. `aether-app.js` bootstraps the app after all module globals exist.
 3. `auth.js` initializes the Supabase client/session and refreshes profile/entitlements when configured.
-4. `backend.js` loads `site_settings.site_identity`, then published stories and chapter catalogs from Supabase.
+4. `backend.js` loads `site_settings.site_identity` and `site_settings.reader_behavior`, then published stories and chapter catalogs from Supabase.
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
-7. `events.js` handles delegated interactions and re-renders or opens sheets as needed.
+7. `backend.js` loads reader community state for open chapters: public comments from `comments` and reaction totals from `chapter_reactions`.
+8. `events.js` handles delegated interactions, comment/reaction writes, and re-renders or opens sheets as needed.
+9. `onboarding.js` optionally highlights key UI regions after render when reader guides are enabled.
 
 ### Reader route groups
 
@@ -108,7 +110,7 @@ Common route groups include:
 | `/vault`, `/shelf`, `/notifications`, `/benefits`, `/onboarding` | `views/account-access.js` | Member/account/access surfaces. |
 | `/updates`, `/calendar`, `/collections` | `views/account-access.js` | Backend-aware update/calendar/collection surfaces; must show honest empty states if no DB data exists. |
 | `/help`, `/support` | `views/help-support.js` | Help/support pages. |
-| studio/preview routes | `views/studio-preview.js`, `author-studio.js` | Reader-side preview/studio support. |
+| `/studio/*` | `router.js` | Redirects to `admin.html`; the reader-side Author Studio prototype is no longer an active product surface. |
 
 ### Reader invariants
 
@@ -129,9 +131,12 @@ Common route groups include:
 Admin responsibilities include:
 
 - Story metadata: title, slug, world title, descriptions, publication state, theme/loader values, covers/backgrounds.
-- Chapter content and release/access metadata.
-- Character, gallery, lore, maps, wallpapers, timeline, and author profile content.
-- Reader tiers/access keys/entitlement-adjacent admin workflows.
+- Chapter content through a focused Writer / Chapters manuscript workspace, with release/access/teaser metadata split into tabs, Markdown/plain-text paste conversion, line-break-preserving sanitized rich HTML, preview generation, NSFW/external-only chapter fields, and local draft autosave.
+- Rolling Access policies per story, stored in `story_access_policies`, that apply tier windows to newest published chapters and make older non-NSFW chapters free.
+- Reader CRM, provider connection visibility, access key redemption visibility, entitlement audit review, comments, and chapter reaction totals.
+- Character, gallery, lore, maps, wallpapers, timeline, map requests, and author profile content as secondary Story Extras.
+- Reader tiers/access keys/manual grants/provider mappings in Access Tools.
+- Site Settings for reader identity, provider flag visibility, guide toggles, and subscription behavior defaults.
 - Uploads to configured Supabase storage buckets.
 
 Before changing admin fields or writes, check `docs/DATABASE_CONTEXT.md` and verify the target column/table/bucket exists. If it does not exist, add an idempotent SQL migration before changing the frontend.
@@ -196,6 +201,7 @@ node --check js/subscription/chrome.js
 node --check js/subscription/router.js
 node --check js/subscription/sheets.js
 node --check js/subscription/events.js
+node --check js/subscription/onboarding.js
 node --check js/subscription/author-studio.js
 node --check js/subscription/views/home-library.js
 node --check js/subscription/views/story-reader.js

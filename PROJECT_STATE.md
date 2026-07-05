@@ -2,6 +2,144 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-05 18:40 Asia/Kolkata - Manual QA for Admin CMS rebuild and rolling access
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+- reader
+- database
+
+Files touched:
+- `admin.html`
+- `index.html`
+- `js/subscription/config.js`
+- `js/subscription/backend.js`
+- `js/subscription/router.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `database/sql/2026-07-05_cms_rebuild_rolling_access.sql`
+- `supabase/migrations/20260705103000_cms_rebuild_rolling_access.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+Summary:
+- Admin CMS was rebuilt into the subscription cockpit shape requested by `docs/cms_rebuild_plan.md`.
+- Added inline/fullscreen rich chapter editor, rolling access policy UI, reader CRM with search/entitlements/redemptions, community view with reader/chapter links, Story Extras launcher, NSFW/external-only fields, and migrations for rolling policies/chapter external metadata.
+- Legacy chapter modal entry points now route into the inline/fullscreen Writer / Chapters editor.
+- Writer / Chapters was refocused after visual review: the writing surface is now a page-like manuscript editor, while Details, Access, and Teaser controls are separated into tabs instead of being crammed above the editor.
+- Writer / Chapters now normalizes pasted/browser-generated line breaks into paragraphs/breaks and accepts Markdown/plain text paste or explicit `Markdown → HTML` conversion alongside safe rich HTML input.
+- Site Settings includes reader identity, subscription behavior defaults, guide toggles, provider settings display, and optional global external fallback.
+- Reader-side Author Studio scripts were removed from active `index.html` loading and `/studio/*` redirects to `admin.html`.
+- Reader startup now loads Admin-authored `reader_behavior` so guide toggles and the optional global external fallback are applied in the runtime reader.
+- Applied and re-ran the linked Supabase migration to verify idempotency; verified `story_access_policies` policies, `chapters.is_nsfw`, `chapters.external_url`, and updated chapter RPC signatures.
+- Re-ran syntax/static/browser smoke checks after the final provider settings display and legacy chapter-form redirect changes.
+- Added rollback-only Supabase verification for chapter catalog/reader RPC behavior with temporary rich-HTML and NSFW/external chapters; verified normal content is returned and NSFW content is withheld while `external_url` is exposed.
+- Added rollback-only RLS verification that non-admin authenticated users cannot write `story_access_policies`, admin users can write them, and enabled policies for published stories are readable.
+
+Remaining work:
+- Manual browser test with real credentials: Admin login gate, story edit, focused/tabbed Writer / Chapters drafting, rich chapter save/edit, publish-triggered rolling access recalculation, Rolling Access matrix, Readers / CRM, Community, and Story Extras navigation.
+- Manual signed-in reader test against real content: a normal rich-HTML chapter, locked/free/tier states, and an NSFW/external chapter.
+
+Risks / notes:
+- Rolling access recalculation is implemented client-side in Admin CMS and updates `chapters.required_tier_id`; if multiple admins edit simultaneously, last save wins.
+- NSFW chapters still count in rolling positions, but Admin intentionally does not overwrite their tier field during recalculation.
+- Admin CRM/community views depend on RLS/admin policies and may show empty/error states until migration and admin session are valid.
+
+Verification needed:
+- Real admin browser session and signed-in reader session.
+- In-app browser smoke checks on `http://127.0.0.1:4173/admin.html`, `index.html`, and `#/studio/write` now pass for page load, Admin nav visibility, reader script order, `/studio/*` redirect, and no Admin page console errors. Use a real authenticated browser session for write/access/data-flow QA.
+
+## 2026-07-05 07:59 Asia/Kolkata - Manual QA for reader guide and community sync
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- database
+- admin
+
+Files touched:
+- `index.html`
+- `admin.html`
+- `styles.css`
+- `js/subscription/onboarding.js`
+- `js/subscription/aether-app.js`
+- `js/subscription/auth.js`
+- `js/subscription/author-studio.js`
+- `js/subscription/backend.js`
+- `js/subscription/events.js`
+- `js/subscription/router.js`
+- `js/subscription/sheets.js`
+- `js/subscription/site-config.js`
+- `js/subscription/site-config.template.js`
+- `js/subscription/state.js`
+- `js/subscription/utils.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/studio-preview.js`
+- `database/sql/2026-07-05_chapter_reactions.sql`
+- `supabase/migrations/20260705074000_chapter_reactions.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+Summary:
+- Added a modular feature-gated reader guide overlay and removed production-facing dev/mock/setup copy found by subagent audit.
+- Comments now post to Supabase `comments` for signed-in users using the reader profile/account name automatically.
+- Added and applied linked Supabase `chapter_reactions` table/RLS migration for DB-backed reader reactions.
+- Admin remote placeholder images were replaced with local inline SVG data URLs.
+
+Remaining work:
+- Manual browser test with a signed-in reader: post a chapter note, post a paragraph note, react/unreact at chapter end, reload, and confirm comments/reaction counts persist.
+- Confirm the reader guide appears for new/local users, highlights sensible UI, can be dismissed, and can be disabled with `features.enableReaderGuides = false`.
+- Re-run production UI copy smoke test in a real browser to confirm no confusing setup/mock/dev copy remains visible.
+
+Risks / notes:
+- Browser-local bookmarks, quotes, history, and progress remain local storage; this task only DB-backed comments and reactions.
+- Visual browser verification was not completed in-app because earlier local browser sessions were blocked; use a normal browser session.
+
+Verification needed:
+- Real auth session and Supabase writes for comments/reactions.
+- Reader guide behavior at home/library/story/read/vault routes.
+- Admin CMS image fallback display after placeholder replacement.
+
+## 2026-07-05 07:32 Asia/Kolkata — Manual responsive layout verification for button containment
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- admin
+
+Files touched:
+- `styles.css`
+- `js/subscription/chrome.js`
+- `admin.html`
+- `CHANGELOG.md`
+
+Summary:
+- Reader topbar brand text now uses the existing `.btxt` class so site name/tagline truncation styles apply.
+- Reader buttons, chips, quicklinks, story hub mobile actions, chapter rows, and chapter catalog cards received mobile containment/wrapping rules to prevent horizontal spill.
+- Admin CMS headers, card headers, action button groups, modal footers, buttons, and dense tables received narrow-screen wrapping/scroll containment.
+
+Remaining work:
+- Open the reader on a real browser at desktop, tablet, and narrow mobile widths and confirm topbar, bottom nav, story hub, latest chapters, chapter catalog, sheets, and quicklinks have no horizontal spill.
+- Open Admin CMS on mobile width and confirm page headers, card headers, modal footers, access-action rows, and data tables wrap or scroll cleanly.
+
+Risks / notes:
+- The in-app browser refused local `localhost`/`127.0.0.1` verification with `ERR_BLOCKED_BY_CLIENT`, so visual verification is still manual.
+
+Verification needed:
+- Manual browser responsive smoke test at ~390px, ~760px, ~900px, and desktop widths.
+
 ## 2026-07-04 00:48 Asia/Kolkata — Manual browser verification for EvilArchives reader polish
 
 Status: NEEDS REVIEW

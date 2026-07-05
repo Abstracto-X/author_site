@@ -48,9 +48,10 @@ function gateDisplay(ch){
   return "locked";
 }
 function reasonFor(ch, r) {
+  if (ch.is_nsfw) return "External-only chapter; opens on the author-provided site.";
   if (r.state === "pending") return "Verifying your access with Patreon — usually a moment.";
-  if (r.state === "expired") return "Your Aether Member access has expired. Renew to continue.";
-  if (r.noTier) return "Your provider tier does not include Aether Pages access.";
+  if (r.state === "expired") return "Your member access has expired. Renew to continue.";
+  if (r.noTier) return "Your provider tier does not include this library.";
   if (r.state === "key") return "Redeem an access key to read this chapter.";
   return D.KEY_REASONS[ch.id] || "";
 }

@@ -2,6 +2,125 @@
 
 Completed durable project changes only. Unfinished/deferred/risky work belongs in `PROJECT_STATE.md`.
 
+## 2026-07-05 19:35 Asia/Kolkata - Fixed Writer editor line breaks and Markdown input
+
+Area: admin | docs
+
+Summary:
+- Updated the Admin Writer / Chapters editor sanitizer so pasted/browser-generated `<div>` blocks and plain text line breaks are normalized into safe paragraph/break HTML instead of collapsing into one large paragraph.
+- Added Markdown-to-safe-HTML conversion for pasted plain text, including paragraphs, soft line breaks, headings, blockquotes, lists, emphasis, and scene breaks.
+- Added a `Markdown → HTML` editor action plus paste handling and save-time normalization so Markdown/plain text and rich HTML inputs both persist cleanly to `chapters.content`.
+- Fixed empty new-chapter autosaves so browser filler such as `&nbsp;` / non-breaking spaces is treated as empty content and removed instead of being restored into the next new chapter.
+
+Files changed:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-07-05 19:20 Asia/Kolkata - Refocused Admin Writer / Chapters into a real writing workspace
+
+Area: admin | docs
+
+Summary:
+- Reworked the Admin Writer / Chapters layout so the writing surface is a focused manuscript workspace with a large title field, sticky formatting toolbar, page-like contenteditable canvas, and local draft word count.
+- Moved chapter order/published state, tier/public release/external-only settings, and preview/teaser editing into separate tabs instead of displaying every metadata field above the editor.
+- Made the chapter list a compact sticky/scrollable sidebar and added `Forms.showWriterPanel()` for in-place panel switching without a full view re-render.
+
+Files changed:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-07-05 18:40 Asia/Kolkata - Rebuilt Admin CMS into subscription cockpit with rolling access and rich chapter editor
+
+Area: admin | reader | database | docs
+
+Summary:
+- Reworked Admin CMS navigation around Dashboard, Stories, Writer / Chapters, Rolling Access, Readers / CRM, Community, Site Settings, and Story Extras.
+- Added a focused inline/fullscreen Writer / Chapters editor in `admin.html` with contenteditable safe HTML, formatting controls, word count, local draft autosave, preview helper, NSFW/external-only fields, and rolling-access recalculation after saves.
+- Redirected legacy chapter modal entry points into the inline Writer / Chapters editor so stale buttons do not reopen the old modal workflow.
+- Expanded Readers / CRM with search, entitlement list, provider connections, key redemptions, and entitlement audit data; expanded Community with comment reader/chapter links and reaction totals by chapter.
+- Added `story_access_policies`, `chapters.is_nsfw`, and `chapters.external_url` migrations, plus updated chapter RPCs to return external fields and withhold local content for NSFW chapters.
+- Applied and re-ran the linked Supabase migration to verify idempotency, and verified the new policies, chapter columns, and chapter RPC signatures.
+- Added Admin rolling access policy UI/matrix, reader CRM, provider/redemption/audit views, community comments/reaction totals, and Story Extras secondary launcher.
+- Added Site Settings behavior defaults for reader guides, provider settings display, provider display notes, and optional global external fallback metadata.
+- Removed active reader-side Author Studio loading from `index.html`; `/studio/*` now redirects to `admin.html`.
+- Updated reader chapter rendering to preserve sanitized basic formatting, apply Admin-authored reader guide/external fallback settings, and show external-only prompts for NSFW chapters.
+
+Files changed:
+- `admin.html`
+- `index.html`
+- `js/subscription/config.js`
+- `js/subscription/backend.js`
+- `js/subscription/router.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `database/sql/2026-07-05_cms_rebuild_rolling_access.sql`
+- `supabase/migrations/20260705103000_cms_rebuild_rolling_access.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-07-05 07:59 Asia/Kolkata - Added reader guide overlay, DB-backed chapter reactions/comments, and cleaned production UI copy
+
+Area: reader | database | admin | docs
+
+Summary:
+- Added modular `js/subscription/onboarding.js`, loaded before app bootstrap, for a feature-gated highlighted reader walkthrough controlled by `features.enableReaderGuides`.
+- Connected chapter reader notes to the existing Supabase `comments` table. Signed-in readers now post with their profile/account display name automatically instead of typing a name.
+- Added `chapter_reactions` schema, RLS policies, SQL files, and a Supabase migration for signed-in chapter-end reactions with public aggregate reads.
+- Loaded chapter comments and reaction counts from Supabase in the reader, and updated comment/reaction event handlers to write to Supabase instead of pretending local-only writes are production data.
+- Removed or replaced production-facing mock/dev/internal UI copy, including simulated notification controls, backend/setup details in reader empty states, “concept” toasts, temporary access-model text, disabled provider teasers, and external placeholder image URLs in Admin CMS.
+- Updated reader docs and database context for the new module, script order, community data flow, and reaction schema.
+
+Files changed:
+- `index.html`
+- `admin.html`
+- `styles.css`
+- `js/subscription/onboarding.js`
+- `js/subscription/aether-app.js`
+- `js/subscription/auth.js`
+- `js/subscription/author-studio.js`
+- `js/subscription/backend.js`
+- `js/subscription/events.js`
+- `js/subscription/router.js`
+- `js/subscription/sheets.js`
+- `js/subscription/site-config.js`
+- `js/subscription/site-config.template.js`
+- `js/subscription/state.js`
+- `js/subscription/utils.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/studio-preview.js`
+- `database/sql/2026-07-05_chapter_reactions.sql`
+- `supabase/migrations/20260705074000_chapter_reactions.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-05 07:32 Asia/Kolkata - Tightened responsive button and navigation containment
+
+Area: reader | admin
+
+Summary:
+- Fixed the reader topbar brand markup/CSS mismatch so the site name and tagline can truncate correctly instead of forcing topbar overflow.
+- Added responsive containment for reader buttons, chips, quicklinks, chapter rows, chapter catalog cards, and mobile story hub actions so long labels wrap or truncate inside their containers instead of spilling horizontally.
+- Added admin CMS button/header/action wrapping and mobile table containment so dense action rows and modal/footer buttons do not force desktop-width layouts on narrow screens.
+
+Files changed:
+- `styles.css`
+- `js/subscription/chrome.js`
+- `admin.html`
+- `CHANGELOG.md`
+
 ## 2026-07-04 02:51 Asia/Kolkata - Polished reader navigation, added start/end buttons, removed chapter index numbers, fixed cast images, locked tier coloring, and added dynamic required tier tags
 
 Area: reader

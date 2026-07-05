@@ -12,6 +12,11 @@ const FEATURES = CONFIG.features || {};
 const PROVIDERS = CONFIG.providers || {};
 const AUTH_CONFIG = CONFIG.auth || {};
 const LINKS = CONFIG.links || {};
+const READER_BEHAVIOR = {
+  enableReaderGuides: Object.prototype.hasOwnProperty.call(FEATURES, "enableReaderGuides") ? !!FEATURES.enableReaderGuides : true,
+  globalExternalUrl: "",
+  providerNote: ""
+};
 const DEFAULT_DATA = {
   STORIES: [],
   UPDATES: [],
@@ -64,14 +69,23 @@ function applySiteSettings(rows){
   const byKey = {};
   (Array.isArray(rows) ? rows : []).forEach(row => { if (row && row.setting_key) byKey[row.setting_key] = row.setting_value; });
   const identity = byKey.site_identity && typeof byKey.site_identity === "object" ? byKey.site_identity : {};
+  const readerBehavior = byKey.reader_behavior && typeof byKey.reader_behavior === "object" ? byKey.reader_behavior : {};
   SITE_NAME = settingText(identity.siteName || identity.site_name || byKey.site_name, SITE_NAME);
   SITE_TAGLINE = settingText(identity.siteTagline || identity.site_tagline || byKey.site_tagline, SITE_TAGLINE);
   SITE_META_DESCRIPTION = settingText(identity.metaDescription || identity.meta_description || byKey.meta_description, SITE_META_DESCRIPTION);
+  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enableReaderGuides")) {
+    READER_BEHAVIOR.enableReaderGuides = !!readerBehavior.enableReaderGuides;
+    FEATURES.enableReaderGuides = READER_BEHAVIOR.enableReaderGuides;
+  }
+  READER_BEHAVIOR.globalExternalUrl = settingText(readerBehavior.globalExternalUrl || readerBehavior.global_external_url, READER_BEHAVIOR.globalExternalUrl);
+  READER_BEHAVIOR.providerNote = settingText(readerBehavior.providerNote || readerBehavior.provider_note, READER_BEHAVIOR.providerNote);
   document.title = settingText(identity.pageTitle || identity.page_title, SITE_NAME);
   const meta = document.querySelector('meta[name="description"]');
   if (meta) meta.setAttribute("content", SITE_META_DESCRIPTION);
 }
 function feature(name, fallback){ return Object.prototype.hasOwnProperty.call(FEATURES, name) ? !!FEATURES[name] : !!fallback; }
+function readerBehavior(){ return Object.assign({}, READER_BEHAVIOR); }
+function readerExternalUrl(fallback){ return settingText(READER_BEHAVIOR.globalExternalUrl, fallback || ""); }
 function providerEnabled(name){ return !!PROVIDERS[name]; }
 function googleEnabled(){ return !!AUTH_CONFIG.googleEnabled && feature("enableGoogleOAuth", false); }
 function emailPasswordEnabled(){ return AUTH_CONFIG.emailPasswordEnabled !== false; }

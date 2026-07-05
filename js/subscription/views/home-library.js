@@ -12,9 +12,9 @@ VIEWS.home = function(){
 
   // access banner
   let banner = "";
-  if (P.expired) banner = accessBanner("expired","Your Aether Member access has expired","Some chapters are now locked. Renew to continue reading — a short grace window may still apply.","/vault","Renew access");
+  if (P.expired) banner = accessBanner("expired","Your member access has expired","Some chapters are now locked. Renew to continue reading — a short grace window may still apply.","/vault","Renew access");
   else if (P.pending) banner = accessBanner("pending","We're verifying your access","Your Provider connection is syncing. This usually takes a moment — we'll update automatically.","/support/check-access","Check status");
-  else if (P.noTier) banner = accessBanner("none","Your provider tier doesn't include access","You're connected, but your current tier doesn't unlock Aether Pages.","/benefits","See what unlocks");
+  else if (P.noTier) banner = accessBanner("none","Your provider tier doesn't include access","You're connected, but your current tier doesn't unlock this library.","/benefits","See what unlocks");
   else if (!P.signedIn) banner = accessBanner("anon","Browsing as a guest","Read free chapters and previews freely. Sign in or redeem a key to unlock the rest.","/vault","Activate access");
 
   return `
@@ -74,7 +74,7 @@ VIEWS.home = function(){
     <div class="section">
       <div class="section-head"><h2>Because you read…</h2></div>
       <div class="col-flex">
-        ${D.STORIES.slice(1, 3).map(storyCardWide).join("") || `<p class="faint" style="font-size:.8rem">More recommendations will appear as the backend library grows.</p>`}
+        ${D.STORIES.slice(1, 3).map(storyCardWide).join("") || `<p class="faint" style="font-size:.8rem">More recommendations will appear as the library grows.</p>`}
       </div>
 
     </div>
@@ -106,7 +106,7 @@ function memberArchivePanel(){
       <a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Threads &amp; quotes</small></a>
       <a data-nav="/benefits">${I.spark}<span>Benefits</span><small>What access unlocks</small></a>
       <a data-nav="/support/check-access">${I.shield}<span>Access Check</span><small>Verify access</small></a>
-      <a data-nav="/calendar">${I.calendar}<span>This Week</span><small>Releases</small></a>
+      <a data-nav="/updates">${I.feed}<span>Updates</span><small>Latest posts</small></a>
     </div>
   </div>`;
 }
@@ -153,9 +153,9 @@ VIEWS.home = function(){
   const shorter = D.STORIES.filter(s=>!D.FEATURED_SLUGS.includes(s.slug));
   
   let banner = "";
-  if (P.expired) banner = accessBanner("expired","Your Aether Member access has expired","Some chapters are now locked. Renew to continue reading.","/vault","Renew access");
+  if (P.expired) banner = accessBanner("expired","Your member access has expired","Some chapters are now locked. Renew to continue reading.","/vault","Renew access");
   else if (P.pending) banner = accessBanner("pending","We're verifying your access","Your Provider connection is syncing — we'll update automatically.","/support/check-access","Check status");
-  else if (P.noTier) banner = accessBanner("none","Your provider tier doesn't include access","You're connected, but your tier doesn't unlock Aether Pages.","/benefits","See what unlocks");
+  else if (P.noTier) banner = accessBanner("none","Your provider tier doesn't include access","You're connected, but your tier doesn't unlock this library.","/benefits","See what unlocks");
   else if (!P.signedIn) banner = accessBanner("anon","Browsing as a guest","Read free chapters and previews. Sign in or redeem a key to unlock more.","/vault","Activate access");
 
   // Continue Reading fallback logic:
@@ -202,7 +202,7 @@ VIEWS.home = function(){
     } else if (P.hasKey) {
       expirationInfo = "Access via key grant";
     } else if (P.level > 0) {
-      expirationInfo = "Active Aether Member";
+      expirationInfo = "Active member access";
     } else {
       expirationInfo = "No active entitlements";
     }
@@ -215,7 +215,7 @@ VIEWS.home = function(){
   return `
   ${announcement()}
   ${banner}
-  <div class="area-switch" style="margin:0 0 14px"><button class="active">${I.book}Reader</button>${isAdmin()?`<button data-nav="/studio/write">${I.overview}Author Studio</button><a class="btn sm ghost" href="admin.html">${I.shield}Admin CMS</a>`:""}</div>
+  <div class="area-switch" style="margin:0 0 14px"><button class="active">${I.book}Reader</button>${isAdmin()?`<a class="btn sm ghost" href="admin.html">${I.shield}Admin CMS</a>`:""}</div>
   
   <div class="home-grid" style="${storyAccentVars(primary)}">
     <!-- Left Column: Book & Tier Status -->
@@ -340,7 +340,7 @@ VIEWS.home = function(){
     </div>
   </div>
 
-  <p class="faint center" style="font-size:.74rem;margin-top:18px">Deep lore, maps &amp; galleries live in the main author archive. <button class="btn sm ghost" data-act="main-archive" style="margin-left:6px">${I.external}Open the configured archive</button></p>`;
+  ${mainArchiveEnabled()?`<p class="faint center" style="font-size:.74rem;margin-top:18px">Deep lore, maps &amp; galleries live in the main author archive. <button class="btn sm ghost" data-act="main-archive" style="margin-left:6px">${I.external}Open archive</button></p>`:""}`;
 };
 function bookHero(s, o){
   const hasChapters = !!o.latestCh;

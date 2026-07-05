@@ -24,8 +24,9 @@ function parseHash(){
   else if (p[0]==="support"){ r.name = { "check-access":"checkAccess","wrong-account":"wrongAccount","contact":"contact" }[p[1]] || "help"; }
   else if (p[0]==="story"){ r.params.slug=p[1]; r.name = { chapters:"chapters", recap:"recap", extras:"extras", updates:"storyUpdates" }[p[2]] || "story"; }
   else if (p[0]==="read"){ r.params.id=p[1]; r.name="read"; }
-  else if (p[0]==="studio" && feature("enableStudioPreview", false)){
-    r.name = { chapters:"studioChapters", access:"studioAccess", announcements:"studioAnnouncements", media:"studioMedia", analytics:"studioAnalytics", settings:"studioSettings" }[p[1]] || "studioOverview";
+  else if (p[0]==="studio"){
+    window.location.href = "admin.html";
+    r.name = "home";
   }
   return r;
 }
@@ -37,7 +38,7 @@ function backendSetupView(){
   const msg = backendState.error?.message || authState.error?.message || "Loading the subscription catalog from Supabase.";
   const configured = configuredSupabase();
   if ((backendState.loading || !authState.ready) && configured) return `<div class="reader-loading"><div class="reader-spinner"></div><h3>Loading member library</h3><p>Fetching stories, chapter catalog, and access state from Supabase.</p></div>`;
-  return `<div class="empty" style="padding-top:90px"><div class="em">${I.alert}</div><h3>Subscription site setup required</h3><p>This production reader is configured to use the real Supabase backend only. No local sample stories will be shown.</p><div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">What to check</div><ol class="muted" style="line-height:1.7;margin:0;padding-left:20px"><li>Set <code>supabase.url</code> and <code>supabase.anonKey</code> in <code>js/subscription/site-config.js</code>.</li><li>Run the SQL files in <code>database/sql/</code> against the new Supabase project.</li><li>Publish at least one story and one chapter, then verify <code>get_chapter_catalog</code>.</li></ol><p class="faint" style="font-size:.78rem;margin:12px 0 0">Current status: ${esc(msg)}</p></div></div>`;
+  return `<div class="empty" style="padding-top:90px"><div class="em">${I.alert}</div><h3>Library temporarily unavailable</h3><p>The reader could not load published stories right now. Please check back soon.</p>${isAdmin()?`<div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">Admin diagnostic</div><p class="faint" style="font-size:.78rem;margin:0">${esc(msg)}</p></div>`:""}</div>`;
 }
 function render(){
   route = parseHash();

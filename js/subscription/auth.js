@@ -57,9 +57,9 @@ function persona(){
       level: best.tier_rank || 1,
       signedIn: true,
       provider: best.provider || "Supabase",
-      tier: best.tier_name || "Aether Member",
+      tier: best.tier_name || "Member access",
       tierRank: best.tier_rank || 10,
-      tierSlug: best.tier_slug || "aether-member",
+      tierSlug: best.tier_slug || "member-access",
       validUntil: best.valid_until || null,
       since: best.created_at || ""
     };
@@ -197,7 +197,7 @@ async function initAuth(){
     });
   } catch (err) {
     authState.error = err;
-    console.error("Aether Pages auth bridge failed:", err);
+    console.error("Reader auth bridge failed:", err);
     console.dir(err);
     const details = err.message || (typeof err === "object" ? JSON.stringify(err) : String(err)) || "Unknown auth error";
     toast("Authentication failed", details, {kind:"bad", icon:"alert", ms:10000});

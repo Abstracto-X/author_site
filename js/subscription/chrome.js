@@ -10,7 +10,7 @@ function topbar(){
   const label = !P.signedIn?"Not signed in":P.expired?"Access expired":P.pending?"Sync pending":P.noTier?"No access":P.tier?("Active · "+P.tier):"Signed in";
   const unread = store.notifs.filter(n=>!n.read).length;
   return `<header class="topbar">
-    <a class="brand" href="#/" data-nav="/">${brandMark()}<span><span class="serif">${esc(SITE_NAME)}</span><small>${esc(SITE_TAGLINE)}</small></span></a>
+    <a class="brand" href="#/" data-nav="/">${brandMark()}<span class="btxt"><span class="serif">${esc(SITE_NAME)}</span><small>${esc(SITE_TAGLINE)}</small></span></a>
     <span class="spacer"></span>
     <button class="access-chip" data-state="${state}" data-nav="/vault"><span class="pulse"></span>${label}</button>
     ${isAdmin()?`<a class="tb-btn" href="admin.html" aria-label="Admin CMS">${I.shield}</a>`:""}

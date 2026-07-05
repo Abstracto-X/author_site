@@ -2,6 +2,15 @@
 
 Generated from the current codebase. One-line descriptions are intentionally concise so agents can quickly locate ownership before editing.
 
+Recent CMS rebuild reader changes:
+
+| File | Function | Purpose |
+|---|---|---|
+| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags. |
+| `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
+| `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |
+| `js/subscription/router.js` | `parseHash()` | Redirects `/studio/*` to `admin.html`; the reader-side Author Studio prototype is inactive. |
+
 ## `js/subscription/config.js`
 
 | Line | Function | Purpose |
@@ -9,7 +18,9 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 5 | `MemStore(()` | Helper used by this module. |
 | 6 | `getStore()` | Helper used by this module. |
 | 55 | `settingText(value, fallback)` | Normalizes site setting values from JSON or strings. |
-| 63 | `applySiteSettings(rows)` | Applies `site_settings` identity values to the reader name, tagline, title, and meta description. |
+| 63 | `applySiteSettings(rows)` | Applies `site_settings` identity and `reader_behavior` values to the reader runtime. |
+| n/a | `readerBehavior()` | Returns the currently applied reader behavior settings. |
+| n/a | `readerExternalUrl(fallback)` | Returns the Admin-configured global external fallback URL when present. |
 | 74 | `feature(name, fallback)` | Helper used by this module. |
 | 75 | `providerEnabled(name)` | Helper used by this module. |
 | 76 | `googleEnabled()` | Helper used by this module. |
@@ -158,6 +169,12 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 48 | `textToBlocks(value)` | Helper used by this module. |
 | 63 | `normalizeBackendChapter(row, story)` | Handles chapter catalog, reader, or chapter form behavior. |
 | 88 | `buildBackendUpdates(stories)` | Persists changes to Supabase or updates local state. |
+| 110 | `relativeTime(iso)` | Formats comment timestamps for reader display. |
+| 120 | `normalizeBackendComment(row)` | Normalizes Supabase comment rows into reader note objects. |
+| 137 | `applyReactionRows(chapterId, rows)` | Aggregates Supabase chapter reaction rows into reader reaction counts. |
+| 148 | `loadChapterCommunity(chapterId, options = {})` | Loads chapter comments and reaction totals from Supabase. |
+| 187 | `postChapterComment(chapterId, text, para)` | Persists a signed-in reader note to Supabase comments. |
+| 210 | `saveChapterReaction(chapterId, reaction)` | Persists or removes a signed-in reader chapter reaction. |
 | 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
 | 119 | `loadBackendLibrary(options = {})` | Loads fresh data/state from Supabase or local runtime state. |
 | 168 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
@@ -312,6 +329,21 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 193 | `renderHeaderless()` | Builds and returns or injects the HTML for this UI section. |
 | 196 | `ensureQuoteFab(show)` | Helper used by this module. |
 | 198 | `handleAct(act, el)` | Handles a delegated event, route, or async workflow. |
+
+## `js/subscription/onboarding.js`
+
+| Line | Function | Purpose |
+|---:|---|---|
+| 44 | `enabled()` | Checks whether reader guide walkthroughs are feature-enabled. |
+| 47 | `dismissed()` | Reads local dismiss state for the reader guide. |
+| 50 | `routeName()` | Determines the current route for contextual guide steps. |
+| 53 | `visible(el)` | Checks whether a potential guide target is currently visible. |
+| 58 | `stepsForRoute()` | Selects guide steps relevant to the current route. |
+| 62 | `clear()` | Removes guide highlight and overlay UI. |
+| 67 | `dismiss()` | Dismisses the guide and persists that choice locally. |
+| 72 | `renderStep()` | Renders the current highlighted guide step. |
+| 97 | `start()` | Starts the reader guide walkthrough. |
+| 103 | `afterRender()` | Repositions/renders the guide after route rendering. |
 
 ## `js/subscription/views/studio-preview.js`
 

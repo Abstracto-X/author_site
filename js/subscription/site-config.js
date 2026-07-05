@@ -34,6 +34,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     enableLocalDemoReaderFeatures: false,
     enablePatreonConnect: true,
     enableAccessKeys: true,
-    enableGoogleOAuth: true
+    enableGoogleOAuth: true,
+    enableReaderGuides: true
   }
 };
