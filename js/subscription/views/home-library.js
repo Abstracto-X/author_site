@@ -215,7 +215,7 @@ VIEWS.home = function(){
   return `
   ${announcement()}
   ${banner}
-  <div class="area-switch" style="margin:0 0 14px"><button class="active">${I.book}Reader</button>${isAdmin()?`<a class="btn sm ghost" href="admin.html">${I.shield}Admin CMS</a>`:""}</div>
+  <div class="area-switch" style="margin:0 0 14px"><button class="active">${I.book}Reader</button>${isAdmin()?`<a class="btn sm ghost" href="writer.html">${I.book}Writer</a><a class="btn sm ghost" href="admin.html">${I.shield}Admin CMS</a>`:""}</div>
   
   <div class="home-grid" style="${storyAccentVars(primary)}">
     <!-- Left Column: Book & Tier Status -->

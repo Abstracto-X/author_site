@@ -206,51 +206,76 @@
 
         /* --- CMS REBUILD: writer cockpit --- */
         .pill-row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
-        .admin-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .65rem; border:1px solid var(--glass-border); border-radius:999px; color:#aaa; background:rgba(255,255,255,.04); font-size:.72rem; }
+        .admin-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .65rem; border:1px solid var(--glass-border); border-radius:999px; color:#aaa; background:rgba(255,255,255,.04); font-size:.72rem; white-space:nowrap; }
         .admin-pill.gold { color:var(--accent-color); border-color:rgba(255,215,0,.28); background:rgba(255,215,0,.08); }
         .admin-pill.danger { color:var(--danger-color); border-color:rgba(255,68,68,.28); background:rgba(255,68,68,.08); }
-        .writer-shell { display: flex; gap: 1rem; align-items: start; position: relative; }
-        .writer-sidebar { width: 300px; flex-shrink: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: hidden; display: flex; flex-direction: column; }
-        .writer-list { overflow: auto; padding-right: .25rem; display: grid; gap: .45rem; }
-        .writer-item { border: 1px solid var(--glass-border); border-radius: 10px; padding: .55rem .7rem; background: rgba(0,0,0,.22); cursor: pointer; transition: .18s ease; }
-        .writer-item:hover, .writer-item.active { border-color: rgba(255,215,0,.45); background: rgba(255,215,0,.07); }
-        .writer-item-title { display: block; font-weight: 700; color: #f3f3f3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .writer-item-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .45rem; color: #888; font-size: .78rem; }
-        
-        /* Collapsed Sidebar Extensions */
-        .writer-sidebar.collapsed { width: 50px; }
-        .writer-sidebar.collapsed .sidebar-full-content { display: none; }
-        .writer-sidebar.collapsed:hover { width: 320px; position: absolute; z-index: 100; background: #0c0c0c; box-shadow: 0 12px 40px rgba(0,0,0,0.65); border-color: var(--accent-color); }
-        .writer-sidebar.collapsed:hover .sidebar-full-content { display: flex; flex-direction: column; height: 100%; width: 100%; }
-        .writer-sidebar.collapsed .collapsed-handle { display: flex; flex-direction: column; align-items: center; justify-content: start; height: 100%; gap: 1.5rem; padding: 1.5rem 0; color: #888; cursor: pointer; width: 100%; }
-        .writer-sidebar.collapsed:hover .collapsed-handle { display: none; }
-        .writer-sidebar .collapsed-handle { display: none; }
-        .writer-editor-card { min-height:calc(100vh - 12rem); padding:0; overflow:hidden; }
-        .writer-topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.25rem; border-bottom:1px solid var(--glass-border); background:rgba(0,0,0,.22); }
-        .writer-tabs { display:flex; gap:.4rem; flex-wrap:wrap; padding:.75rem 1.25rem 0; background:rgba(0,0,0,.14); }
-        .writer-tab { padding:.55rem .8rem; border:1px solid var(--glass-border); border-bottom-color:transparent; border-radius:10px 10px 0 0; background:rgba(255,255,255,.04); color:#aaa; cursor:pointer; }
-        .writer-tab.active { color:var(--accent-color); background:rgba(255,215,0,.1); border-color:rgba(255,215,0,.3); }
-        .writer-panel { display:none; padding:1.25rem; }
+        .writer-page-header { margin-bottom:1rem; }
+        .writer-controls { display:grid; grid-template-columns:minmax(220px, 1fr) auto; gap:1rem; align-items:end; padding:1rem 1.1rem; margin-bottom:1rem; background:linear-gradient(180deg, rgba(17,17,17,.9), rgba(7,7,7,.78)); box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+        .writer-controls .form-group { margin:0; }
+        .writer-shell { display:grid; grid-template-columns:minmax(320px, 360px) minmax(0, 1fr); gap:1rem; align-items:start; position:relative; }
+        .writer-shell.sidebar-collapsed { grid-template-columns:72px minmax(0, 1fr); }
+        .writer-sidebar { padding:0; width:auto; min-width:0; transition:all 0.28s cubic-bezier(0.4, 0, 0.2, 1); position:sticky; top:1rem; height:calc(100vh - 3rem); overflow:hidden; display:flex; flex-direction:column; background:linear-gradient(180deg, rgba(14,14,14,.96), rgba(4,4,4,.92)); box-shadow:0 24px 60px rgba(0,0,0,.34); }
+        .writer-list { overflow:auto; padding:.65rem; display:grid; gap:.58rem; }
+        .writer-item { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:.78rem .84rem; background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018)); cursor:pointer; transition:border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease; position:relative; overflow:hidden; box-shadow:inset 0 1px 0 rgba(255,255,255,.03); }
+        .writer-item::before { content:''; position:absolute; inset:0 auto 0 0; width:4px; background:transparent; transition:.18s ease; }
+        .writer-item:hover { transform:translateY(-1px); border-color:rgba(255,255,255,.16); background:linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.026)); box-shadow:0 14px 24px rgba(0,0,0,.16); }
+        .writer-item.active { border-color:rgba(255,215,0,.42); background:linear-gradient(180deg, rgba(255,215,0,.14), rgba(255,255,255,.035)); box-shadow:0 18px 36px rgba(0,0,0,.24); }
+        .writer-item.active::before { background:var(--accent-color); box-shadow:0 0 18px rgba(255,215,0,.8); }
+        .writer-item-head { display:grid; grid-template-columns:auto minmax(0, 1fr) auto; gap:.72rem; align-items:start; }
+        .writer-item-title-wrap { min-width:0; }
+        .writer-item-title { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-weight:700; color:#f3f3f3; overflow:hidden; min-width:0; line-height:1.22; font-size:.94rem; }
+        .writer-item-number { display:inline-flex; align-items:center; justify-content:center; min-width:46px; height:30px; padding:0 .55rem; border-radius:999px; border:1px solid rgba(255,215,0,.24); background:rgba(255,215,0,.08); color:var(--accent-color); font-size:.72rem; font-weight:800; letter-spacing:.5px; }
+        .writer-item-submeta { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-top:.58rem; color:#8f8f8f; font-size:.74rem; }
+        .writer-word-meta { color:#8f8f8f; white-space:nowrap; }
+        .writer-meta-right { display:flex; align-items:center; justify-content:flex-end; gap:.35rem; flex-wrap:wrap; min-width:0; }
+        .writer-tier-pill, .writer-access-pill, .writer-flag-pill { display:inline-flex; align-items:center; gap:.32rem; min-width:0; padding:.18rem .55rem; border-radius:999px; font-size:.68rem; line-height:1.1; }
+        .writer-tier-pill { border:1px solid rgba(255,215,0,.22); background:rgba(255,215,0,.08); color:var(--accent-color); }
+        .writer-tier-pill .label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
+        .writer-access-pill { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.045); color:#b8b8b8; }
+        .writer-flag-pill { border:1px solid rgba(255,68,68,.22); background:rgba(255,68,68,.08); color:#ff8f8f; }
+        .writer-sidebar.collapsed { width:72px; min-width:72px; }
+        .writer-sidebar.collapsed .sidebar-full-content { display:none; }
+        .writer-sidebar.collapsed:hover { width:72px; min-width:72px; }
+        .writer-sidebar.collapsed:hover .sidebar-full-content { display:none; }
+        .writer-sidebar.collapsed .collapsed-handle { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:100%; gap:1rem; padding:1rem 0; color:#888; cursor:pointer; width:100%; background:linear-gradient(180deg, rgba(255,255,255,.035), transparent); }
+        .writer-sidebar.collapsed:hover .collapsed-handle { display:flex; }
+        .writer-sidebar .collapsed-handle { display:none; }
+        .collapsed-count { display:inline-flex; align-items:center; justify-content:center; min-width:36px; height:36px; border-radius:999px; background:rgba(255,215,0,.12); color:var(--accent-color); font-size:.74rem; font-weight:800; border:1px solid rgba(255,215,0,.22); }
+        .writer-editor-card { min-height:calc(100vh - 10rem); padding:0; overflow:hidden; background:linear-gradient(180deg, rgba(15,15,15,.97), rgba(4,4,4,.94)); box-shadow:0 28px 70px rgba(0,0,0,.36); }
+        .writer-topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.08); background:linear-gradient(90deg, rgba(255,215,0,.1), rgba(255,255,255,.03) 45%, rgba(0,0,0,.24)); position:sticky; top:0; z-index:5; backdrop-filter:blur(18px); }
+        .writer-kicker { color:#777; font-size:.72rem; text-transform:uppercase; letter-spacing:1.8px; margin-bottom:.15rem; }
+        .writer-tabs { display:flex; gap:.35rem; flex-wrap:wrap; padding:.75rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.24); }
+        .writer-tab { padding:.55rem .82rem; border:1px solid rgba(255,255,255,.09); border-radius:999px; background:rgba(255,255,255,.045); color:#999; cursor:pointer; font-family:var(--font-ui); font-size:.78rem; transition:.18s ease; }
+        .writer-tab:hover { color:#fff; border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.07); }
+        .writer-tab.active { color:#050505; background:var(--accent-color); border-color:var(--accent-color); box-shadow:0 0 22px rgba(255,215,0,.22); font-weight:700; }
+        .writer-panel { display:none; padding:1.15rem; }
         .writer-panel.active { display:block; }
-        .writer-workspace { max-width:920px; margin:0 auto; }
-        .manuscript-title { width:100%; border:0; border-bottom:1px solid rgba(255,255,255,.12); background:transparent; color:#fff; font-family:var(--font-header); font-size:clamp(1.9rem, 4vw, 3.4rem); padding:.5rem 0 1rem; outline:none; }
+        .writer-workspace { max-width:1180px; margin:0 auto; }
+        .manuscript-sheet { border:1px solid rgba(255,255,255,.1); border-radius:18px; overflow:hidden; background:linear-gradient(180deg, rgba(9,9,9,.98), rgba(0,0,0,1)); box-shadow:0 28px 80px rgba(0,0,0,.48); }
+        .manuscript-title-row { display:grid; grid-template-columns:84px minmax(0, 1fr); gap:1rem; align-items:end; padding:1.35rem clamp(1.2rem, 4vw, 3rem) 1rem; border-bottom:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)); }
+        .chapter-order-inline label { display:block; color:#777; font-size:.62rem; text-transform:uppercase; letter-spacing:1.4px; margin-bottom:.35rem; }
+        .chapter-order-input { width:100%; border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(0,0,0,.48); color:var(--accent-color); font-family:var(--font-ui); font-size:1rem; font-weight:800; padding:.7rem .65rem; outline:none; }
+        .chapter-order-input:focus { border-color:rgba(255,215,0,.45); box-shadow:0 0 0 3px rgba(255,215,0,.08); }
+        .manuscript-title { width:100%; border:0; background:transparent; color:#fff; font-family:var(--font-header); font-size:clamp(2rem, 4vw, 3.45rem); padding:0; outline:none; }
         .manuscript-title::placeholder { color:rgba(255,255,255,.28); }
-        .editor-toolbar { display:flex; gap:.4rem; flex-wrap:wrap; padding:.65rem; border:1px solid var(--glass-border); border-radius:10px 10px 0 0; background:rgba(0,0,0,.44); position:sticky; top:0; z-index:2; backdrop-filter:blur(10px); }
-        .editor-toolbar button { padding:.4rem .6rem; border-radius:6px; border:1px solid var(--glass-border); background:rgba(255,255,255,.06); color:#ddd; cursor:pointer; }
-        .chapter-canvas { min-height:64vh; padding:clamp(1.25rem, 4vw, 3.5rem); border:1px solid var(--glass-border); border-top:0; border-radius:0 0 14px 14px; background:linear-gradient(180deg, rgba(6,6,6,.88), rgba(0,0,0,.96)); box-shadow:0 24px 70px rgba(0,0,0,.42); color:#f3eee4; font-family:var(--font-body); font-size:1.12rem; line-height:1.95; outline:none; overflow:auto; }
-        .chapter-canvas:empty:before { content:'Start writing. Paste from docs, format scenes, then save a draft or publish when ready.'; color:#666; }
+        .editor-toolbar { display:flex; gap:.45rem; flex-wrap:wrap; padding:.7rem clamp(1rem, 3vw, 1.4rem); border-bottom:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.62); position:sticky; top:69px; z-index:4; backdrop-filter:blur(12px); }
+        .editor-toolbar button { padding:.42rem .68rem; border-radius:8px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.055); color:#ddd; cursor:pointer; font-family:var(--font-ui); transition:.16s ease; }
+        .editor-toolbar button:hover { color:#fff; border-color:rgba(255,215,0,.35); background:rgba(255,215,0,.08); }
+        .chapter-canvas { min-height:66vh; padding:clamp(1.5rem, 4vw, 3.75rem); color:#f5efe7; font-family:var(--font-body); font-size:1.16rem; line-height:2.02; outline:none; overflow:auto; }
+        .chapter-canvas:empty:before { content:'Start writing...'; color:#666; font-style:italic; }
         .chapter-canvas p { margin:0 0 1.05rem; }
         .chapter-canvas h2, .chapter-canvas h3 { color:var(--accent-color); font-family:var(--font-header); margin:1rem 0 .5rem; }
         .chapter-canvas blockquote { margin:1rem 0; padding:.8rem 1rem; border-left:3px solid var(--accent-color); background:rgba(255,215,0,.06); color:#ddd; }
         .chapter-canvas hr { border:0; text-align:center; margin:1.5rem 0; }
-        .chapter-canvas hr:after { content:'✦ ✦ ✦'; color:var(--accent-color); letter-spacing:.5rem; }
+        .chapter-canvas hr:after { content:'* * *'; color:var(--accent-color); letter-spacing:.5rem; }
+        .writer-meta-strip { display:flex; justify-content:space-between; gap:.75rem; padding:.85rem 1.15rem; border-top:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.025); }
         .matrix-grid { display:grid; gap:.55rem; }
         .matrix-row { display:grid; grid-template-columns:70px 1fr 170px 110px; gap:.75rem; align-items:center; padding:.7rem .85rem; border:1px solid var(--glass-border); border-radius:10px; background:rgba(255,255,255,.035); }
         .matrix-row.nsfw { border-color:rgba(255,68,68,.28); }
         .subnav-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.9rem; }
         .subnav-card { cursor:pointer; border:1px solid var(--glass-border); border-radius:12px; padding:1rem; background:rgba(255,255,255,.035); transition:.2s; }
         .subnav-card:hover { border-color:rgba(255,215,0,.45); transform:translateY(-2px); }
-        @media (max-width: 980px) { .writer-shell { grid-template-columns:1fr; } .writer-sidebar { position:static; max-height:none; } .matrix-row { grid-template-columns:1fr; } }
+        @media (max-width: 980px) { .writer-controls, .writer-shell, .writer-shell.sidebar-collapsed { grid-template-columns:1fr; } .writer-sidebar, .writer-sidebar.collapsed { position:static; height:auto; max-height:45vh; width:auto; min-width:0; } .writer-sidebar.collapsed .sidebar-full-content { display:flex; } .writer-sidebar.collapsed .collapsed-handle { display:none; } .writer-editor-card { min-height:0; } .matrix-row { grid-template-columns:1fr; } .editor-toolbar { top:0; } }
 
         /* --- FORMS --- */
         .form-group { margin-bottom: 1.5rem; }
@@ -1080,7 +1105,7 @@
                         <div class="nav-section-title">Cockpit</div>
                         <div class="nav-item active" data-view="dashboard"><i class="fas fa-home"></i> Dashboard</div>
                         <div class="nav-item" data-view="stories"><i class="fas fa-book"></i> Stories</div>
-                        <div class="nav-item" data-view="chapters"><i class="fas fa-pen-nib"></i> Writer / Chapters</div>
+                        <a class="nav-item" href="writer.html" style="text-decoration:none"><i class="fas fa-pen-nib"></i> Writer / Chapters</a>
                         <div class="nav-item" data-view="rollingAccess"><i class="fas fa-layer-group"></i> Rolling Access</div>
                     </div>
 
@@ -5161,6 +5186,8 @@
 
 
         Views.chapters = async (container) => {
+            window.location.href = 'writer.html';
+            return;
             const stories = await DB.getStories();
             State.stories = stories;
             if (stories.length === 0) {
@@ -5169,6 +5196,7 @@
             }
             State.selectedStoryId = State.selectedStoryId || stories[0].id;
             State.writerPanel = State.writerPanel || 'write';
+            if (State.writerPanel === 'details') State.writerPanel = 'write';
             const [chapters, tiers] = await Promise.all([DB.getChapters(State.selectedStoryId), DB.getAccessTiers().catch(() => [])]);
             const tierLookup = Object.fromEntries(tiers.map(t => [t.id, t]));
             const sortedChapters = [...chapters].sort((a,b) => (Number(b.chapter_order)||0) - (Number(a.chapter_order)||0));
@@ -5179,18 +5207,24 @@
             const tierOptions = ['<option value="">Free / public when published</option>', ...tiers.map(t => `<option value="${t.id}" ${chapter?.required_tier_id === t.id ? 'selected' : ''}>${Utils.escapeHtml(t.name)} (rank ${t.tier_rank})</option>`)].join('');
             const publicReleaseValue = chapter?.public_release_at ? new Date(chapter.public_release_at).toISOString().slice(0, 16) : '';
             const chapterTitle = chapter?.title || '';
+            const chapterTierLabel = chapter?.required_tier_id ? (tierLookup[chapter.required_tier_id]?.name || 'Tier gated') : 'Public';
+            const chapterStatusLabel = chapter?.is_published ? 'Live' : 'Draft';
             const tabButton = (panel, icon, label) => `<button type="button" class="writer-tab ${State.writerPanel === panel ? 'active' : ''}" data-writer-tab="${panel}" onclick="Forms.showWriterPanel('${panel}')"><i class="fas fa-${icon}"></i> ${label}</button>`;
             container.innerHTML = `
-                <div class="page-header">
-                    <div><h1 class="page-title">Writer / Chapters</h1><p class="page-subtitle">Focused manuscript editor. Publishing, access, and teaser tools live in their own tabs instead of choking the writing page.</p></div>
+                <div class="page-header writer-page-header">
+                    <div><h1 class="page-title">Writer / Chapters</h1><p class="page-subtitle">A clean production desk for drafting, publishing, access, and teasers.</p></div>
                     <button class="btn btn-primary" onclick="State.editingChapterId='new'; State.writerPanel='write'; Views.render('chapters')"><i class="fas fa-plus"></i> New Chapter</button>
                 </div>
-                <div class="glass-card" style="margin-bottom:1rem"><label class="form-label">Story</label><select class="form-select" id="story-select" onchange="State.selectedStoryId=this.value; State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">${stories.map(s => `<option value="${s.id}" ${s.id === State.selectedStoryId ? 'selected' : ''}>${Utils.escapeHtml(s.title)}</option>`).join('')}</select></div>
-                <div class="writer-shell">
+                <div class="glass-card writer-controls">
+                    <div class="form-group"><label class="form-label">Active story</label><select class="form-select" id="story-select" onchange="State.selectedStoryId=this.value; State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">${stories.map(s => `<option value="${s.id}" ${s.id === State.selectedStoryId ? 'selected' : ''}>${Utils.escapeHtml(s.title)}</option>`).join('')}</select></div>
+                    <div class="pill-row"><span class="admin-pill gold"><i class="fas fa-book-open"></i> ${chapters.length} chapters</span><span class="admin-pill">${sortedChapters.filter(c => c.is_published).length} live</span></div>
+                </div>
+                <div class="writer-shell ${State.writerSidebarCollapsed ? 'sidebar-collapsed' : ''}" id="writer-shell">
                     <aside class="glass-card writer-sidebar ${State.writerSidebarCollapsed ? 'collapsed' : ''}" style="margin:0" id="writer-sidebar">
                         <div class="collapsed-handle" onclick="Forms.toggleWriterSidebar(event)">
                             <i class="fas fa-chevron-right" style="font-size:1.1rem; color:var(--accent-color)"></i>
-                            <span style="writing-mode: vertical-rl; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 2px; font-weight: 700; margin-top: 1.5rem;">Chapters</span>
+                            <span class="collapsed-count">${chapters.length}</span>
+                            <span style="writing-mode: vertical-rl; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; font-weight: 700;">Chapters</span>
                         </div>
                         <div class="sidebar-full-content" style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
                             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -5204,16 +5238,19 @@
                             </div>
                             <div class="writer-list">
                                 ${sortedChapters.map(c => `
-                                    <div class="writer-item ${editingId === c.id ? 'active' : ''}" onclick="State.editingChapterId='${c.id}'; State.writerPanel='write'; Views.render('chapters')" style="padding: 0.5rem 0.65rem;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem">
-                                            <span class="writer-item-title" style="font-size:0.88rem; font-weight:700;">#${c.chapter_order || 0}. ${Utils.escapeHtml(c.title || 'Untitled')}</span>
-                                            <span class="status-badge ${c.is_published ? 'status-published' : 'status-draft'}" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0;">${c.is_published ? 'Live' : 'Draft'}</span>
+                                    <div class="writer-item ${editingId === c.id ? 'active' : ''}" onclick="State.editingChapterId='${c.id}'; State.writerPanel='write'; Views.render('chapters')">
+                                        <div class="writer-item-head">
+                                            <span class="writer-item-number">#${c.chapter_order || 0}</span>
+                                            <div class="writer-item-title-wrap">
+                                                <span class="writer-item-title">${Utils.escapeHtml(c.title || 'Untitled')}</span>
+                                            </div>
+                                            <span class="status-badge ${c.is_published ? 'status-published' : 'status-draft'}" style="font-size:0.65rem; padding:2px 7px; flex-shrink:0;">${c.is_published ? 'Live' : 'Draft'}</span>
                                         </div>
-                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:#888; margin-top:0.35rem">
-                                            <span>${c.word_count || 0} words</span>
-                                            <div style="display:flex; gap:0.25rem; align-items:center;">
-                                                ${c.required_tier_id ? `<span class="admin-pill gold" style="font-size:0.65rem; padding:1px 6px; border-radius:4px;"><i class="fas fa-lock" style="font-size:0.55rem"></i> ${Utils.escapeHtml(tierLookup[c.required_tier_id]?.name || 'Tier')}</span>` : '<span class="admin-pill" style="font-size:0.65rem; padding:1px 6px; border-radius:4px;">Free</span>'}
-                                                ${c.is_nsfw ? '<span class="admin-pill danger" style="font-size:0.65rem; padding:1px 6px; border-radius:4px;">NSFW</span>' : ''}
+                                        <div class="writer-item-submeta">
+                                            <span class="writer-word-meta">${c.word_count || 0} words</span>
+                                            <div class="writer-meta-right">
+                                                ${c.required_tier_id ? `<span class="writer-tier-pill" title="${Utils.escapeAttr(tierLookup[c.required_tier_id]?.name || 'Tier gated')}"><i class="fas fa-lock"></i><span class="label">${Utils.escapeHtml(tierLookup[c.required_tier_id]?.name || 'Tier gated')}</span></span>` : '<span class="writer-access-pill">Public</span>'}
+                                                ${c.is_nsfw ? '<span class="writer-flag-pill">NSFW</span>' : ''}
                                             </div>
                                         </div>
                                     </div>
@@ -5224,21 +5261,23 @@
                     <section class="glass-card writer-editor-card" style="margin:0">
                         ${chapter ? `
                             <div class="writer-topbar">
-                                <div><h3 class="card-title">${editingId === 'new' ? 'New Chapter' : 'Editing Chapter'}</h3><p style="color:#777;font-size:.85rem;margin-top:.25rem">${editingId === 'new' ? 'Draft not saved yet' : '#' + (chapter.chapter_order || 0) + ' · ' + (chapter.word_count || 0) + ' words'}</p></div>
-                                <div class="action-btns"><button class="btn btn-secondary btn-sm" onclick="Forms.saveInlineChapter('${editingId === 'new' ? '' : chapter.id}', false)"><i class="fas fa-save"></i> Save Draft</button><button class="btn btn-primary btn-sm" onclick="Forms.saveInlineChapter('${editingId === 'new' ? '' : chapter.id}', true)"><i class="fas fa-upload"></i> Publish</button></div>
+                                <div><div class="writer-kicker">${editingId === 'new' ? 'New draft' : 'Chapter desk'}</div><h3 class="card-title">${editingId === 'new' ? 'New Chapter' : 'Editing Chapter'}</h3><p style="color:#777;font-size:.85rem;margin-top:.25rem">${editingId === 'new' ? 'Draft not saved yet' : '#' + (chapter.chapter_order || 0) + ' &middot; ' + (chapter.word_count || 0) + ' words &middot; ' + Utils.escapeHtml(chapterTierLabel) + ' &middot; ' + chapterStatusLabel}</p></div>
+                                <div class="action-btns"><button class="btn btn-secondary btn-sm" onclick="Forms.saveInlineChapter('${editingId === 'new' ? '' : chapter.id}', null)"><i class="fas fa-save"></i> ${chapter.is_published ? 'Save Changes' : 'Save Draft'}</button><button class="btn btn-primary btn-sm" onclick="Forms.saveInlineChapter('${editingId === 'new' ? '' : chapter.id}', true)"><i class="fas fa-upload"></i> Publish</button></div>
                             </div>
-                            <nav class="writer-tabs">${tabButton('write','pen-nib','Write')}${tabButton('details','sliders','Details')}${tabButton('access','lock','Access')}${tabButton('teaser','wand-magic-sparkles','Teaser')}</nav>
+                            <nav class="writer-tabs">${tabButton('write','pen-nib','Write')}${tabButton('access','lock','Access')}${tabButton('teaser','wand-magic-sparkles','Teaser')}</nav>
                             <div class="writer-panel ${State.writerPanel === 'write' ? 'active' : ''}" data-writer-panel="write">
                                 <div class="writer-workspace">
-                                    <input class="manuscript-title" id="f-title" value="${Utils.escapeAttr(chapterTitle)}" placeholder="Chapter title">
-                                    <div class="editor-toolbar"><button type="button" onclick="Forms.editorCommand('bold')"><b>B</b></button><button type="button" onclick="Forms.editorCommand('italic')"><i>I</i></button><button type="button" onclick="Forms.editorBlock('h2')">H2</button><button type="button" onclick="Forms.editorBlock('h3')">H3</button><button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button><button type="button" onclick="Forms.insertSceneBreak()">Scene break</button><button type="button" onclick="Forms.convertMarkdownEditor()">Markdown → HTML</button><button type="button" onclick="Forms.clearEditorFormatting()">Clear</button></div>
-                                    <div class="chapter-canvas" id="f-content" contenteditable="true" spellcheck="true">${Utils.normalizeEditorHtml(chapter.content || '')}</div>
-                                    <div class="pill-row" style="margin-top:.8rem"><span class="admin-pill gold" id="editor-word-count">0 words</span><span class="admin-pill">Markdown, rich HTML, and line breaks supported</span><span class="admin-pill">Autosaves locally</span><button class="btn btn-secondary btn-sm" onclick="State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">Close editor</button></div>
+                                    <div class="manuscript-sheet">
+                                        <div class="manuscript-title-row">
+                                            <div class="chapter-order-inline"><label>Index</label><input class="chapter-order-input" type="number" id="f-chapter_order" value="${chapter.chapter_order || 0}" title="Chapter index"></div>
+                                            <input class="manuscript-title" id="f-title" value="${Utils.escapeAttr(chapterTitle)}" placeholder="Chapter title">
+                                        </div>
+                                        <input type="hidden" id="f-is_published" value="${chapter.is_published ? 'true' : 'false'}">
+                                        <div class="editor-toolbar"><button type="button" onclick="Forms.editorCommand('bold')"><b>B</b></button><button type="button" onclick="Forms.editorCommand('italic')"><i>I</i></button><button type="button" onclick="Forms.editorBlock('h2')">H2</button><button type="button" onclick="Forms.editorBlock('h3')">H3</button><button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button><button type="button" onclick="Forms.insertSceneBreak()">Scene break</button><button type="button" onclick="Forms.convertMarkdownEditor()">Markdown &rarr; HTML</button><button type="button" onclick="Forms.clearEditorFormatting()">Clear</button></div>
+                                        <div class="chapter-canvas" id="f-content" contenteditable="true" spellcheck="true">${Utils.normalizeEditorHtml(chapter.content || '')}</div>
+                                        <div class="writer-meta-strip"><div class="pill-row"><span class="admin-pill gold" id="editor-word-count">0 words</span><span class="admin-pill">Local autosave</span><span class="admin-pill">Markdown + rich paste</span></div><button class="btn btn-secondary btn-sm" onclick="State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">Close editor</button></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="writer-panel ${State.writerPanel === 'details' ? 'active' : ''}" data-writer-panel="details">
-                                <div class="form-grid"><div class="form-group"><label class="form-label">Chapter Order</label><input class="form-input" type="number" id="f-chapter_order" value="${chapter.chapter_order || 0}"></div><div class="form-group"><label class="form-label">Published state</label><label class="form-checkbox"><input type="checkbox" id="f-is_published" ${chapter.is_published ? 'checked' : ''}> Published / visible in reader</label></div></div>
-                                <p style="color:#777">Keep ordering and publish state here; the Write tab stays clean for actual drafting.</p>
                             </div>
                             <div class="writer-panel ${State.writerPanel === 'access' ? 'active' : ''}" data-writer-panel="access">
                                 <div class="form-grid"><div class="form-group"><label class="form-label">Tier State</label><select class="form-select" id="f-required_tier_id">${tierOptions}</select></div><div class="form-group"><label class="form-label">Public Release</label><input class="form-input" type="datetime-local" id="f-public_release_at" value="${publicReleaseValue}"></div></div>
@@ -5293,7 +5332,7 @@
                     title: document.getElementById('f-title').value.trim() || 'Untitled chapter',
                     content: Forms.normalizeEditorNow(),
                     chapter_order: orderValue,
-                    is_published: publishOverride === null ? document.getElementById('f-is_published').checked : !!publishOverride,
+                    is_published: publishOverride === null ? document.getElementById('f-is_published')?.value === 'true' : !!publishOverride,
                     required_tier_id: document.getElementById('f-required_tier_id')?.value || null,
                     public_release_at: publicReleaseValue ? new Date(publicReleaseValue).toISOString() : null,
                     preview_text: document.getElementById('f-preview_text')?.value || Utils.makePreviewFromHtml(document.getElementById('f-content').innerHTML),
@@ -5315,6 +5354,7 @@
             if (event) event.stopPropagation();
             State.writerSidebarCollapsed = !State.writerSidebarCollapsed;
             const sidebar = document.getElementById('writer-sidebar');
+            const shell = document.getElementById('writer-shell');
             if (sidebar) {
                 sidebar.classList.toggle('collapsed', State.writerSidebarCollapsed);
                 // Update header chevron icon
@@ -5327,6 +5367,9 @@
                 if (handleIcon) {
                     handleIcon.className = State.writerSidebarCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
                 }
+            }
+            if (shell) {
+                shell.classList.toggle('sidebar-collapsed', State.writerSidebarCollapsed);
             }
         };
 

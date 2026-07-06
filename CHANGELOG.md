@@ -1,6 +1,111 @@
 # Changelog
 
+## 2026-07-07 04:55 Asia/Kolkata - Left-align standalone Writer drafting canvas
+
+Area: admin
+
+Summary:
+- Fixed the standalone `writer.html` Quill drafting canvas so new chapters start at the left writing margin instead of a centered, narrow editor column.
+- Kept the editor full-width inside the available workspace while preserving comfortable responsive padding and explicit left text alignment.
+
+Files changed:
+- `writer.html`
+
+## 2026-07-07 00:00 Asia/Kolkata - Bound Writer demo to Supabase and shared system-message screen
+
+Area: admin | reader | docs
+
+Summary:
+- Converted `writer.html` from mock/demo chapter data to the site Supabase config, admin profile gate, real story/chapter/tier loading, and real chapter insert/update/publish/unpublish writes.
+- Removed bundled demo chapter/tier/story seed data from the Writer runtime cache and replaced mock media thumbnails with an honest no-bundled-media state.
+- Preserved Writer `div.sys-msg-box` system-message blocks in reader chapter parsing and rendered them with the same techno SVG system-screen border concept in the main reader.
+- Restored visible system-message screen treatment in Writer, fixed editor-mode scrolling, and added explicit Draft/Live pills in both the active editor header and chapter list.
+- Added backward compatibility for preexisting bracket-authored system messages like `[content]` in both Writer loading and reader rendering.
+
+Files changed:
+- `writer.html`
+- `js/subscription/backend.js`
+- `js/subscription/views/story-reader.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-06 01:53 Asia/Kolkata ? Standalone Writer workspace
+
+Area: admin, reader
+
+Summary:
+- Added `writer.html` and `js/admin-writer.js` as a dedicated admin-only chapter writing workspace.
+- The chapter rail now preserves index, title, word count, live/draft state, tier name, NSFW/external flags, and release date metadata.
+- The editor keeps chapter index beside title, rich/Markdown toolbar, contenteditable body, local autosave, Save Draft/Save Changes preserving publish state, explicit Publish, access controls, teaser generation, NSFW, and external URL behavior.
+- Admin Writer / Chapters navigation now opens `writer.html`; reader `/studio/write` and `/studio/chapters` bridge to the standalone Writer page for admins.
+
+Files changed:
+- `writer.html`
+- `js/admin-writer.js`
+- `admin.html`
+- `js/subscription/router.js`
+- `js/subscription/chrome.js`
+- `js/subscription/sheets.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/studio-preview.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+
 Completed durable project changes only. Unfinished/deferred/risky work belongs in `PROJECT_STATE.md`.
+
+## 2026-07-06 01:38 Asia/Kolkata - Reworked Admin Writer rail, tier labels, and collapse behavior
+
+Area: admin | docs
+
+Summary:
+- Reworked the Writer / Chapters chapter rail into a wider, more polished card list with clearer chapter numbering, better title spacing, and restored visible tier names instead of stripping access context down to generic labels.
+- Fixed sidebar collapse behavior so it now explicitly shrinks the chapter rail and gives the manuscript editor more horizontal space instead of depending on CSS selector behavior that could leave the editor layout wrong.
+- Tightened the Writer manuscript presentation with stronger dark surfaces, better chapter-card hierarchy, and richer topbar metadata showing tier and live/draft state.
+
+Files changed:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-06 01:22 Asia/Kolkata - Simplified Admin Writer chapter list and metadata controls
+
+Area: admin | docs
+
+Summary:
+- Simplified the Writer / Chapters sidebar from chunky card rows into a flatter compact chapter list with the index separated from the chapter title and smaller status/access metadata.
+- Removed the separate Details tab from the Writer workspace; chapter index now sits directly beside the chapter title in the Write panel.
+- Removed the visible published checkbox from the editor flow; Save Draft/Save Changes preserves the existing publish state while Publish explicitly publishes.
+
+Files changed:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-06 01:15 Asia/Kolkata - Polished Admin Writer / Chapters visual design
+
+Area: admin
+
+Summary:
+- Reworked the Writer / Chapters view from a demo-like glass panel into a cleaner production writing desk with a compact active-story control strip, chapter metrics, and a stronger two-column workspace.
+- Restyled the chapter sidebar with professional cards, active-state accenting, tighter spacing, and a collapsed-column grid behavior that gives the editor more room.
+- Restyled the editor chrome with a sticky command header, pill tabs, manuscript sheet container, improved toolbar buttons, cleaner chapter canvas spacing, and a bottom metadata strip for word count/autosave status.
+
+Files changed:
+- `admin.html`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
 
 ## 2026-07-05 19:35 Asia/Kolkata - Fixed Writer editor line breaks and Markdown input
 

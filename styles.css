@@ -569,6 +569,37 @@ body.has-sheet #main, body.locked-scroll { overflow: hidden; }
 .prose p { font-family: var(--serif); font-size: var(--fs, 1.12rem); line-height: var(--lh, 1.78); margin: 0 0 1.18em; color: var(--read-fg); }
 .prose p:first-of-type::first-letter { font-size: 3.1em; float:left; line-height:.8; padding: 6px 10px 0 0; font-weight:700; color: var(--s); }
 .prose .scene { text-align:center; margin: 2.1em 0; color: var(--read-dim); letter-spacing:.4em; font-size:.7rem; }
+.prose .reader-system-message {
+  position: relative;
+  margin: 2rem auto;
+  padding: 1.25rem 1.35rem;
+  max-width: min(100%, 720px);
+  min-height: 92px;
+  color: #bae6fd;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+  font-size: .92rem;
+  line-height: 1.7;
+  letter-spacing: .015em;
+  white-space: pre-wrap;
+  background: rgba(14, 165, 233, .08);
+  border: 16px solid transparent;
+  border-image-slice: 20;
+  border-image-repeat: stretch;
+  border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cpolygon points='20,2 130,2 148,20 148,130 130,148 20,148 2,130 2,20' fill='rgba(14, 165, 233, 0.08)' stroke='%230ea5e9' stroke-width='1.5'/%3E%3Cpattern id='grid' width='15' height='15' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 15 0 L 0 0 0 15' fill='none' stroke='rgba(14, 165, 233, 0.15)' stroke-width='0.5'/%3E%3C/pattern%3E%3Cpolygon points='20,2 130,2 148,20 148,130 130,148 20,148 2,130 2,20' fill='url(%23grid)'/%3E%3Cpath d='M 2,40 L 2,20 L 20,2 L 40,2' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Ctext x='25' y='14' fill='%2338bdf8' font-family='monospace' font-size='9' font-weight='bold' letter-spacing='1'%3ESYSTEM%3C/text%3E%3Crect x='25' y='18' width='30' height='2' fill='%230ea5e9'/%3E%3Cpath d='M 110,2 L 130,2 L 148,20 L 148,40' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Crect x='125' y='8' width='4' height='4' fill='%2338bdf8'/%3E%3Crect x='132' y='8' width='4' height='4' fill='%2338bdf8'/%3E%3Cpath d='M 148,110 L 148,130 L 130,148 L 110,148' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Cpath d='M 40,148 L 20,148 L 2,130 L 2,110' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Crect x='10' y='125' width='2' height='10' fill='%2338bdf8'/%3E%3Crect x='15' y='125' width='2' height='10' fill='%2338bdf8'/%3E%3Crect x='65' y='0' width='20' height='4' fill='%2338bdf8'/%3E%3Crect x='65' y='146' width='20' height='4' fill='%2338bdf8'/%3E%3Cline x1='6' y1='50' x2='6' y2='100' stroke='%230ea5e9' stroke-width='2' stroke-dasharray='6 4'/%3E%3Cline x1='144' y1='50' x2='144' y2='100' stroke='%230ea5e9' stroke-width='2' stroke-dasharray='6 4'/%3E%3C/svg%3E");
+  box-shadow: 0 0 28px rgba(14, 165, 233, .12), inset 0 0 24px rgba(14, 165, 233, .05);
+}
+.prose .reader-system-message::before {
+  content: "SYSTEM";
+  position: absolute;
+  top: -1.15rem;
+  left: .35rem;
+  color: #38bdf8;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-shadow: 0 0 10px rgba(56, 189, 248, .65);
+}
 .prose figure { margin: 1.8em 0; border-radius: var(--radius); overflow:hidden; border:1px solid var(--read-border, var(--border)); background: var(--read-card, var(--surface)); }
 .prose figure svg { width:100%; height:auto; }
 .prose figcaption { font-size:.74rem; color: var(--read-dim); padding: 9px 13px; font-style: italic; text-align:center; }

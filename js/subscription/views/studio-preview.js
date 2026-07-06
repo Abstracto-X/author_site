@@ -2,11 +2,11 @@
 "use strict";
 
 function studioAdminRedirect(title, body){
-  return `<div class="empty"><div class="em">${I.shield}</div><h3>${title}</h3><p>${body}</p><a class="btn story" href="admin.html">${I.external}Open Admin CMS</a></div>`;
+  return `<div class="empty"><div class="em">${I.shield}</div><h3>${title}</h3><p>${body}</p><a class="btn story" href="writer.html">${I.external}Open Writer</a></div>`;
 }
 
 VIEWS.studioOverview = function(){
-  return studioAdminRedirect("Studio dashboard moved", "Use the Admin CMS for stories, chapters, tiers, keys, media, and announcements.");
+  return studioAdminRedirect("Studio dashboard moved", "Use the standalone Writer for chapters, or Admin CMS for tiers, keys, media, and announcements.");
 };
 VIEWS.studioAccess = function(){
   return studioAdminRedirect("Access management lives in Admin CMS", "Create tiers, access keys, and entitlement records in the real Supabase-backed admin page.");
@@ -20,3 +20,6 @@ VIEWS.studioAnalytics = function(){
 VIEWS.studioSettings = function(){
   return studioAdminRedirect("Studio settings moved", "Manage story identity, covers, backgrounds, loader themes, and storage-backed media in Admin CMS.");
 };
+
+VIEWS.studioWrite = function(){ window.location.href = "writer.html"; return studioAdminRedirect("Opening Writer", "Redirecting to the standalone chapter workspace."); };
+VIEWS.studioChapters = VIEWS.studioWrite;

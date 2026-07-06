@@ -55,26 +55,42 @@ function textToBlocks(value){
     container.innerHTML = withoutImports;
     container.querySelectorAll("script,style,iframe,object,embed,link,meta").forEach(node => node.remove());
     container.querySelectorAll("*").forEach(node => {
-      if (!["P","BR","STRONG","B","EM","I","BLOCKQUOTE","H2","H3","H4","HR","UL","OL","LI"].includes(node.tagName)) {
+      if (!["P","DIV","BR","STRONG","B","EM","I","BLOCKQUOTE","H2","H3","H4","HR","UL","OL","LI"].includes(node.tagName)) {
         const frag = document.createDocumentFragment();
         while (node.firstChild) frag.appendChild(node.firstChild);
         node.replaceWith(frag);
         return;
       }
+      const isSystemMessage = node.tagName === "DIV" && node.classList.contains("sys-msg-box");
+      const bracketSystem = ["P","DIV"].includes(node.tagName) && /^\[[\s\S]+\]$/.test((node.textContent || "").trim());
       [...node.attributes].forEach(attr => node.removeAttribute(attr.name));
+      if (isSystemMessage || bracketSystem) node.dataset.systemMessage = "true";
     });
     const nodes = Array.from(container.children);
     const blocks = nodes.map(node => {
       if (node.tagName === "HR") return { t:"scene" };
+      if (node.dataset.systemMessage === "true") {
+        const text = (node.textContent || "").trim();
+        const bracket = text.match(/^\[([\s\S]+)\]$/);
+        return { t:"system", v: bracket ? esc(bracket[1].trim()).replace(/\n/g, "<br>") : (node.innerHTML || esc(text)) };
+      }
       if (["H2","H3","H4"].includes(node.tagName)) return { t:"html", tag:node.tagName.toLowerCase(), v:node.innerHTML };
       if (node.tagName === "BLOCKQUOTE") return { t:"html", tag:"blockquote", v:node.innerHTML };
       return { t:"p", v:node.innerHTML || esc(node.textContent || "") };
     }).filter(b => b.t === "scene" || String(b.v || "").trim());
     if (blocks.length) return blocks;
     const text = (container.textContent || "").trim();
-    return text ? text.split(/\n{2,}/).map(part => ({ t:"p", v: esc(part.trim()) })).filter(b=>b.v) : [];
+    return text ? text.split(/\n{2,}/).map(part => {
+      const trimmed = part.trim();
+      const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
+      return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
+    }).filter(b=>b.v) : [];
   }
-  return withoutImports.split(/\n{2,}|\r?\n/).map(part => ({ t:"p", v: esc(part.trim()) })).filter(b => b.v);
+  return withoutImports.split(/\n{2,}|\r?\n/).map(part => {
+    const trimmed = part.trim();
+    const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
+    return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
+  }).filter(b => b.v);
 }
 function normalizeBackendChapter(row, story){
   const state = backendStateToAether(row);

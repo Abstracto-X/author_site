@@ -356,3 +356,15 @@ Recent CMS rebuild reader changes:
 | Line | Function | Purpose |
 |---:|---|---|
 | 5 | `init()` | Initializes this module or application surface. |
+
+
+## 2026-07-06 01:53 Asia/Kolkata - Standalone Writer route bridge
+
+- `js/subscription/router.js` redirects `/studio/write` and `/studio/chapters` to `writer.html`; other `/studio/*` paths continue to send users toward Admin CMS.
+- Admin-only reader chrome/account/home links now expose `writer.html` as a direct Writer entry point while preserving normal reader separation.
+
+
+## 2026-07-07 00:00 Asia/Kolkata - Reader system-message rendering
+
+- `js/subscription/backend.js` preserves saved Writer `div.sys-msg-box` blocks as `system` chapter blocks instead of flattening them into normal paragraphs.
+- `js/subscription/views/story-reader.js` renders `system` blocks as `.reader-system-message`; `styles.css` carries the same SVG system screen border concept from Writer into the reader.

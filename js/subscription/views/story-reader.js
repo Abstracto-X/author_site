@@ -359,6 +359,7 @@ function readerBar(){
 function renderBlocks(blocks, chId){
   return blocks.map((b,i)=>{
     if(b.t==="scene") return `<div class="scene">✦ ✦ ✦</div>`;
+    if(b.t==="system") return `<div class="reader-system-message">${b.v}</div>`;
     if(b.t==="html"){
       const tag = ["h2","h3","h4","blockquote"].includes(b.tag) ? b.tag : "p";
       return `<${tag} class="${tag === 'blockquote' ? 'quote-block' : 'chapter-heading'}">${b.v}</${tag}>`;

@@ -11,7 +11,8 @@ The active implementation is the source of truth. Anything under `deleted/` is a
 | Surface | Entry | Audience | Purpose | Editing model |
 |---|---|---|---|---|
 | Subscription reader | `index.html` | Public readers / members / supporters | Member-facing reader shell for published stories, chapter catalogs, gated chapter reading, auth, entitlement status, access keys, account sheets, help/support, and reader navigation. | Modular classic browser scripts under `js/subscription/`, loaded in dependency order. This is the frequently edited surface. |
-| Admin CMS | `admin.html` | Author/admin | Single-page CMS for writing Supabase content: stories, chapters, media URLs/uploads, characters, lore, maps, timeline content, reader tiers, access keys, and settings. | Intentionally monolithic single HTML file because it changes less often and mainly writes database content. |
+| Admin CMS | `admin.html` | Author/admin | Single-page CMS for Supabase content management: stories, rolling access, media URLs/uploads, characters, lore, maps, timeline content, reader tiers, access keys, and settings. | Intentionally monolithic single HTML file except the dedicated Writer workspace. |
+| Standalone Writer | `writer.html` | Author/admin | Focused chapter drafting/publishing workspace reachable from Admin CMS and the reader `/studio/write` path. Uses Supabase stories, chapters, reader tiers, admin profile checks, and chapter RLS instead of mock/demo data. Includes the Quill system-message authoring flow. | Plain static page with inline classic browser script; uses the same Supabase anon config/profile admin check as `admin.html`. |
 
 ---
 
@@ -20,7 +21,9 @@ The active implementation is the source of truth. Anything under `deleted/` is a
 ```txt
 index.html                 # subscription reader entry
 admin.html                 # admin CMS entry
+writer.html                # standalone admin-only chapter writer workspace
 styles.css                 # shared/reader-heavy stylesheet
+js/admin-writer.js         # legacy/alternate standalone writer helper; current `writer.html` keeps its active logic inline
 js/subscription/           # subscription reader modules and config
 database/sql/              # human-readable setup/migration SQL
 supabase/                  # Supabase CLI config, Edge Functions, migrations
@@ -110,7 +113,8 @@ Common route groups include:
 | `/vault`, `/shelf`, `/notifications`, `/benefits`, `/onboarding` | `views/account-access.js` | Member/account/access surfaces. |
 | `/updates`, `/calendar`, `/collections` | `views/account-access.js` | Backend-aware update/calendar/collection surfaces; must show honest empty states if no DB data exists. |
 | `/help`, `/support` | `views/help-support.js` | Help/support pages. |
-| `/studio/*` | `router.js` | Redirects to `admin.html`; the reader-side Author Studio prototype is no longer an active product surface. |
+| `/studio/write`, `/studio/chapters` | `router.js` | Redirect to `writer.html` for admin chapter drafting. The page still requires an admin profile and Supabase RLS; normal readers receive no privileged behavior. |
+| Other `/studio/*` | `router.js` | Redirect to `admin.html`; the old reader-side Author Studio prototype is not an active product surface. |
 
 ### Reader invariants
 
@@ -130,8 +134,9 @@ Common route groups include:
 
 Admin responsibilities include:
 
+- Launching Writer / Chapters into the standalone `writer.html` workspace instead of keeping chapter writing inside the admin monolith.
 - Story metadata: title, slug, world title, descriptions, publication state, theme/loader values, covers/backgrounds.
-- Chapter content through a focused Writer / Chapters manuscript workspace, with release/access/teaser metadata split into tabs, Markdown/plain-text paste conversion, line-break-preserving sanitized rich HTML, preview generation, NSFW/external-only chapter fields, and local draft autosave.
+- Chapter content through `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, Quill rich/Markdown editor, autosave to Supabase, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, and system-message blocks saved in chapter HTML.
 - Rolling Access policies per story, stored in `story_access_policies`, that apply tier windows to newest published chapters and make older non-NSFW chapters free.
 - Reader CRM, provider connection visibility, access key redemption visibility, entitlement audit review, comments, and chapter reaction totals.
 - Character, gallery, lore, maps, wallpapers, timeline, map requests, and author profile content as secondary Story Extras.

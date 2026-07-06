@@ -30,7 +30,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | n/a | `Forms.normalizeEditorNow()` | Normalizes the active chapter editor to safe HTML immediately before save. |
 | n/a | `Forms.isMeaningfulEditorHtml(html)` | Detects whether editor/autosave content contains real text instead of only browser filler like non-breaking spaces. |
 | n/a | `Forms.convertMarkdownEditor()` | Converts the current editor text from Markdown into safe chapter HTML on demand. |
-| n/a | `Forms.showWriterPanel(panel = 'write')` | Switches Writer / Chapters between focused Write, Details, Access, and Teaser panels without re-rendering. |
+| n/a | `Forms.showWriterPanel(panel = 'write')` | Switches Writer / Chapters between focused Write, Access, and Teaser panels without re-rendering. |
 | n/a | `Forms.saveRollingPolicy()` | Saves and applies rolling-access policy inputs. |
 | n/a | `Forms.recalculateRollingNow()` | Reapplies the selected story rolling-access policy. |
 | n/a | `Forms.saveReaderBehavior()` | Persists reader guide/provider/external fallback behavior defaults. |
@@ -40,7 +40,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | n/a | `Views.readers(container)` | Renders reader CRM, provider, redemption, and audit data. |
 | n/a | `Views.community(container)` | Renders comments and reaction totals. |
 | n/a | `Views.storyExtras(container)` | Renders secondary links for world-building/extras tools. |
-| n/a | `Views.chapters(container)` | Rebuilt Writer / Chapters view with story selector, scrollable chapter list, focused manuscript editor, and tabbed Details/Access/Teaser panels. |
+| n/a | `Views.chapters(container)` | Rebuilt Writer / Chapters view with story selector, collapsible tier-aware chapter rail, focused manuscript editor with inline chapter index, and Access/Teaser panels. |
 | 1142 | `escapeHtml(unsafe)` | Escapes or normalizes unsafe/display text. |
 | 1151 | `escapeAttr(unsafe)` | Escapes or normalizes unsafe/display text. |
 | 1158 | `formatRelativeDate(dateString)` | Formats a value for display. |
@@ -206,3 +206,16 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 4739 | `update()` | Persists changes to Supabase or updates local state. |
 | 4740 | `draw()` | Admin CMS helper used by the single-file admin app. |
 | 4744 | `animate()` | Admin CMS helper used by the single-file admin app. |
+
+
+## 2026-07-06 01:53 Asia/Kolkata - Standalone Writer handoff
+
+- Admin sidebar `Writer / Chapters` now links to `writer.html` instead of relying on the embedded Admin CMS chapter workspace.
+- `Views.chapters` in `admin.html` is retained as a compatibility fallback but immediately redirects to `writer.html`.
+- `writer.html` is now the active Supabase-backed Writer surface; its current Quill/editor logic is inline in that file, while `js/admin-writer.js` remains an alternate/legacy helper unless the page explicitly loads it.
+
+## 2026-07-07 00:00 Asia/Kolkata - Writer mock removal and Supabase binding
+
+- `writer.html` now loads `js/subscription/site-config.js` plus Supabase JS, requires a signed-in admin profile, loads real `stories`, `chapters`, and `reader_access_tiers`, and writes chapter drafts/published updates to `public.chapters`.
+- Demo `MockDB` seed content was removed; the in-page store is now only a runtime cache of Supabase rows.
+- Quill system-message blocks continue to save as `div.sys-msg-box` in chapter HTML.

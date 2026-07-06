@@ -2,6 +2,158 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-07 00:00 Asia/Kolkata - Manual QA for Supabase-backed Writer demo conversion
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+- reader
+
+Files touched:
+- `writer.html`
+- `js/subscription/backend.js`
+- `js/subscription/views/story-reader.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Writer mock story/tier/chapter data was removed and replaced with Supabase-backed admin loading/writes.
+- Writer system-message blocks are now preserved and rendered in the main reader with the SVG system-screen styling.
+- Follow-up fix restored visible Writer system-message treatment, editor scrolling, and Draft/Live pills in the editor/list.
+- Follow-up compatibility fix converts preexisting `[content]` chapter lines/paragraphs into system-message blocks in Writer and Reader.
+- Follow-up layout fix left-aligned the standalone Writer Quill drafting canvas for new chapters.
+
+Remaining work:
+- Manual browser QA with a real authenticated admin session and at least one real story.
+
+Risks / notes:
+- Syntax checks passed, but no live admin browser session was available in this run.
+- `writer.html` currently keeps its active Quill/Supabase logic inline; `js/admin-writer.js` still exists as an unreferenced/alternate helper.
+
+Verification needed:
+- Open `writer.html` after signing in via `admin.html`; verify story switching, chapter search, draft creation, the new-chapter cursor/text starts at the left writing margin, autosave/save, publish/update-live, unpublish, tier selection, NSFW external URL validation, cover URL save, and reader display of a `[system message]` block.
+
+## 2026-07-06 01:53 Asia/Kolkata - Manual QA for standalone Writer workspace
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+- reader
+
+Files touched:
+- `writer.html`
+- `js/admin-writer.js`
+- `admin.html`
+- `js/subscription/router.js`
+- `js/subscription/chrome.js`
+- `js/subscription/sheets.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/studio-preview.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Created a standalone admin-only Writer page outside the admin monolith and redirected Admin CMS Writer / Chapters plus reader `/studio/write` and `/studio/chapters` to it.
+- Writer rail restores full metadata: index, title, word count, live/draft state, tier name, NSFW/external flags, and public release date.
+- Editor keeps chapter index/title/content in the main writing surface and access/teaser controls in a compact inspector.
+
+Remaining work:
+- Manual authenticated admin-session QA with real chapter/tier data.
+
+Risks / notes:
+- Browser smoke verified only the public login gate because no authenticated admin browser session was available.
+- No Supabase schema or RLS changes were made.
+
+Verification needed:
+- Open `writer.html` as an admin and verify story switching, chapter selection, rail collapse/expand, tier names, release tags, NSFW/external tags, local autosave, Save Draft/Save Changes preserving publish state, and Publish setting `is_published = true`.
+
+## 2026-07-06 01:38 Asia/Kolkata - Manual QA for Writer rail redesign and collapse fix
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+
+Files touched:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Reworked the Writer / Chapters rail again after visual review: restored tier-name visibility, widened chapter cards, improved hierarchy, and replaced the fragile collapse behavior with an explicit layout class so collapsing the rail gives more room to the editor.
+
+Remaining work:
+- Open Writer / Chapters in a real authenticated admin session and confirm the chapter rail, tier labels, and collapsed-editor width now feel correct with long titles and long tier names.
+
+Risks / notes:
+- The in-app browser could only verify the public admin login page in this session because no authenticated admin session was available there.
+- This was frontend/UI behavior only; no Supabase schema changed.
+
+Verification needed:
+- Manual admin-session visual QA of expanded rail, collapsed rail, tier label truncation, chapter selection, and editor width after collapse.
+
+## 2026-07-06 01:22 Asia/Kolkata - Manual QA for simplified Admin Writer controls
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+
+Files touched:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Simplified the Writer / Chapters UI after visual review: flatter chapter list rows, chapter index beside title in the manuscript header, no separate Details tab, and no visible publish checkbox.
+
+Remaining work:
+- Open Admin CMS with a real authenticated admin session and confirm the chapter list is visually cleaner and the inline chapter index works with Save Draft/Save Changes and Publish.
+
+Risks / notes:
+- Save Draft/Save Changes now preserves existing published state when publishOverride is null; Publish explicitly sets the chapter live.
+- This was frontend/UI behavior only; no Supabase schema changed.
+
+Verification needed:
+- Manual browser visual QA of chapter selection, index editing/conflict warning, Access/Teaser tabs, draft save, and publish.
+
+## 2026-07-06 01:15 Asia/Kolkata - Manual QA for Admin Writer visual polish
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+
+Files touched:
+- `admin.html`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Polished Writer / Chapters into a cleaner production writing desk: compact story controls, refined chapter sidebar cards, pill tabs, sticky editor header, manuscript sheet, toolbar, canvas spacing, and metadata strip.
+
+Remaining work:
+- Open Admin CMS with a real authenticated admin session and confirm the Writer / Chapters section looks right with real chapters at desktop and narrow widths.
+
+Risks / notes:
+- This was a visual/layout polish only; no Supabase schema or write contract changed.
+
+Verification needed:
+- Manual browser visual QA of chapter selection, collapsed sidebar, Write/Details/Access/Teaser tabs, draft save, and publish buttons.
+
 ## 2026-07-05 18:40 Asia/Kolkata - Manual QA for Admin CMS rebuild and rolling access
 
 Status: NEEDS REVIEW

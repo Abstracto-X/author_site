@@ -1,0 +1,1836 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writer Studio | EvilArchives</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;750&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        zinc: {
+                            850: '#202024',
+                            900: '#18181b',
+                            950: '#09090b'
+                        },
+                        primary: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- FontAwesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+
+    <!-- Site Config + Supabase -->
+    <script src="js/subscription/site-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Quill Editor & Markdown Parsers -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+
+    <style>
+        :root {
+            --surface-base: #09090b;
+            --surface-raised: rgba(24, 24, 27, 0.72);
+            --surface-hover: rgba(255, 255, 255, 0.045);
+            --border-soft: rgba(255, 255, 255, 0.075);
+            --border-strong: rgba(255, 255, 255, 0.13);
+            --text-muted: #a1a1aa;
+            --text-soft: #d4d4d8;
+            --accent: #818cf8;
+        }
+
+        /* Global & Scrollbars */
+        body {
+            background-color: #09090b;
+            color: #e4e4e7;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 34rem),
+                radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.08), transparent 32rem);
+            z-index: 0;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Focus States */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid rgba(129, 140, 248, 0.9);
+            outline-offset: 2px;
+        }
+
+        button {
+            user-select: none;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Active Nav */
+        .active-nav {
+            background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(39,39,42,0.95));
+            color: #f4f4f5 !important;
+            box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.14);
+        }
+
+        /* Glass / UI Elements */
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .tier-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Dashboard Stat Cards */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(24, 24, 27, 0.58);
+            border: 1px solid rgba(255,255,255,0.075);
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: 0 16px 32px rgba(0,0,0,0.18);
+        }
+
+        .stat-card-label {
+            color: #71717a;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+
+        .stat-card-value {
+            margin-top: 0.35rem;
+            color: #f4f4f5;
+            font-size: 1.45rem;
+            font-weight: 750;
+            letter-spacing: -0.03em;
+        }
+
+        /* Table Styles */
+        .index-table th {
+            position: sticky;
+            top: 0;
+            background: rgba(24, 24, 27, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 5;
+        }
+
+        .index-row {
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .index-row:hover {
+            background:
+                linear-gradient(90deg, rgba(99,102,241,0.1), transparent 42%),
+                rgba(255,255,255,0.035);
+            cursor: pointer;
+        }
+
+        .index-row:hover td:first-child {
+            color: #a5b4fc;
+        }
+
+        /* Empty State */
+        .empty-state-card {
+            background: rgba(24,24,27,0.58);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 24px 50px rgba(0,0,0,0.28);
+        }
+
+        /* Editor Shell */
+        #editor-workspace header {
+            background: rgba(9, 9, 11, 0.84);
+            backdrop-filter: blur(18px);
+        }
+
+        #ed-title {
+            letter-spacing: -0.03em;
+        }
+
+        #ed-order::-webkit-outer-spin-button,
+        #ed-order::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .editor-meta-bar {
+            height: 36px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            background: rgba(9, 9, 11, 0.84);
+            backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            color: #71717a;
+            font-size: 0.72rem;
+            flex-shrink: 0;
+        }
+
+        .settings-card {
+            background: rgba(9,9,11,0.42);
+            border: 1px solid rgba(255,255,255,0.065);
+            border-radius: 0.9rem;
+            padding: 1rem;
+        }
+
+        .editor-hint {
+            opacity: 0.74;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .editor-hint:hover {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-1px);
+        }
+
+        /* Quill Editor Overrides */
+        .ql-toolbar.ql-snow {
+            border: none !important;
+            border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+            background: rgba(24, 24, 27, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 12px 24px !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+        }
+
+        #view-editor,
+        #editor-workspace,
+        #editor-workspace > .flex-1,
+        #quill-editor {
+            min-height: 0;
+        }
+
+        #quill-editor {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ql-container.ql-snow {
+            border: none !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.08rem;
+            height: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .ql-editor {
+            padding: 3rem min(6vw, 4rem) 10rem;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            box-sizing: border-box;
+            color: #d4d4d8;
+            line-height: 1.8;
+            text-align: left;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .ql-editor:focus {
+            outline: none;
+        }
+
+        .ql-editor p {
+            margin-bottom: 1.2em;
+        }
+
+        .ql-editor h1,
+        .ql-editor h2 {
+            color: #f4f4f5;
+            font-weight: 600;
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+        }
+
+        .ql-editor h1 {
+            font-size: 2.25rem;
+        }
+
+        .ql-editor img {
+            border-radius: 8px;
+            border: 1px solid #3f3f46;
+            margin: 1.5rem 0;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        .ql-editor.ql-blank::before {
+            color: #52525b;
+            font-style: normal;
+        }
+
+        /* Dark Theme Quill UI */
+        .ql-snow .ql-stroke {
+            stroke: #a1a1aa;
+        }
+
+        .ql-snow .ql-fill {
+            fill: #a1a1aa;
+        }
+
+        .ql-snow .ql-picker {
+            color: #a1a1aa;
+        }
+
+        .ql-snow .ql-picker-options {
+            background-color: #27272a;
+            border-color: #3f3f46;
+        }
+
+        /* 
+         * Autoscaling Techno Vector SVG System Box
+         * Enter inserts line breaks inside the same div.
+         * Tab exits into a normal paragraph.
+         */
+        .ql-editor .sys-msg-box {
+            position: relative;
+            margin: 2.5rem 0;
+            min-height: 92px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(2, 6, 23, 0.72));
+            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25), 0 0 36px rgba(14, 165, 233, 0.18), inset 0 0 26px rgba(14, 165, 233, 0.08);
+
+            border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cpolygon points='20,2 130,2 148,20 148,130 130,148 20,148 2,130 2,20' fill='rgba(14, 165, 233, 0.08)' stroke='%230ea5e9' stroke-width='1.5'/%3E%3Cpattern id='grid' width='15' height='15' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 15 0 L 0 0 0 15' fill='none' stroke='rgba(14, 165, 233, 0.15)' stroke-width='0.5'/%3E%3C/pattern%3E%3Cpolygon points='20,2 130,2 148,20 148,130 130,148 20,148 2,130 2,20' fill='url(%23grid)'/%3E%3Cpath d='M 2,40 L 2,20 L 20,2 L 40,2' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Ctext x='25' y='14' fill='%2338bdf8' font-family='monospace' font-size='9' font-weight='bold' letter-spacing='1'%3ESYSTEM%3C/text%3E%3Crect x='25' y='18' width='30' height='2' fill='%230ea5e9'/%3E%3Cpath d='M 110,2 L 130,2 L 148,20 L 148,40' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Crect x='125' y='8' width='4' height='4' fill='%2338bdf8'/%3E%3Crect x='132' y='8' width='4' height='4' fill='%2338bdf8'/%3E%3Cpath d='M 148,110 L 148,130 L 130,148 L 110,148' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Cpath d='M 40,148 L 20,148 L 2,130 L 2,110' fill='none' stroke='%2338bdf8' stroke-width='3'/%3E%3Crect x='10' y='125' width='2' height='10' fill='%2338bdf8'/%3E%3Crect x='15' y='125' width='2' height='10' fill='%2338bdf8'/%3E%3Crect x='65' y='0' width='20' height='4' fill='%2338bdf8'/%3E%3Crect x='65' y='146' width='20' height='4' fill='%2338bdf8'/%3E%3Cline x1='6' y1='50' x2='6' y2='100' stroke='%230ea5e9' stroke-width='2' stroke-dasharray='6 4'/%3E%3Cline x1='144' y1='50' x2='144' y2='100' stroke='%230ea5e9' stroke-width='2' stroke-dasharray='6 4'/%3E%3C/svg%3E");
+            border-image-slice: 45 fill;
+            border-style: solid;
+            border-width: 30px;
+
+            padding: 0.35rem 0.55rem;
+            color: #bae6fd;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+            outline: none;
+            filter: drop-shadow(0 0 12px rgba(14, 165, 233, 0.15));
+            white-space: pre-wrap;
+        }
+
+        .ql-editor .sys-msg-box::before {
+            content: "SYSTEM";
+            position: absolute;
+            top: -1.15rem;
+            left: 0.35rem;
+            color: #38bdf8;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.65);
+        }
+
+        .ql-editor .sys-msg-box br {
+            display: block;
+            content: "";
+        }
+
+        /* Responsive Pass */
+        @media (max-width: 1200px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            aside.w-80 {
+                width: 18rem;
+            }
+
+            .ql-editor {
+                padding-inline: 6%;
+            }
+        }
+
+        @media (max-width: 900px) {
+            aside.w-64 {
+                width: 4.75rem;
+            }
+
+            aside.w-64 span,
+            aside.w-64 h1,
+            aside.w-64 label,
+            aside.w-64 select,
+            aside.w-64 .fa-chevron-down,
+            aside.w-64 p {
+                display: none;
+            }
+
+            aside.w-64 .p-4 {
+                padding-inline: 0.75rem;
+            }
+
+            #editor-workspace {
+                flex-direction: column;
+            }
+
+            #editor-workspace aside.w-80 {
+                width: 100%;
+                max-height: 42vh;
+                border-left: none;
+                border-top: 1px solid #27272a;
+            }
+
+            .editor-meta-bar {
+                flex-direction: column;
+                height: auto;
+                gap: 0.15rem;
+                padding-block: 0.45rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex h-screen w-full antialiased text-sm bg-zinc-950">
+
+    <!-- Toasts -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Media Library Modal -->
+    <div id="modal-media" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center fade-in">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-[700px] max-w-[95vw] overflow-hidden flex flex-col max-h-[80vh] slide-up">
+            <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+                <h3 class="text-lg font-semibold text-zinc-100">
+                    <i class="fa-regular fa-image text-primary-400 mr-2"></i>
+                    Media Library
+                </h3>
+                <button onclick="UI.closeModal('modal-media')" class="text-zinc-500 hover:text-white" aria-label="Close media library">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b border-zinc-800 flex justify-between items-center">
+                <input
+                    type="text"
+                    placeholder="Search images..."
+                    class="bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-sm w-64 focus:border-primary-500 outline-none text-zinc-200"
+                >
+                <button class="bg-primary-600 hover:bg-primary-500 text-white px-4 py-1.5 rounded text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Upload
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 grid grid-cols-3 gap-4" id="media-grid"></div>
+        </div>
+    </div>
+
+    <!-- Main App Layout -->
+    <div class="flex w-full h-full">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-zinc-950 border-r border-zinc-800/60 flex flex-col flex-shrink-0 z-20">
+            <div class="h-16 px-5 border-b border-zinc-800/60 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
+                    <i class="fa-solid fa-feather-pointed text-sm"></i>
+                </div>
+                <h1 class="font-bold text-zinc-100 tracking-wide text-base">Writer Studio</h1>
+            </div>
+
+            <div class="p-4 border-b border-zinc-800/60">
+                <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Active Story</label>
+                <div class="relative">
+                    <select
+                        id="story-selector"
+                        class="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 p-2.5 appearance-none outline-none font-medium cursor-pointer transition hover:border-zinc-700"
+                    ></select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-zinc-500 text-xs pointer-events-none"></i>
+                </div>
+            </div>
+
+            <nav class="p-3 space-y-1 flex-1">
+                <button
+                    onclick="Router.navigate('dashboard')"
+                    id="nav-dashboard"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition active-nav"
+                >
+                    <i class="fa-solid fa-table-list w-4 text-center"></i>
+                    <span class="font-medium">Chapter Index</span>
+                </button>
+
+                <button
+                    onclick="Router.navigate('editor')"
+                    id="nav-editor"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition"
+                >
+                    <i class="fa-solid fa-pen-nib w-4 text-center"></i>
+                    <span class="font-medium">Active Editor</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-zinc-800/60 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-zinc-200">Admin Session</p>
+                    <p class="text-[10px] text-zinc-500">Connected to Supabase</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 relative bg-zinc-950 overflow-hidden flex flex-col min-w-0">
+
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="absolute inset-0 flex flex-col z-10 bg-zinc-950 fade-in">
+                <header class="h-20 px-8 flex items-center justify-between flex-shrink-0 border-b border-zinc-800/60">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Chapters</h2>
+                        <p class="text-zinc-400 text-sm mt-0.5" id="dash-story-title">Manage contents for Selected Story</p>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-zinc-500"></i>
+                            <input
+                                type="text"
+                                id="dash-search"
+                                placeholder="Search chapters..."
+                                class="bg-zinc-900 border border-zinc-800 rounded-full py-2 pl-9 pr-4 text-sm text-zinc-200 w-64 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
+                            >
+                        </div>
+
+                        <button
+                            onclick="App.createNewChapter()"
+                            class="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2 rounded-full font-medium shadow-lg shadow-primary-500/20 transition flex items-center gap-2"
+                        >
+                            <i class="fa-solid fa-plus"></i>
+                            New Chapter
+                        </button>
+                    </div>
+                </header>
+
+                <section class="px-8 pt-6">
+                    <div id="dash-stats" class="stat-grid"></div>
+                </section>
+
+                <div class="flex-1 overflow-auto p-8">
+                    <div class="border border-zinc-800/80 rounded-xl overflow-hidden bg-zinc-900/30 shadow-xl">
+                        <table class="w-full text-left border-collapse index-table">
+                            <thead>
+                                <tr class="text-zinc-400 text-xs uppercase tracking-wider border-b border-zinc-800">
+                                    <th class="px-6 py-4 font-semibold w-16 text-center">Ch.</th>
+                                    <th class="px-6 py-4 font-semibold">Title</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold">Access Tier</th>
+                                    <th class="px-6 py-4 font-semibold">Word Count</th>
+                                    <th class="px-6 py-4 font-semibold">Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-chapter-list" class="text-sm divide-y divide-zinc-800/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor View -->
+            <div id="view-editor" class="absolute inset-0 flex flex-col z-10 bg-zinc-950 hidden">
+
+                <!-- Empty State -->
+                <div id="editor-empty" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-20 px-6">
+                    <div class="empty-state-card text-center max-w-md">
+                        <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-zinc-900 flex items-center justify-center text-3xl text-zinc-600 shadow-inner border border-zinc-800">
+                            <i class="fa-solid fa-pen-nib"></i>
+                        </div>
+
+                        <h2 class="text-xl font-semibold text-zinc-200 mb-2">Choose a chapter to start writing</h2>
+
+                        <p class="text-zinc-500 mb-6 text-sm leading-relaxed">
+                            Open an existing chapter from the index, or create a fresh draft for the active story.
+                        </p>
+
+                        <div class="flex items-center justify-center gap-3">
+                            <button
+                                onclick="Router.navigate('dashboard')"
+                                class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white font-medium transition border border-zinc-700"
+                            >
+                                Go to Index
+                            </button>
+
+                            <button
+                                onclick="App.createNewChapter()"
+                                class="px-5 py-2 bg-primary-600 hover:bg-primary-500 rounded-lg text-white font-medium transition shadow-lg shadow-primary-500/20"
+                            >
+                                New Chapter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor Workspace -->
+                <div id="editor-workspace" class="flex-1 flex hidden">
+
+                    <!-- Main Editor Column -->
+                    <div class="flex-1 flex flex-col min-w-0 bg-[#09090b]">
+                        <header class="h-16 px-6 border-b border-zinc-800/60 flex items-center justify-between flex-shrink-0 bg-zinc-950">
+                            <div class="flex items-center gap-3 w-1/2">
+                                <span class="text-zinc-600 font-mono text-sm bg-zinc-900 px-2 rounded border border-zinc-800">CH</span>
+
+                                <input
+                                    type="number"
+                                    id="ed-order"
+                                    class="bg-transparent border-none text-zinc-300 w-12 text-center text-lg font-medium outline-none focus:ring-0 p-0"
+                                    placeholder="#"
+                                >
+
+                                <div class="h-6 w-px bg-zinc-800 mx-1"></div>
+
+                                <input
+                                    type="text"
+                                    id="ed-title"
+                                    class="bg-transparent border-none text-xl font-bold text-zinc-100 focus:ring-0 outline-none w-full placeholder-zinc-700 p-0"
+                                    placeholder="Chapter Title..."
+                                >
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <span id="ed-status-pill" class="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                                    <i class="fa-solid fa-circle text-[6px]"></i>
+                                    Draft
+                                </span>
+
+                                <span id="ed-save-status" class="text-xs font-medium text-zinc-500">
+                                    <i class="fa-solid fa-check text-emerald-500 mr-1"></i>
+                                    Saved
+                                </span>
+
+                                <div class="flex items-center gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+                                    <button
+                                        onclick="App.copyAsMarkdown()"
+                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                                        title="Copy as Markdown"
+                                        aria-label="Copy as Markdown"
+                                    >
+                                        <i class="fa-brands fa-markdown text-sm"></i>
+                                    </button>
+
+                                    <button
+                                        onclick="App.copyAsRichText()"
+                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                                        title="Copy as Rich Text"
+                                        aria-label="Copy as Rich Text"
+                                    >
+                                        <i class="fa-solid fa-file-lines text-sm"></i>
+                                    </button>
+                                </div>
+
+                                <div class="h-6 w-px bg-zinc-800"></div>
+
+                                <button
+                                    onclick="App.saveDraft()"
+                                    class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition border border-zinc-700 shadow-sm"
+                                >
+                                    Save Draft
+                                </button>
+
+                                <button
+                                    onclick="App.publishChapter()"
+                                    id="btn-publish"
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                                >
+                                    <i class="fa-solid fa-rocket"></i>
+                                    Publish
+                                </button>
+                            </div>
+                        </header>
+
+                        <div id="ed-banner" class="bg-indigo-500/10 border-b border-indigo-500/20 px-6 py-2 text-xs font-medium text-indigo-300 flex justify-between hidden">
+                            <span>
+                                <i class="fa-solid fa-globe mr-2"></i>
+                                This chapter is Published.
+                            </span>
+
+                            <button onclick="App.unpublishChapter()" class="hover:text-white underline decoration-indigo-500/50">
+                                Revert to Draft
+                            </button>
+                        </div>
+
+                        <div class="flex-1 relative overflow-hidden flex flex-col">
+                            <div id="quill-editor" class="flex-1 custom-scrollbar"></div>
+
+                            <div class="editor-meta-bar">
+                                <div id="ed-live-count">0 words · 0 characters</div>
+                                <div id="ed-last-saved">Last saved just now</div>
+                            </div>
+
+                            <div class="editor-hint absolute bottom-12 left-1/2 -translate-x-1/2 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-full px-4 py-1.5 text-xs text-zinc-400 pointer-events-none fade-in shadow-lg">
+                                Type
+                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">/image</kbd>
+                                for media,
+                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">[text]</kbd>
+                                for system messages,
+                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">Enter</kbd>
+                                for new system lines,
+                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">Tab</kbd>
+                                to exit.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Settings Sidebar -->
+                    <aside class="w-80 bg-zinc-900 border-l border-zinc-800 flex flex-col flex-shrink-0 z-20">
+                        <div class="h-16 px-5 border-b border-zinc-800 flex items-center">
+                            <h3 class="font-semibold text-zinc-200">Chapter Settings</h3>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+
+                            <section class="settings-card space-y-4">
+                                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-lock text-zinc-600"></i>
+                                    Access Control
+                                </h4>
+
+                                <div>
+                                    <label class="text-sm text-zinc-300 block mb-1.5 font-medium">Required Tier</label>
+                                    <select
+                                        id="ed-tier"
+                                        class="w-full bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm rounded-lg p-2.5 focus:border-primary-500 outline-none transition"
+                                    >
+                                        <option value="">Free Access</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-sm text-zinc-300 block mb-1.5 font-medium">Public Release Date</label>
+                                    <input
+                                        type="datetime-local"
+                                        id="ed-release-date"
+                                        class="w-full bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm rounded-lg p-2.5 focus:border-primary-500 outline-none transition [color-scheme:dark]"
+                                    >
+                                    <p class="text-xs text-zinc-500 mt-1.5 leading-relaxed">
+                                        Chapter unlocks automatically after this date.
+                                    </p>
+                                </div>
+                            </section>
+
+                            <section class="settings-card space-y-4">
+                                <h4 class="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation text-rose-500/70"></i>
+                                    Content Rules
+                                </h4>
+
+                                <label class="flex items-start gap-3 cursor-pointer group">
+                                    <div class="relative flex items-center justify-center mt-0.5">
+                                        <input type="checkbox" id="ed-nsfw" class="peer sr-only">
+                                        <div class="w-10 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+                                    </div>
+
+                                    <div>
+                                        <span class="text-sm text-zinc-200 font-medium block">NSFW / External-Only</span>
+                                        <span class="text-xs text-zinc-500 mt-0.5 block leading-relaxed">
+                                            Local content is hidden from reader API.
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <div id="ed-external-wrap" class="transition-all duration-300 opacity-50 pointer-events-none pl-12">
+                                    <label class="text-xs text-zinc-400 block mb-1 font-medium">External URL Fallback</label>
+                                    <input
+                                        type="url"
+                                        id="ed-external-url"
+                                        class="w-full bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm rounded-lg p-2 focus:border-rose-500 outline-none transition"
+                                        placeholder="https://..."
+                                    >
+                                </div>
+                            </section>
+
+                            <section class="settings-card space-y-4 pb-1">
+                                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-image text-zinc-600"></i>
+                                    Media
+                                </h4>
+
+                                <div>
+                                    <label class="text-sm text-zinc-300 block mb-1.5 font-medium">Cover Image</label>
+                                    <div class="flex">
+                                        <input
+                                            type="text"
+                                            id="ed-cover"
+                                            class="flex-1 bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm rounded-l-lg p-2.5 focus:border-primary-500 outline-none border-r-0"
+                                            placeholder="URL or path..."
+                                        >
+
+                                        <button
+                                            onclick="Editor.openMediaLibrary()"
+                                            class="bg-zinc-800 border border-zinc-700 rounded-r-lg px-4 text-zinc-400 hover:text-white transition"
+                                            aria-label="Open media library"
+                                        >
+                                            <i class="fa-solid fa-folder-open"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </section>
+
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ==========================================
+        // SUPABASE DATABASE & STATE
+        // ==========================================
+        const CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
+        const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || '';
+        const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || '';
+        const CONFIGURED_SUPABASE = SUPABASE_URL && SUPABASE_ANON_KEY && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME/i.test(`${SUPABASE_URL} ${SUPABASE_ANON_KEY}`);
+        const supabaseClient = CONFIGURED_SUPABASE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        const MockDB = { tiers: [], stories: [], chapters: [] };
+
+        function rankOf(tier) { return Number(tier?.tier_rank ?? tier?.rank ?? 0); }
+        function wordCountFromHtml(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html || '';
+            const text = (div.textContent || div.innerText || '').replace(/\u00a0/g, ' ').trim();
+            return text ? text.split(/\s+/).filter(Boolean).length : 0;
+        }
+        function datetimeLocal(value) {
+            if (!value) return '';
+            const d = new Date(value);
+            if (Number.isNaN(d.getTime())) return '';
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+        function normalizeChapterRow(row) {
+            return {
+                ...row,
+                cover_image_url: row.cover_image_url || '',
+                external_url: row.external_url || '',
+                word_count: Number(row.word_count || wordCountFromHtml(row.content || ''))
+            };
+        }
+        function legacyBracketSystemToHtml(value) {
+            const raw = String(value || '');
+            if (!raw.trim()) return '';
+            const hasHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
+            if (!hasHtml) {
+                return raw
+                    .replace(/\r\n?/g, '\n')
+                    .split(/\n{2,}|\n/g)
+                    .map(part => {
+                        const trimmed = part.trim();
+                        if (!trimmed) return '';
+                        const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
+                        return bracket
+                            ? `<div class="sys-msg-box">${UI.escapeHtml(bracket[1].trim()).replace(/\n/g, '<br>')}</div>`
+                            : `<p>${UI.escapeHtml(trimmed)}</p>`;
+                    })
+                    .join('');
+            }
+            const template = document.createElement('template');
+            template.innerHTML = raw;
+            template.content.querySelectorAll('p, div').forEach(node => {
+                if (node.classList.contains('sys-msg-box')) return;
+                const bracket = (node.textContent || '').trim().match(/^\[([\s\S]+)\]$/);
+                if (!bracket) return;
+                const box = document.createElement('div');
+                box.className = 'sys-msg-box';
+                box.innerHTML = UI.escapeHtml(bracket[1].trim()).replace(/\n/g, '<br>');
+                node.replaceWith(box);
+            });
+            return template.innerHTML;
+        }
+        function tierColor(rank) {
+            if (rank >= 20) return 'text-rose-400 bg-rose-400/10 border-rose-400/20';
+            if (rank >= 10) return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+            return 'text-purple-400 bg-purple-400/10 border-purple-400/20';
+        }
+
+        const DB = {
+            async requireAdmin() {
+                if (!supabaseClient) throw new Error('Supabase is not configured. Update js/subscription/site-config.js first.');
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                if (sessionError) throw sessionError;
+                if (!session) throw new Error('Admin sign-in required. Open admin.html, sign in, then return to writer.html.');
+                const { data, error } = await supabaseClient.from('profiles').select('id, role, display_name, username').eq('id', session.user.id).single();
+                if (error) throw error;
+                if (data.role !== 'admin') throw new Error('Access denied. Admin privileges required.');
+                return data;
+            },
+            async loadWorkspace(storyId = null) {
+                const [{ data: stories, error: storiesError }, { data: tiers, error: tiersError }] = await Promise.all([
+                    supabaseClient.from('stories').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
+                    supabaseClient.from('reader_access_tiers').select('*').order('tier_rank', { ascending: true })
+                ]);
+                if (storiesError) throw storiesError;
+                if (tiersError) throw tiersError;
+                MockDB.stories = stories || [];
+                MockDB.tiers = (tiers || []).map(t => ({ ...t, rank: rankOf(t), color: tierColor(rankOf(t)) }));
+                State.activeStoryId = storyId || localStorage.getItem('ea-admin-last-story-id') || MockDB.stories[0]?.id || '';
+                if (!MockDB.stories.some(story => story.id === State.activeStoryId)) State.activeStoryId = MockDB.stories[0]?.id || '';
+                if (State.activeStoryId) localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
+                await this.loadChapters(State.activeStoryId);
+            },
+            async loadChapters(storyId) {
+                if (!storyId) { MockDB.chapters = []; return; }
+                const { data, error } = await supabaseClient.from('chapters').select('*').eq('story_id', storyId).order('chapter_order', { ascending: true });
+                if (error) throw error;
+                MockDB.chapters = (data || []).map(normalizeChapterRow);
+            },
+            async saveChapter(id, record) {
+                record.word_count = wordCountFromHtml(record.content || '');
+                if (id) {
+                    const { data, error } = await supabaseClient.from('chapters').update(record).eq('id', id).select().single();
+                    if (error) throw error;
+                    return normalizeChapterRow(data);
+                }
+                const { data, error } = await supabaseClient.from('chapters').insert(record).select().single();
+                if (error) throw error;
+                return normalizeChapterRow(data);
+            }
+        };
+
+        const State = {
+            activeStoryId: localStorage.getItem('ea-admin-last-story-id') || '',
+            activeChapterId: null,
+            unsavedChanges: false,
+            quillInstance: null,
+            autosaveTimer: null
+        };
+
+        // ==========================================
+        // QUILL CUSTOMIZATION
+        // ==========================================
+        const Block = Quill.import('blots/block');
+
+        class SystemMessageBlot extends Block {
+            static create(value) {
+                const node = super.create(value);
+                node.classList.add('sys-msg-box');
+                return node;
+            }
+
+            static formats(node) {
+                return node.classList.contains('sys-msg-box') ? true : undefined;
+            }
+
+            format(name, value) {
+                if (name === SystemMessageBlot.blotName) {
+                    if (value) {
+                        this.domNode.classList.add('sys-msg-box');
+                    } else {
+                        this.domNode.classList.remove('sys-msg-box');
+                    }
+                } else {
+                    super.format(name, value);
+                }
+            }
+        }
+
+        SystemMessageBlot.blotName = 'system-message';
+        SystemMessageBlot.tagName = 'div';
+        Quill.register(SystemMessageBlot);
+
+        const Embed = Quill.import('blots/embed');
+
+        class BreakBlot extends Embed {
+            static create(value) {
+                return super.create(value);
+            }
+        }
+
+        BreakBlot.blotName = 'break';
+        BreakBlot.tagName = 'br';
+        Quill.register(BreakBlot);
+
+        // ==========================================
+        // UI CORE & ROUTER
+        // ==========================================
+        const Router = {
+            navigate(view) {
+                document.querySelectorAll('.active-nav').forEach(el => {
+                    el.classList.remove('active-nav', 'bg-zinc-900', 'text-zinc-100');
+                    el.classList.add('text-zinc-400');
+                });
+
+                const btn = document.getElementById(`nav-${view}`);
+
+                if (btn) {
+                    btn.classList.add('active-nav', 'bg-zinc-900', 'text-zinc-100');
+                    btn.classList.remove('text-zinc-400');
+                }
+
+                document.getElementById('view-dashboard').classList.add('hidden');
+                document.getElementById('view-editor').classList.add('hidden');
+
+                document.getElementById(`view-${view}`).classList.remove('hidden');
+
+                if (view === 'dashboard') {
+                    Dashboard.render();
+                }
+            }
+        };
+
+        const UI = {
+            async init() {
+                try {
+                    await DB.requireAdmin();
+                    await DB.loadWorkspace(State.activeStoryId);
+                    this.populateDropdowns();
+                    Editor.initQuill();
+                    this.bindEvents();
+                    Router.navigate('dashboard');
+                } catch (error) {
+                    this.showToast(error.message || 'Writer failed to initialize.', 'error');
+                    document.getElementById('dash-story-title').innerText = error.message || 'Writer unavailable';
+                }
+            },
+
+            escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            },
+
+            populateDropdowns() {
+                const storySelect = document.getElementById('story-selector');
+
+                storySelect.innerHTML = MockDB.stories
+                    .map(story => `<option value="${this.escapeHtml(story.id)}">${this.escapeHtml(story.title)}</option>`)
+                    .join('');
+
+                storySelect.value = State.activeStoryId;
+
+                const tierSelect = document.getElementById('ed-tier');
+                tierSelect.innerHTML = '<option value="">Free Access</option>';
+
+                MockDB.tiers
+                    .slice()
+                    .sort((a, b) => rankOf(a) - rankOf(b))
+                    .forEach(tier => {
+                        tierSelect.innerHTML += `<option value="${this.escapeHtml(tier.id)}">${this.escapeHtml(tier.name)}</option>`;
+                    });
+            },
+
+            bindEvents() {
+                document.getElementById('story-selector').addEventListener('change', async event => {
+                    State.activeStoryId = event.target.value;
+                    localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
+                    State.activeChapterId = null;
+                    document.getElementById('editor-workspace').classList.add('hidden');
+                    document.getElementById('editor-empty').classList.remove('hidden');
+                    try { await DB.loadChapters(State.activeStoryId); Dashboard.render(); }
+                    catch (error) { UI.showToast(error.message || 'Could not load chapters.', 'error'); }
+                });
+
+                document.getElementById('dash-search').addEventListener('input', () => {
+                    Dashboard.render();
+                });
+
+                const inputs = [
+                    'ed-title',
+                    'ed-order',
+                    'ed-tier',
+                    'ed-release-date',
+                    'ed-nsfw',
+                    'ed-external-url',
+                    'ed-cover'
+                ];
+
+                inputs.forEach(id => {
+                    const el = document.getElementById(id);
+
+                    if (el) {
+                        el.addEventListener('input', () => Editor.markUnsaved());
+                        el.addEventListener('change', () => Editor.markUnsaved());
+                    }
+                });
+
+                document.getElementById('ed-nsfw').addEventListener('change', event => {
+                    this.updateNsfwExternalState(event.target.checked);
+                });
+
+                document.addEventListener('keydown', event => {
+                    const isMac = navigator.platform.toUpperCase().includes('MAC');
+                    const mod = isMac ? event.metaKey : event.ctrlKey;
+
+                    if (mod && event.key.toLowerCase() === 's') {
+                        event.preventDefault();
+                        App.saveDraft();
+                    }
+
+                    if (mod && event.key.toLowerCase() === 'k') {
+                        event.preventDefault();
+                        Router.navigate('dashboard');
+                        document.getElementById('dash-search')?.focus();
+                    }
+
+                    if (mod && event.key === 'Enter') {
+                        event.preventDefault();
+                        App.publishChapter();
+                    }
+                });
+            },
+
+            updateNsfwExternalState(isChecked) {
+                const wrap = document.getElementById('ed-external-wrap');
+
+                if (isChecked) {
+                    wrap.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    wrap.classList.add('opacity-50', 'pointer-events-none');
+                }
+            },
+
+            showToast(msg, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+
+                let colors = 'bg-zinc-800 border-zinc-700 text-zinc-100';
+                let icon = 'fa-info-circle text-primary-400';
+
+                if (type === 'success') {
+                    colors = 'bg-emerald-950 border-emerald-800 text-emerald-100';
+                    icon = 'fa-check-circle text-emerald-400';
+                }
+
+                if (type === 'error') {
+                    colors = 'bg-rose-950 border-rose-800 text-rose-100';
+                    icon = 'fa-triangle-exclamation text-rose-400';
+                }
+
+                toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border backdrop-blur-md fade-in pointer-events-auto ${colors}`;
+                toast.innerHTML = `
+                    <i class="fa-solid ${icon}"></i>
+                    <span class="text-sm font-medium">${this.escapeHtml(msg)}</span>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    toast.style.transition = 'all 0.3s ease';
+
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            },
+
+            openModal(id) {
+                const modal = document.getElementById(id);
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            },
+
+            closeModal(id) {
+                const modal = document.getElementById(id);
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        // ==========================================
+        // DASHBOARD LOGIC
+        // ==========================================
+        const Dashboard = {
+            render() {
+                const story = MockDB.stories.find(s => s.id === State.activeStoryId);
+                document.getElementById('dash-story-title').innerText = story ? story.title : '';
+
+                this.renderStats();
+
+                const search = document.getElementById('dash-search').value.toLowerCase();
+                const list = document.getElementById('dash-chapter-list');
+                list.innerHTML = '';
+
+                let chapters = MockDB.chapters
+                    .filter(chapter => chapter.story_id === State.activeStoryId)
+                    .sort((a, b) => a.chapter_order - b.chapter_order);
+
+                if (search) {
+                    chapters = chapters.filter(chapter => chapter.title.toLowerCase().includes(search));
+                }
+
+                if (chapters.length === 0) {
+                    list.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-14 text-zinc-500">
+                                <div class="inline-flex flex-col items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-zinc-300 font-medium">No chapters found</p>
+                                        <p class="text-xs text-zinc-500 mt-1">Try a different search or create a new chapter.</p>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                chapters.forEach(chapter => {
+                    const isPublished = chapter.is_published;
+                    const tier = MockDB.tiers.find(t => t.id === chapter.required_tier_id);
+
+                    let statusHtml = isPublished
+                        ? `
+                            <span class="flex items-center gap-1.5 text-emerald-400 font-medium">
+                                <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                Published
+                            </span>
+                        `
+                        : `
+                            <span class="flex items-center gap-1.5 text-zinc-500 font-medium">
+                                <div class="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>
+                                Draft
+                            </span>
+                        `;
+
+                    if (chapter.is_nsfw) {
+                        statusHtml += `<span class="ml-2 text-rose-500 text-[10px] uppercase font-bold tracking-wider">NSFW</span>`;
+                    }
+
+                    const statusPill = isPublished
+                        ? `<span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300"><i class="fa-solid fa-circle text-[6px]"></i>Live</span>`
+                        : `<span class="inline-flex items-center gap-1 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300"><i class="fa-solid fa-circle text-[6px]"></i>Draft</span>`;
+
+                    let tierHtml = `<span class="text-zinc-500 text-xs font-medium">Free Access</span>`;
+
+                    if (tier) {
+                        tierHtml = `
+                            <span class="tier-badge border ${tier.color}">
+                                <i class="fa-solid fa-lock text-[8px] mr-1.5"></i>
+                                ${UI.escapeHtml(tier.name)}
+                            </span>
+                        `;
+                    }
+
+                    const dateStr = new Date(chapter.updated_at).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'index-row';
+                    tr.onclick = () => App.openEditorForChapter(chapter.id);
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 text-center font-mono text-zinc-500">${chapter.chapter_order}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="font-semibold text-zinc-200">${UI.escapeHtml(chapter.title || 'Untitled')}</div>
+                                ${statusPill}
+                            </div>
+                            <div class="text-xs text-zinc-600 mt-1">${UI.escapeHtml(chapter.id)}</div>
+                        </td>
+                        <td class="px-6 py-4">${statusHtml}</td>
+                        <td class="px-6 py-4"><div class="flex flex-wrap items-center gap-2">${statusPill}${tierHtml}</div></td>
+                        <td class="px-6 py-4 text-zinc-400 text-xs font-mono">${chapter.word_count || 0} words</td>
+                        <td class="px-6 py-4 text-zinc-500 text-xs">${dateStr}</td>
+                    `;
+
+                    list.appendChild(tr);
+                });
+            },
+
+            renderStats() {
+                const chapters = MockDB.chapters.filter(chapter => chapter.story_id === State.activeStoryId);
+                const published = chapters.filter(chapter => chapter.is_published).length;
+                const drafts = chapters.filter(chapter => !chapter.is_published).length;
+                const gated = chapters.filter(chapter => chapter.required_tier_id).length;
+                const nsfw = chapters.filter(chapter => chapter.is_nsfw).length;
+                const totalWords = chapters.reduce((sum, chapter) => sum + (chapter.word_count || 0), 0);
+
+                document.getElementById('dash-stats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-card-label">Chapters</div>
+                        <div class="stat-card-value">${chapters.length}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card-label">Published</div>
+                        <div class="stat-card-value">${published}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card-label">Drafts</div>
+                        <div class="stat-card-value">${drafts}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card-label">Gated</div>
+                        <div class="stat-card-value">${gated}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card-label">Words</div>
+                        <div class="stat-card-value">${totalWords.toLocaleString()}</div>
+                    </div>
+                `;
+            }
+        };
+
+        // ==========================================
+        // EDITOR LOGIC
+        // ==========================================
+        const Editor = {
+            initQuill() {
+                State.quillInstance = new Quill('#quill-editor', {
+                    theme: 'snow',
+                    placeholder: 'Begin writing... Type /image for media, [text] for a techno system message.',
+                    modules: {
+                        keyboard: {
+                            bindings: {
+                                systemEnter: {
+                                    key: 13,
+                                    handler: function(range) {
+                                        const quill = this.quill;
+                                        const [line] = quill.getLine(range.index);
+
+                                        if (line?.domNode?.classList?.contains('sys-msg-box')) {
+                                            if (range.length) {
+                                                quill.deleteText(range.index, range.length, 'user');
+                                            }
+
+                                            quill.insertEmbed(range.index, 'break', true, 'user');
+                                            quill.setSelection(range.index + 1, 0, 'silent');
+
+                                            return false;
+                                        }
+
+                                        return true;
+                                    }
+                                },
+
+                                systemTab: {
+                                    key: 9,
+                                    handler: function(range) {
+                                        const quill = this.quill;
+                                        const [line] = quill.getLine(range.index);
+
+                                        if (line?.domNode?.classList?.contains('sys-msg-box')) {
+                                            if (range.length) {
+                                                quill.deleteText(range.index, range.length, 'user');
+                                            }
+
+                                            const lineIndex = quill.getIndex(line);
+                                            const insertAt = lineIndex + line.length();
+
+                                            quill.insertText(insertAt, '\n', 'user');
+                                            quill.formatLine(insertAt, 1, 'system-message', false, 'user');
+                                            quill.setSelection(insertAt + 1, 0, 'silent');
+
+                                            return false;
+                                        }
+
+                                        return true;
+                                    }
+                                }
+                            }
+                        },
+
+                        toolbar: [
+                            [{ header: [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['link', 'image'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                State.quillInstance.on('text-change', (delta, oldDelta, source) => {
+                    this.updateMeta();
+
+                    if (source === 'user') {
+                        this.markUnsaved();
+                        this.handleCustomInputs();
+                    }
+                });
+
+                State.quillInstance.root.addEventListener('paste', event => {
+                    const clipboard = event.clipboardData || event.originalEvent?.clipboardData;
+                    const text = clipboard?.getData('text/plain') || '';
+
+                    if (/(^#|\*\*|__|^[-*]\s|^\d+\.\s|^\[.*\]$)/m.test(text)) {
+                        event.preventDefault();
+
+                        let md = text.replace(/^\[(.*?)\]$/gm, (full, content) => {
+                            return `<div class="sys-msg-box">${UI.escapeHtml(content)}</div>`;
+                        });
+
+                        const html = marked.parse(md);
+                        const range = State.quillInstance.getSelection(true);
+
+                        State.quillInstance.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+                        UI.showToast('Markdown detected and formatted.', 'success');
+                    }
+                });
+
+                this.updateMeta();
+            },
+
+            isSystemLineAt(index) {
+                const [line] = State.quillInstance.getLine(index);
+                return Boolean(line?.domNode?.classList?.contains('sys-msg-box'));
+            },
+
+            handleCustomInputs() {
+                const quill = State.quillInstance;
+                const range = quill.getSelection();
+
+                if (!range) return;
+
+                const [line] = quill.getLine(range.index);
+
+                if (!line) return;
+
+                if (line.domNode.classList.contains('sys-msg-box')) {
+                    return;
+                }
+
+                const lineIndex = quill.getIndex(line);
+                const lineLength = Math.max(line.length() - 1, 0);
+                const rawLineText = quill.getText(lineIndex, lineLength);
+                const text = rawLineText.trim();
+
+                if (text === '/image') {
+                    quill.deleteText(lineIndex, lineLength, 'user');
+                    this.openMediaLibrary();
+                    return;
+                }
+
+                if (text.startsWith('[') && text.endsWith(']') && text.length > 2) {
+                    const innerText = text.substring(1, text.length - 1);
+
+                    quill.deleteText(lineIndex, lineLength, 'user');
+                    quill.insertText(lineIndex, innerText, 'user');
+                    quill.formatLine(lineIndex, Math.max(innerText.length, 1), 'system-message', true, 'user');
+                    quill.setSelection(lineIndex + innerText.length, 0, 'silent');
+                }
+            },
+
+            openMediaLibrary() {
+                const grid = document.getElementById('media-grid');
+                grid.innerHTML = `
+                    <div class="col-span-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 text-center text-zinc-400">
+                        <i class="fa-regular fa-image text-3xl text-zinc-600 mb-3"></i>
+                        <p class="text-zinc-200 font-medium">No mock media is bundled here.</p>
+                        <p class="text-xs mt-2 leading-relaxed">Use Quill's image button to paste a real image URL, or add chapter media through Admin CMS storage fields.</p>
+                    </div>
+                `;
+                UI.openModal('modal-media');
+            },
+
+            insertImage(url) {
+                const quill = State.quillInstance;
+                const range = quill.getSelection(true);
+
+                quill.insertEmbed(range.index, 'image', url, 'user');
+                quill.setSelection(range.index + 1, 0, 'silent');
+
+                UI.closeModal('modal-media');
+            },
+
+            getPlainText() {
+                return State.quillInstance
+                    .getText()
+                    .replace(/\uFFFC/g, '\n')
+                    .trim();
+            },
+
+            updateMeta() {
+                if (!State.quillInstance) return;
+
+                const text = this.getPlainText();
+                const words = text.length > 0 ? text.split(/\s+/).filter(Boolean).length : 0;
+                const chars = text.length;
+
+                const el = document.getElementById('ed-live-count');
+
+                if (el) {
+                    el.textContent = `${words.toLocaleString()} words · ${chars.toLocaleString()} characters`;
+                }
+            },
+
+            setLastSavedNow() {
+                const el = document.getElementById('ed-last-saved');
+
+                if (el) {
+                    const time = new Date().toLocaleTimeString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    el.textContent = `Last saved at ${time}`;
+                }
+            },
+
+            markUnsaved() {
+                State.unsavedChanges = true;
+
+                const el = document.getElementById('ed-save-status');
+                el.innerHTML = `<i class="fa-solid fa-circle text-amber-500 text-[8px] mr-1 mb-0.5"></i> Unsaved`;
+                el.classList.replace('text-zinc-500', 'text-amber-500');
+
+                clearTimeout(State.autosaveTimer);
+
+                if (State.activeChapterId) {
+                    State.autosaveTimer = setTimeout(() => {
+                        App.saveDraft({ silent: true });
+                    }, 1200);
+                }
+            },
+
+            markSaved() {
+                clearTimeout(State.autosaveTimer);
+
+                State.unsavedChanges = false;
+
+                const el = document.getElementById('ed-save-status');
+                el.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> Saved`;
+                el.classList.replace('text-amber-500', 'text-zinc-500');
+
+                this.setLastSavedNow();
+                this.updateMeta();
+            }
+        };
+
+        // ==========================================
+        // APPLICATION CONTROLLERS
+        // ==========================================
+        const App = {
+            async createNewChapter() {
+                if (!State.activeStoryId) { UI.showToast('Create/select a story first.', 'error'); return; }
+                const nextOrder = (MockDB.chapters.length ? Math.max(...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0)) : 0) + 1;
+                try {
+                    const saved = await DB.saveChapter(null, {
+                        story_id: State.activeStoryId,
+                        chapter_order: nextOrder,
+                        title: `Chapter ${nextOrder}`,
+                        content: '',
+                        is_published: false,
+                        required_tier_id: null,
+                        is_nsfw: false,
+                        external_url: null,
+                        cover_image_url: null,
+                        public_release_at: null,
+                        word_count: 0,
+                        updated_at: new Date().toISOString()
+                    });
+                    await DB.loadChapters(State.activeStoryId);
+                    this.openEditorForChapter(saved.id);
+                    Dashboard.render();
+                    UI.showToast('Draft created.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not create draft.', 'error');
+                }
+            },
+
+            openEditorForChapter(id) {
+                const chapter = MockDB.chapters.find(item => item.id === id);
+
+                if (!chapter) return;
+
+                State.activeChapterId = id;
+
+                document.getElementById('editor-empty').classList.add('hidden');
+                document.getElementById('editor-workspace').classList.remove('hidden');
+
+                document.getElementById('ed-title').value = chapter.title || '';
+                document.getElementById('ed-order').value = chapter.chapter_order || '';
+                document.getElementById('ed-tier').value = chapter.required_tier_id || '';
+                document.getElementById('ed-release-date').value = datetimeLocal(chapter.public_release_at);
+
+                const nsfwToggle = document.getElementById('ed-nsfw');
+                nsfwToggle.checked = Boolean(chapter.is_nsfw);
+                UI.updateNsfwExternalState(nsfwToggle.checked);
+
+                document.getElementById('ed-external-url').value = chapter.external_url || '';
+                document.getElementById('ed-cover').value = chapter.cover_image_url || '';
+
+                State.quillInstance.setText('', 'silent');
+                State.quillInstance.clipboard.dangerouslyPasteHTML(0, legacyBracketSystemToHtml(chapter.content || ''), 'silent');
+
+                Editor.markSaved();
+
+                const banner = document.getElementById('ed-banner');
+                const btn = document.getElementById('btn-publish');
+
+                const statusPill = document.getElementById('ed-status-pill');
+                if (chapter.is_published) {
+                    banner.classList.remove('hidden');
+                    btn.innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
+                    statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
+                    statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
+                } else {
+                    banner.classList.add('hidden');
+                    btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
+                    statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
+                    statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
+                }
+
+                Router.navigate('editor');
+            },
+
+            getEditorData() {
+                const text = Editor.getPlainText();
+                const releaseValue = document.getElementById('ed-release-date').value;
+
+                return {
+                    title: document.getElementById('ed-title').value.trim() || 'Untitled',
+                    chapter_order: parseInt(document.getElementById('ed-order').value, 10) || 0,
+                    content: State.quillInstance.root.innerHTML,
+                    required_tier_id: document.getElementById('ed-tier').value || null,
+                    public_release_at: releaseValue ? new Date(releaseValue).toISOString() : null,
+                    is_nsfw: document.getElementById('ed-nsfw').checked,
+                    external_url: document.getElementById('ed-external-url').value.trim(),
+                    cover_image_url: document.getElementById('ed-cover').value.trim(),
+                    word_count: text.length > 0 ? text.split(/\s+/).filter(Boolean).length : 0,
+                    updated_at: new Date().toISOString()
+                };
+            },
+
+            async saveDraft(options = {}) {
+                if (!State.activeChapterId) return;
+                const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
+                if (index === -1) return;
+                const existing = MockDB.chapters[index];
+                try {
+                    const saved = await DB.saveChapter(State.activeChapterId, {
+                        ...this.getEditorData(),
+                        is_published: Boolean(existing.is_published)
+                    });
+                    MockDB.chapters[index] = saved;
+                    Editor.markSaved();
+                    if (!options.silent) UI.showToast('Changes saved successfully.', 'success');
+                    Dashboard.render();
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not save draft.', 'error');
+                }
+            },
+
+            async publishChapter() {
+                if (!State.activeChapterId) return;
+                const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
+                if (index === -1) return;
+                const data = this.getEditorData();
+                if (!data.title.trim()) { UI.showToast('Title is required to publish.', 'error'); return; }
+                if (data.is_nsfw && !data.external_url) { UI.showToast('NSFW chapters require an External URL fallback.', 'error'); return; }
+                try {
+                    const saved = await DB.saveChapter(State.activeChapterId, { ...data, is_published: true });
+                    MockDB.chapters[index] = saved;
+                    Editor.markSaved();
+                    document.getElementById('ed-banner').classList.remove('hidden');
+                    document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
+                    document.getElementById('ed-status-pill').className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
+                    document.getElementById('ed-status-pill').innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
+                    Dashboard.render();
+                    UI.showToast('Chapter is now live.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not publish chapter.', 'error');
+                }
+            },
+
+            async unpublishChapter() {
+                if (!State.activeChapterId) return;
+                const confirmed = confirm('Revert to draft? Readers will lose access immediately.');
+                if (!confirmed) return;
+                const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
+                if (index === -1) return;
+                try {
+                    const saved = await DB.saveChapter(State.activeChapterId, { ...this.getEditorData(), is_published: false });
+                    MockDB.chapters[index] = saved;
+                    document.getElementById('ed-banner').classList.add('hidden');
+                    document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
+                    document.getElementById('ed-status-pill').className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
+                    document.getElementById('ed-status-pill').innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
+                    Editor.markSaved();
+                    Dashboard.render();
+                    UI.showToast('Chapter reverted to draft.', 'info');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not unpublish chapter.', 'error');
+                }
+            },
+
+            copyAsRichText() {
+                const html = State.quillInstance.root.innerHTML;
+                const plainText = State.quillInstance.getText();
+
+                if (navigator.clipboard?.write && window.ClipboardItem) {
+                    const htmlBlob = new Blob([html], { type: 'text/html' });
+                    const plainBlob = new Blob([plainText], { type: 'text/plain' });
+
+                    navigator.clipboard.write([
+                        new ClipboardItem({
+                            'text/html': htmlBlob,
+                            'text/plain': plainBlob
+                        })
+                    ])
+                    .then(() => UI.showToast('Copied as Rich Text.', 'success'))
+                    .catch(() => UI.showToast('Clipboard access denied.', 'error'));
+
+                    return;
+                }
+
+                navigator.clipboard.writeText(plainText)
+                    .then(() => UI.showToast('Copied as plain text fallback.', 'success'))
+                    .catch(() => UI.showToast('Clipboard access denied.', 'error'));
+            },
+
+            copyAsMarkdown() {
+                const html = State.quillInstance.root.innerHTML;
+                const turndownService = new TurndownService({
+                    headingStyle: 'atx'
+                });
+
+                turndownService.addRule('systemMessage', {
+                    filter: node => node.nodeName === 'DIV' && node.classList.contains('sys-msg-box'),
+                    replacement: (content, node) => {
+                        const text = node.innerText.replace(/\n+$/g, '');
+                        return `\n[${text}]\n`;
+                    }
+                });
+
+                turndownService.addRule('lineBreak', {
+                    filter: 'br',
+                    replacement: () => '\n'
+                });
+
+                const markdown = turndownService.turndown(html);
+
+                navigator.clipboard.writeText(markdown)
+                    .then(() => UI.showToast('Copied as Markdown.', 'success'))
+                    .catch(() => UI.showToast('Clipboard access denied.', 'error'));
+            }
+        };
+
+        // ==========================================
+        // SAFETY GUARD
+        // ==========================================
+        window.addEventListener('beforeunload', event => {
+            if (State.unsavedChanges) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+
+        // ==========================================
+        // BOOTSTRAP APP
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init().catch(error => UI.showToast(error.message || 'Writer failed to start.', 'error'));
+        });
+    </script>
+</body>
+</html>
