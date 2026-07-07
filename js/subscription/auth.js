@@ -28,6 +28,9 @@ function entitlementLevel(){
 function accountLabel(){
   return authState.profile?.display_name || authState.profile?.username || authState.user?.email || store.email || "Guest";
 }
+function profileAvatar(){
+  return authState.profile?.avatar_url || authState.user?.user_metadata?.avatar_url || "";
+}
 function isAdmin(){
   const profileRole = String(authState.profile?.role || "").trim().toLowerCase();
   const metadataRole = String(authState.user?.app_metadata?.role || authState.user?.user_metadata?.role || "").trim().toLowerCase();
@@ -108,6 +111,38 @@ async function refreshEntitlements(){
     }
   }
   return authState.entitlements;
+}
+async function uploadReaderAvatar(file){
+  const client = getSupabase();
+  if (!client || !authState.user) throw new Error("Sign in before changing your avatar.");
+  if (!file) return "";
+  if (!/^image\/(png|jpe?g|gif|webp)$/i.test(file.type || "")) throw new Error("Avatar must be a PNG, JPG, GIF, or WebP image.");
+  if (file.size > 3 * 1024 * 1024) throw new Error("Avatar image must be under 3 MB.");
+  const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `${authState.user.id}/profile/avatar-${Date.now()}.${ext}`;
+  const { error } = await client.storage.from("Reader").upload(path, file, { upsert:true, contentType:file.type || "image/png" });
+  if (error) throw error;
+  const { data } = client.storage.from("Reader").getPublicUrl(path);
+  return data?.publicUrl || "";
+}
+async function updateReaderProfile({ username, displayName, avatarFile, avatarUrl }){
+  const client = getSupabase();
+  if (!client || !authState.user) throw new Error("Sign in before editing your profile.");
+  const cleanUsername = String(username || "").trim().replace(/^@+/, "").replace(/\s+/g, "-").toLowerCase();
+  if (cleanUsername && !/^[a-z0-9_.-]{3,32}$/.test(cleanUsername)) throw new Error("Username must be 3-32 characters using letters, numbers, dot, underscore, or dash.");
+  let finalAvatar = String(avatarUrl || authState.profile?.avatar_url || "").trim();
+  if (avatarFile) finalAvatar = await uploadReaderAvatar(avatarFile);
+  const record = {
+    id: authState.user.id,
+    username: cleanUsername || null,
+    display_name: String(displayName || "").trim() || null,
+    avatar_url: finalAvatar || null,
+    updated_at: new Date().toISOString()
+  };
+  const { data, error } = await client.from("profiles").upsert(record, { onConflict:"id" }).select("id, username, display_name, avatar_url, role").single();
+  if (error) throw error;
+  authState.profile = data || record;
+  return authState.profile;
 }
 const OAUTH_URL_KEYS = [
   "code", "state", "type", "error", "error_code", "error_description", "sub_auth", "sub_route",
@@ -194,6 +229,8 @@ async function initAuth(){
     store.email = authState.user?.email || "";
     await refreshProfile();
     await refreshEntitlements();
+    if (authState.user && typeof loadNotificationPreferences === "function") await loadNotificationPreferences();
+    if (authState.user && typeof loadReaderNotifications === "function") await loadReaderNotifications({ browser:false });
     if (authState.user && store.pendingAuthAction === "connect-patreon") {
       store.pendingAuthAction = "";
       saveStore();
@@ -206,6 +243,8 @@ async function initAuth(){
       store.email = authState.user?.email || "";
       await refreshProfile();
       await refreshEntitlements();
+      if (authState.user && typeof loadNotificationPreferences === "function") await loadNotificationPreferences();
+      if (authState.user && typeof loadReaderNotifications === "function") await loadReaderNotifications();
       if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
       const pendingAction = authState.user ? store.pendingAuthAction : "";
       if (pendingAction === "connect-patreon") store.pendingAuthAction = "";

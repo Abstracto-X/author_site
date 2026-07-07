@@ -11,10 +11,22 @@ Recent CMS rebuild reader changes:
 | `js/subscription/views/home-library.js` | `VIEWS.home()` | Uses resolved reader access for start buttons/counts/tier display so admin accounts do not appear subscription-locked on the home page. |
 | `js/subscription/views/account-access.js` | `VIEWS.vault()` | Displays the admin reader override in the Vault separately from Patreon/member entitlements. |
 | `js/subscription/sheets.js` | `sheetPersona()` | Shows the admin reader override in the account sheet while keeping it distinct from paid/direct entitlements. |
-| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags. |
+| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags; converts `<hr>` and standalone `--` into scene breaks. |
 | `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
 | `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |
 | `js/subscription/router.js` | `parseHash()` | Redirects `/studio/*` to `admin.html`; the reader-side Author Studio prototype is inactive. |
+
+Recent reader notification/profile changes:
+
+| File | Function | Purpose |
+|---|---|---|
+| `js/subscription/auth.js` | `profileAvatar()` / `uploadReaderAvatar(file)` / `updateReaderProfile(...)` | Supports signed-in reader profile edits, username/display name changes, and avatar uploads to the `Reader/<user_id>/profile/...` storage path. |
+| `js/subscription/backend.js` | `loadNotificationPreferences()` / `saveNotificationPreferences(prefs)` | Loads and saves signed-in reader email/browser chapter notification preferences. |
+| `js/subscription/backend.js` | `loadReaderNotifications(options)` / `markReaderNotificationsRead(ids)` / `dismissReaderNotification(id)` | Syncs DB-backed reader notifications into the existing notifications view and updates read/dismissed state. |
+| `js/subscription/backend.js` | `requestBrowserNotifications()` / `maybeShowBrowserNotifications(items)` | Requests browser notification permission and displays new chapter browser notifications while the site is open. |
+| `js/subscription/sheets.js` | `sheetProfile()` / `sheetWhatsNew()` | Adds a profile editor sheet and versioned "What's new" update popup. |
+| `js/subscription/events.js` | `maybeShowWhatsNew()` / `dismissWhatsNew()` | Shows the update popup once per signed-in user/version and persists dismissal in local storage. |
+| `js/subscription/config.js` | `applyAppBackground(url)` | Applies Admin-configured reader background imagery to the app shell. |
 
 ## `js/subscription/config.js`
 
@@ -171,7 +183,7 @@ Recent CMS rebuild reader changes:
 | 10 | `colorPair(row, index)` | Helper used by this module. |
 | 15 | `normalizeBackendStory(row, index)` | Handles story data or story-facing UI behavior. |
 | 40 | `backendStateToAether(row)` | Helper used by this module. |
-| 48 | `textToBlocks(value)` | Helper used by this module. |
+| 48 | `textToBlocks(value)` | Normalizes Supabase chapter/preview text or safe HTML into reader blocks, including system messages and scene breaks from `<hr>` or standalone `--`. |
 | 63 | `normalizeBackendChapter(row, story)` | Handles chapter catalog, reader, or chapter form behavior. |
 | 88 | `buildBackendUpdates(stories)` | Persists changes to Supabase or updates local state. |
 | 110 | `relativeTime(iso)` | Formats comment timestamps for reader display. |

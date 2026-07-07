@@ -15,7 +15,9 @@ const LINKS = CONFIG.links || {};
 const READER_BEHAVIOR = {
   enableReaderGuides: Object.prototype.hasOwnProperty.call(FEATURES, "enableReaderGuides") ? !!FEATURES.enableReaderGuides : true,
   globalExternalUrl: "",
-  providerNote: ""
+  providerNote: "",
+  appBackgroundUrl: "",
+  enableAppBackground: true
 };
 const DEFAULT_DATA = {
   STORIES: [],
@@ -79,9 +81,20 @@ function applySiteSettings(rows){
   }
   READER_BEHAVIOR.globalExternalUrl = settingText(readerBehavior.globalExternalUrl || readerBehavior.global_external_url, READER_BEHAVIOR.globalExternalUrl);
   READER_BEHAVIOR.providerNote = settingText(readerBehavior.providerNote || readerBehavior.provider_note, READER_BEHAVIOR.providerNote);
+  READER_BEHAVIOR.appBackgroundUrl = settingText(readerBehavior.appBackgroundUrl || readerBehavior.app_background_url, READER_BEHAVIOR.appBackgroundUrl);
+  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enableAppBackground")) READER_BEHAVIOR.enableAppBackground = !!readerBehavior.enableAppBackground;
+  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enable_app_background")) READER_BEHAVIOR.enableAppBackground = !!readerBehavior.enable_app_background;
+  applyAppBackground();
   document.title = settingText(identity.pageTitle || identity.page_title, SITE_NAME);
   const meta = document.querySelector('meta[name="description"]');
   if (meta) meta.setAttribute("content", SITE_META_DESCRIPTION);
+}
+function applyAppBackground(url){
+  const desired = settingText(url || READER_BEHAVIOR.appBackgroundUrl, "");
+  const localStore = typeof store === "undefined" ? null : store;
+  const enabled = READER_BEHAVIOR.enableAppBackground !== false && (!localStore || localStore.settings?.appBackground !== false);
+  document.documentElement.style.setProperty("--app-bg-image", enabled && desired ? `url("${desired.replace(/"/g, "%22")}")` : "none");
+  document.documentElement.classList.toggle("has-app-bg", !!(enabled && desired));
 }
 function feature(name, fallback){ return Object.prototype.hasOwnProperty.call(FEATURES, name) ? !!FEATURES[name] : !!fallback; }
 function readerBehavior(){ return Object.assign({}, READER_BEHAVIOR); }

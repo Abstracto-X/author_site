@@ -1294,7 +1294,7 @@
                     const line = rawLine.trimEnd();
                     const trimmed = line.trim();
                     if (!trimmed) { flushParagraph(); flushList(); return; }
-                    if (/^(\*\s*){3,}$|^(-\s*){3,}$|^_{3,}$/.test(trimmed)) {
+                    if (/^--$|^(\*\s*){3,}$|^(-\s*){3,}$|^_{3,}$/.test(trimmed)) {
                         flushParagraph(); flushList(); blocks.push('<hr>'); return;
                     }
                     const heading = trimmed.match(/^(#{2,4})\s+(.+)$/);
@@ -1340,6 +1340,10 @@
                                 walk(node);
                                 return;
                             }
+                            if (['P','DIV'].includes(child.tagName) && (child.textContent || '').replace(/\u00a0/g, ' ').trim() === '--') {
+                                child.replaceWith(document.createElement('hr'));
+                                return;
+                            }
                             [...child.attributes].forEach(attr => child.removeAttribute(attr.name));
                             if (child.tagName === 'B') child.outerHTML = `<strong>${child.innerHTML}</strong>`;
                             if (child.tagName === 'I') child.outerHTML = `<em>${child.innerHTML}</em>`;
@@ -1372,6 +1376,24 @@
                 }
                 return output;
             },
+            removeExtraChapterBreaks: (html) => {
+                const template = document.createElement('template');
+                template.innerHTML = Utils.sanitizeChapterHtml(html || '');
+                template.content.querySelectorAll('p, div').forEach(node => {
+                    const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
+                    if (text === '--') {
+                        node.replaceWith(document.createElement('hr'));
+                        return;
+                    }
+                    if (!text && !node.querySelector('img, iframe, video')) node.remove();
+                });
+                template.content.querySelectorAll('br').forEach(br => {
+                    let next = br.nextSibling;
+                    while (next && next.nodeType === Node.TEXT_NODE && !next.textContent.trim()) next = next.nextSibling;
+                    if (next && next.nodeName === 'BR') br.remove();
+                });
+                return template.innerHTML.trim();
+            },
             normalizeEditorHtml: (html) => {
                 const raw = html || '';
                 const emptyish = raw
@@ -1382,7 +1404,7 @@
                     .trim();
                 if (!emptyish) return '';
                 const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
-                return looksLikeHtml ? Utils.sanitizeChapterHtml(raw) : Utils.markdownToChapterHtml(raw);
+                return looksLikeHtml ? Utils.removeExtraChapterBreaks(raw) : Utils.markdownToChapterHtml(raw);
             },
             makePreviewFromHtml: (html, max = 340) => {
                 const text = Utils.htmlToPlainText(html).replace(/\s+/g, ' ').trim();
@@ -2893,6 +2915,7 @@
                             <button type="button" onclick="Forms.editorBlock('h3')">H3</button>
                             <button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button>
                             <button type="button" onclick="Forms.insertSceneBreak()">Scene break</button>
+                            <button type="button" onclick="Forms.removeExtraLineBreaks()">Remove extra breaks</button>
                             <button type="button" onclick="Forms.convertMarkdownEditor()">Markdown → HTML</button>
                             <button type="button" onclick="Forms.clearEditorFormatting()">Clear</button>
                         </div>
@@ -2965,6 +2988,14 @@
             editorCommand: (cmd) => { document.execCommand(cmd, false, null); document.getElementById('f-content')?.focus(); },
             editorBlock: (tag) => { document.execCommand('formatBlock', false, tag); document.getElementById('f-content')?.focus(); },
             insertSceneBreak: () => { document.execCommand('insertHTML', false, '<hr><p><br></p>'); document.getElementById('f-content')?.focus(); },
+            removeExtraLineBreaks: () => {
+                const editor = document.getElementById('f-content');
+                if (!editor) return;
+                editor.innerHTML = Utils.removeExtraChapterBreaks(editor.innerHTML);
+                editor.dispatchEvent(new Event('input', { bubbles: true }));
+                editor.focus();
+                UI.showToast('Extra blank lines removed.');
+            },
             clearEditorFormatting: () => { document.execCommand('removeFormat', false, null); },
             handleEditorPaste: (event) => {
                 const editor = document.getElementById('f-content');
@@ -3896,7 +3927,9 @@
                     const behavior = {
                         enableReaderGuides: document.getElementById('f-enable-reader-guides').checked,
                         globalExternalUrl: document.getElementById('f-global-external-url').value.trim(),
-                        providerNote: document.getElementById('f-provider-note').value.trim()
+                        providerNote: document.getElementById('f-provider-note').value.trim(),
+                        enableAppBackground: document.getElementById('f-enable-app-background').checked,
+                        appBackgroundUrl: document.getElementById('f-app-background-url').value.trim()
                     };
                     await DB.upsertSettingByKey('reader_behavior', behavior);
                     UI.showToast('Reader behavior defaults saved.');
@@ -5004,6 +5037,18 @@
                                 <input class="form-input" id="f-global-external-url" value="${Utils.escapeAttr(behavior.globalExternalUrl || '')}" placeholder="https://...">
                             </div>
                         </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="f-enable-app-background" ${behavior.enableAppBackground !== false ? 'checked' : ''}>
+                                    Enable reader background image
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reader background image URL</label>
+                                <input class="form-input" id="f-app-background-url" value="${Utils.escapeAttr(behavior.appBackgroundUrl || '')}" placeholder="https://...">
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label class="form-label">Provider/settings display note</label>
                             <textarea class="form-textarea" id="f-provider-note" style="min-height:90px;">${Utils.escapeHtml(behavior.providerNote || 'Provider entitlements are managed by Edge Functions and provider tier mappings.')}</textarea>
@@ -5274,7 +5319,7 @@
                                             <input class="manuscript-title" id="f-title" value="${Utils.escapeAttr(chapterTitle)}" placeholder="Chapter title">
                                         </div>
                                         <input type="hidden" id="f-is_published" value="${chapter.is_published ? 'true' : 'false'}">
-                                        <div class="editor-toolbar"><button type="button" onclick="Forms.editorCommand('bold')"><b>B</b></button><button type="button" onclick="Forms.editorCommand('italic')"><i>I</i></button><button type="button" onclick="Forms.editorBlock('h2')">H2</button><button type="button" onclick="Forms.editorBlock('h3')">H3</button><button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button><button type="button" onclick="Forms.insertSceneBreak()">Scene break</button><button type="button" onclick="Forms.convertMarkdownEditor()">Markdown &rarr; HTML</button><button type="button" onclick="Forms.clearEditorFormatting()">Clear</button></div>
+                                        <div class="editor-toolbar"><button type="button" onclick="Forms.editorCommand('bold')"><b>B</b></button><button type="button" onclick="Forms.editorCommand('italic')"><i>I</i></button><button type="button" onclick="Forms.editorBlock('h2')">H2</button><button type="button" onclick="Forms.editorBlock('h3')">H3</button><button type="button" onclick="Forms.editorBlock('blockquote')">Quote</button><button type="button" onclick="Forms.insertSceneBreak()">Scene break</button><button type="button" onclick="Forms.removeExtraLineBreaks()">Remove extra breaks</button><button type="button" onclick="Forms.convertMarkdownEditor()">Markdown &rarr; HTML</button><button type="button" onclick="Forms.clearEditorFormatting()">Clear</button></div>
                                         <div class="chapter-canvas" id="f-content" contenteditable="true" spellcheck="true">${Utils.normalizeEditorHtml(chapter.content || '')}</div>
                                         <div class="writer-meta-strip"><div class="pill-row"><span class="admin-pill gold" id="editor-word-count">0 words</span><span class="admin-pill">Local autosave</span><span class="admin-pill">Markdown + rich paste</span></div><button class="btn btn-secondary btn-sm" onclick="State.editingChapterId=null; State.writerPanel='write'; Views.render('chapters')">Close editor</button></div>
                                     </div>

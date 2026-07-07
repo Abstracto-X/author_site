@@ -69,6 +69,7 @@ body {
   --on-accent: #15110a;        /* text color that sits on accent fills */
   --scrub: rgba(255,255,255,.1); /* progress/track neutral */
   --track: rgba(127,127,127,.24); /* input/switch track, theme-agnostic */
+  --app-bg-image: none;
 
   --ease: cubic-bezier(.22,.61,.36,1);
 }
@@ -78,11 +79,16 @@ body::before {
   content:"";
   position: fixed; inset: 0;
   background:
+    linear-gradient(rgba(5,5,8,.74), rgba(5,5,8,.88)),
+    var(--app-bg-image),
     radial-gradient(900px 700px at 78% -8%, var(--bg-grad-a), transparent 60%),
     radial-gradient(820px 620px at 8% 12%, var(--bg-grad-b), transparent 55%),
     radial-gradient(700px 800px at 50% 120%, rgba(212,176,106,0.05), transparent 60%);
+  background-size: cover, cover, auto, auto, auto;
+  background-position: center, center, center, center, center;
   z-index: -2; pointer-events:none;
 }
+html.has-app-bg body::before { filter: saturate(.9) contrast(1.05); }
 body::after {
   content:""; position: fixed; inset:0; z-index:-1; pointer-events:none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
@@ -118,6 +124,19 @@ body[data-bg-mode="gradient"] .background-layer {
 body[data-bg-mode="gradient"]::before {
   opacity: 0.85 !important; /* Keep ambient gradients visible */
 }
+
+.profile-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  object-fit: cover; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid var(--border);
+  overflow: hidden; flex: 0 0 auto;
+}
+.profile-form-grid { display:grid; gap:10px; }
+.profile-form-grid input[type="file"] { width:100%; color: var(--text-dim); font-size:.8rem; }
+.whats-new-list { display:grid; gap:10px; margin:14px 0; }
+.whats-new-item { display:flex; gap:11px; align-items:flex-start; padding:12px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+.whats-new-item .icn { width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent); flex:0 0 auto; }
 
 /* Blur Settings (Only applied when bgMode is 'story') */
 body[data-bg-mode="story"][data-bg-blur="true"] .background-layer {

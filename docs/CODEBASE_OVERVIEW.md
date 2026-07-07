@@ -97,8 +97,9 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
 7. `backend.js` loads reader community state for open chapters: public comments from `comments` and reaction totals from `chapter_reactions`.
-8. `events.js` handles delegated interactions, comment/reaction writes, and re-renders or opens sheets as needed.
-9. `onboarding.js` optionally highlights key UI regions after render when reader guides are enabled.
+8. Signed-in readers load `reader_notifications` and `reader_notification_preferences`; the Settings sheet can save email/browser chapter alert preferences, and browser notifications are shown while the site is open if permission is granted.
+9. `events.js` handles delegated interactions, profile edits/avatar uploads, notification preference saves, comment/reaction writes, and re-renders or opens sheets as needed.
+10. `onboarding.js` optionally highlights key UI regions after render when reader guides are enabled; a separate versioned "What's new" sheet appears once per signed-in user after reader updates.
 
 ### Reader route groups
 
@@ -125,6 +126,7 @@ Common route groups include:
 - Preserve RPC names: `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, `redeem_access_key`.
 - Preserve localStorage/sessionStorage key compatibility unless intentionally migrating.
 - Do not add a bundler or framework; modules are browser globals loaded by script tags.
+- Browser notification popups are permission-gated and only fire from the active reader session; durable server-side notification rows live in `reader_notifications`, and email sends are queued in `reader_email_queue` for the `send-reader-email-queue` Edge Function.
 
 ---
 
@@ -136,12 +138,13 @@ Admin responsibilities include:
 
 - Keeping an embedded Writer / Chapters workspace inside Admin CMS while also offering the standalone `writer.html` workspace.
 - Story metadata: title, slug, world title, descriptions, publication state, theme/loader values, covers/backgrounds.
-- Chapter content through embedded Admin CMS Writer / Chapters and `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, rich/Markdown editor, autosave/drafts, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, and system-message blocks saved in chapter HTML.
+- Chapter content through embedded Admin CMS Writer / Chapters and `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, rich/Markdown editor, autosave/drafts, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, system-message blocks saved in chapter HTML, editor cleanup for extra blank lines, and scene breaks from toolbar commands or standalone `--`.
 - Rolling Access policies per story, stored in `story_access_policies`, that apply tier windows to newest published chapters and make older non-NSFW chapters free.
 - Reader CRM, provider connection visibility, access key redemption visibility, entitlement audit review, comments, and chapter reaction totals.
 - Character, gallery, lore, maps, wallpapers, timeline, map requests, and author profile content as secondary Story Extras.
 - Reader tiers/access keys/manual grants/provider mappings in Access Tools.
 - Site Settings for reader identity, provider flag visibility, guide toggles, and subscription behavior defaults.
+- Site Settings can also configure the subscription reader background image URL used by the app shell.
 - Uploads to configured Supabase storage buckets.
 
 Before changing admin fields or writes, check `docs/DATABASE_CONTEXT.md` and verify the target column/table/bucket exists. If it does not exist, add an idempotent SQL migration before changing the frontend.
@@ -158,6 +161,7 @@ Primary references:
 - `database/sql/` — setup and migration SQL kept for reset/rebuild/documentation.
 - `supabase/migrations/` — Supabase CLI migration files.
 - `supabase/functions/` — Edge Functions for provider/Patreon-related flows.
+- `send-reader-email-queue` processes queued reader chapter email notifications when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured.
 
 Storage expectations:
 

@@ -8,19 +8,25 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Application schema: `public`; storage metadata/policies live under `storage`.
 - Browser clients use the anon key only. Admin writes are protected by RLS policies and `public.is_admin()`.
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
+- Reader notification flows use `reader_notifications`, `reader_notification_preferences`, and `reader_email_queue`. Publishing a chapter fans out in-app notifications and queued email rows to readers whose active entitlement/admin role covers the chapter's required tier.
 - Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates `user_entitlements` from active `provider_tier_mappings`.
+- Reader email notification delivery uses `supabase/functions/send-reader-email-queue`, which processes queued `reader_email_queue` rows through Resend when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured.
 - Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
 - Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
 - After durable schema changes, run `NOTIFY pgrst, 'reload schema';`.
 
 ## Configured access/provider tiers
 
-As of 2026-07-07, the linked project has these active Patreon-facing access tiers. Patreon mappings use actual Patreon tier IDs so OAuth/manual sync survives provider-side tier renames:
+As of 2026-07-07 16:53 Asia/Kolkata, the linked project has these active Patreon-facing access tiers. Patreon mappings for Licker and Nemesis use actual Patreon tier IDs; Tyrant and Evil temporarily match by exact Patreon tier title until their numeric Patreon tier IDs are known. Rank controls cumulative access through `held.tier_rank >= required.tier_rank`, so Resident Evil is highest because it includes all Resident Nemesis benefits.
 
 | Internal slug | Internal name | Rank | Provider | Provider tier ID | Provider tier label |
 |---|---|---:|---|---|---|
 | `resident-licker` | Resident Licker | 10 | `patreon` | `28946758` | `Resident Licker` |
-| `resident-tyrant` | Resident Nemesis | 20 | `patreon` | `28946791` | `Resident Nemesis` |
+| `resident-tyrant` | Resident Tyrant | 20 | `patreon` | `Resident Tyrant` | `Resident Tyrant` |
+| `resident-nemesis` | Resident Nemesis | 30 | `patreon` | `28946791` | `Resident Nemesis` |
+| `resident-evil` | Resident Evil | 40 | `patreon` | `Resident Evil` | `Resident Evil` |
+
+The previous `resident-tyrant`/Resident Nemesis row was converted in place to `resident-nemesis`, preserving its UUID for existing entitlements and references. Current active entitlement counts immediately after the change were: Licker 14, Tyrant 0, Nemesis 10, Evil 0. Existing chapter gates were not rewritten during the migration; 7 chapters still required `resident-licker` immediately after the change.
 
 ## Configured site settings
 
@@ -276,6 +282,66 @@ Reader chapter-end reactions. One reaction per user per chapter; selecting the s
 | `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
+Reader accounts can update their own `username`, `display_name`, and `avatar_url` through existing `profiles_own_update` RLS. Reader avatar uploads use the `Reader/<user_id>/profile/...` storage path.
+
+### `public.reader_notification_preferences`
+
+Per-reader chapter notification settings.
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `user_id` | uuid | NO |  |
+| `browser_enabled` | boolean / `bool` | NO | true |
+| `email_enabled` | boolean / `bool` | NO | true |
+| `new_chapters_enabled` | boolean / `bool` | NO | true |
+| `minimum_tier_rank` | integer / `int4` | NO | 0 |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+| `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+Readers can read/update their own row; admins can manage all rows.
+
+### `public.reader_notifications`
+
+Per-reader in-app notifications, currently generated for chapter publishes/republishes relevant to the reader's access tier.
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `id` | uuid | NO | gen_random_uuid() |
+| `user_id` | uuid | NO |  |
+| `story_id` | uuid | YES |  |
+| `chapter_id` | uuid | YES |  |
+| `notification_type` | text | NO | 'chapter'::text |
+| `title` | text | NO |  |
+| `body` | text | NO | ''::text |
+| `url` | text | YES |  |
+| `required_tier_id` | uuid | YES |  |
+| `required_tier_rank` | integer / `int4` | NO | 0 |
+| `read_at` | timestamp with time zone / `timestamptz` | YES |  |
+| `dismissed_at` | timestamp with time zone / `timestamptz` | YES |  |
+| `metadata` | jsonb | NO | '{}'::jsonb |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+Readers can read/update their own notifications; admins can manage all rows. `(user_id, chapter_id, notification_type)` is unique to avoid duplicate chapter alerts.
+
+### `public.reader_email_queue`
+
+Server-side email queue rows created when chapter notifications fan out. This records intended email sends; a separate sender/Edge Function can process queued rows using a configured email provider.
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `id` | uuid | NO | gen_random_uuid() |
+| `notification_id` | uuid | YES |  |
+| `user_id` | uuid | NO |  |
+| `to_email` | text | NO |  |
+| `subject` | text | NO |  |
+| `body` | text | NO |  |
+| `status` | text | NO | 'queued'::text |
+| `error` | text | YES |  |
+| `sent_at` | timestamp with time zone / `timestamptz` | YES |  |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+Only admins can read/manage email queue rows.
+
 ### `public.provider_connections`
 
 | Column | Type | Nullable | Default |
@@ -384,7 +450,7 @@ Rolling subscription access rules for Admin CMS. One policy per story. Admin can
 | `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
-Rule JSON currently uses `{"windows":[{"tier_id":"<reader_access_tiers.id>","count":10}]}`. Admin applies higher-rank tiers first to newest published chapters by `chapter_order`; non-NSFW chapters beyond configured windows become free by setting `chapters.required_tier_id = null`.
+Rule JSON currently uses `{"windows":[{"tier_id":"<reader_access_tiers.id>","count":10}]}`. Admin applies higher-rank tiers first to newest published chapters by `chapter_order`; non-NSFW chapters beyond configured windows become free by setting `chapters.required_tier_id = null`. The current resident-tier policy window is cumulative by rank: Resident Nemesis count 3, Resident Tyrant count 3, Resident Licker count 6. Resident Evil has no separate slice because its rank 40 inherits all Nemesis/Tyrant/Licker gated chapters.
 
 Policies: `story_access_policies_admin_all` permits admin write/manage access through `public.is_admin()`; `story_access_policies_public_read` permits read access for enabled policies belonging to published stories.
 
@@ -841,6 +907,12 @@ $function$
 ```
 
 </details>
+
+### `public.enqueue_chapter_publish_notifications()`
+
+Returns: `trigger`
+
+Creates per-reader `reader_notifications` rows and queued `reader_email_queue` rows when a chapter is inserted/published or its title/tier changes while published. A reader is eligible when the chapter is public, their profile role is admin, or `has_active_entitlement(reader, required_tier_id)` is true. Email rows are queued only when the reader's notification preferences allow email and their auth account has an email address.
 
 ### `public.has_active_entitlement(target_user_id uuid, target_tier_id uuid)`
 

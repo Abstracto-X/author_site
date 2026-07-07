@@ -10,6 +10,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | n/a | `Utils.markdownInlineToHtml(text)` | Converts safe inline Markdown emphasis/code markers into editor HTML. |
 | n/a | `Utils.markdownToChapterHtml(markdown)` | Converts pasted/plain Markdown chapter input into sanitized chapter HTML with paragraphs, breaks, headings, quotes, lists, and scene breaks. |
 | n/a | `Utils.sanitizeChapterHtml(html)` | Whitelists safe chapter formatting before saving/rendering. |
+| n/a | `Utils.removeExtraChapterBreaks(html)` | Removes empty paragraph/break filler from chapter HTML and converts standalone `--` markers to scene breaks. |
 | n/a | `Utils.normalizeEditorHtml(html)` | Normalizes editor HTML or plain/Markdown text before displaying or saving chapter content. |
 | n/a | `Utils.makePreviewFromHtml(html, max = 340)` | Builds a teaser from rich chapter HTML. |
 | n/a | `DB.getStoryAccessPolicy(storyId)` | Loads a story rolling-access policy. |
@@ -25,6 +26,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | n/a | `Forms.editorCommand(cmd)` | Runs rich editor inline formatting commands. |
 | n/a | `Forms.editorBlock(tag)` | Applies rich editor block styles. |
 | n/a | `Forms.insertSceneBreak()` | Inserts a scene break into the rich chapter editor. |
+| n/a | `Forms.removeExtraLineBreaks()` | Cleans the active chapter editor by removing blank lines between paragraphs. |
 | n/a | `Forms.clearEditorFormatting()` | Removes rich editor inline formatting. |
 | n/a | `Forms.handleEditorPaste(event)` | Handles chapter editor paste, preserving rich HTML or converting plain Markdown/text into safe chapter HTML. |
 | n/a | `Forms.normalizeEditorNow()` | Normalizes the active chapter editor to safe HTML immediately before save. |
@@ -33,7 +35,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | n/a | `Forms.showWriterPanel(panel = 'write')` | Switches Writer / Chapters between focused Write, Access, and Teaser panels without re-rendering. |
 | n/a | `Forms.saveRollingPolicy()` | Saves and applies rolling-access policy inputs. |
 | n/a | `Forms.recalculateRollingNow()` | Reapplies the selected story rolling-access policy. |
-| n/a | `Forms.saveReaderBehavior()` | Persists reader guide/provider/external fallback behavior defaults. |
+| n/a | `Forms.saveReaderBehavior()` | Persists reader guide/provider/external fallback behavior defaults plus reader background image URL/toggle under `site_settings.reader_behavior`. |
 | n/a | `Forms.saveInlineChapter(id, publishOverride = null)` | Saves the inline/fullscreen Writer / Chapters editor and triggers rolling access recalculation. |
 | n/a | `Forms.chapterForm(id = null)` | Redirects legacy chapter form calls into the inline/fullscreen Writer / Chapters editor. |
 | n/a | `Views.rollingAccess(container)` | Renders per-story tier window editor and chapter access matrix. |

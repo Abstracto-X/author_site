@@ -69,6 +69,7 @@ function textToBlocks(value){
     const nodes = Array.from(container.children);
     const blocks = nodes.map(node => {
       if (node.tagName === "HR") return { t:"scene" };
+      if (["P","DIV"].includes(node.tagName) && (node.textContent || "").replace(/\u00a0/g, " ").trim() === "--") return { t:"scene" };
       if (node.dataset.systemMessage === "true") {
         const text = (node.textContent || "").trim();
         const bracket = text.match(/^\[([\s\S]+)\]$/);
@@ -83,12 +84,14 @@ function textToBlocks(value){
     return text ? text.split(/\n{2,}/).map(part => {
       const trimmed = part.trim();
       const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
+      if (trimmed === "--") return { t:"scene" };
       return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
     }).filter(b=>b.v) : [];
   }
   return withoutImports.split(/\n{2,}|\r?\n/).map(part => {
     const trimmed = part.trim();
     const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
+    if (trimmed === "--") return { t:"scene" };
     return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
   }).filter(b => b.v);
 }
@@ -331,8 +334,134 @@ async function loadBackendLibrary(options = {}){
       backendState.usingFixtures = false;
       backendState.loaded = true;
       backendState.error = stories.some(story => story.chapters.length) ? null : new Error("Published stories were found, but no published chapters exist yet.");
-      return true;
-    }
+  return true;
+}
+
+function normalizeNotification(row){
+  return {
+    id: row.id,
+    k: row.notification_type || "chapter",
+    t: row.title || "Reader update",
+    d: row.body || "",
+    time: row.created_at ? relativeTime(row.created_at) : "just now",
+    chapter: row.chapter_id || null,
+    url: row.url || "",
+    read: !!row.read_at,
+    dismissed: !!row.dismissed_at,
+    created_at: row.created_at || ""
+  };
+}
+async function loadNotificationPreferences(){
+  const client = getSupabase();
+  if (!client || !authState.user) return null;
+  try {
+    const { data, error } = await client
+      .from("reader_notification_preferences")
+      .select("*")
+      .eq("user_id", authState.user.id)
+      .maybeSingle();
+    if (error) throw error;
+    store.notificationPrefs = data || {
+      user_id: authState.user.id,
+      browser_enabled: !!store.settings.browserNotifications,
+      email_enabled: store.settings.emailNotifications !== false,
+      new_chapters_enabled: store.settings.chapterNotifications !== false,
+      minimum_tier_rank: 0
+    };
+    store.settings.browserNotifications = !!store.notificationPrefs.browser_enabled;
+    store.settings.emailNotifications = store.notificationPrefs.email_enabled !== false;
+    store.settings.chapterNotifications = store.notificationPrefs.new_chapters_enabled !== false;
+    saveStore();
+    return store.notificationPrefs;
+  } catch (err) {
+    console.warn("Notification preferences unavailable", err);
+    return null;
+  }
+}
+async function saveNotificationPreferences(prefs){
+  const client = getSupabase();
+  if (!client || !authState.user) throw new Error("Sign in before changing notification preferences.");
+  const record = {
+    user_id: authState.user.id,
+    browser_enabled: !!prefs.browser_enabled,
+    email_enabled: !!prefs.email_enabled,
+    new_chapters_enabled: prefs.new_chapters_enabled !== false,
+    minimum_tier_rank: Math.max(0, Number(prefs.minimum_tier_rank || 0))
+  };
+  const { data, error } = await client
+    .from("reader_notification_preferences")
+    .upsert(record, { onConflict:"user_id" })
+    .select()
+    .single();
+  if (error) throw error;
+  store.notificationPrefs = data || record;
+  store.settings.browserNotifications = !!record.browser_enabled;
+  store.settings.emailNotifications = !!record.email_enabled;
+  store.settings.chapterNotifications = record.new_chapters_enabled !== false;
+  saveStore();
+  return store.notificationPrefs;
+}
+async function loadReaderNotifications(options = {}){
+  const client = getSupabase();
+  if (!client || !authState.user) return [];
+  try {
+    const { data, error } = await client
+      .from("reader_notifications")
+      .select("*")
+      .is("dismissed_at", null)
+      .order("created_at", { ascending:false })
+      .limit(40);
+    if (error) throw error;
+    const remote = (data || []).map(normalizeNotification).filter(n => !store.dismissedNotifs.includes(n.id));
+    const local = (store.notifs || []).filter(n => !n.id || !String(n.id).match(/^[0-9a-f-]{36}$/i));
+    store.notifs = [...remote, ...local].slice(0, 50);
+    saveStore();
+    if (options.browser !== false) maybeShowBrowserNotifications(remote);
+    return remote;
+  } catch (err) {
+    console.warn("Reader notifications unavailable", err);
+    return [];
+  }
+}
+async function markReaderNotificationsRead(ids){
+  const client = getSupabase();
+  if (!client || !authState.user || !ids.length) return false;
+  const { error } = await client.from("reader_notifications").update({ read_at: new Date().toISOString() }).in("id", ids);
+  if (error) throw error;
+  return true;
+}
+async function dismissReaderNotification(id){
+  const client = getSupabase();
+  if (client && authState.user && String(id).match(/^[0-9a-f-]{36}$/i)) {
+    await client.from("reader_notifications").update({ dismissed_at: new Date().toISOString() }).eq("id", id);
+  }
+  if (!store.dismissedNotifs.includes(id)) store.dismissedNotifs.push(id);
+  store.notifs = store.notifs.filter(n => n.id !== id);
+  saveStore();
+}
+function maybeShowBrowserNotifications(items){
+  if (!store.settings.browserNotifications || !store.settings.chapterNotifications) return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const lastKey = `ea-last-browser-notification:${authState.user?.id || "anon"}`;
+  const lastSeen = Number(LS.getItem(lastKey) || 0);
+  const fresh = (items || []).filter(n => !n.read && new Date(n.created_at || 0).getTime() > lastSeen).slice(0, 3);
+  fresh.forEach(n => {
+    try {
+      const notice = new Notification(n.t, { body: n.d, tag: n.id, icon: profileAvatar() || undefined });
+      notice.onclick = () => { window.focus(); if (n.chapter) nav("/read/" + n.chapter); };
+    } catch (_) {}
+  });
+  if (fresh.length) LS.setItem(lastKey, String(Date.now()));
+}
+async function requestBrowserNotifications(){
+  if (!("Notification" in window)) throw new Error("This browser does not support notifications.");
+  const permission = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
+  if (permission !== "granted") throw new Error("Browser notification permission was not granted.");
+  store.settings.browserNotifications = true;
+  if (store.notificationPrefs) store.notificationPrefs.browser_enabled = true;
+  saveStore();
+  return permission;
+}
     backendState.error = new Error("No published backend stories were found.");
     backendState.usingFixtures = false;
     D.STORIES = [];

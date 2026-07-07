@@ -32,12 +32,24 @@ const defaultStore = () => ({
   settings: {
     readerTheme:"aether", fontScale:1, lineHeight:1.78, margin:1,
     preset:"none", showImages:true, showParaComments:true, showProgress:true,
-    showReactions:true, spoilerSafe:false
+    showReactions:true, spoilerSafe:false, focusMode:false,
+    browserNotifications:false, emailNotifications:true, chapterNotifications:true,
+    appBackground:true
   },
+  notificationPrefs: null,
+  dismissedNotifs: [],
   filters: { q:"", chips:[] },
   theme: "aether"
 });
 let store;
-function loadStore(){ try { const raw = LS.getItem("aether-pages-prod-bridge-v2-realdb"); store = raw ? Object.assign(defaultStore(), JSON.parse(raw)) : defaultStore(); } catch(e){ store = defaultStore(); } if(!store.settings) store.settings = defaultStore().settings; }
+function loadStore(){
+  const defaults = defaultStore();
+  try {
+    const raw = LS.getItem("aether-pages-prod-bridge-v2-realdb");
+    store = raw ? Object.assign(defaults, JSON.parse(raw)) : defaults;
+  } catch(e){ store = defaults; }
+  store.settings = Object.assign(defaultStore().settings, store.settings || {});
+  if (!Array.isArray(store.dismissedNotifs)) store.dismissedNotifs = [];
+}
 function saveStore(){ try { LS.setItem("aether-pages-prod-bridge-v2-realdb", JSON.stringify(store)); } catch(e){} }
 loadStore();

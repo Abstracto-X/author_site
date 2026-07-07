@@ -1,5 +1,83 @@
 # Changelog
 
+## 2026-07-07 22:00 Asia/Kolkata - Fix standalone Writer autosave editor rewrite and paste formatting
+
+Area: admin
+
+Summary:
+- Applied fixes to `writer.html` so the editor no longer rewrites itself during autosave.
+- Standardized paste behavior so Markdown paste formatted text becomes rich text while raw rich text remains unchanged.
+- Prevented double-firing on slash commands.
+- Configured scene breaks as real `<hr>` elements and added native Quill toolbar icon tooltip hover labels.
+
+Files changed:
+- `writer.html`
+
+## 2026-07-07 19:45 Asia/Kolkata - Add chapter editor cleanup and double-dash scene breaks
+
+Area: admin | reader | docs
+
+Summary:
+- Added a Remove extra breaks cleanup action to the standalone Writer and embedded Admin Writer / Chapters editor to strip blank paragraph filler between paragraphs.
+- Added Writer slash commands for `/scene`, `/clean`, and `/image`, with `--` automatically becoming the same scene break divider.
+- Updated chapter normalization so pasted/saved standalone `--` markers become `<hr>` scene breaks, and the reader renders legacy standalone `--` content as the existing gold-star scene divider.
+
+Files changed:
+- `writer.html`
+- `admin.html`
+- `js/subscription/backend.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-07-07 17:30 Asia/Kolkata - Add reader notifications, profile editing, what's-new popup, and app background
+
+Area: reader | admin | database | edge-functions | docs
+
+Summary:
+- Added DB-backed reader notification tables/preferences plus a chapter publish trigger that fans out relevant in-app notifications and queued email rows to readers whose active entitlement/admin role covers the chapter tier.
+- Added and deployed `send-reader-email-queue`, an optional Resend-backed Edge Function for processing queued reader emails when email provider secrets are configured.
+- Added reader Settings controls for chapter alerts, email notifications, browser notification permission, and app background art.
+- Added signed-in reader profile editing for display name, username, avatar URL, and avatar upload to `Reader/<user_id>/profile/...`.
+- Added a one-time signed-in "What's new" popup linking directly to notification settings, profile editing, and background settings.
+- Added Admin Settings fields for the subscription reader background image URL and enable/disable toggle under `site_settings.reader_behavior`.
+
+Files changed:
+- `admin.html`
+- `styles.css`
+- `js/subscription/config.js`
+- `js/subscription/state.js`
+- `js/subscription/auth.js`
+- `js/subscription/backend.js`
+- `js/subscription/sheets.js`
+- `js/subscription/events.js`
+- `database/sql/2026-07-07_reader_notifications_profile.sql`
+- `supabase/migrations/20260707173000_reader_notifications_profile.sql`
+- `supabase/functions/send-reader-email-queue/index.ts`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-07-07 16:53 Asia/Kolkata - Correct resident Patreon tier ladder
+
+Area: database | docs
+
+Summary:
+- Applied a linked Supabase data migration for the corrected resident tier ladder: Licker rank 10, Tyrant rank 20, Nemesis rank 30, Evil rank 40.
+- Converted the existing `resident-tyrant`/Resident Nemesis row in place to `resident-nemesis`, preserving its UUID so current Nemesis entitlements remain attached.
+- Added new `resident-tyrant` and `resident-evil` access tiers; Resident Evil is the highest rank because it includes all Resident Nemesis benefits.
+- Kept known Patreon numeric mappings for Licker (`28946758`) and Nemesis (`28946791`), and added temporary exact-title mappings for Tyrant and Evil until their numeric Patreon tier IDs are available.
+- Seeded the story rolling access policy as Nemesis 3 + Tyrant 3 + Licker 6 slices. Existing chapter `required_tier_id` assignments were intentionally not rewritten during the migration, preserving current reader access immediately after the tier fix.
+
+Files changed:
+- `database/sql/2026-07-07_resident_tier_ladder.sql`
+- `supabase/migrations/20260707165300_resident_tier_ladder.sql`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+
 ## 2026-07-07 09:18 Asia/Kolkata - Preserve Patreon paid-through access on cancellation
 
 Area: database | edge-functions | docs

@@ -25,6 +25,8 @@ function closeSheet(silent){
 /* ============ SHEETS (builders) ============ */
 function sheetSettings(){
   const st=store.settings;
+  const prefs = store.notificationPrefs || {};
+  const browserState = ("Notification" in window) ? Notification.permission : "unsupported";
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Settings</h2><p class="sheet-sub">Theme &amp; reading comfort. Saved to this device.</p>
   <div class="set-group"><label>Site theme</label>${themeSwatches()}</div>
   <div class="set-group"><label>Reader lighting</label><div class="seg">${["aether","twilight","parchment"].map(t=>`<button class="${st.readerTheme===t?'active':''}" data-set-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div></div>
@@ -38,7 +40,14 @@ function sheetSettings(){
     ${toggleRow("showReactions","Chapter reactions","Show reaction buttons at chapter end",st.showReactions)}
     ${toggleRow("spoilerSafe","Spoiler safety","Hide titles/descriptions of unread chapters",st.spoilerSafe)}
     ${toggleRow("focusMode","Focus mode","Hide UI until you tap the page",st.focusMode)}
-  </div>`;
+    ${toggleRow("appBackground","App background art","Use the site background image behind the shell",st.appBackground)}
+  </div>
+  <form data-notification-form class="set-group"><label>Chapter notifications</label>
+    ${toggleRow("chapterNotifications","New chapter alerts","Create in-app notifications for chapters you can access",st.chapterNotifications)}
+    ${toggleRow("emailNotifications","Email updates","Queue email updates for new chapters in your tiers",st.emailNotifications)}
+    ${toggleRow("browserNotifications","Browser popups","Show browser notifications when this site is open",st.browserNotifications)}
+    <div class="card" style="margin-top:10px"><div class="faint" style="font-size:.76rem;margin-bottom:8px">Browser permission: <b>${browserState}</b>. Email uses your account email and server-side queue.</div><button class="btn sm story" type="button" data-act="request-browser-notifications">${I.bell}Enable browser permission</button><button class="btn sm ghost" type="submit">${I.check}Save notification prefs</button></div>
+  </form>`;
 }
 function toggleRow(key,title,sub,on){ return `<div class="toggle-row"><div class="lbl">${title}<small>${sub}</small></div><button class="switch ${on?'on':''}" data-toggle="${key}" aria-label="${title}"></button></div>`; }
 
@@ -46,12 +55,36 @@ function sheetPersona(){
   const P=persona();
   const active = activeEntitlements();
   const signedIn = !!authState.user;
+  const avatar = profileAvatar();
   const status = P.admin ? "Admin reader override active" : signedIn ? (active.length ? `${active.length} active entitlement${active.length===1?"":"s"}` : "Signed in, no active member entitlement") : "Guest reader";
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Account</h2>
-  <div class="card tinted" style="margin-bottom:14px;display:flex;gap:12px;align-items:center"><span style="width:42px;height:42px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)">${I.user}</span><div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(accountLabel())}</div><div class="faint" style="font-size:.76rem">${esc(P.tier || status)}</div></div>${signedIn?`<button class="btn sm ghost" data-act="reader-signout">Sign out</button>`:""}</div>
-  <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.aa}<span>Preferences</span><small>Reader</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
+  <div class="card tinted" style="margin-bottom:14px;display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(accountLabel())}</div><div class="faint" style="font-size:.76rem">${esc(P.tier || status)}</div></div>${signedIn?`<button class="btn sm ghost" data-sheet="profile">Edit</button><button class="btn sm ghost" data-act="reader-signout">Sign out</button>`:""}</div>
+  <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/notifications">${I.bell}<span>Notifications</span><small>Chapter alerts</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.aa}<span>Preferences</span><small>Reader</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
   ${signedIn?`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:7px">Entitlements</div>${P.admin?`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">Admin reader override</span><span class="badge free">active</span></div><p class="faint" style="font-size:.78rem;margin:4px 0 0">This is not a paid/member entitlement; it is attached to your admin profile role.</p>`:active.length?active.map(e=>`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">${esc(e.tier_name || e.name || e.tier || "Reader access")}</span><span class="badge free">active</span></div>`).join(""):`<p class="faint" style="font-size:.8rem;margin:0">No active entitlement returned yet. Connect provider or redeem an access key.</p>`}</div>`:`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">Continue</div><div class="col-flex"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button><div class="faint" style="font-size:.74rem;text-align:center">or use email</div><form data-auth-form="signin"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="current-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Sign in with email</button><button class="btn ghost block" type="button" data-act="show-signup">Create email account</button><button class="btn ghost block" type="button" data-act="show-forgot-password">Forgot password?</button></div></form></div></div>`}
   <div class="card" style="margin-top:8px"><div style="font-weight:600;font-size:.86rem">Need help?</div><div class="faint" style="font-size:.74rem;margin-top:4px">Open the Vault to manage access, reconnect Patreon, or redeem an access key.</div></div>`;
+}
+function sheetProfile(){
+  if (!authState.user) return sheetPersona();
+  const avatar = profileAvatar();
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Edit profile</h2><p class="sheet-sub">Customize the name and avatar readers see on comments.</p>
+  <form data-profile-form class="card profile-form-grid">
+    <div style="display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div class="faint" style="font-size:.78rem">Images upload to your private Reader folder path and are served by public URL.</div></div>
+    <input class="pill-input" name="display_name" value="${esc(authState.profile?.display_name || "")}" placeholder="Display name" autocomplete="name" style="text-align:left">
+    <input class="pill-input" name="username" value="${esc(authState.profile?.username || "")}" placeholder="username" autocomplete="username" style="text-align:left">
+    <input name="avatar" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+    <input class="pill-input" name="avatar_url" value="${esc(authState.profile?.avatar_url || "")}" placeholder="Or paste image URL" style="text-align:left">
+    <div class="faint" data-profile-status style="font-size:.76rem;min-height:1em"></div>
+    <button class="btn story block" type="submit">${I.check}Save profile</button>
+  </form>`;
+}
+function sheetWhatsNew(){
+  return `<span class="close-x" data-act="dismiss-whats-new">${I.x}</span><h2>What's new</h2><p class="sheet-sub">Reader upgrades are live on your account.</p>
+  <div class="whats-new-list">
+    <div class="whats-new-item"><span class="icn">${I.bell}</span><div><b>Chapter notifications</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">New chapters now create relevant in-app alerts, browser popups when enabled, and email queue entries for your access tier.</p><button class="btn sm ghost" data-sheet="settings">Open notification settings</button></div></div>
+    <div class="whats-new-item"><span class="icn">${I.user}</span><div><b>Profile customization</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">Add an avatar, display name, and username for comments and account surfaces.</p><button class="btn sm ghost" data-sheet="profile">Edit profile</button></div></div>
+    <div class="whats-new-item"><span class="icn">${I.spark}</span><div><b>Site background art</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">The app shell can now use the configured reader background image.</p><button class="btn sm ghost" data-sheet="settings">Background toggle</button></div></div>
+  </div>
+  <button class="btn story block" data-act="dismiss-whats-new">${I.check}Got it</button>`;
 }
 function sheetSignup(){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Save your library</h2><p class="sheet-sub">Use Google for the fastest setup, or create an email login for key redemption, Patreon linking, and future cross-device shelf sync.</p>

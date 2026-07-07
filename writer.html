@@ -289,6 +289,49 @@
             transform: translateX(-50%) translateY(-1px);
         }
 
+
+        .slash-menu {
+            position: absolute;
+            left: 50%;
+            bottom: 5.25rem;
+            transform: translateX(-50%);
+            z-index: 45;
+            width: min(340px, calc(100% - 2rem));
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 1rem;
+            background: rgba(9, 9, 11, 0.96);
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+        }
+
+        .slash-menu.hidden { display: none; }
+
+        .slash-menu button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.85rem 1rem;
+            color: #d4d4d8;
+            text-align: left;
+            transition: 0.16s ease;
+        }
+
+        .slash-menu button:hover {
+            background: rgba(129, 140, 248, 0.16);
+            color: #fff;
+        }
+
+        .slash-menu kbd {
+            margin-left: auto;
+            color: #a1a1aa;
+            font-size: 0.72rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0.45rem;
+            padding: 0.15rem 0.38rem;
+            background: rgba(255, 255, 255, 0.055);
+        }
+
         /* Quill Editor Overrides */
         .ql-toolbar.ql-snow {
             border: none !important;
@@ -368,6 +411,40 @@
         .ql-editor.ql-blank::before {
             color: #52525b;
             font-style: normal;
+        }
+
+        /* Scene Break */
+        .ql-editor hr.scene-break {
+            border: 0;
+            height: 1px;
+            width: 9rem;
+            margin: 2.75rem auto;
+            overflow: visible;
+            text-align: center;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(251, 191, 36, 0.65),
+                transparent
+            );
+        }
+
+        .ql-editor hr.scene-break::after {
+            content: "âœ¦";
+            position: relative;
+            top: -0.82rem;
+            display: inline-block;
+            padding: 0 0.75rem;
+            color: #fbbf24;
+            background: #09090b;
+            font-size: 0.95rem;
+            text-shadow: 0 0 18px rgba(251, 191, 36, 0.5);
+        }
+
+        /* Better native tooltips for Quill controls */
+        .ql-toolbar button,
+        .ql-toolbar .ql-picker {
+            position: relative;
         }
 
         /* Dark Theme Quill UI */
@@ -720,6 +797,15 @@
                                     >
                                         <i class="fa-solid fa-file-lines text-sm"></i>
                                     </button>
+
+                                    <button
+                                        onclick="Editor.removeExtraLineBreaks()"
+                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                                        title="Remove extra line breaks"
+                                        aria-label="Remove extra line breaks"
+                                    >
+                                        <i class="fa-solid fa-broom text-sm"></i>
+                                    </button>
                                 </div>
 
                                 <div class="h-6 w-px bg-zinc-800"></div>
@@ -756,15 +842,35 @@
                         <div class="flex-1 relative overflow-hidden flex flex-col">
                             <div id="quill-editor" class="flex-1 custom-scrollbar"></div>
 
+                            <div id="slash-menu" class="slash-menu hidden">
+                                <button type="button" onclick="Editor.executeSlashCommand('scene')">
+                                    <i class="fa-solid fa-star text-amber-300"></i>
+                                    <span><strong>Scene break</strong><br><small class="text-zinc-500">Insert the gold-star divider</small></span>
+                                    <kbd>/scene</kbd>
+                                </button>
+                                <button type="button" onclick="Editor.executeSlashCommand('clean')">
+                                    <i class="fa-solid fa-broom text-indigo-300"></i>
+                                    <span><strong>Clean breaks</strong><br><small class="text-zinc-500">Remove blank lines between paragraphs</small></span>
+                                    <kbd>/clean</kbd>
+                                </button>
+                                <button type="button" onclick="Editor.executeSlashCommand('image')">
+                                    <i class="fa-regular fa-image text-sky-300"></i>
+                                    <span><strong>Image</strong><br><small class="text-zinc-500">Open media helper</small></span>
+                                    <kbd>/image</kbd>
+                                </button>
+                            </div>
+
                             <div class="editor-meta-bar">
-                                <div id="ed-live-count">0 words · 0 characters</div>
+                                <div id="ed-live-count">0 words Â· 0 characters</div>
                                 <div id="ed-last-saved">Last saved just now</div>
                             </div>
 
                             <div class="editor-hint absolute bottom-12 left-1/2 -translate-x-1/2 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-full px-4 py-1.5 text-xs text-zinc-400 pointer-events-none fade-in shadow-lg">
                                 Type
-                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">/image</kbd>
-                                for media,
+                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">/</kbd>
+                                for commands,
+                                <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">--</kbd>
+                                for scene breaks,
                                 <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">[text]</kbd>
                                 for system messages,
                                 <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 mx-1">Enter</kbd>
@@ -942,6 +1048,37 @@
             });
             return template.innerHTML;
         }
+        function cleanChapterEditorHtml(value) {
+            const template = document.createElement('template');
+            template.innerHTML = value || '';
+
+            template.content.querySelectorAll('p, div').forEach(node => {
+                const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
+                const isSystem = node.classList.contains('sys-msg-box');
+
+                if (!isSystem && text === '--') {
+                    node.replaceWith(document.createElement('hr'));
+                    return;
+                }
+
+                if (!isSystem && !text && !node.querySelector('img, iframe, video')) {
+                    node.remove();
+                }
+            });
+
+            template.content.querySelectorAll('br').forEach(br => {
+                let next = br.nextSibling;
+                while (next && next.nodeType === Node.TEXT_NODE && !next.textContent.trim()) next = next.nextSibling;
+                if (next && next.nodeName === 'BR') br.remove();
+            });
+
+            return template.innerHTML.trim();
+        }
+
+        function markdownSceneBreaksToHtml(value) {
+            return String(value || '').replace(/^\s*--\s*$/gm, '<hr>');
+        }
+
         function tierColor(rank) {
             if (rank >= 20) return 'text-rose-400 bg-rose-400/10 border-rose-400/20';
             if (rank >= 10) return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
@@ -997,7 +1134,9 @@
             activeChapterId: null,
             unsavedChanges: false,
             quillInstance: null,
-            autosaveTimer: null
+            autosaveTimer: null,
+            commandRunning: false,
+            isHydratingEditor: false
         };
 
         // ==========================================
@@ -1044,6 +1183,18 @@
         BreakBlot.blotName = 'break';
         BreakBlot.tagName = 'br';
         Quill.register(BreakBlot);
+
+        class SceneBreakBlot extends Embed {
+            static create(value) {
+                const node = super.create(value);
+                node.classList.add('scene-break');
+                return node;
+            }
+        }
+
+        SceneBreakBlot.blotName = 'scene-break';
+        SceneBreakBlot.tagName = 'hr';
+        Quill.register(SceneBreakBlot);
 
         // ==========================================
         // UI CORE & ROUTER
@@ -1382,11 +1533,76 @@
         // ==========================================
         // EDITOR LOGIC
         // ==========================================
+                function normalizeWhitespace(value) {
+            return String(value || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function looksLikeMarkdown(text) {
+            const value = String(text || '').trim();
+
+            if (!value) return false;
+
+            return /(^#{1,6}\s+)|(^>\s+)|(^[-*+]\s+)|(^\d+\.\s+)|(\*\*[^*]+\*\*)|(__[^_]+__)|(```)|(^\s*--\s*$)|(^\[.+\]$)|(\[[^\]]+\]\([^)]+\))/m.test(value);
+        }
+
+        function richHtmlLooksUseful(html) {
+            return /<(h[1-6]|strong|b|em|i|u|s|blockquote|pre|code|ul|ol|li|a|img|table|thead|tbody|tr|td|th)\b/i.test(html || '');
+        }
+
+        function sanitizeEditorHtml(html) {
+            const template = document.createElement('template');
+            template.innerHTML = html || '';
+
+            template.content.querySelectorAll('script, style, iframe, object, embed').forEach(node => node.remove());
+
+            template.content.querySelectorAll('*').forEach(node => {
+                [...node.attributes].forEach(attr => {
+                    const name = attr.name.toLowerCase();
+                    const value = attr.value || '';
+
+                    if (name.startsWith('on')) {
+                        node.removeAttribute(attr.name);
+                    }
+
+                    if ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(value)) {
+                        node.removeAttribute(attr.name);
+                    }
+                });
+            });
+
+            return template.innerHTML;
+        }
+
+        function markdownToEditorHtml(markdown) {
+            let md = String(markdown || '');
+
+            md = md.replace(/^\s*--\s*$/gm, '<hr class="scene-break">');
+
+            md = md.replace(/^\[([^\n]+)\]$/gm, (full, content) => {
+                return `<div class="sys-msg-box">${UI.escapeHtml(content.trim())}</div>`;
+            });
+
+            const parsed = marked.parse(md);
+            return sanitizeEditorHtml(parsed);
+        }
+
+        function pasteHtmlAtCursor(html) {
+            const quill = State.quillInstance;
+            if (!quill) return;
+
+            const range = quill.getSelection(true);
+            quill.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+            quill.setSelection(range.index + 1, 0, 'silent');
+        }
+
+        // ==========================================
+        // EDITOR LOGIC
+        // ==========================================
         const Editor = {
             initQuill() {
                 State.quillInstance = new Quill('#quill-editor', {
                     theme: 'snow',
-                    placeholder: 'Begin writing... Type /image for media, [text] for a techno system message.',
+                    placeholder: 'Begin writing... Type / for commands, -- for a scene break, [text] for a techno system message.',
                     modules: {
                         keyboard: {
                             bindings: {
@@ -1452,32 +1668,79 @@
                 State.quillInstance.on('text-change', (delta, oldDelta, source) => {
                     this.updateMeta();
 
-                    if (source === 'user') {
-                        this.markUnsaved();
-                        this.handleCustomInputs();
+                    if (State.isHydratingEditor || State.commandRunning) {
+                        this.updateSlashMenu();
+                        return;
                     }
+
+                    if (source === 'user') {
+                        this.handleCustomInputs();
+                        this.markUnsaved();
+                    }
+
+                    this.updateSlashMenu();
                 });
 
                 State.quillInstance.root.addEventListener('paste', event => {
                     const clipboard = event.clipboardData || event.originalEvent?.clipboardData;
-                    const text = clipboard?.getData('text/plain') || '';
+                    if (!clipboard) return;
 
-                    if (/(^#|\*\*|__|^[-*]\s|^\d+\.\s|^\[.*\]$)/m.test(text)) {
+                    const html = clipboard.getData('text/html') || '';
+                    const text = clipboard.getData('text/plain') || '';
+
+                    /*
+                     * Rule:
+                     * 1. Real rich text stays rich.
+                     * 2. Plain Markdown becomes rich text.
+                     * 3. Weak HTML wrappers around Markdown are treated as Markdown.
+                     */
+                    if (html && richHtmlLooksUseful(html)) {
+                        return;
+                    }
+
+                    if (text && looksLikeMarkdown(text)) {
                         event.preventDefault();
 
-                        let md = text.replace(/^\[(.*?)\]$/gm, (full, content) => {
-                            return `<div class="sys-msg-box">${UI.escapeHtml(content)}</div>`;
-                        });
+                        const editorHtml = markdownToEditorHtml(text);
+                        pasteHtmlAtCursor(editorHtml);
 
-                        const html = marked.parse(md);
-                        const range = State.quillInstance.getSelection(true);
-
-                        State.quillInstance.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
-                        UI.showToast('Markdown detected and formatted.', 'success');
+                        UI.showToast('Markdown pasted as rich text.', 'success');
                     }
                 });
 
+                this.addToolbarTooltips();
                 this.updateMeta();
+            },
+
+            addToolbarTooltips() {
+                const toolbar = document.querySelector('.ql-toolbar');
+                if (!toolbar) return;
+
+                const labels = {
+                    '.ql-bold': 'Bold',
+                    '.ql-italic': 'Italic',
+                    '.ql-underline': 'Underline',
+                    '.ql-strike': 'Strikethrough',
+                    '.ql-blockquote': 'Blockquote',
+                    '.ql-code-block': 'Code block',
+                    '.ql-list[value="ordered"]': 'Numbered list',
+                    '.ql-list[value="bullet"]': 'Bulleted list',
+                    '.ql-link': 'Insert link',
+                    '.ql-image': 'Insert image',
+                    '.ql-clean': 'Clear formatting'
+                };
+
+                Object.entries(labels).forEach(([selector, label]) => {
+                    toolbar.querySelectorAll(selector).forEach(el => {
+                        el.setAttribute('title', label);
+                        el.setAttribute('aria-label', label);
+                    });
+                });
+
+                toolbar.querySelectorAll('.ql-header').forEach(el => {
+                    el.setAttribute('title', 'Heading level');
+                    el.setAttribute('aria-label', 'Heading level');
+                });
             },
 
             isSystemLineAt(index) {
@@ -1485,43 +1748,165 @@
                 return Boolean(line?.domNode?.classList?.contains('sys-msg-box'));
             },
 
-            handleCustomInputs() {
+            getCurrentLineInfo(useFocus = false) {
                 const quill = State.quillInstance;
-                const range = quill.getSelection();
+                const range = quill?.getSelection(useFocus);
 
-                if (!range) return;
+                if (!range) return null;
 
                 const [line] = quill.getLine(range.index);
-
-                if (!line) return;
-
-                if (line.domNode.classList.contains('sys-msg-box')) {
-                    return;
-                }
+                if (!line) return null;
 
                 const lineIndex = quill.getIndex(line);
                 const lineLength = Math.max(line.length() - 1, 0);
-                const rawLineText = quill.getText(lineIndex, lineLength);
-                const text = rawLineText.trim();
+                const text = quill.getText(lineIndex, lineLength).trim();
 
-                if (text === '/image') {
-                    quill.deleteText(lineIndex, lineLength, 'user');
-                    this.openMediaLibrary();
+                return {
+                    quill,
+                    range,
+                    line,
+                    lineIndex,
+                    lineLength,
+                    text
+                };
+            },
+
+            handleCustomInputs() {
+                if (State.commandRunning) return;
+
+                const info = this.getCurrentLineInfo(false);
+                if (!info) return;
+
+                if (info.line.domNode.classList.contains('sys-msg-box')) {
+                    return;
+                }
+
+                const text = info.text;
+
+                if (text === '--') {
+                    this.executeSlashCommand('scene', info);
+                    return;
+                }
+
+                if (text === '/image' || text === '/scene' || text === '/clean') {
+                    this.executeSlashCommand(text.slice(1), info);
                     return;
                 }
 
                 if (text.startsWith('[') && text.endsWith(']') && text.length > 2) {
-                    const innerText = text.substring(1, text.length - 1);
+                    const innerText = text.substring(1, text.length - 1).trim();
+                    if (!innerText) return;
 
-                    quill.deleteText(lineIndex, lineLength, 'user');
-                    quill.insertText(lineIndex, innerText, 'user');
-                    quill.formatLine(lineIndex, Math.max(innerText.length, 1), 'system-message', true, 'user');
-                    quill.setSelection(lineIndex + innerText.length, 0, 'silent');
+                    State.commandRunning = true;
+
+                    try {
+                        info.quill.deleteText(info.lineIndex, info.lineLength, 'silent');
+                        info.quill.insertText(info.lineIndex, innerText, 'silent');
+                        info.quill.formatLine(
+                            info.lineIndex,
+                            Math.max(innerText.length, 1),
+                            'system-message',
+                            true,
+                            'user'
+                        );
+                        info.quill.setSelection(info.lineIndex + innerText.length, 0, 'silent');
+                    } finally {
+                        State.commandRunning = false;
+                    }
                 }
+            },
+
+            executeSlashCommand(command, info = this.getCurrentLineInfo(true)) {
+                if (!info || State.commandRunning) return;
+
+                State.commandRunning = true;
+
+                try {
+                    info.quill.deleteText(info.lineIndex, info.lineLength, 'silent');
+
+                    if (command === 'scene') {
+                        this.insertSceneBreak(info.lineIndex);
+                    } else if (command === 'clean') {
+                        this.removeExtraLineBreaks();
+                    } else if (command === 'image') {
+                        this.openMediaLibrary();
+                    }
+
+                    this.hideSlashMenu();
+                    this.markUnsaved();
+                } finally {
+                    State.commandRunning = false;
+                }
+            },
+
+            insertSceneBreak(index = null) {
+                const quill = State.quillInstance;
+                if (!quill) return;
+
+                const range = quill.getSelection(true);
+                const insertAt = Number.isInteger(index) ? index : range.index;
+
+                quill.insertEmbed(insertAt, 'scene-break', true, 'user');
+                quill.insertText(insertAt + 1, '\n', 'silent');
+                quill.setSelection(insertAt + 2, 0, 'silent');
+
+                this.hideSlashMenu();
+            },
+
+            removeExtraLineBreaks() {
+                const quill = State.quillInstance;
+                if (!quill) return;
+
+                const cleaned = cleanChapterEditorHtml(quill.root.innerHTML);
+
+                State.isHydratingEditor = true;
+
+                try {
+                    quill.setText('', 'silent');
+                    quill.clipboard.dangerouslyPasteHTML(0, cleaned, 'silent');
+                } finally {
+                    State.isHydratingEditor = false;
+                }
+
+                this.markUnsaved();
+                this.updateMeta();
+                this.hideSlashMenu();
+
+                UI.showToast('Extra blank lines removed.', 'success');
+            },
+
+            normalizeForSave() {
+                const quill = State.quillInstance;
+                if (!quill) return '';
+
+                /*
+                 * Critical fix:
+                 * Saving must never rewrite the live editor.
+                 * Autosave should serialize only.
+                 */
+                return cleanChapterEditorHtml(quill.root.innerHTML);
+            },
+
+            updateSlashMenu() {
+                const menu = document.getElementById('slash-menu');
+                const info = this.getCurrentLineInfo(false);
+
+                const show = Boolean(
+                    info &&
+                    !info.line.domNode.classList.contains('sys-msg-box') &&
+                    /^\/(?:image|scene|clean)?$/i.test(info.text)
+                );
+
+                menu?.classList.toggle('hidden', !show);
+            },
+
+            hideSlashMenu() {
+                document.getElementById('slash-menu')?.classList.add('hidden');
             },
 
             openMediaLibrary() {
                 const grid = document.getElementById('media-grid');
+
                 grid.innerHTML = `
                     <div class="col-span-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 text-center text-zinc-400">
                         <i class="fa-regular fa-image text-3xl text-zinc-600 mb-3"></i>
@@ -1529,20 +1914,26 @@
                         <p class="text-xs mt-2 leading-relaxed">Use Quill's image button to paste a real image URL, or add chapter media through Admin CMS storage fields.</p>
                     </div>
                 `;
+
                 UI.openModal('modal-media');
             },
 
             insertImage(url) {
                 const quill = State.quillInstance;
+                if (!quill || !url) return;
+
                 const range = quill.getSelection(true);
 
                 quill.insertEmbed(range.index, 'image', url, 'user');
                 quill.setSelection(range.index + 1, 0, 'silent');
 
                 UI.closeModal('modal-media');
+                this.markUnsaved();
             },
 
             getPlainText() {
+                if (!State.quillInstance) return '';
+
                 return State.quillInstance
                     .getText()
                     .replace(/\uFFFC/g, '\n')
@@ -1559,7 +1950,7 @@
                 const el = document.getElementById('ed-live-count');
 
                 if (el) {
-                    el.textContent = `${words.toLocaleString()} words · ${chars.toLocaleString()} characters`;
+                    el.textContent = `${words.toLocaleString()} words â€¢ ${chars.toLocaleString()} characters`;
                 }
             },
 
@@ -1577,18 +1968,24 @@
             },
 
             markUnsaved() {
+                if (State.isHydratingEditor) return;
+
                 State.unsavedChanges = true;
 
                 const el = document.getElementById('ed-save-status');
-                el.innerHTML = `<i class="fa-solid fa-circle text-amber-500 text-[8px] mr-1 mb-0.5"></i> Unsaved`;
-                el.classList.replace('text-zinc-500', 'text-amber-500');
+
+                if (el) {
+                    el.innerHTML = `<i class="fa-solid fa-circle text-amber-500 text-[8px] mr-1 mb-0.5"></i> Unsaved`;
+                    el.classList.remove('text-zinc-500');
+                    el.classList.add('text-amber-500');
+                }
 
                 clearTimeout(State.autosaveTimer);
 
                 if (State.activeChapterId) {
                     State.autosaveTimer = setTimeout(() => {
                         App.saveDraft({ silent: true });
-                    }, 1200);
+                    }, 1500);
                 }
             },
 
@@ -1598,8 +1995,12 @@
                 State.unsavedChanges = false;
 
                 const el = document.getElementById('ed-save-status');
-                el.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> Saved`;
-                el.classList.replace('text-amber-500', 'text-zinc-500');
+
+                if (el) {
+                    el.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> Saved`;
+                    el.classList.remove('text-amber-500');
+                    el.classList.add('text-zinc-500');
+                }
 
                 this.setLastSavedNow();
                 this.updateMeta();
@@ -1609,10 +2010,19 @@
         // ==========================================
         // APPLICATION CONTROLLERS
         // ==========================================
-        const App = {
+                const App = {
             async createNewChapter() {
-                if (!State.activeStoryId) { UI.showToast('Create/select a story first.', 'error'); return; }
-                const nextOrder = (MockDB.chapters.length ? Math.max(...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0)) : 0) + 1;
+                if (!State.activeStoryId) {
+                    UI.showToast('Create/select a story first.', 'error');
+                    return;
+                }
+
+                const nextOrder = (
+                    MockDB.chapters.length
+                        ? Math.max(...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0))
+                        : 0
+                ) + 1;
+
                 try {
                     const saved = await DB.saveChapter(null, {
                         story_id: State.activeStoryId,
@@ -1628,9 +2038,12 @@
                         word_count: 0,
                         updated_at: new Date().toISOString()
                     });
+
                     await DB.loadChapters(State.activeStoryId);
+
                     this.openEditorForChapter(saved.id);
                     Dashboard.render();
+
                     UI.showToast('Draft created.', 'success');
                 } catch (error) {
                     UI.showToast(error.message || 'Could not create draft.', 'error');
@@ -1639,48 +2052,55 @@
 
             openEditorForChapter(id) {
                 const chapter = MockDB.chapters.find(item => item.id === id);
-
                 if (!chapter) return;
 
                 State.activeChapterId = id;
+                State.isHydratingEditor = true;
 
-                document.getElementById('editor-empty').classList.add('hidden');
-                document.getElementById('editor-workspace').classList.remove('hidden');
+                try {
+                    document.getElementById('editor-empty').classList.add('hidden');
+                    document.getElementById('editor-workspace').classList.remove('hidden');
 
-                document.getElementById('ed-title').value = chapter.title || '';
-                document.getElementById('ed-order').value = chapter.chapter_order || '';
-                document.getElementById('ed-tier').value = chapter.required_tier_id || '';
-                document.getElementById('ed-release-date').value = datetimeLocal(chapter.public_release_at);
+                    document.getElementById('ed-title').value = chapter.title || '';
+                    document.getElementById('ed-order').value = chapter.chapter_order || '';
+                    document.getElementById('ed-tier').value = chapter.required_tier_id || '';
+                    document.getElementById('ed-release-date').value = datetimeLocal(chapter.public_release_at);
 
-                const nsfwToggle = document.getElementById('ed-nsfw');
-                nsfwToggle.checked = Boolean(chapter.is_nsfw);
-                UI.updateNsfwExternalState(nsfwToggle.checked);
+                    const nsfwToggle = document.getElementById('ed-nsfw');
+                    nsfwToggle.checked = Boolean(chapter.is_nsfw);
+                    UI.updateNsfwExternalState(nsfwToggle.checked);
 
-                document.getElementById('ed-external-url').value = chapter.external_url || '';
-                document.getElementById('ed-cover').value = chapter.cover_image_url || '';
+                    document.getElementById('ed-external-url').value = chapter.external_url || '';
+                    document.getElementById('ed-cover').value = chapter.cover_image_url || '';
 
-                State.quillInstance.setText('', 'silent');
-                State.quillInstance.clipboard.dangerouslyPasteHTML(0, legacyBracketSystemToHtml(chapter.content || ''), 'silent');
+                    State.quillInstance.setText('', 'silent');
+                    State.quillInstance.clipboard.dangerouslyPasteHTML(
+                        0,
+                        legacyBracketSystemToHtml(chapter.content || ''),
+                        'silent'
+                    );
 
-                Editor.markSaved();
+                    const banner = document.getElementById('ed-banner');
+                    const btn = document.getElementById('btn-publish');
+                    const statusPill = document.getElementById('ed-status-pill');
 
-                const banner = document.getElementById('ed-banner');
-                const btn = document.getElementById('btn-publish');
+                    if (chapter.is_published) {
+                        banner.classList.remove('hidden');
+                        btn.innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
+                        statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
+                        statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
+                    } else {
+                        banner.classList.add('hidden');
+                        btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
+                        statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
+                        statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
+                    }
 
-                const statusPill = document.getElementById('ed-status-pill');
-                if (chapter.is_published) {
-                    banner.classList.remove('hidden');
-                    btn.innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
-                    statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
-                    statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
-                } else {
-                    banner.classList.add('hidden');
-                    btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
-                    statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
-                    statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
+                    Router.navigate('editor');
+                } finally {
+                    State.isHydratingEditor = false;
+                    Editor.markSaved();
                 }
-
-                Router.navigate('editor');
             },
 
             getEditorData() {
@@ -1690,7 +2110,7 @@
                 return {
                     title: document.getElementById('ed-title').value.trim() || 'Untitled',
                     chapter_order: parseInt(document.getElementById('ed-order').value, 10) || 0,
-                    content: State.quillInstance.root.innerHTML,
+                    content: Editor.normalizeForSave(),
                     required_tier_id: document.getElementById('ed-tier').value || null,
                     public_release_at: releaseValue ? new Date(releaseValue).toISOString() : null,
                     is_nsfw: document.getElementById('ed-nsfw').checked,
@@ -1703,18 +2123,29 @@
 
             async saveDraft(options = {}) {
                 if (!State.activeChapterId) return;
+
+                if (options.silent && !State.unsavedChanges) {
+                    return;
+                }
+
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
                 if (index === -1) return;
+
                 const existing = MockDB.chapters[index];
+
                 try {
                     const saved = await DB.saveChapter(State.activeChapterId, {
                         ...this.getEditorData(),
                         is_published: Boolean(existing.is_published)
                     });
+
                     MockDB.chapters[index] = saved;
                     Editor.markSaved();
-                    if (!options.silent) UI.showToast('Changes saved successfully.', 'success');
-                    Dashboard.render();
+
+                    if (!options.silent) {
+                        Dashboard.render();
+                        UI.showToast('Changes saved successfully.', 'success');
+                    }
                 } catch (error) {
                     UI.showToast(error.message || 'Could not save draft.', 'error');
                 }
@@ -1722,20 +2153,38 @@
 
             async publishChapter() {
                 if (!State.activeChapterId) return;
+
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
                 if (index === -1) return;
+
                 const data = this.getEditorData();
-                if (!data.title.trim()) { UI.showToast('Title is required to publish.', 'error'); return; }
-                if (data.is_nsfw && !data.external_url) { UI.showToast('NSFW chapters require an External URL fallback.', 'error'); return; }
+
+                if (!data.title.trim()) {
+                    UI.showToast('Title is required to publish.', 'error');
+                    return;
+                }
+
+                if (data.is_nsfw && !data.external_url) {
+                    UI.showToast('NSFW chapters require an External URL fallback.', 'error');
+                    return;
+                }
+
                 try {
-                    const saved = await DB.saveChapter(State.activeChapterId, { ...data, is_published: true });
+                    const saved = await DB.saveChapter(State.activeChapterId, {
+                        ...data,
+                        is_published: true
+                    });
+
                     MockDB.chapters[index] = saved;
-                    Editor.markSaved();
+
                     document.getElementById('ed-banner').classList.remove('hidden');
                     document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
                     document.getElementById('ed-status-pill').className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
                     document.getElementById('ed-status-pill').innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
+
+                    Editor.markSaved();
                     Dashboard.render();
+
                     UI.showToast('Chapter is now live.', 'success');
                 } catch (error) {
                     UI.showToast(error.message || 'Could not publish chapter.', 'error');
@@ -1744,19 +2193,29 @@
 
             async unpublishChapter() {
                 if (!State.activeChapterId) return;
+
                 const confirmed = confirm('Revert to draft? Readers will lose access immediately.');
                 if (!confirmed) return;
+
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
                 if (index === -1) return;
+
                 try {
-                    const saved = await DB.saveChapter(State.activeChapterId, { ...this.getEditorData(), is_published: false });
+                    const saved = await DB.saveChapter(State.activeChapterId, {
+                        ...this.getEditorData(),
+                        is_published: false
+                    });
+
                     MockDB.chapters[index] = saved;
+
                     document.getElementById('ed-banner').classList.add('hidden');
                     document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
                     document.getElementById('ed-status-pill').className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
                     document.getElementById('ed-status-pill').innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
+
                     Editor.markSaved();
                     Dashboard.render();
+
                     UI.showToast('Chapter reverted to draft.', 'info');
                 } catch (error) {
                     UI.showToast(error.message || 'Could not unpublish chapter.', 'error');
@@ -1764,7 +2223,7 @@
             },
 
             copyAsRichText() {
-                const html = State.quillInstance.root.innerHTML;
+                const html = Editor.normalizeForSave();
                 const plainText = State.quillInstance.getText();
 
                 if (navigator.clipboard?.write && window.ClipboardItem) {
@@ -1789,7 +2248,8 @@
             },
 
             copyAsMarkdown() {
-                const html = State.quillInstance.root.innerHTML;
+                const html = Editor.normalizeForSave();
+
                 const turndownService = new TurndownService({
                     headingStyle: 'atx'
                 });
@@ -1800,6 +2260,11 @@
                         const text = node.innerText.replace(/\n+$/g, '');
                         return `\n[${text}]\n`;
                     }
+                });
+
+                turndownService.addRule('sceneBreak', {
+                    filter: node => node.nodeName === 'HR' && node.classList.contains('scene-break'),
+                    replacement: () => '\n--\n'
                 });
 
                 turndownService.addRule('lineBreak', {
