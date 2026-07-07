@@ -6,6 +6,11 @@ Recent CMS rebuild reader changes:
 
 | File | Function | Purpose |
 |---|---|---|
+| `js/subscription/auth.js` | `isAdmin()` / `persona()` | Normalizes admin role checks and treats `profiles.role = 'admin'` as an explicit admin reader override with full published-chapter access without creating fake entitlements. |
+| `js/subscription/utils.js` | `chapterResolved(ch)` / `accessTag(r)` / `reasonFor(ch, r)` | Shows admin-gated chapters as readable “Admin Access” instead of subscription-locked when the signed-in profile is admin. |
+| `js/subscription/views/home-library.js` | `VIEWS.home()` | Uses resolved reader access for start buttons/counts/tier display so admin accounts do not appear subscription-locked on the home page. |
+| `js/subscription/views/account-access.js` | `VIEWS.vault()` | Displays the admin reader override in the Vault separately from Patreon/member entitlements. |
+| `js/subscription/sheets.js` | `sheetPersona()` | Shows the admin reader override in the account sheet while keeping it distinct from paid/direct entitlements. |
 | `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags. |
 | `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
 | `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |

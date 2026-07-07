@@ -27,6 +27,7 @@ Summary:
 - Follow-up fix restored visible Writer system-message treatment, editor scrolling, and Draft/Live pills in the editor/list.
 - Follow-up compatibility fix converts preexisting `[content]` chapter lines/paragraphs into system-message blocks in Writer and Reader.
 - Follow-up layout fix left-aligned the standalone Writer Quill drafting canvas for new chapters.
+- Follow-up access fix added a subscription-reader admin override so `profiles.role = 'admin'` can read published gated chapters and sees “Admin access” in home/Vault/account UI without fake entitlement rows. The specific account `abstracto.tales@gmail.com` was verified in the linked DB as `role = admin`.
 
 Remaining work:
 - Manual browser QA with a real authenticated admin session and at least one real story.
@@ -37,6 +38,7 @@ Risks / notes:
 
 Verification needed:
 - Open `writer.html` after signing in via `admin.html`; verify story switching, chapter search, draft creation, the new-chapter cursor/text starts at the left writing margin, autosave/save, publish/update-live, unpublish, tier selection, NSFW external URL validation, cover URL save, and reader display of a `[system message]` block.
+- Open the subscription reader as an admin profile with no Patreon/access-key entitlement; verify gated published chapters show Admin Access/read buttons, chapter content loads, Vault shows Admin access, and the account sheet lists Admin reader override separately from entitlements.
 
 ## 2026-07-06 01:53 Asia/Kolkata - Manual QA for standalone Writer workspace
 

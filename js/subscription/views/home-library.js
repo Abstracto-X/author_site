@@ -170,7 +170,7 @@ VIEWS.home = function(){
     resolvedChapterId = lastRead.ch.id;
     continueLabel = `Resume — ${lastRead.ch.title}`;
   } else if (primary.chapters && primary.chapters.length > 0) {
-    const firstReadable = primary.chapters.find(c => c.can_read_backend || c.state === "free" || c.state === "unlocked");
+    const firstReadable = primary.chapters.find(c => isReadable(chapterResolved(c)));
     if (firstReadable) {
       resolvedChapterId = firstReadable.id;
       continueLabel = "Start reading";
@@ -184,15 +184,15 @@ VIEWS.home = function(){
   }
 
   // Resolve chapter counts
-  const unlockedCount = primary.chapters.filter(c => c.access_state_backend === 'free' || c.access_state_backend === 'unlocked').length;
-  const lockedCount = primary.chapters.length - unlockedCount;
+  const unlockedCount = primary.chapters.filter(c => isReadable(chapterResolved(c))).length;
+  const lockedCount = primary.chapters.filter(c => !isReadable(chapterResolved(c)) && c.state !== "unavailable").length;
 
   // Resolve reading progress/status
   const pRead = primary.chapters.filter(c => store.readMarked[c.id] || (store.progress[c.id] && store.progress[c.id].pct >= 100)).length;
   const pPct = primary.chapters.length ? Math.round(pRead / primary.chapters.length * 100) : 0;
 
   // Resolve current tier details
-  const tierName = P.tier || "Guest (No active tier)";
+  const tierName = P.admin ? "Admin reader override" : (P.tier || "Guest (No active tier)");
   let expirationInfo = "Sign in or connect to unlock access";
   if (P.signedIn) {
     if (P.validUntil) {
@@ -201,6 +201,8 @@ VIEWS.home = function(){
       expirationInfo = "Auto-renewed via Patreon";
     } else if (P.hasKey) {
       expirationInfo = "Access via key grant";
+    } else if (P.admin) {
+      expirationInfo = "Full published-reader access";
     } else if (P.level > 0) {
       expirationInfo = "Active member access";
     } else {
@@ -256,7 +258,7 @@ VIEWS.home = function(){
         <div class="between" style="align-items: center; margin-bottom: 8px;">
           <div class="eyebrow" style="margin:0">Current Tier</div>
           <button class="btn sm ghost" data-sheet="connect-patreon" style="padding: 0 10px; height: 26px; font-size: 0.72rem;">
-            ${P.level > 0 ? "Upgrade" : "Get Access"}
+            ${P.admin ? "Admin" : P.level > 0 ? "Upgrade" : "Get Access"}
           </button>
         </div>
         <div class="tier-name">${tierName}</div>

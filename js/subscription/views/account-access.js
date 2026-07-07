@@ -26,15 +26,16 @@ VIEWS.vault = function(){
   const readable=countReadable();
   const early=D.STORIES.reduce((n,s)=>n+s.chapters.filter(c=>c.state==="early").length,0);
   const locked=D.STORIES.reduce((n,s)=>n+s.chapters.filter(c=>!isReadable(chapterResolved(c))&&c.state!=="unavailable").length,0);
-  const state = P.expired?"expired":P.pending?"pending":P.noTier?"none":P.level>0?"active":"none";
-  const stateLabel={active:"Active",expired:"Expired",pending:"Syncing",none:"No access"}[state];
-  const providerConnected = P.provider && !P.expired && !P.pending && !P.noTier;
+  const state = P.admin?"admin":P.expired?"expired":P.pending?"pending":P.noTier?"none":P.level>0?"active":"none";
+  const stateLabel={admin:"Admin access",active:"Active",expired:"Expired",pending:"Syncing",none:"No access"}[state];
+  const providerConnected = P.provider && !P.admin && !P.expired && !P.pending && !P.noTier;
+  const statusIcon = state==="active" || state==="admin" ? I.checkCirc : state==="expired" ? I.lock : state==="pending" ? I.sync : I.lock;
   return `
   <h1 class="page-title">The Vault</h1>
   <p class="page-sub">One place for every kind of access: Patreon memberships, access keys, and direct grants.</p>
   <div class="card tinted" style="margin:14px 0;display:flex;gap:14px;align-items:center">
-    <span class="ax ${state==='active'?'unlocked':state==='expired'?'expired':state==='pending'?'pending':'locked'}" style="font-size:1.6rem"><span class="ic" style="width:30px;height:30px">${state==='active'?I.checkCirc:state==='expired'?I.lock:state==='pending'?I.sync:I.lock}</span></span>
-    <div style="flex:1"><div class="eyebrow">Current access</div><div style="font-family:var(--serif);font-size:1.3rem;font-weight:700">${stateLabel}</div><div class="faint" style="font-size:.8rem">${P.tier?("via "+P.provider+" · "+P.tier):P.signedIn?"Signed in, no active access":"Browsing as guest"}</div></div>
+    <span class="ax ${state==='active'||state==='admin'?'unlocked':state==='expired'?'expired':state==='pending'?'pending':'locked'}" style="font-size:1.6rem"><span class="ic" style="width:30px;height:30px">${statusIcon}</span></span>
+    <div style="flex:1"><div class="eyebrow">Current access</div><div style="font-family:var(--serif);font-size:1.3rem;font-weight:700">${stateLabel}</div><div class="faint" style="font-size:.8rem">${P.admin?"Admin override &middot; Full published-reader access":P.tier?("via "+P.provider+" &middot; "+P.tier):P.signedIn?"Signed in, no active access":"Browsing as guest"}</div></div>
   </div>
 
   <div class="section"><div class="section-head"><h2>What your access unlocks</h2></div>
@@ -43,6 +44,7 @@ VIEWS.vault = function(){
 
   <div class="section"><div class="section-head"><h2>Providers</h2></div>
     <div class="col-flex">
+      ${P.admin?`<div class="card" style="display:flex;gap:13px;align-items:center"><span style="width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent)">${I.shield}</span><div style="flex:1;min-width:0"><div style="font-weight:600">Admin override</div><div class="faint" style="font-size:.76rem">This profile can read every published subscription chapter without a member entitlement.</div></div><span class="badge free">${I.check}Active</span></div>`:""}
       ${patreonEnabled()?providerCard("Patreon","patreon",providerConnected,P.tier||null,P.since):`<div class="empty"><div class="em">${I.vault}</div><h3>No providers enabled</h3><p>Use an access key or contact support if you expected member access.</p></div>`}
     </div>
   </div>

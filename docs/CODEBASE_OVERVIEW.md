@@ -92,7 +92,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 
 1. Browser loads `site-config.js`, Supabase CDN, and the reader modules. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
 2. `aether-app.js` bootstraps the app after all module globals exist.
-3. `auth.js` initializes the Supabase client/session and refreshes profile/entitlements when configured.
+3. `auth.js` initializes the Supabase client/session and refreshes profile/entitlements when configured. If the loaded profile has `role = 'admin'`, the subscription reader exposes an admin reader override for published chapters without creating fake `user_entitlements`.
 4. `backend.js` loads `site_settings.site_identity` and `site_settings.reader_behavior`, then published stories and chapter catalogs from Supabase.
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.

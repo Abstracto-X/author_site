@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-07-07 06:06 Asia/Kolkata - Add subscription reader admin access override
+
+Area: reader | docs
+
+Summary:
+- Added an explicit admin reader override: signed-in profiles with `role = 'admin'` now resolve gated published chapters as readable in the subscription reader without requiring Patreon/access-key entitlements.
+- Hardened admin role detection by normalizing the profile/app metadata role and forcing a backend catalog refresh after auth changes/email sign-in.
+- Updated home, Vault, and account UI to use resolved persona access instead of raw backend `can_read_backend`/chapter state where admin overrides apply.
+- Kept the override frontend/RPC-aligned only; no fake `user_entitlements` rows or schema changes were added.
+
+Files changed:
+- `js/subscription/auth.js`
+- `js/subscription/utils.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/sheets.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+
 ## 2026-07-07 04:55 Asia/Kolkata - Left-align standalone Writer drafting canvas
 
 Area: admin

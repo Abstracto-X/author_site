@@ -28,7 +28,11 @@ function entitlementLevel(){
 function accountLabel(){
   return authState.profile?.display_name || authState.profile?.username || authState.user?.email || store.email || "Guest";
 }
-function isAdmin(){ return authState.profile?.role === "admin"; }
+function isAdmin(){
+  const profileRole = String(authState.profile?.role || "").trim().toLowerCase();
+  const metadataRole = String(authState.user?.app_metadata?.role || authState.user?.user_metadata?.role || "").trim().toLowerCase();
+  return profileRole === "admin" || metadataRole === "admin";
+}
 async function refreshProfile(){
   const client = getSupabase();
   if (!client || !authState.user) { authState.profile = null; return null; }
@@ -44,6 +48,19 @@ async function refreshProfile(){
 }
 function persona(){
   if (!authState.user) return Object.assign({}, PERSONA_ACCESS.anon);
+  if (isAdmin()) {
+    return {
+      level: 999,
+      signedIn: true,
+      admin: true,
+      provider: "Admin",
+      tier: "Admin reader override",
+      tierRank: 999,
+      tierSlug: "admin-reader-override",
+      validUntil: null,
+      since: authState.profile?.created_at || ""
+    };
+  }
   const active = activeEntitlements();
   if (active.length > 0) {
     // Sort active entitlements by tier_rank descending to get the best tier
@@ -189,6 +206,7 @@ async function initAuth(){
       store.email = authState.user?.email || "";
       await refreshProfile();
       await refreshEntitlements();
+      if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
       const pendingAction = authState.user ? store.pendingAuthAction : "";
       if (pendingAction === "connect-patreon") store.pendingAuthAction = "";
       saveStore();
@@ -217,6 +235,7 @@ async function signInWithPassword(email, password){
   store.email = authState.user?.email || email;
   await refreshProfile();
   await refreshEntitlements();
+  if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
   saveStore();
   return authState.user;
 }

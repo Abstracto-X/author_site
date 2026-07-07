@@ -19,6 +19,7 @@ function chapterResolved(ch) {
   const P = persona();
   if (ch.state === "free") return { state:"free", isEarly:false };
   if (ch.state === "unavailable") return { state:"unavailable" };
+  if (P.admin) return { state:"unlocked", isEarly: ch.state==="early", admin:true };
   if (ch.state === "key") return { state: (P.hasKey || store.grantedKey) ? "unlocked" : "key", isEarly:false };
   const isArch = ch.tier === "Archivist Tier";
   const need = isArch ? 2 : 1;
@@ -49,6 +50,7 @@ function gateDisplay(ch){
 }
 function reasonFor(ch, r) {
   if (ch.is_nsfw) return "External-only chapter; opens on the author-provided site.";
+  if (r.admin) return "Unlocked by your admin reader override.";
   if (r.state === "pending") return "Verifying your access with Patreon — usually a moment.";
   if (r.state === "expired") return "Your member access has expired. Renew to continue.";
   if (r.noTier) return "Your provider tier does not include this library.";
@@ -152,6 +154,7 @@ function storyAccentVars(s){ return `--s:${s.accent};--s2:${s.accent2};--s-soft:
 function hexA(hex,a){ const h=hex.replace("#","");const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return `rgba(${r},${g},${b},${a})`; }
 
 function accessTag(r){
+  if (r.admin) return ["unlocked","Admin Access",I.shield || I.checkCirc,"Read now"];
   const map = {
     free:["free","Free",I.open,"Read now"],
     unlocked:["unlocked","Unlocked",I.checkCirc,"Read now"],
