@@ -9,17 +9,18 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Browser clients use the anon key only. Admin writes are protected by RLS policies and `public.is_admin()`.
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
 - Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates `user_entitlements` from active `provider_tier_mappings`.
-- Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; this allows configured title mappings such as `Resident Licker` and `Resident Tyrant` while preserving ID-based mappings when IDs are known.
+- Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
+- Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
 - After durable schema changes, run `NOTIFY pgrst, 'reload schema';`.
 
 ## Configured access/provider tiers
 
-As of 2026-07-03, the linked project has these active Patreon-facing access tiers:
+As of 2026-07-07, the linked project has these active Patreon-facing access tiers. Patreon mappings use actual Patreon tier IDs so OAuth/manual sync survives provider-side tier renames:
 
-| Internal slug | Internal name | Rank | Provider | Provider tier mapping |
-|---|---|---:|---|---|
-| `resident-licker` | Resident Licker | 10 | `patreon` | `Resident Licker` |
-| `resident-tyrant` | Resident Tyrant | 20 | `patreon` | `Resident Tyrant` |
+| Internal slug | Internal name | Rank | Provider | Provider tier ID | Provider tier label |
+|---|---|---:|---|---|---|
+| `resident-licker` | Resident Licker | 10 | `patreon` | `28946758` | `Resident Licker` |
+| `resident-tyrant` | Resident Nemesis | 20 | `patreon` | `28946791` | `Resident Nemesis` |
 
 ## Configured site settings
 

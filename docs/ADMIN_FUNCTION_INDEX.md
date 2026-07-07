@@ -210,8 +210,8 @@ Generated from the current codebase. One-line descriptions are intentionally con
 
 ## 2026-07-06 01:53 Asia/Kolkata - Standalone Writer handoff
 
-- Admin sidebar `Writer / Chapters` now links to `writer.html` instead of relying on the embedded Admin CMS chapter workspace.
-- `Views.chapters` in `admin.html` is retained as a compatibility fallback but immediately redirects to `writer.html`.
+- Admin sidebar `Writer / Chapters` opens the embedded Admin CMS chapter workspace; the standalone `writer.html` remains available from reader/admin cross-links.
+- `Views.chapters` in `admin.html` renders the embedded Writer / Chapters workspace instead of redirecting, so stale `ea-admin-last-view = chapters` localStorage does not bounce `admin.html` into `writer.html`.
 - `writer.html` is now the active Supabase-backed Writer surface; its current Quill/editor logic is inline in that file, while `js/admin-writer.js` remains an alternate/legacy helper unless the page explicitly loads it.
 
 ## 2026-07-07 00:00 Asia/Kolkata - Writer mock removal and Supabase binding

@@ -25,7 +25,7 @@ function parseHash(){
   else if (p[0]==="story"){ r.params.slug=p[1]; r.name = { chapters:"chapters", recap:"recap", extras:"extras", updates:"storyUpdates" }[p[2]] || "story"; }
   else if (p[0]==="read"){ r.params.id=p[1]; r.name="read"; }
   else if (p[0]==="studio"){
-    window.location.href = (p[1] === "write" || p[1] === "chapters") ? "writer.html" : "admin.html";
+    window.location.href = p[1] === "write" ? "writer.html" : (p[1] === "chapters" ? "admin.html?view=chapters" : "admin.html");
     r.name = "home";
   }
   return r;

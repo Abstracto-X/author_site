@@ -354,24 +354,27 @@ Area:
 Files touched:
 - `js/subscription/site-config.js`
 - `supabase/functions/_shared/patreon.ts`
+- `supabase/functions/provider-webhook/index.ts`
 - `docs/DATABASE_CONTEXT.md`
 - `CHANGELOG.md`
 
 Summary:
 - Patreon OAuth/connect was enabled and title-based tier matching was deployed for `Resident Licker` and `Resident Tyrant`.
-- The generic `provider-webhook` function was intentionally not reworked yet because the user asked to check item 6 after the rest was done.
+- Follow-up on 2026-07-07 relinked the live mappings to Patreon tier IDs `28946758` and `28946791`, renamed the internal high tier display to `Resident Nemesis`, and backfilled one missed entitlement.
+- Follow-up on 2026-07-07 updated Patreon OAuth/manual sync and the generic `provider-webhook` to preserve cancellation access only through a provider/stored paid-through timestamp. Renewing patrons remain normal active entitlements; non-renewing currently entitled patrons get bounded `valid_until` access.
 
 Remaining work:
 - Review whether Patreon-native webhook payloads should be parsed directly instead of requiring the current normalized `provider`, `provider_user_id`, `provider_tier_id`, and `status` payload shape.
 - If needed, update `provider-webhook` to verify Patreon signatures and map Patreon webhook events to entitlement grants/revokes.
 
 Risks / notes:
-- OAuth + manual resync should use `patreon-oauth-*` and `sync-provider-entitlements`.
-- Automatic Patreon revokes/pledge changes may still need webhook adaptation if no external normalizer sends the expected generic payload.
+- OAuth + manual resync should use deployed `patreon-oauth-*` and `sync-provider-entitlements`.
+- Automatic Patreon revokes/pledge changes still need native webhook adaptation if no external normalizer sends the expected generic payload, but the generic webhook now honors `valid_until`, `access_expires_at`, `current_period_end`, or `next_charge_date` when present.
+- Existing active Patreon entitlement rows were checked after deploy: 12 active rows, 0 with the new paid-through metadata. Do not fabricate dates for them; they should receive verified period metadata on the next Patreon OAuth/manual sync, or via webhook payload dates.
 
 Verification needed:
-- Perform a real reader OAuth connect with a Patreon account in `Resident Licker` or `Resident Tyrant`.
-- Confirm `/vault` shows the entitlement and gated chapters unlock.
+- Perform a real reader OAuth connect/manual resync with active, canceled-but-paid-through, and fully expired Patreon accounts.
+- Confirm `/vault` shows active access for active/current-period accounts and locks after `valid_until` for fully expired accounts.
 
 ## 2026-06-29 01:06 Asia/Kolkata - Clean up `aether-data.js`
 

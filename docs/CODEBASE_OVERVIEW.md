@@ -134,9 +134,9 @@ Common route groups include:
 
 Admin responsibilities include:
 
-- Launching Writer / Chapters into the standalone `writer.html` workspace instead of keeping chapter writing inside the admin monolith.
+- Keeping an embedded Writer / Chapters workspace inside Admin CMS while also offering the standalone `writer.html` workspace.
 - Story metadata: title, slug, world title, descriptions, publication state, theme/loader values, covers/backgrounds.
-- Chapter content through `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, Quill rich/Markdown editor, autosave to Supabase, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, and system-message blocks saved in chapter HTML.
+- Chapter content through embedded Admin CMS Writer / Chapters and `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, rich/Markdown editor, autosave/drafts, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, and system-message blocks saved in chapter HTML.
 - Rolling Access policies per story, stored in `story_access_policies`, that apply tier windows to newest published chapters and make older non-NSFW chapters free.
 - Reader CRM, provider connection visibility, access key redemption visibility, entitlement audit review, comments, and chapter reaction totals.
 - Character, gallery, lore, maps, wallpapers, timeline, map requests, and author profile content as secondary Story Extras.

@@ -1,5 +1,50 @@
 # Changelog
 
+## 2026-07-07 09:18 Asia/Kolkata - Preserve Patreon paid-through access on cancellation
+
+Area: database | edge-functions | docs
+
+Summary:
+- Updated Patreon OAuth/manual sync to request `next_charge_date`, `pledge_cadence`, and `will_pay_amount_cents` from Patreon member data.
+- Added paid-through entitlement handling: renewing patrons stay active normally, while non-renewing/canceled Patreon memberships that are still currently entitled receive a bounded `valid_until` from Patreon's period dates.
+- Changed provider revoke/expired webhook handling to preserve access only until a verified future paid-through timestamp from the webhook payload or stored entitlement metadata; otherwise it expires immediately.
+- Stored Patreon period metadata on entitlement rows so later revokes can honor the already-verified paid-through period without trusting browser/client input.
+- Deployed `patreon-oauth-callback`, `sync-provider-entitlements`, and `provider-webhook` to the linked Supabase project.
+
+Files changed:
+- `supabase/functions/_shared/patreon.ts`
+- `supabase/functions/provider-webhook/index.ts`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+
+## 2026-07-07 08:42 Asia/Kolkata - Relink Patreon tier mappings
+
+Area: database | docs
+
+Summary:
+- Updated live Supabase Patreon provider mappings from title-based matching to actual Patreon tier IDs: `Resident Licker` -> `28946758`, and internal `resident-tyrant` -> current Patreon `Resident Nemesis` tier `28946791`.
+- Renamed the internal `resident-tyrant` display name to `Resident Nemesis` while keeping the slug stable for compatibility with existing chapter/access references.
+- Backfilled one connected Patreon account whose stored Patreon tier metadata matched `28946791` but lacked an active entitlement after the old title mapping missed the renamed tier.
+- Verified all 12 connected Patreon tier matches now have active entitlement rows.
+
+Files changed:
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+
+## 2026-07-07 06:25 Asia/Kolkata - Restore embedded Admin Writer navigation
+
+Area: admin | docs
+
+Summary:
+- Restored the Admin CMS `Writer / Chapters` sidebar item to render the embedded `Views.chapters` workspace instead of linking directly to `writer.html`.
+- Removed the immediate `Views.chapters` redirect to `writer.html`, fixing `admin.html` auto-redirects caused by stale `ea-admin-last-view = chapters` localStorage.
+- Kept the standalone `writer.html` workspace available; this change only restores access to the still-useful embedded Admin Writer.
+
+Files changed:
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+
 ## 2026-07-07 06:06 Asia/Kolkata - Add subscription reader admin access override
 
 Area: reader | docs

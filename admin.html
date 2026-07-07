@@ -1105,7 +1105,7 @@
                         <div class="nav-section-title">Cockpit</div>
                         <div class="nav-item active" data-view="dashboard"><i class="fas fa-home"></i> Dashboard</div>
                         <div class="nav-item" data-view="stories"><i class="fas fa-book"></i> Stories</div>
-                        <a class="nav-item" href="writer.html" style="text-decoration:none"><i class="fas fa-pen-nib"></i> Writer / Chapters</a>
+                        <div class="nav-item" data-view="chapters"><i class="fas fa-pen-nib"></i> Writer / Chapters</div>
                         <div class="nav-item" data-view="rollingAccess"><i class="fas fa-layer-group"></i> Rolling Access</div>
                     </div>
 
@@ -1175,10 +1175,13 @@
         // ==============================================
         // STATE
         // ==============================================
+        const ADMIN_VIEW_NAMES = new Set(['dashboard', 'stories', 'chapters', 'rollingAccess', 'readers', 'community', 'storyExtras', 'characters', 'gallery', 'wallpapers', 'lore', 'timeline', 'maps', 'mapRequests', 'access', 'settings', 'profile']);
+        const requestedAdminView = new URLSearchParams(window.location.search).get('view');
+
         const _State = {
             user: null,
             profile: null,
-            currentView: localStorage.getItem('ea-admin-last-view') || 'dashboard',
+            currentView: ADMIN_VIEW_NAMES.has(requestedAdminView) ? requestedAdminView : (localStorage.getItem('ea-admin-last-view') || 'dashboard'),
             stories: [],
             characters: [],
             selectedStoryId: localStorage.getItem('ea-admin-last-story-id') || null,
@@ -5186,8 +5189,6 @@
 
 
         Views.chapters = async (container) => {
-            window.location.href = 'writer.html';
-            return;
             const stories = await DB.getStories();
             State.stories = stories;
             if (stories.length === 0) {
