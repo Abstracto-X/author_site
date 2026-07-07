@@ -50,12 +50,12 @@ function textToBlocks(value){
   const raw = String(value || "").trim();
   if (!raw) return [];
   const withoutImports = raw.replace(/<!--([\s\S]*?)-->/g, "");
-  if (/<\/?(p|div|br|h[1-6]|li|blockquote)\b/i.test(withoutImports)) {
+  if (/<\/?(p|div|br|h[1-6]|li|blockquote|a|img)\b/i.test(withoutImports)) {
     const container = document.createElement("div");
     container.innerHTML = withoutImports;
     container.querySelectorAll("script,style,iframe,object,embed,link,meta").forEach(node => node.remove());
     container.querySelectorAll("*").forEach(node => {
-      if (!["P","DIV","BR","STRONG","B","EM","I","BLOCKQUOTE","H2","H3","H4","HR","UL","OL","LI"].includes(node.tagName)) {
+      if (!["P","DIV","BR","STRONG","B","EM","I","BLOCKQUOTE","H2","H3","H4","HR","UL","OL","LI","A","IMG","SPAN","U","S","SUB","SUP","PRE","CODE"].includes(node.tagName)) {
         const frag = document.createDocumentFragment();
         while (node.firstChild) frag.appendChild(node.firstChild);
         node.replaceWith(frag);
@@ -63,7 +63,12 @@ function textToBlocks(value){
       }
       const isSystemMessage = node.tagName === "DIV" && node.classList.contains("sys-msg-box");
       const bracketSystem = ["P","DIV"].includes(node.tagName) && /^\[[\s\S]+\]$/.test((node.textContent || "").trim());
-      [...node.attributes].forEach(attr => node.removeAttribute(attr.name));
+      [...node.attributes].forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (node.tagName === "A" && ["href", "target", "rel"].includes(name)) return;
+        if (node.tagName === "IMG" && name === "src") return;
+        node.removeAttribute(attr.name);
+      });
       if (isSystemMessage || bracketSystem) node.dataset.systemMessage = "true";
     });
     const nodes = Array.from(container.children);
@@ -77,7 +82,8 @@ function textToBlocks(value){
       }
       if (["H2","H3","H4"].includes(node.tagName)) return { t:"html", tag:node.tagName.toLowerCase(), v:node.innerHTML };
       if (node.tagName === "BLOCKQUOTE") return { t:"html", tag:"blockquote", v:node.innerHTML };
-      return { t:"p", v:node.innerHTML || esc(node.textContent || "") };
+      if (["P","DIV"].includes(node.tagName)) return { t:"p", v:node.innerHTML || esc(node.textContent || "") };
+      return { t:"p", v:node.outerHTML };
     }).filter(b => b.t === "scene" || String(b.v || "").trim());
     if (blocks.length) return blocks;
     const text = (container.textContent || "").trim();
@@ -118,6 +124,7 @@ function normalizeBackendChapter(row, story){
     content: null,
     is_nsfw: !!row.is_nsfw,
     external_url: row.external_url || "",
+    views: Number(row.views || 0),
     can_read_backend: !!row.can_read,
     access_state_backend: row.access_state || state,
     created_at: row.created_at,
@@ -492,6 +499,7 @@ async function loadReaderChapterFromBackend(chapterId){
     if (!row || !row.can_read) throw new Error("This chapter is still locked for this account.");
     found.ch.is_nsfw = !!row.is_nsfw;
     found.ch.external_url = row.external_url || found.ch.external_url || "";
+    found.ch.views = Number(row.views || found.ch.views || 0);
     if (found.ch.is_nsfw) {
       found.ch.content = [];
       found.ch.state = row.access_state === "free" ? "free" : "unlocked";
@@ -509,5 +517,15 @@ async function loadReaderChapterFromBackend(chapterId){
     return false;
   } finally {
     found.ch.contentLoading = false;
+  }
+}
+
+async function incrementChapterViews(chapterId) {
+  const client = getSupabase();
+  if (!client) return;
+  try {
+    await client.rpc("increment_chapter_views", { target_chapter_id: chapterId });
+  } catch (err) {
+    console.warn("Failed to increment chapter views:", err);
   }
 }

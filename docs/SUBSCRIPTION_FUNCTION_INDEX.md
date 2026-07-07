@@ -195,6 +195,7 @@ Recent reader notification/profile changes:
 | 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
 | 119 | `loadBackendLibrary(options = {})` | Loads fresh data/state from Supabase or local runtime state. |
 | 168 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
+| 520 | `incrementChapterViews(chapterId)` | Increments the views count of a chapter in the database using a SECURITY DEFINER RPC. |
 
 ## `js/subscription/utils.js`
 

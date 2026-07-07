@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-07-07 22:20 Asia/Kolkata - Fix links and inline images rendering in subscription reader
+
+Area: reader
+
+Summary:
+- Updated the `textToBlocks` parser in `js/subscription/backend.js` to whitelist anchor (`A`) and image (`IMG`) tags.
+- Preserved necessary attributes for links (`href`, `target`, `rel`) and images (`src`) during element sanitation.
+- Updated direct children mapping to return `outerHTML` for non-container tags (preserving full link/image attributes) when they are not nested inside paragraphs.
+
+Files changed:
+- `js/subscription/backend.js`
+
+## 2026-07-07 22:15 Asia/Kolkata - Enable standalone Writer inline image upload and URL insertion
+
+Area: admin
+
+Summary:
+- Added image upload capability to `writer.html` with support for PNG, JPG, WebP, and GIF up to 4 MB.
+- Configured uploads to save to the public `chapter-images` Supabase Storage bucket.
+- Implemented a base64 Data URL fallback for local development or cases where Supabase Storage is unconfigured or blocked.
+- Updated the Quill toolbar configuration to route the default image tool button through the upload/URL modal flow instead of default inline insertion.
+- Updated the media library modal UI to support pasting an image URL or selecting a local file.
+
+Files changed:
+- `writer.html`
+
 ## 2026-07-07 22:00 Asia/Kolkata - Fix standalone Writer autosave editor rewrite and paste formatting
 
 Area: admin

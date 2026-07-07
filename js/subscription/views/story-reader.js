@@ -327,6 +327,11 @@ VIEWS.read = function(){
       </div>
     `);
   }
+  if (window.lastIncrementedChapterId !== ch.id) {
+    window.lastIncrementedChapterId = ch.id;
+    ch.views = (ch.views || 0) + 1;
+    incrementChapterViews(ch.id);
+  }
   return readerFull(ch, story, index, r);
 };
 function readerShell(themeClass, inner, settings){
@@ -403,9 +408,10 @@ function readerFull(ch, story, index, r){
   const blocks = ch.content || ch.preview || (ch.excerpt ? [{t:"p",v:ch.excerpt}] : [{t:"p",v:"The full text of this chapter will appear here once it is published."}]);
   const next = story.chapters[index+1];
   const nr = next?chapterResolved(next):null;
+  const statsSpan = isAdmin() ? ` &middot; <span class="admin-stats" style="color:var(--accent); font-weight:bold;"><i class="fa-solid fa-eye"></i> ${ch.views || 0} views</span>` : '';
   return readerShell(themeClass, `
     <h1 class="ch-title">${ch.title}</h1>
-    <div class="ch-by">${story.title} &middot; ${ch.wordCount || (ch.readTime * 220)} words &middot; ${r.isEarly?'Early access until '+fmtDate(ch.publicDate):'Unlocked'}</div>
+    <div class="ch-by">${story.title} &middot; ${ch.wordCount || (ch.readTime * 220)} words &middot; ${r.isEarly?'Early access until '+fmtDate(ch.publicDate):'Unlocked'}${statsSpan}</div>
     ${ch.arc?`<div class="faint" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:24px">${ch.arc}</div>`:""}
     
     ${readerNavButtons(ch, story, index)}

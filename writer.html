@@ -583,13 +583,39 @@
                 </button>
             </div>
 
-            <div class="p-4 border-b border-zinc-800 flex justify-between items-center">
+            <div class="p-4 border-b border-zinc-800 flex justify-between items-center gap-3">
                 <input
                     type="text"
-                    placeholder="Search images..."
-                    class="bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-sm w-64 focus:border-primary-500 outline-none text-zinc-200"
+                    id="media-url-input"
+                    placeholder="Paste image URL..."
+                    class="bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-sm flex-1 focus:border-primary-500 outline-none text-zinc-200"
                 >
-                <button class="bg-primary-600 hover:bg-primary-500 text-white px-4 py-1.5 rounded text-sm font-medium transition flex items-center gap-2">
+
+                <input
+                    type="file"
+                    id="media-file-input"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    class="hidden"
+                >
+
+                <button
+                    type="button"
+                    onclick="Editor.insertImageFromUrlInput()"
+                    class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-1.5 rounded text-sm font-medium transition flex items-center gap-2 border border-zinc-700"
+                    title="Insert image from URL"
+                    aria-label="Insert image from URL"
+                >
+                    <i class="fa-solid fa-link"></i>
+                    Insert URL
+                </button>
+
+                <button
+                    type="button"
+                    onclick="Editor.pickInlineImage()"
+                    class="bg-primary-600 hover:bg-primary-500 text-white px-4 py-1.5 rounded text-sm font-medium transition flex items-center gap-2"
+                    title="Upload inline image"
+                    aria-label="Upload inline image"
+                >
                     <i class="fa-solid fa-cloud-arrow-up"></i>
                     Upload
                 </button>
@@ -1595,6 +1621,74 @@
             quill.setSelection(range.index + 1, 0, 'silent');
         }
 
+        const IMAGE_UPLOAD_CONFIG = {
+            bucket: 'chapter-images',
+            maxBytes: 4 * 1024 * 1024,
+            allowedTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+        };
+
+        function isAllowedInlineImage(file) {
+            return Boolean(
+                file &&
+                IMAGE_UPLOAD_CONFIG.allowedTypes.includes(file.type) &&
+                file.size <= IMAGE_UPLOAD_CONFIG.maxBytes
+            );
+        }
+
+        function fileToDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Could not read image file.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function makeStorageSafeFilename(file) {
+            const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+            const safeBase = file.name
+                .replace(/\.[^.]+$/, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .slice(0, 60) || 'image';
+
+            const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+            return `${safeBase}-${id}.${extension}`;
+        }
+
+        async function uploadImageToSupabaseStorage(file) {
+            if (!supabaseClient) return null;
+
+            const storyId = State.activeStoryId || 'unassigned-story';
+            const chapterId = State.activeChapterId || 'draft';
+            const filename = makeStorageSafeFilename(file);
+            const path = `${storyId}/${chapterId}/${filename}`;
+
+            const { error } = await supabaseClient
+                .storage
+                .from(IMAGE_UPLOAD_CONFIG.bucket)
+                .upload(path, file, {
+                    cacheControl: '31536000',
+                    upsert: false,
+                    contentType: file.type
+                });
+
+            if (error) {
+                console.warn('Supabase image upload failed. Falling back to inline data URL.', error);
+                return null;
+            }
+
+            const { data } = supabaseClient
+                .storage
+                .from(IMAGE_UPLOAD_CONFIG.bucket)
+                .getPublicUrl(path);
+
+            return data?.publicUrl || null;
+        }
+
         // ==========================================
         // EDITOR LOGIC
         // ==========================================
@@ -1654,14 +1748,21 @@
                             }
                         },
 
-                        toolbar: [
-                            [{ header: [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            ['blockquote', 'code-block'],
-                            [{ list: 'ordered' }, { list: 'bullet' }],
-                            ['link', 'image'],
-                            ['clean']
-                        ]
+                        toolbar: {
+                            container: [
+                                [{ header: [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                ['blockquote', 'code-block'],
+                                [{ list: 'ordered' }, { list: 'bullet' }],
+                                ['link', 'image'],
+                                ['clean']
+                            ],
+                            handlers: {
+                                image: function() {
+                                    Editor.pickInlineImage();
+                                }
+                            }
+                        }
                     }
                 });
 
@@ -1907,28 +2008,126 @@
             openMediaLibrary() {
                 const grid = document.getElementById('media-grid');
 
-                grid.innerHTML = `
-                    <div class="col-span-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 text-center text-zinc-400">
-                        <i class="fa-regular fa-image text-3xl text-zinc-600 mb-3"></i>
-                        <p class="text-zinc-200 font-medium">No mock media is bundled here.</p>
-                        <p class="text-xs mt-2 leading-relaxed">Use Quill's image button to paste a real image URL, or add chapter media through Admin CMS storage fields.</p>
-                    </div>
-                `;
+                if (grid) {
+                    grid.innerHTML = `
+                        <div class="col-span-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 text-center text-zinc-400">
+                            <i class="fa-regular fa-image text-3xl text-zinc-600 mb-3"></i>
+                            <p class="text-zinc-200 font-medium">Upload an inline image or insert one from URL.</p>
+                            <p class="text-xs mt-2 leading-relaxed">
+                                Supported: PNG, JPG, WebP, GIF. Max size: ${Math.round(IMAGE_UPLOAD_CONFIG.maxBytes / 1024 / 1024)} MB.
+                            </p>
+                        </div>
+                    `;
+                }
 
                 UI.openModal('modal-media');
             },
 
-            insertImage(url) {
+            pickInlineImage() {
+                let input = document.getElementById('media-file-input');
+
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'file';
+                    input.id = 'media-file-input';
+                    input.accept = IMAGE_UPLOAD_CONFIG.allowedTypes.join(',');
+                    input.className = 'hidden';
+                    document.body.appendChild(input);
+                }
+
+                input.value = '';
+
+                input.onchange = async event => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+
+                    await this.insertInlineImageFile(file);
+                };
+
+                input.click();
+            },
+
+            async insertInlineImageFile(file) {
+                if (!isAllowedInlineImage(file)) {
+                    UI.showToast(
+                        `Use PNG, JPG, WebP, or GIF under ${Math.round(IMAGE_UPLOAD_CONFIG.maxBytes / 1024 / 1024)} MB.`,
+                        'error'
+                    );
+                    return;
+                }
+
                 const quill = State.quillInstance;
-                if (!quill || !url) return;
+                if (!quill) return;
 
                 const range = quill.getSelection(true);
+                const insertAt = range ? range.index : quill.getLength();
 
-                quill.insertEmbed(range.index, 'image', url, 'user');
-                quill.setSelection(range.index + 1, 0, 'silent');
+                UI.showToast('Uploading image...', 'info');
+
+                try {
+                    let imageUrl = await uploadImageToSupabaseStorage(file);
+
+                    /*
+                     * Fallback:
+                     * If Supabase Storage is not configured, the bucket does not exist,
+                     * or permissions block upload, embed a data URL so inline image still works.
+                     */
+                    if (!imageUrl) {
+                        imageUrl = await fileToDataUrl(file);
+                    }
+
+                    quill.insertEmbed(insertAt, 'image', imageUrl, 'user');
+                    quill.insertText(insertAt + 1, '\n', 'silent');
+                    quill.setSelection(insertAt + 2, 0, 'silent');
+
+                    UI.closeModal('modal-media');
+                    this.markUnsaved();
+
+                    UI.showToast('Image inserted.', 'success');
+                } catch (error) {
+                    console.error(error);
+                    UI.showToast(error.message || 'Image upload failed.', 'error');
+                }
+            },
+
+            insertImageFromUrlInput() {
+                const input = document.getElementById('media-url-input');
+                const url = input?.value?.trim();
+
+                if (!url) {
+                    UI.showToast('Paste an image URL first.', 'error');
+                    return;
+                }
+
+                this.insertImage(url);
+
+                if (input) input.value = '';
+            },
+
+            insertImage(url) {
+                const quill = State.quillInstance;
+
+                if (!quill || !url) {
+                    UI.showToast('No image URL provided.', 'error');
+                    return;
+                }
+
+                if (!/^https?:\/\//i.test(url) && !/^data:image\//i.test(url)) {
+                    UI.showToast('Use a valid image URL.', 'error');
+                    return;
+                }
+
+                const range = quill.getSelection(true);
+                const insertAt = range ? range.index : quill.getLength();
+
+                quill.insertEmbed(insertAt, 'image', url, 'user');
+                quill.insertText(insertAt + 1, '\n', 'silent');
+                quill.setSelection(insertAt + 2, 0, 'silent');
 
                 UI.closeModal('modal-media');
                 this.markUnsaved();
+
+                UI.showToast('Image inserted.', 'success');
             },
 
             getPlainText() {

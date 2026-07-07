@@ -2,6 +2,41 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-07 22:15 Asia/Kolkata - Manual QA for inline image upload, URL insertion, and reader rendering
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+- reader
+
+Files touched:
+- `writer.html`
+- `js/subscription/backend.js`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Standalone Writer now supports uploading inline images or pasting external image URLs from the media library modal.
+- Uploaded files are sent to the `chapter-images` Supabase Storage bucket under `${storyId}/${chapterId}/${filename}`.
+- If Supabase client/storage is unconfigured or fails, the tool falls back to embedding a base64 Data URL.
+- Custom Quill image handler intercepts default image tool interactions and routes them through this picker.
+- Fixed the reader backend parser `textToBlocks` in `js/subscription/backend.js` to whitelist `A` and `IMG` tags, preserve their attributes (`href`, `target`, `rel`, `src`), and render them correctly.
+
+Remaining work:
+- None.
+
+Risks / notes:
+- Confirming that Supabase Storage returns a public URL that loads correctly in browsers.
+
+Verification needed:
+- Open `writer.html` in an active browser session.
+- Click the image button on the toolbar or run `/image` to open the media library modal.
+- Test pasting an external image URL (e.g. `https://picsum.photos/200`) and clicking "Insert URL".
+- Test choosing a local image file and clicking "Upload". Verify the image is embedded in the editor.
+- Save the draft and verify the content contains the correct image source (either a Supabase public URL or base64 Data URL).
+- Open the subscription reader view for the chapter containing images and links, and verify that they render properly without being stripped.
+
 ## 2026-07-07 19:45 Asia/Kolkata - Manual QA for editor cleanup and scene-break shortcuts
 
 Status: DONE
