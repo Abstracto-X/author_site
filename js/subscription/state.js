@@ -34,7 +34,8 @@ const defaultStore = () => ({
     preset:"none", showImages:true, showParaComments:true, showProgress:true,
     showReactions:true, spoilerSafe:false, focusMode:false,
     browserNotifications:false, emailNotifications:true, chapterNotifications:true,
-    appBackground:true
+    appBackground:true,
+    bgMode:"story", bgBlur:true, bgImageUrl:"default", readerWidth:46, readerBg:false
   },
   notificationPrefs: null,
   dismissedNotifs: [],

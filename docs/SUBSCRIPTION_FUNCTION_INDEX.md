@@ -225,6 +225,8 @@ Recent reader notification/profile changes:
 | 187 | `fmtDate(iso)` | Helper used by this module. |
 | 188 | `daysUntil(iso)` | Helper used by this module. |
 | 189 | `setStoryAccent(s)` | Handles story data or story-facing UI behavior. |
+| 197 | `getActiveStory()` | Returns the active story based on the current route. |
+| 205 | `applyBgSettings()` | Applies the background mode (artwork, ambient, solid), blur settings, reader width, and reader background. |
 | 190 | `meta(items)` | Helper used by this module. |
 | 191 | `countReadable()` | Helper used by this module. |
 | 192 | `activeReads()` | Helper used by this module. |
@@ -310,7 +312,8 @@ Recent reader notification/profile changes:
 |---:|---|---|
 | 6 | `openSheet(builder, opts)` | Opens the related modal, sheet, route, or external flow. |
 | 17 | `closeSheet(silent)` | Closes the related modal, sheet, or transient UI. |
-| 26 | `sheetSettings()` | Builds or controls bottom-sheet/modal content. |
+| 26 | `wallpaperSwatches(story)` | Builds thumbnail swatches for selecting wallpapers. |
+| 38 | `sheetSettings()` | Builds or controls bottom-sheet/modal content. |
 | 43 | `toggleRow(key,title,sub,on)` | Helper used by this module. |
 | 45 | `sheetPersona()` | Builds or controls bottom-sheet/modal content. |
 | 56 | `sheetSignup()` | Coordinates authentication/session behavior. |
@@ -386,3 +389,9 @@ Recent reader notification/profile changes:
 
 - `js/subscription/backend.js` preserves saved Writer `div.sys-msg-box` blocks as `system` chapter blocks instead of flattening them into normal paragraphs.
 - `js/subscription/views/story-reader.js` renders `system` blocks as `.reader-system-message`; `styles.css` carries the same SVG system screen border concept from Writer into the reader.
+
+## 2026-07-08 01:08 Asia/Kolkata - Linked system caption dialog styling
+
+- Standalone `writer.html` now marks Quill `sys-msg-box` blocks that contain hyperlinks with a caption variant so linked system dialogs render red in the editor while normal system dialogs remain blue.
+- `js/subscription/backend.js` now tags parsed saved system-message blocks that contain links as `variant: "caption"`.
+- `js/subscription/views/story-reader.js` renders linked system messages with `reader-system-caption`, and `styles.css` gives those linked/caption system dialogs a red treatment in the subscription reader.

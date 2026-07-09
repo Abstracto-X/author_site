@@ -35,6 +35,7 @@ function normalizeBackendStory(row, index){
     cast: [],
     glossary: [],
     chapters: [],
+    wallpapers: [],
     backend: true
   };
 }
@@ -78,7 +79,8 @@ function textToBlocks(value){
       if (node.dataset.systemMessage === "true") {
         const text = (node.textContent || "").trim();
         const bracket = text.match(/^\[([\s\S]+)\]$/);
-        return { t:"system", v: bracket ? esc(bracket[1].trim()).replace(/\n/g, "<br>") : (node.innerHTML || esc(text)) };
+        const html = bracket ? esc(bracket[1].trim()).replace(/\n/g, "<br>") : (node.innerHTML || esc(text));
+        return { t:"system", v: html, variant: node.querySelector("a[href]") ? "caption" : "" };
       }
       if (["H2","H3","H4"].includes(node.tagName)) return { t:"html", tag:node.tagName.toLowerCase(), v:node.innerHTML };
       if (node.tagName === "BLOCKQUOTE") return { t:"html", tag:"blockquote", v:node.innerHTML };
@@ -319,6 +321,18 @@ async function loadBackendLibrary(options = {}){
       console.warn("Could not load lore entries:", e);
     }
 
+    // Load wallpapers
+    let wallpaperRows = [];
+    try {
+      const { data, error } = await client
+        .from("story_wallpapers")
+        .select("id, story_id, image_url, label")
+        .order("sort_order", { ascending: true });
+      if (!error) wallpaperRows = data || [];
+    } catch (e) {
+      console.warn("Could not load wallpapers:", e);
+    }
+
     const stories = (storyRows || []).map(normalizeBackendStory);
     for (const story of stories) {
       const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
@@ -332,6 +346,10 @@ async function loadBackendLibrary(options = {}){
       story.glossary = loreRows
         .filter(l => l.story_id === story.id)
         .map(l => ({ id: l.id, t: l.title, d: l.description || "", slug: l.slug || "" }));
+
+      story.wallpapers = wallpaperRows
+        .filter(w => w.story_id === story.id)
+        .map(w => ({ id: w.id, image_url: w.image_url, name: w.label || "" }));
     }
     if (stories.length) {
       D.STORIES = stories;

@@ -505,6 +505,31 @@
             text-shadow: 0 0 10px rgba(56, 189, 248, 0.65);
         }
 
+        .ql-editor .sys-msg-box.sys-msg-caption,
+        .ql-editor .sys-msg-box:has(a[href]) {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(69, 10, 10, 0.76));
+            box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.34), 0 0 38px rgba(239, 68, 68, 0.24), inset 0 0 26px rgba(248, 113, 113, 0.1);
+            border-image-source: none;
+            border-color: rgba(248, 113, 113, 0.68);
+            border-radius: 18px;
+            color: #fecaca;
+            text-shadow: 0 0 10px rgba(248, 113, 113, 0.42);
+            filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.18));
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-caption::before,
+        .ql-editor .sys-msg-box:has(a[href])::before {
+            content: "CAPTION";
+            color: #f87171;
+            text-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-caption a,
+        .ql-editor .sys-msg-box:has(a[href]) a {
+            color: #fecdd3;
+            text-decoration-color: rgba(248, 113, 113, 0.85);
+        }
+
         .ql-editor .sys-msg-box br {
             display: block;
             content: "";
@@ -1082,6 +1107,10 @@
                 const text = (node.textContent || '').replace(/\u00a0/g, ' ').trim();
                 const isSystem = node.classList.contains('sys-msg-box');
 
+                if (isSystem) {
+                    node.classList.toggle('sys-msg-caption', Boolean(node.querySelector('a[href]')));
+                }
+
                 if (!isSystem && text === '--') {
                     node.replaceWith(document.createElement('hr'));
                     return;
@@ -1621,6 +1650,14 @@
             quill.setSelection(range.index + 1, 0, 'silent');
         }
 
+        function updateSystemMessageVariants(root = State.quillInstance?.root) {
+            if (!root) return;
+
+            root.querySelectorAll('.sys-msg-box').forEach(box => {
+                box.classList.toggle('sys-msg-caption', Boolean(box.querySelector('a[href]')));
+            });
+        }
+
         const IMAGE_UPLOAD_CONFIG = {
             bucket: 'chapter-images',
             maxBytes: 4 * 1024 * 1024,
@@ -1767,6 +1804,7 @@
                 });
 
                 State.quillInstance.on('text-change', (delta, oldDelta, source) => {
+                    updateSystemMessageVariants();
                     this.updateMeta();
 
                     if (State.isHydratingEditor || State.commandRunning) {
@@ -1965,6 +2003,7 @@
                 try {
                     quill.setText('', 'silent');
                     quill.clipboard.dangerouslyPasteHTML(0, cleaned, 'silent');
+                    updateSystemMessageVariants();
                 } finally {
                     State.isHydratingEditor = false;
                 }
@@ -2278,6 +2317,7 @@
                         legacyBracketSystemToHtml(chapter.content || ''),
                         'silent'
                     );
+                    updateSystemMessageVariants();
 
                     const banner = document.getElementById('ed-banner');
                     const btn = document.getElementById('btn-publish');

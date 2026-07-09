@@ -9,10 +9,10 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Browser clients use the anon key only. Admin writes are protected by RLS policies and `public.is_admin()`.
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
 - Reader notification flows use `reader_notifications`, `reader_notification_preferences`, and `reader_email_queue`. Publishing a chapter fans out in-app notifications and queued email rows to readers whose active entitlement/admin role covers the chapter's required tier.
-- Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates `user_entitlements` from active `provider_tier_mappings`.
+- Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates or refreshes `user_entitlements` from active `provider_tier_mappings`.
 - Reader email notification delivery uses `supabase/functions/send-reader-email-queue`, which processes queued `reader_email_queue` rows through Resend when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured.
 - Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
-- Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
+- Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider grants are idempotent: the highest matched internal tier is kept as the single active provider entitlement for a reader/provider, existing rows are refreshed instead of duplicated, and a partial unique index prevents concurrent duplicate active provider rows. Patreon free/zero-dollar tiers are treated as connected accounts without paid access and are not written as noisy `*_no_matching_tier` audit failures. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
 - After durable schema changes, run `NOTIFY pgrst, 'reload schema';`.
 
 ## Configured access/provider tiers
@@ -501,6 +501,8 @@ Policies: `story_access_policies_admin_all` permits admin write/manage access th
 | `metadata` | jsonb | NO | '{}'::jsonb |
 | `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+Provider-backed active rows are constrained by `user_entitlements_one_active_provider_per_user_idx`, a partial unique index on `(user_id, provider)` where `provider IS NOT NULL AND status = 'active'`. Historical expired/revoked rows are retained for audit context.
 
 ### `public.writer_node_links`
 

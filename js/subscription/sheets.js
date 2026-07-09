@@ -23,14 +23,56 @@ function closeSheet(silent){
 }
 
 /* ============ SHEETS (builders) ============ */
+function wallpaperSwatches(story) {
+  if (!story) return "";
+  const wallpapers = story.wallpapers || [];
+  const activeWp = store.settings.bgImageUrl || "default";
+  const defaultCoverUrl = story.cover_image_url || "";
+  
+  let html = `<div class="wp-swatches" style="display:flex;gap:12px;margin-top:10px;overflow-x:auto;padding-bottom:6px">`;
+  
+  // 1. Default Cover
+  html += `
+    <button class="wp-swatch ${activeWp === 'default' ? 'active' : ''}" data-set-bg-url="default" aria-label="Story Cover" style="position:relative;flex:0 0 auto;width:72px;text-align:center;">
+      <div class="wp-thumb" style="width:72px;height:96px;border-radius:8px;background-image:url('${defaultCoverUrl}');background-size:cover;background-position:center;border:2px solid ${activeWp === 'default' ? 'var(--accent)' : 'var(--border)'}"></div>
+      <span class="nm" style="font-size:0.72rem;display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${activeWp === 'default' ? 'var(--accent)' : 'var(--text-dim)'}">Cover</span>
+    </button>
+  `;
+  
+  // 2. Wallpapers
+  wallpapers.forEach((wp, idx) => {
+    html += `
+      <button class="wp-swatch ${activeWp === wp.image_url ? 'active' : ''}" data-set-bg-url="${wp.image_url}" aria-label="${wp.name || 'Wallpaper ' + (idx + 1)}" style="position:relative;flex:0 0 auto;width:72px;text-align:center;">
+        <div class="wp-thumb" style="width:72px;height:96px;border-radius:8px;background-image:url('${wp.image_url}');background-size:cover;background-position:center;border:2px solid ${activeWp === wp.image_url ? 'var(--accent)' : 'var(--border)'}"></div>
+        <span class="nm" style="font-size:0.72rem;display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${activeWp === wp.image_url ? 'var(--accent)' : 'var(--text-dim)'}">${wp.name || 'Wallpaper ' + (idx + 1)}</span>
+      </button>
+    `;
+  });
+  
+  html += `</div>`;
+  return html;
+}
+
 function sheetSettings(){
   const st=store.settings;
   const prefs = store.notificationPrefs || {};
   const browserState = ("Notification" in window) ? Notification.permission : "unsupported";
+  const story = getActiveStory();
+
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Settings</h2><p class="sheet-sub">Theme &amp; reading comfort. Saved to this device.</p>
   <div class="set-group"><label>Site theme</label>${themeSwatches()}</div>
   <div class="set-group"><label>Reader lighting</label><div class="seg">${["aether","twilight","parchment"].map(t=>`<button class="${st.readerTheme===t?'active':''}" data-set-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div></div>
   <div class="set-group"><label>Reading preset</label><div class="seg">${[["none","Default"],["focus","Focus"],["bedtime","Bedtime"],["dyslexia","Dyslexia"],["compact","Compact"]].map(([k,l])=>`<button class="${st.preset===k?'active':''}" data-set-preset="${k}">${l}</button>`).join("")}</div></div>
+  
+  <div class="set-group"><label>Background mode</label>
+    <div class="seg">${[["story","Artwork"],["gradient","Ambient"],["solid","Solid"]].map(([k,l])=>`<button class="${st.bgMode===k?'active':''}" data-set-bg-mode="${k}">${l}</button>`).join("")}</div>
+    ${st.bgMode === "story" && story ? wallpaperSwatches(story) : ""}
+  </div>
+
+  <div class="set-group"><label>Reader width</label>
+    <div class="seg">${[[38,"Compact"],[46,"Medium"],[54,"Wide"],[62,"X-Wide"]].map(([k,l])=>`<button class="${st.readerWidth===k?'active':''}" data-set-width="${k}">${l}</button>`).join("")}</div>
+  </div>
+
   <div class="set-group"><label>Font size <span class="faint" style="float:right">${Math.round(st.fontScale*100)}%</span></label><input type="range" class="range" min="0.8" max="1.4" step="0.05" value="${st.fontScale}" data-set-range="fontScale"></div>
   <div class="set-group"><label>Line height <span class="faint" style="float:right">${st.lineHeight.toFixed(2)}</span></label><input type="range" class="range" min="1.5" max="2.1" step="0.02" value="${st.lineHeight}" data-set-range="lineHeight"></div>
   <div class="set-group"><label>Comfort</label>
@@ -40,6 +82,8 @@ function sheetSettings(){
     ${toggleRow("showReactions","Chapter reactions","Show reaction buttons at chapter end",st.showReactions)}
     ${toggleRow("spoilerSafe","Spoiler safety","Hide titles/descriptions of unread chapters",st.spoilerSafe)}
     ${toggleRow("focusMode","Focus mode","Hide UI until you tap the page",st.focusMode)}
+    ${toggleRow("bgBlur","Blur artwork background","Apply blur to background cover/wallpapers",st.bgBlur)}
+    ${toggleRow("readerBg","Background image in reader","Keep background image visible in reading mode",st.readerBg)}
     ${toggleRow("appBackground","App background art","Use the site background image behind the shell",st.appBackground)}
   </div>
   <form data-notification-form class="set-group"><label>Chapter notifications</label>

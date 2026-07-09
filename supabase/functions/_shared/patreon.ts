@@ -274,7 +274,7 @@ export const syncPatreonEntitlements = async (
 
   const { data: previousActive, error: previousError } = await admin
     .from('user_entitlements')
-    .select('id,tier_id,valid_until,metadata')
+    .select('id,tier_id,valid_until,metadata,created_at')
     .eq('user_id', userId)
     .eq('provider', 'patreon')
     .eq('status', 'active');
@@ -286,7 +286,7 @@ export const syncPatreonEntitlements = async (
   if (identity.tierIds.length || identity.tiers.length) {
     const { data: mappings, error: mappingError } = await admin
       .from('provider_tier_mappings')
-      .select('*')
+      .select('*, reader_access_tiers(tier_rank,name,slug)')
       .eq('provider', 'patreon')
       .eq('is_active', true);
     if (mappingError) throw mappingError;
@@ -306,9 +306,73 @@ export const syncPatreonEntitlements = async (
     }
   }
 
-  const matchedTierIds = new Set(matchedMappings.map(({ mapping }) => String(mapping.tier_id)));
+  // The site entitlement model is rank-based/cumulative: a higher Patreon
+  // tier unlocks lower-tier chapter gates through has_active_entitlement().
+  // Keep only the highest matched internal tier so reconnect/sync does not
+  // create multiple simultaneously-revocable rows for one reader/provider.
+  matchedMappings.sort((a, b) => {
+    const rankA = Number(a.mapping?.reader_access_tiers?.tier_rank || 0);
+    const rankB = Number(b.mapping?.reader_access_tiers?.tier_rank || 0);
+    if (rankA !== rankB) return rankB - rankA;
+    return String(b.mapping?.provider_tier_id || '').localeCompare(String(a.mapping?.provider_tier_id || ''));
+  });
+  const desiredMappings = matchedMappings.slice(0, 1);
+
+  const refreshedExistingIds = new Set<string>();
+
+  const refreshExistingEntitlement = async (existing: any, mapping: any, tier: any | null, mappingId: string) => {
+    const accessExpiresAt = tier?.access_expires_at || null;
+    const membership = tier?.membership || {};
+    const validUntil = membership.is_renewing ? null : accessExpiresAt;
+    const { data: entitlement, error: updateError } = await admin
+      .from('user_entitlements')
+      .update({
+        tier_id: mapping.tier_id,
+        source: 'patreon',
+        provider: 'patreon',
+        provider_connection_id: connection.id,
+        status: 'active',
+        valid_until: validUntil,
+        updated_at: now,
+        metadata: {
+          ...(existing?.metadata || {}),
+          patreon_tier_id: tier?.id || mapping.provider_tier_id,
+          patreon_tier_label: mapping.provider_tier_label || tier?.title || null,
+          patreon_amount_cents: tier?.amount_cents || null,
+          patreon_access_expires_at: accessExpiresAt,
+          patreon_period_ends_at: accessExpiresAt,
+          patreon_is_renewing: !!membership.is_renewing,
+          patreon_member_status: membership.patron_status || null,
+          patreon_last_charge_status: membership.last_charge_status || null,
+          patreon_last_charge_date: membership.last_charge_date || null,
+          patreon_next_charge_date: membership.next_charge_date || null,
+          patreon_pledge_cadence: membership.pledge_cadence || null,
+          patreon_will_pay_amount_cents: membership.will_pay_amount_cents ?? null,
+          patreon_last_synced_at: now,
+        },
+      })
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (updateError) throw updateError;
+    refreshedExistingIds.add(String(entitlement.id));
+    grants++;
+    grantedEntitlementIds.push(entitlement.id);
+    return { entitlement, validUntil, accessExpiresAt, mappingId };
+  };
+
+  for (const { mapping, tier, mappingId } of desiredMappings) {
+    const sameTierActive = (previousActive || [])
+      .filter((previous) => String(previous.tier_id) === String(mapping.tier_id))
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    if (sameTierActive[0]) {
+      await refreshExistingEntitlement(sameTierActive[0], mapping, tier, mappingId);
+    }
+  }
+
   for (const previous of previousActive || []) {
-    const paidThrough = matchedTierIds.has(String(previous.tier_id)) ? null : entitlementPaidThrough(previous);
+    if (refreshedExistingIds.has(String(previous.id))) continue;
+    const paidThrough = desiredMappings.length ? null : entitlementPaidThrough(previous);
     const update = paidThrough
       ? {
         status: 'active',
@@ -329,7 +393,8 @@ export const syncPatreonEntitlements = async (
     if (expireError) throw expireError;
   }
 
-  for (const { mapping, tier, mappingId } of matchedMappings) {
+  for (const { mapping, tier, mappingId } of desiredMappings) {
+      if (grantedEntitlementIds.some((id) => refreshedExistingIds.has(String(id)))) continue;
       const accessExpiresAt = tier?.access_expires_at || null;
       const membership = tier?.membership || {};
       const validUntil = membership.is_renewing ? null : accessExpiresAt;
@@ -361,7 +426,28 @@ export const syncPatreonEntitlements = async (
         })
         .select()
         .single();
-      if (entitlementError) throw entitlementError;
+      if (entitlementError) {
+        // A DB partial unique index protects against concurrent duplicate
+        // provider grants. If another sync won the race, refresh that active
+        // row instead of returning an error or creating another row.
+        if (entitlementError.code === '23505') {
+          const { data: existingRows, error: existingError } = await admin
+            .from('user_entitlements')
+            .select('id,tier_id,valid_until,metadata,created_at')
+            .eq('user_id', userId)
+            .eq('provider', 'patreon')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (existingError) throw existingError;
+          const existing = (existingRows || [])[0] || null;
+          if (existing) {
+            await refreshExistingEntitlement(existing, mapping, tier, mappingId);
+            continue;
+          }
+        }
+        throw entitlementError;
+      }
       grants++;
       grantedEntitlementIds.push(entitlement.id);
       await admin.from('entitlement_audit_log').insert({
@@ -375,13 +461,34 @@ export const syncPatreonEntitlements = async (
   }
 
   if (!grants) {
-    await admin.from('entitlement_audit_log').insert({
-      user_id: userId,
-      action: `${action}_no_matching_tier`,
-      source: 'patreon',
-      provider: 'patreon',
-      details: { tier_ids: identity.tierIds, connection_id: connection.id },
+    const onlyFreeOrZeroTiers = identity.tiers.length > 0 && identity.tiers.every((tier) => {
+      const title = normalizeTierName(tier.title);
+      const amount = Number(tier.amount_cents || 0);
+      return amount <= 0 || title === 'free' || title.includes('free tier');
     });
+    if (onlyFreeOrZeroTiers) {
+      return { connection, identity, grants, grantedEntitlementIds };
+    }
+
+    const noMatchAction = `${action}_no_matching_tier`;
+    const recentCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recentNoMatchRows } = await admin
+      .from('entitlement_audit_log')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('action', noMatchAction)
+      .eq('source', 'patreon')
+      .gte('created_at', recentCutoff)
+      .limit(1);
+    if (!recentNoMatchRows?.length) {
+      await admin.from('entitlement_audit_log').insert({
+        user_id: userId,
+        action: noMatchAction,
+        source: 'patreon',
+        provider: 'patreon',
+        details: { tier_ids: identity.tierIds, connection_id: connection.id },
+      });
+    }
   }
 
   return { connection, identity, grants, grantedEntitlementIds };

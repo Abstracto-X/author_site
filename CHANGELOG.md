@@ -1,5 +1,79 @@
 # Changelog
 
+## 2026-07-09 06:05 Asia/Kolkata - Add Wookieepedia planets scraper and extractor pipeline
+
+Area: external-data | pipeline
+
+Summary:
+- Created a Python pipeline in the `abstracto_tales` data directory (`data/planets/`) to download all Star Wars planets from Wookieepedia.
+- Features support for both Canon and Legends continuities, automatic name merging, local caching, request throttling, Chrome impersonation via curl_cffi, and key deduplication / citation removal.
+
+Files changed:
+- `C:/Users/admis/OneDrive/Documents/GitHub/abstracto_tales/data/planets/scrape_planets.py`
+- `C:/Users/admis/OneDrive/Documents/GitHub/abstracto_tales/data/planets/run_pipeline.bat`
+
+## 2026-07-09 00:00 Asia/Kolkata - Suppress Patreon free-tier audit noise
+
+Area: edge-functions | database
+
+Summary:
+- Updated Patreon entitlement sync so users connected only to Patreon free/zero-dollar tiers remain linked but do not generate misleading `*_no_matching_tier` entitlement audit rows.
+- Documented that Patreon free tiers are account links without paid reader access.
+
+Files changed:
+- `supabase/functions/_shared/patreon.ts`
+- `docs/DATABASE_CONTEXT.md`
+
+## 2026-07-08 14:05 Asia/Kolkata - Make provider entitlements idempotent
+
+Area: database | edge-functions | admin
+
+Summary:
+- Added a migration that expires duplicate active provider entitlement rows, normalizes already-ended provider rows to expired, and adds a partial unique index allowing only one active provider entitlement per reader/provider.
+- Updated Patreon OAuth/manual sync to refresh the existing active entitlement, keep only the highest matched cumulative tier, and avoid repeated grant inserts/audit rows on reconnect or sync retries.
+- Updated the generic provider webhook active-grant path to refresh the current provider entitlement instead of blindly inserting duplicates.
+- Applied the migration to the linked Supabase project and redeployed `sync-provider-entitlements`, `patreon-oauth-callback`, and `provider-webhook`.
+
+Files changed:
+- `database/sql/2026-07-08_provider_entitlement_idempotency.sql`
+- `supabase/migrations/20260708140000_provider_entitlement_idempotency.sql`
+- `supabase/functions/_shared/patreon.ts`
+- `supabase/functions/provider-webhook/index.ts`
+- `docs/DATABASE_CONTEXT.md`
+
+## 2026-07-08 14:01 Asia/Kolkata - Refine Admin Reader CRM layout
+
+Area: admin
+
+Summary:
+- Reworked the Admin Readers / CRM view into segmented sub-tabs for Readers & Grants, Provider Links, Key Redemptions, and Audit Log so the page no longer renders every CRM table in one long stack.
+- Added scroll-safe table wrappers and long-code wrapping for admin tables, keeping wide CRM data usable without overflowing the page.
+- Expanded CRM search to filter the active reader/provider/redemption/audit panels by reader identity and related provider/key/action fields.
+
+Files changed:
+- `admin.html`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+
+## 2026-07-07 22:35 Asia/Kolkata - Add story wallpapers and reader customizations
+
+Area: reader
+
+Summary:
+- Integrated public database wallpapers (`public.story_wallpapers`) into the subscription reader backend, loading and mapping them per-story.
+- Added background modes (solid, ambient gradients, story artwork) and interactive wallpaper selector swatches inside reader settings.
+- Added custom options to blur/unblur background artwork.
+- Added reader width layout customization options (Compact, Medium, Wide, X-Wide) controlling the lines boundary (--reader-w).
+- Added an option to use/keep background images visible during reading mode instead of unconditionally hiding them.
+
+Files changed:
+- `js/subscription/state.js`
+- `js/subscription/backend.js`
+- `js/subscription/utils.js`
+- `js/subscription/sheets.js`
+- `js/subscription/events.js`
+- `styles.css`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+
 ## 2026-07-07 22:20 Asia/Kolkata - Fix links and inline images rendering in subscription reader
 
 Area: reader
@@ -591,3 +665,21 @@ Files changed:
 - `CHANGELOG.md`
 - `PROJECT_STATE.md`
 - `AGENTS.md`
+
+## 2026-07-08 01:08 Asia/Kolkata - Add red linked system caption dialogs
+
+Area: admin | reader
+
+Summary:
+- Added a linked/caption variant for Writer system-message boxes: any system dialog containing a hyperlink is marked and styled red in `writer.html`.
+- Propagated the same linked system-message distinction through the subscription reader parser and renderer.
+- Added reader CSS so linked system dialogs/caption boxes render red while normal system dialogs stay blue.
+
+Files changed:
+- `writer.html`
+- `js/subscription/backend.js`
+- `js/subscription/views/story-reader.js`
+- `styles.css`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`

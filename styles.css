@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
    Subscription Reader SPA
    Design system: premium, desktop/tablet-rich, responsive restrained atmosphere.
    ===================================================================== */
@@ -106,7 +106,7 @@ body::after {
   will-change: background-image, opacity, filter;
 }
 
-body.in-reader .background-layer {
+body.in-reader:not(.show-reader-bg) .background-layer {
   opacity: 0 !important;
 }
 
@@ -619,6 +619,26 @@ body.has-sheet #main, body.locked-scroll { overflow: hidden; }
   letter-spacing: .22em;
   text-shadow: 0 0 10px rgba(56, 189, 248, .65);
 }
+.prose .reader-system-message.reader-system-caption,
+.prose .reader-system-message:has(a[href]) {
+  color: #fecaca;
+  background: linear-gradient(135deg, rgba(239, 68, 68, .16), rgba(69, 10, 10, .58));
+  border-image-source: none;
+  border-color: rgba(248, 113, 113, .68);
+  border-radius: 18px;
+  box-shadow: 0 0 30px rgba(239, 68, 68, .18), inset 0 0 24px rgba(248, 113, 113, .08);
+}
+.prose .reader-system-message.reader-system-caption::before,
+.prose .reader-system-message:has(a[href])::before {
+  content: "CAPTION";
+  color: #f87171;
+  text-shadow: 0 0 10px rgba(248, 113, 113, .7);
+}
+.prose .reader-system-message.reader-system-caption a,
+.prose .reader-system-message:has(a[href]) a {
+  color: #fecdd3;
+  text-decoration-color: rgba(248, 113, 113, .85);
+}
 .prose figure { margin: 1.8em 0; border-radius: var(--radius); overflow:hidden; border:1px solid var(--read-border, var(--border)); background: var(--read-card, var(--surface)); }
 .prose figure svg { width:100%; height:auto; }
 .prose figcaption { font-size:.74rem; color: var(--read-dim); padding: 9px 13px; font-style: italic; text-align:center; }
@@ -722,6 +742,32 @@ body.has-sheet #main, body.locked-scroll { overflow: hidden; }
 .switch::after { content:""; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:#fff; transition:.2s var(--ease); }
 .switch.on { background: var(--accent); }
 .switch.on::after { left:22px; }
+
+/* Wallpaper Swatches in Settings Sheet */
+.wp-swatches::-webkit-scrollbar {
+  height: 6px;
+}
+.wp-swatches::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+.wp-swatch {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+.wp-swatch .wp-thumb {
+  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.wp-swatch:hover .wp-thumb {
+  transform: scale(1.04);
+}
+.wp-swatch.active .wp-thumb {
+  border-color: var(--accent) !important;
+}
 
 .range { width:100%; -webkit-appearance:none; appearance:none; height:6px; border-radius:99px; background: var(--track); outline:none; }
 .range::-webkit-slider-thumb { -webkit-appearance:none; width:20px;height:20px;border-radius:50%; background: var(--accent); cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,.4); }

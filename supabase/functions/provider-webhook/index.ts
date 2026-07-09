@@ -151,9 +151,45 @@ Deno.serve(async (req) => {
     if (!mapping) throw new Error(`No active provider mapping for ${provider}:${providerTierId}.`);
 
     const validUntil = payloadPaidThrough(payload);
-    const { data: entitlement, error: entitlementError } = await admin
+    const { data: currentActiveRows, error: currentActiveError } = await admin
       .from('user_entitlements')
-      .insert({
+      .select('id,tier_id,metadata')
+      .eq('user_id', userId)
+      .eq('provider', provider)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (currentActiveError) throw currentActiveError;
+    const currentActive = (currentActiveRows || [])[0] || null;
+
+    let entitlement = null;
+    if (currentActive) {
+      const { data: updatedEntitlement, error: updateEntitlementError } = await admin
+        .from('user_entitlements')
+        .update({
+          tier_id: mapping.tier_id,
+          source: provider,
+          provider,
+          provider_connection_id: connectionId,
+          status: 'active',
+          valid_until: validUntil,
+          updated_at: new Date().toISOString(),
+          metadata: {
+            ...(currentActive.metadata || {}),
+            provider_tier_id: providerTierId,
+            provider_valid_until: validUntil,
+            raw: payload.metadata || {},
+          },
+        })
+        .eq('id', currentActive.id)
+        .select()
+        .single();
+      if (updateEntitlementError) throw updateEntitlementError;
+      entitlement = updatedEntitlement;
+    } else {
+      const { data: insertedEntitlement, error: entitlementError } = await admin
+        .from('user_entitlements')
+        .insert({
         user_id: userId,
         tier_id: mapping.tier_id,
         source: provider,
@@ -165,11 +201,13 @@ Deno.serve(async (req) => {
       })
       .select()
       .single();
-    if (entitlementError) throw entitlementError;
+      if (entitlementError) throw entitlementError;
+      entitlement = insertedEntitlement;
+    }
 
     await admin.from('entitlement_audit_log').insert({
       user_id: userId,
-      action: 'provider_webhook_grant',
+      action: currentActive ? 'provider_webhook_refresh' : 'provider_webhook_grant',
       source: provider,
       provider,
       entitlement_id: entitlement.id,

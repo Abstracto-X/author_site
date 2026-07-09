@@ -194,6 +194,60 @@ function ctaFor(ch, r, story, opts){
 function fmtDate(iso){ if(!iso) return ""; const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; const d=new Date(iso); return m[d.getMonth()]+" "+d.getDate(); }
 function daysUntil(iso){ if(!iso) return null; const d=new Date(iso); const t=new Date("2026-06-24"); return Math.max(0, Math.round((d-t)/86400000)); }
 function setStoryAccent(s){ document.documentElement.style.setProperty("--s", s.accent); document.documentElement.style.setProperty("--s2", s.accent2); document.documentElement.style.setProperty("--s-soft", hexA(s.accent,0.14)); }
+function getActiveStory() {
+  if (typeof route === "undefined" || !route) return D.STORIES && D.STORIES[0];
+  if (route.name === "read" && typeof currentChapter !== "undefined" && currentChapter) {
+    return currentChapter.story;
+  }
+  if (route.params && route.params.slug) {
+    return bySlug(route.params.slug);
+  }
+  return D.STORIES && D.STORIES[0];
+}
+function applyBgSettings() {
+  if (!document.body) return;
+  const settings = store.settings;
+  const bgMode = settings.bgMode || "story";
+  const bgBlur = settings.bgBlur !== false;
+  document.body.setAttribute("data-bg-mode", bgMode);
+  document.body.setAttribute("data-bg-blur", bgBlur ? "true" : "false");
+  
+  const readerWidth = settings.readerWidth || 46;
+  document.documentElement.style.setProperty("--reader-w", readerWidth + "rem");
+  
+  const readerBg = !!settings.readerBg;
+  document.body.classList.toggle("show-reader-bg", readerBg);
+  
+  const story = getActiveStory();
+  const bg = document.getElementById("global-bg");
+  if (bg) {
+    if (bgMode === "story" && story) {
+      const selectedWp = settings.bgImageUrl || "default";
+      let bgUrl = "";
+      if (selectedWp === "default") {
+        bgUrl = story.background_image_url || story.cover_image_url || "";
+      } else {
+        bgUrl = selectedWp;
+      }
+      
+      if (bgUrl) {
+        if (bg.style.backgroundImage !== `url("${bgUrl}")`) {
+          bg.style.backgroundImage = `url('${bgUrl}')`;
+        }
+        bg.style.opacity = "1";
+        document.body.classList.add("has-story-bg");
+      } else {
+        bg.style.backgroundImage = "";
+        bg.style.opacity = "0";
+        document.body.classList.remove("has-story-bg");
+      }
+    } else {
+      bg.style.backgroundImage = "";
+      bg.style.opacity = "0";
+      document.body.classList.remove("has-story-bg");
+    }
+  }
+}
 function meta(items){ return items.filter(Boolean).map(x=>`<span class="mi">${x}</span>`).join(""); }
 function countReadable(){ let n=0; D.STORIES.forEach(s=>s.chapters.forEach(c=>{ if(isReadable(chapterResolved(c))) n++; })); return n; }
 function activeReads(){ return Object.entries(store.progress).map(([id,p])=>{ const f=byId(id); return f?{...f, prog:p}:null; }).filter(Boolean).sort((a,b)=>b.prog.updatedAt-a.prog.updatedAt); }

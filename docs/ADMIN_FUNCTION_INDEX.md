@@ -221,3 +221,13 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `writer.html` now loads `js/subscription/site-config.js` plus Supabase JS, requires a signed-in admin profile, loads real `stories`, `chapters`, and `reader_access_tiers`, and writes chapter drafts/published updates to `public.chapters`.
 - Demo `MockDB` seed content was removed; the in-page store is now only a runtime cache of Supabase rows.
 - Quill system-message blocks continue to save as `div.sys-msg-box` in chapter HTML.
+
+## 2026-07-08 01:08 Asia/Kolkata - Standalone Writer linked system captions
+
+- `writer.html` adds `updateSystemMessageVariants()` to mark Quill system-message boxes containing links as `sys-msg-caption` during edits, hydration, cleanup, and save serialization.
+- Linked system-message boxes render as red caption dialogs in the Writer editor; unlinked system-message boxes retain the existing blue system styling.
+
+## 2026-07-08 14:01 Asia/Kolkata - Reader CRM sub-tabs
+
+- `Views.readers(container)` now renders an internal CRM console with sub-tabs for Readers & Grants, Provider Links, Key Redemptions, and Audit Log instead of stacking all CRM tables in one long page.
+- Reader CRM tables use scroll-safe wrappers and shared search filtering across reader IDs, profile names, provider fields, access key data, and audit details.
