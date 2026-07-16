@@ -219,18 +219,36 @@
 
         .index-row {
             position: relative;
-            transition: all 0.2s;
+            --tier-rgb: 113, 113, 122;
+            --tier-accent: #a1a1aa;
+            background: linear-gradient(90deg, rgba(var(--tier-rgb), 0.11), rgba(var(--tier-rgb), 0.025) 46%, transparent 76%);
+            box-shadow: inset 3px 0 0 rgba(var(--tier-rgb), 0.72);
+            transition: background 0.2s, box-shadow 0.2s;
         }
 
         .index-row:hover {
             background:
-                linear-gradient(90deg, rgba(99,102,241,0.1), transparent 42%),
+                linear-gradient(90deg, rgba(var(--tier-rgb), 0.2), rgba(var(--tier-rgb), 0.055) 52%, transparent 82%),
                 rgba(255,255,255,0.035);
+            box-shadow: inset 4px 0 0 var(--tier-accent);
             cursor: pointer;
         }
 
         .index-row:hover td:first-child {
-            color: #a5b4fc;
+            color: var(--tier-accent);
+        }
+
+        .index-row select {
+            border-color: rgba(var(--tier-rgb), 0.42);
+        }
+
+        .tier-color-dot {
+            width: 0.55rem;
+            height: 0.55rem;
+            flex: 0 0 auto;
+            border-radius: 999px;
+            background: var(--tier-accent);
+            box-shadow: 0 0 12px rgba(var(--tier-rgb), 0.55);
         }
 
         /* Empty State */
@@ -270,6 +288,64 @@
             color: #71717a;
             font-size: 0.72rem;
             flex-shrink: 0;
+        }
+
+        .chapter-mini-list button[aria-current="page"] {
+            background: rgba(99, 102, 241, 0.14);
+            color: #f4f4f5;
+            box-shadow: inset 2px 0 0 #818cf8;
+        }
+
+        .editor-tabs {
+            display: flex;
+            align-items: end;
+            gap: 0.25rem;
+            min-height: 40px;
+            padding: 0.4rem 0.75rem 0;
+            overflow-x: auto;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(9, 9, 11, 0.92);
+        }
+
+        .editor-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            max-width: 15rem;
+            padding: 0.55rem 0.7rem;
+            border: 1px solid transparent;
+            border-bottom: 0;
+            border-radius: 0.65rem 0.65rem 0 0;
+            color: #71717a;
+            white-space: nowrap;
+        }
+
+        .editor-tab.active {
+            border-color: rgba(255,255,255,0.09);
+            background: #18181b;
+            color: #f4f4f5;
+        }
+
+        .editor-tab-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .editor-tab-add {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            align-self: center;
+            width: 1.8rem;
+            height: 1.8rem;
+            flex: 0 0 auto;
+            border-radius: 0.5rem;
+            color: #71717a;
+        }
+
+        .editor-tab-add:hover {
+            color: #e4e4e7;
+            background: rgba(129, 140, 248, 0.14);
         }
 
         .settings-card {
@@ -673,7 +749,7 @@
                 </div>
             </div>
 
-            <nav class="p-3 space-y-1 flex-1">
+            <nav class="p-3 space-y-1">
                 <button
                     onclick="Router.navigate('dashboard')"
                     id="nav-dashboard"
@@ -692,6 +768,16 @@
                     <span class="font-medium">Active Editor</span>
                 </button>
             </nav>
+
+            <section class="flex-1 min-h-0 border-t border-zinc-800/60 flex flex-col">
+                <div class="px-4 pt-4 pb-2 flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Chapters</span>
+                    <button type="button" onclick="App.createNewChapter()" class="text-zinc-500 hover:text-white" title="New chapter" aria-label="New chapter">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                    </button>
+                </div>
+                <div id="sidebar-chapter-list" class="chapter-mini-list flex-1 min-h-0 overflow-y-auto px-2 pb-3 custom-scrollbar"></div>
+            </section>
 
             <div class="p-4 border-t border-zinc-800/60 flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
@@ -716,6 +802,16 @@
                     </div>
 
                     <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <select id="dash-sort" class="bg-zinc-900 border border-zinc-800 rounded-full py-2 pl-4 pr-9 text-sm text-zinc-300 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition appearance-none cursor-pointer" aria-label="Sort chapters">
+                                <option value="chapter-asc">Chapter order</option>
+                                <option value="newest">Newest updated</option>
+                                <option value="oldest">Oldest updated</option>
+                                <option value="chapter-desc">Chapter order reversed</option>
+                            </select>
+                            <i class="fa-solid fa-arrow-down-wide-short absolute right-3 top-3 text-zinc-500 text-xs pointer-events-none"></i>
+                        </div>
+
                         <div class="relative">
                             <i class="fa-solid fa-search absolute left-3 top-2.5 text-zinc-500"></i>
                             <input
@@ -751,6 +847,7 @@
                                     <th class="px-6 py-4 font-semibold">Access Tier</th>
                                     <th class="px-6 py-4 font-semibold">Word Count</th>
                                     <th class="px-6 py-4 font-semibold">Last Updated</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="dash-chapter-list" class="text-sm divide-y divide-zinc-800/50"></tbody>
@@ -857,6 +954,15 @@
                                     >
                                         <i class="fa-solid fa-broom text-sm"></i>
                                     </button>
+
+                                    <button
+                                        onclick="Editor.deleteCurrentSystemMessage()"
+                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-rose-300 hover:bg-zinc-800 transition"
+                                        title="Delete selected system box"
+                                        aria-label="Delete selected system box"
+                                    >
+                                        <i class="fa-solid fa-message-slash text-sm"></i>
+                                    </button>
                                 </div>
 
                                 <div class="h-6 w-px bg-zinc-800"></div>
@@ -878,6 +984,8 @@
                                 </button>
                             </div>
                         </header>
+
+                        <div id="editor-tabs" class="editor-tabs custom-scrollbar" aria-label="Open chapter tabs"></div>
 
                         <div id="ed-banner" class="bg-indigo-500/10 border-b border-indigo-500/20 px-6 py-2 text-xs font-medium text-indigo-300 flex justify-between hidden">
                             <span>
@@ -1027,6 +1135,17 @@
                                 </div>
                             </section>
 
+                            <section class="settings-card border-rose-500/20">
+                                <button type="button" onclick="Editor.deleteCurrentSystemMessage()" class="mb-2 w-full flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm font-medium text-zinc-300 hover:border-rose-500/30 hover:text-rose-300 transition">
+                                    <i class="fa-solid fa-message-slash"></i>
+                                    Delete Selected System Box
+                                </button>
+                                <button type="button" onclick="App.deleteChapter(State.activeChapterId)" class="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    Delete Chapter
+                                </button>
+                            </section>
+
                         </div>
                     </aside>
                 </div>
@@ -1140,6 +1259,22 @@
             return 'text-purple-400 bg-purple-400/10 border-purple-400/20';
         }
 
+        function tierRowVisual(tierId) {
+            if (!tierId) return { rgb: '16, 185, 129', accent: '#34d399' };
+
+            const palette = [
+                { rgb: '168, 85, 247', accent: '#c084fc' },
+                { rgb: '245, 158, 11', accent: '#fbbf24' },
+                { rgb: '244, 63, 94', accent: '#fb7185' },
+                { rgb: '14, 165, 233', accent: '#38bdf8' },
+                { rgb: '99, 102, 241', accent: '#818cf8' },
+                { rgb: '236, 72, 153', accent: '#f472b6' }
+            ];
+            const tiers = MockDB.tiers.slice().sort((a, b) => rankOf(a) - rankOf(b));
+            const index = tiers.findIndex(tier => tier.id === tierId);
+            return index >= 0 ? palette[index % palette.length] : { rgb: '113, 113, 122', accent: '#a1a1aa' };
+        }
+
         const DB = {
             async requireAdmin() {
                 if (!supabaseClient) throw new Error('Supabase is not configured. Update js/subscription/site-config.js first.');
@@ -1181,6 +1316,20 @@
                 const { data, error } = await supabaseClient.from('chapters').insert(record).select().single();
                 if (error) throw error;
                 return normalizeChapterRow(data);
+            },
+            async updateChapterFields(id, fields) {
+                const { data, error } = await supabaseClient
+                    .from('chapters')
+                    .update({ ...fields, updated_at: new Date().toISOString() })
+                    .eq('id', id)
+                    .select()
+                    .single();
+                if (error) throw error;
+                return normalizeChapterRow(data);
+            },
+            async deleteChapter(id) {
+                const { error } = await supabaseClient.from('chapters').delete().eq('id', id);
+                if (error) throw error;
             }
         };
 
@@ -1191,7 +1340,9 @@
             quillInstance: null,
             autosaveTimer: null,
             commandRunning: false,
-            isHydratingEditor: false
+            isHydratingEditor: false,
+            openChapterIds: [],
+            dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc'
         };
 
         // ==========================================
@@ -1312,6 +1463,9 @@
 
                 storySelect.value = State.activeStoryId;
 
+                const sortSelect = document.getElementById('dash-sort');
+                if (sortSelect) sortSelect.value = State.dashboardSort;
+
                 const tierSelect = document.getElementById('ed-tier');
                 tierSelect.innerHTML = '<option value="">Free Access</option>';
 
@@ -1328,13 +1482,22 @@
                     State.activeStoryId = event.target.value;
                     localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                     State.activeChapterId = null;
+                    State.openChapterIds = [];
+                    State.unsavedChanges = false;
+                    clearTimeout(State.autosaveTimer);
                     document.getElementById('editor-workspace').classList.add('hidden');
                     document.getElementById('editor-empty').classList.remove('hidden');
-                    try { await DB.loadChapters(State.activeStoryId); Dashboard.render(); }
+                    try { await DB.loadChapters(State.activeStoryId); Dashboard.render(); Dashboard.renderEditorTabs(); }
                     catch (error) { UI.showToast(error.message || 'Could not load chapters.', 'error'); }
                 });
 
                 document.getElementById('dash-search').addEventListener('input', () => {
+                    Dashboard.render();
+                });
+
+                document.getElementById('dash-sort').addEventListener('change', event => {
+                    State.dashboardSort = event.target.value;
+                    localStorage.setItem('ea-writer-chapter-sort', State.dashboardSort);
                     Dashboard.render();
                 });
 
@@ -1449,14 +1612,23 @@
                 document.getElementById('dash-story-title').innerText = story ? story.title : '';
 
                 this.renderStats();
+                this.renderSidebarChapters();
+                this.renderEditorTabs();
 
                 const search = document.getElementById('dash-search').value.toLowerCase();
                 const list = document.getElementById('dash-chapter-list');
                 list.innerHTML = '';
 
                 let chapters = MockDB.chapters
-                    .filter(chapter => chapter.story_id === State.activeStoryId)
-                    .sort((a, b) => a.chapter_order - b.chapter_order);
+                    .filter(chapter => chapter.story_id === State.activeStoryId);
+
+                const sorters = {
+                    newest: (a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0),
+                    oldest: (a, b) => new Date(a.updated_at || 0) - new Date(b.updated_at || 0),
+                    'chapter-desc': (a, b) => Number(b.chapter_order || 0) - Number(a.chapter_order || 0),
+                    'chapter-asc': (a, b) => Number(a.chapter_order || 0) - Number(b.chapter_order || 0)
+                };
+                chapters.sort(sorters[State.dashboardSort] || sorters['chapter-asc']);
 
                 if (search) {
                     chapters = chapters.filter(chapter => chapter.title.toLowerCase().includes(search));
@@ -1465,7 +1637,7 @@
                 if (chapters.length === 0) {
                     list.innerHTML = `
                         <tr>
-                            <td colspan="6" class="text-center py-14 text-zinc-500">
+                            <td colspan="7" class="text-center py-14 text-zinc-500">
                                 <div class="inline-flex flex-col items-center gap-3">
                                     <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600">
                                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -1483,7 +1655,6 @@
 
                 chapters.forEach(chapter => {
                     const isPublished = chapter.is_published;
-                    const tier = MockDB.tiers.find(t => t.id === chapter.required_tier_id);
 
                     let statusHtml = isPublished
                         ? `
@@ -1507,16 +1678,14 @@
                         ? `<span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300"><i class="fa-solid fa-circle text-[6px]"></i>Live</span>`
                         : `<span class="inline-flex items-center gap-1 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300"><i class="fa-solid fa-circle text-[6px]"></i>Draft</span>`;
 
-                    let tierHtml = `<span class="text-zinc-500 text-xs font-medium">Free Access</span>`;
-
-                    if (tier) {
-                        tierHtml = `
-                            <span class="tier-badge border ${tier.color}">
-                                <i class="fa-solid fa-lock text-[8px] mr-1.5"></i>
-                                ${UI.escapeHtml(tier.name)}
-                            </span>
-                        `;
-                    }
+                    const tierOptions = [
+                        `<option value=""${chapter.required_tier_id ? '' : ' selected'}>Free Access</option>`,
+                        ...MockDB.tiers
+                            .slice()
+                            .sort((a, b) => rankOf(a) - rankOf(b))
+                            .map(item => `<option value="${UI.escapeHtml(item.id)}"${item.id === chapter.required_tier_id ? ' selected' : ''}>${UI.escapeHtml(item.name)}</option>`)
+                    ].join('');
+                    const tierVisual = tierRowVisual(chapter.required_tier_id);
 
                     const dateStr = new Date(chapter.updated_at).toLocaleDateString(undefined, {
                         month: 'short',
@@ -1527,6 +1696,8 @@
 
                     const tr = document.createElement('tr');
                     tr.className = 'index-row';
+                    tr.style.setProperty('--tier-rgb', tierVisual.rgb);
+                    tr.style.setProperty('--tier-accent', tierVisual.accent);
                     tr.onclick = () => App.openEditorForChapter(chapter.id);
 
                     tr.innerHTML = `
@@ -1539,13 +1710,71 @@
                             <div class="text-xs text-zinc-600 mt-1">${UI.escapeHtml(chapter.id)}</div>
                         </td>
                         <td class="px-6 py-4">${statusHtml}</td>
-                        <td class="px-6 py-4"><div class="flex flex-wrap items-center gap-2">${statusPill}${tierHtml}</div></td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <span class="tier-color-dot" aria-hidden="true"></span>
+                                <select onclick="event.stopPropagation()" onchange="event.stopPropagation(); App.quickSetChapterTier('${UI.escapeHtml(chapter.id)}', this.value)" class="max-w-44 bg-zinc-950 border text-zinc-300 text-xs rounded-lg px-2 py-1.5 focus:border-primary-500 outline-none" aria-label="Access tier for ${UI.escapeHtml(chapter.title || 'chapter')}">
+                                    ${tierOptions}
+                                </select>
+                            </div>
+                        </td>
                         <td class="px-6 py-4 text-zinc-400 text-xs font-mono">${chapter.word_count || 0} words</td>
                         <td class="px-6 py-4 text-zinc-500 text-xs">${dateStr}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button type="button" onclick="event.stopPropagation(); App.deleteChapter('${UI.escapeHtml(chapter.id)}')" class="w-8 h-8 rounded-lg text-zinc-600 hover:text-rose-300 hover:bg-rose-500/10 transition" title="Delete chapter" aria-label="Delete ${UI.escapeHtml(chapter.title || 'chapter')}">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
                     `;
 
                     list.appendChild(tr);
                 });
+            },
+
+            renderSidebarChapters() {
+                const list = document.getElementById('sidebar-chapter-list');
+                if (!list) return;
+
+                const chapters = MockDB.chapters
+                    .filter(chapter => chapter.story_id === State.activeStoryId)
+                    .sort((a, b) => a.chapter_order - b.chapter_order);
+
+                if (!chapters.length) {
+                    list.innerHTML = '<p class="px-2 py-4 text-xs text-zinc-600">No chapters yet.</p>';
+                    return;
+                }
+
+                list.innerHTML = chapters.map(chapter => `
+                    <button type="button" onclick="App.openEditorForChapter('${UI.escapeHtml(chapter.id)}')" aria-current="${chapter.id === State.activeChapterId ? 'page' : 'false'}" class="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 transition">
+                        <span class="w-6 flex-shrink-0 text-center font-mono text-[10px] text-zinc-600">${Number(chapter.chapter_order) || '–'}</span>
+                        <span class="min-w-0 flex-1 truncate">${UI.escapeHtml(chapter.title || 'Untitled')}</span>
+                        ${chapter.is_published ? '<i class="fa-solid fa-circle text-[6px] text-emerald-400" title="Published"></i>' : ''}
+                    </button>
+                `).join('');
+            },
+
+            renderEditorTabs() {
+                const tabs = document.getElementById('editor-tabs');
+                if (!tabs) return;
+
+                State.openChapterIds = State.openChapterIds.filter(id => MockDB.chapters.some(chapter => chapter.id === id));
+                const chapterTabs = State.openChapterIds.map(id => {
+                    const chapter = MockDB.chapters.find(item => item.id === id);
+                    if (!chapter) return '';
+                    const active = id === State.activeChapterId;
+                    return `
+                        <div class="editor-tab ${active ? 'active' : ''}">
+                            <button type="button" onclick="App.openEditorForChapter('${UI.escapeHtml(id)}')" class="editor-tab-title text-xs" title="${UI.escapeHtml(chapter.title || 'Untitled')}">${UI.escapeHtml(chapter.title || 'Untitled')}</button>
+                            <button type="button" onclick="App.closeChapterTab('${UI.escapeHtml(id)}')" class="text-zinc-600 hover:text-zinc-200" title="Close tab" aria-label="Close ${UI.escapeHtml(chapter.title || 'chapter')} tab"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        </div>
+                    `;
+                }).join('');
+
+                tabs.innerHTML = `${chapterTabs}
+                    <button type="button" onclick="App.createNewChapter()" class="editor-tab-add" title="Open a new chapter tab at the next chapter index" aria-label="Open new chapter tab">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                    </button>
+                `;
             },
 
             renderStats() {
@@ -1597,7 +1826,7 @@
 
             if (!value) return false;
 
-            return /(^#{1,6}\s+)|(^>\s+)|(^[-*+]\s+)|(^\d+\.\s+)|(\*\*[^*]+\*\*)|(__[^_]+__)|(```)|(^\s*--\s*$)|(^\[.+\]$)|(\[[^\]]+\]\([^)]+\))/m.test(value);
+            return /(^#{1,6}\s+)|(^>\s+)|(^[-*+]\s+)|(^\d+\.\s+)|(\*\*[^*]+\*\*)|(\*[^*\n]+\*)|(__[^_]+__)|(~~[^~]+~~)|(```)|(^\s*--\s*$)|(^\[.+\]$)|(\[[^\]]+\]\([^)]+\))/m.test(value);
         }
 
         function richHtmlLooksUseful(html) {
@@ -1885,6 +2114,25 @@
             isSystemLineAt(index) {
                 const [line] = State.quillInstance.getLine(index);
                 return Boolean(line?.domNode?.classList?.contains('sys-msg-box'));
+            },
+
+            deleteCurrentSystemMessage() {
+                const quill = State.quillInstance;
+                const range = quill?.getSelection(true);
+                if (!quill || !range) return;
+
+                const [line] = quill.getLine(range.index);
+                if (!line?.domNode?.classList?.contains('sys-msg-box')) {
+                    UI.showToast('Place the cursor inside a system box first.', 'info');
+                    return;
+                }
+
+                const lineIndex = quill.getIndex(line);
+                quill.deleteText(lineIndex, line.length(), 'user');
+                quill.insertText(lineIndex, '\n', 'user');
+                quill.setSelection(lineIndex, 0, 'silent');
+                this.markUnsaved();
+                UI.showToast('System box deleted.', 'success');
             },
 
             getCurrentLineInfo(useFocus = false) {
@@ -2255,6 +2503,11 @@
                     return;
                 }
 
+                if (State.activeChapterId && State.unsavedChanges) {
+                    const savedBeforeCreate = await this.saveDraft({ silent: true });
+                    if (!savedBeforeCreate) return;
+                }
+
                 const nextOrder = (
                     MockDB.chapters.length
                         ? Math.max(...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0))
@@ -2279,18 +2532,34 @@
 
                     await DB.loadChapters(State.activeStoryId);
 
-                    this.openEditorForChapter(saved.id);
+                    await this.openEditorForChapter(saved.id);
                     Dashboard.render();
 
-                    UI.showToast('Draft created.', 'success');
+                    UI.showToast(`Chapter ${nextOrder} opened in a new tab.`, 'success');
                 } catch (error) {
                     UI.showToast(error.message || 'Could not create draft.', 'error');
                 }
             },
 
-            openEditorForChapter(id) {
+            async openEditorForChapter(id) {
                 const chapter = MockDB.chapters.find(item => item.id === id);
                 if (!chapter) return;
+
+                if (State.activeChapterId === id) {
+                    Router.navigate('editor');
+                    Dashboard.renderSidebarChapters();
+                    Dashboard.renderEditorTabs();
+                    return;
+                }
+
+                if (State.activeChapterId && State.activeChapterId !== id && State.unsavedChanges) {
+                    const savedBeforeSwitch = await this.saveDraft({ silent: true });
+                    if (!savedBeforeSwitch) return;
+                }
+
+                if (!State.openChapterIds.includes(id)) {
+                    State.openChapterIds.push(id);
+                }
 
                 State.activeChapterId = id;
                 State.isHydratingEditor = true;
@@ -2336,9 +2605,105 @@
                     }
 
                     Router.navigate('editor');
+                    Dashboard.renderSidebarChapters();
+                    Dashboard.renderEditorTabs();
                 } finally {
                     State.isHydratingEditor = false;
                     Editor.markSaved();
+                }
+            },
+
+            async closeChapterTab(id) {
+                const closingIndex = State.openChapterIds.indexOf(id);
+                if (closingIndex === -1) return;
+
+                if (id === State.activeChapterId && State.unsavedChanges) {
+                    const savedBeforeClose = await this.saveDraft({ silent: true });
+                    if (!savedBeforeClose) return;
+                }
+
+                State.openChapterIds.splice(closingIndex, 1);
+
+                if (id !== State.activeChapterId) {
+                    Dashboard.renderEditorTabs();
+                    return;
+                }
+
+                const nextId = State.openChapterIds[Math.min(closingIndex, State.openChapterIds.length - 1)];
+                State.activeChapterId = null;
+
+                if (nextId) {
+                    await this.openEditorForChapter(nextId);
+                } else {
+                    document.getElementById('editor-workspace').classList.add('hidden');
+                    document.getElementById('editor-empty').classList.remove('hidden');
+                    Dashboard.renderEditorTabs();
+                    Dashboard.renderSidebarChapters();
+                }
+            },
+
+            async quickSetChapterTier(id, tierId) {
+                const index = MockDB.chapters.findIndex(chapter => chapter.id === id);
+                if (index === -1) return;
+
+                try {
+                    if (id === State.activeChapterId && State.unsavedChanges) {
+                        const savedBeforeTierChange = await this.saveDraft({ silent: true });
+                        if (!savedBeforeTierChange) {
+                            Dashboard.render();
+                            return;
+                        }
+                    }
+                    const saved = await DB.updateChapterFields(id, { required_tier_id: tierId || null });
+                    MockDB.chapters[index] = saved;
+
+                    if (id === State.activeChapterId) {
+                        document.getElementById('ed-tier').value = saved.required_tier_id || '';
+                    }
+
+                    Dashboard.render();
+                    UI.showToast(`Access changed to ${MockDB.tiers.find(tier => tier.id === tierId)?.name || 'Free Access'}.`, 'success');
+                } catch (error) {
+                    Dashboard.render();
+                    UI.showToast(error.message || 'Could not update chapter access.', 'error');
+                }
+            },
+
+            async deleteChapter(id) {
+                if (!id) return;
+                const chapter = MockDB.chapters.find(item => item.id === id);
+                if (!chapter) return;
+
+                const confirmed = confirm(`Delete “${chapter.title || 'Untitled'}” permanently? This cannot be undone.`);
+                if (!confirmed) return;
+
+                try {
+                    if (State.activeChapterId === id) {
+                        clearTimeout(State.autosaveTimer);
+                    }
+                    await DB.deleteChapter(id);
+                    MockDB.chapters = MockDB.chapters.filter(item => item.id !== id);
+                    State.openChapterIds = State.openChapterIds.filter(itemId => itemId !== id);
+
+                    if (State.activeChapterId === id) {
+                        State.activeChapterId = null;
+                        State.unsavedChanges = false;
+                        const nextId = State.openChapterIds.at(-1) || MockDB.chapters[0]?.id;
+
+                        if (nextId) {
+                            await this.openEditorForChapter(nextId);
+                        } else {
+                            document.getElementById('editor-workspace').classList.add('hidden');
+                            document.getElementById('editor-empty').classList.remove('hidden');
+                            Router.navigate('dashboard');
+                        }
+                    }
+
+                    Dashboard.render();
+                    Dashboard.renderEditorTabs();
+                    UI.showToast('Chapter deleted.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not delete chapter.', 'error');
                 }
             },
 
@@ -2361,14 +2726,14 @@
             },
 
             async saveDraft(options = {}) {
-                if (!State.activeChapterId) return;
+                if (!State.activeChapterId) return false;
 
                 if (options.silent && !State.unsavedChanges) {
-                    return;
+                    return true;
                 }
 
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
-                if (index === -1) return;
+                if (index === -1) return false;
 
                 const existing = MockDB.chapters[index];
 
@@ -2380,13 +2745,17 @@
 
                     MockDB.chapters[index] = saved;
                     Editor.markSaved();
+                    Dashboard.renderSidebarChapters();
+                    Dashboard.renderEditorTabs();
 
                     if (!options.silent) {
                         Dashboard.render();
                         UI.showToast('Changes saved successfully.', 'success');
                     }
+                    return true;
                 } catch (error) {
                     UI.showToast(error.message || 'Could not save draft.', 'error');
+                    return false;
                 }
             },
 
@@ -2490,20 +2859,30 @@
                 const html = Editor.normalizeForSave();
 
                 const turndownService = new TurndownService({
-                    headingStyle: 'atx'
+                    headingStyle: 'atx',
+                    emDelimiter: '*',
+                    strongDelimiter: '**',
+                    bulletListMarker: '-',
+                    codeBlockStyle: 'fenced',
+                    fence: '```'
                 });
 
                 turndownService.addRule('systemMessage', {
                     filter: node => node.nodeName === 'DIV' && node.classList.contains('sys-msg-box'),
                     replacement: (content, node) => {
-                        const text = node.innerText.replace(/\n+$/g, '');
-                        return `\n[${text}]\n`;
+                        const lines = node.innerText.replace(/\n+$/g, '').split('\n');
+                        return `\n\n> **System message:** ${lines.join('\n> ')}\n\n`;
                     }
+                });
+
+                turndownService.addRule('strikethrough', {
+                    filter: ['del', 's', 'strike'],
+                    replacement: content => `~~${content}~~`
                 });
 
                 turndownService.addRule('sceneBreak', {
                     filter: node => node.nodeName === 'HR' && node.classList.contains('scene-break'),
-                    replacement: () => '\n--\n'
+                    replacement: () => '\n\n---\n\n'
                 });
 
                 turndownService.addRule('lineBreak', {

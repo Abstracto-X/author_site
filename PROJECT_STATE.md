@@ -2,6 +2,39 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-16 05:52 Asia/Kolkata - Manual QA for standalone Writer navigation and deletion
+
+Status: NEEDS REVIEW
+
+Area:
+- admin
+
+Files touched:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Standalone Writer now exports conventional LLM-friendly Markdown, shows a scrollable chapter rail, supports persisted newer/older/order sorting, provides closable multi-chapter tabs with next-index draft creation, permits color-coded index-level tier updates, and exposes confirmed chapter deletion plus selected system-box deletion.
+
+Remaining work:
+- None known; complete browser interaction QA against the linked Supabase project.
+
+Risks / notes:
+- Chapter deletion is permanent after confirmation and remains subject to existing Supabase admin RLS and foreign-key constraints.
+- Tab changes save a dirty active chapter before hydrating the next tab; failed Supabase saves surface a toast and should be tested under a real admin session.
+
+Verification needed:
+- Copy a chapter containing italic, bold, lists, code, a system box, and a scene break as Markdown; confirm the clipboard uses `*italic*`, `**bold**`, `-` bullets, fenced code, a blockquoted **System message** label, and `---`.
+- Open several chapters from the left rail and index, switch and close tabs, and confirm dirty content autosaves before switching.
+- Switch the Chapter Index between newest updated, oldest updated, chapter order, and reversed chapter order; reload and confirm the selected sort persists.
+- While editing, click the plus button at the end of the tab strip; confirm a draft with the next available chapter index is created and opened without losing dirty content in the prior tab.
+- Change Free/tier access from the chapter index and reload to verify persistence; confirm the row tint, left accent, and access dot change with the tier and Free Access appears green.
+- Delete a test draft from the index and another from editor settings; confirm cancellation is safe and confirmation removes it.
+- Put the cursor in a system box, use the message-slash action, save, and verify only that box is removed.
+
 ## 2026-07-07 22:15 Asia/Kolkata - Manual QA for inline image upload, URL insertion, and reader rendering
 
 Status: NEEDS REVIEW

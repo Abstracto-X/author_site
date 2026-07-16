@@ -231,3 +231,14 @@ Generated from the current codebase. One-line descriptions are intentionally con
 
 - `Views.readers(container)` now renders an internal CRM console with sub-tabs for Readers & Grants, Provider Links, Key Redemptions, and Audit Log instead of stacking all CRM tables in one long page.
 - Reader CRM tables use scroll-safe wrappers and shared search filtering across reader IDs, profile names, provider fields, access key data, and audit details.
+
+## 2026-07-16 05:52 Asia/Kolkata - Standalone Writer chapter navigation and management
+
+- `DB.updateChapterFields(id, fields)` updates index-level chapter fields without rewriting manuscript content; `DB.deleteChapter(id)` permanently deletes an admin-selected chapter through Supabase/RLS.
+- `Dashboard.renderSidebarChapters()` fills the persistent, scrollable left chapter rail and `Dashboard.renderEditorTabs()` renders the currently open chapter tabs.
+- `Dashboard.render()` applies the persisted `State.dashboardSort` choice for chapter order, reversed chapter order, newest updated, or oldest updated.
+- `App.openEditorForChapter(id)` now adds/switches tabs and saves dirty content before switching; `App.closeChapterTab(id)` closes a tab without deleting its chapter.
+- `App.createNewChapter()` saves a dirty active tab first, creates the next `chapter_order` draft, and opens it from the editor tab-strip plus control.
+- `App.quickSetChapterTier(id, tierId)` changes access directly from the chapter index; `tierRowVisual(tierId)` gives each tier a stable row tint/accent while Free Access stays green; `App.deleteChapter(id)` confirms and deletes from either the index or editor settings.
+- `Editor.deleteCurrentSystemMessage()` deletes the system-message block containing the current cursor.
+- `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, blockquoted system messages, and `---` scene dividers.

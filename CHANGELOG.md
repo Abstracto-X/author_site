@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-07-16 05:52 Asia/Kolkata - Expand standalone Writer chapter workflow
+
+Area: admin | writer
+
+Summary:
+- Changed Markdown copy output to conventional LLM-friendly syntax, including asterisk emphasis, fenced code blocks, hyphen bullets, blockquoted system messages, and standard horizontal-rule scene breaks.
+- Added confirmed chapter deletion from both the chapter index and editor settings, plus a delete-current-system-box editor action.
+- Added a persistent scrollable chapter list beneath the left navigation and closable multi-chapter editor tabs that save dirty content before switching.
+- Added direct access-tier selection to every chapter-index row without rewriting chapter content; rows now use distinct tier-colored tinting, accent rails, and access dots (with green reserved for Free Access).
+- Added persisted Chapter Index sorting for chapter order, reversed order, newest updated, and oldest updated.
+- Added a plus control to the editor tab strip that creates a real Supabase draft at the next available chapter index and opens it immediately as a new tab.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-09 06:05 Asia/Kolkata - Add Wookieepedia planets scraper and extractor pipeline
 
 Area: external-data | pipeline
