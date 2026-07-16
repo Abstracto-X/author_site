@@ -59,6 +59,41 @@ async function redeemKey(code){
 }
 function copyText(t){ try{ navigator.clipboard&&navigator.clipboard.writeText(t); }catch(e){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); } toast("Copied to clipboard"); }
 
+function chapterDirectUrl(chapterId){
+  const url = new URL(window.location.href);
+  url.hash = `/read/${chapterId}`;
+  return url.href;
+}
+
+async function shareChapterLink(chapterId){
+  if (!chapterId) {
+    toast("Chapter link unavailable", "Open a chapter and try again.", {icon:"alert", kind:"bad"});
+    return;
+  }
+  const found = byId(chapterId);
+  const title = found ? `${found.ch.title} — ${found.story.title}` : "Chapter";
+  const url = chapterDirectUrl(chapterId);
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text:`Read ${title}`, url });
+      return;
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (_) {
+    try {
+      const ta=document.createElement("textarea"); ta.value=url; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+    } catch (error) {
+      toast("Could not copy chapter link", url, {icon:"alert", kind:"bad", ms:6000});
+      return;
+    }
+  }
+  toast("Chapter link copied", "Anyone opening it will land directly on this chapter; normal access rules still apply.", {icon:"copy", ms:4200});
+}
+
 /* ============ reader-only re-render (keep scroll) ============ */
 function renderReaderOnly(){ if(route.name!=="read"||!currentChapter) return;
   const v=VIEWS.read(); const tmp=document.createElement("div"); tmp.innerHTML=v;
@@ -285,6 +320,7 @@ function handleAct(act, el){
     case "reader-markread": toggleMarkRead(); break;
     case "reader-savequote": saveQuote(); break;
     case "reader-comments": { const c=document.getElementById("cmtblock"); if(c){ c.scrollIntoView({behavior:"smooth"}); } break; }
+    case "share-chapter": shareChapterLink(el.dataset.chapterId || currentChapter?.ch.id); break;
     case "offline-queue": toast("Offline reading unavailable","This site currently streams chapters after access is verified.",{icon:"download",ms:4000}); break;
     case "extra-open": toast("Opening bonus material","Author note · reader format.",{icon:"spark"}); break;
     case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); break;

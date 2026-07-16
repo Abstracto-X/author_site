@@ -2,6 +2,40 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-16 16:36 Asia/Kolkata - Manual QA for subscriber tier colors and chapter sharing
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- `js/subscription/utils.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/events.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Subscriber chapter cards and rows now carry access-tier color accents for free and gated chapters.
+- Chapter share controls generate direct `#/read/<chapter-id>` URLs through the native share sheet or clipboard fallback.
+
+Remaining work:
+- None known; complete responsive browser QA with real free, entitled, preview, locked, and external-only chapters.
+
+Risks / notes:
+- A shared link intentionally does not bypass authentication, publication, NSFW/external, or entitlement rules; recipients land on the appropriate reader, preview, external prompt, or lock screen.
+- Native `navigator.share` availability depends on the browser and secure context; clipboard copy is the fallback.
+
+Verification needed:
+- Compare Free Access, Resident Licker, Resident Tyrant, Resident Nemesis, and Resident Evil chapters in the story hub and Chapter Catalog; confirm each has the expected green/purple/amber/rose/cyan treatment whether readable or locked.
+- Trigger Share from a catalog card, story row, full/preview reader navigation, locked view, and external-only view.
+- Open a copied link in a signed-out/private window and confirm it lands directly on the correct chapter while showing the correct access state.
+- Check desktop and mobile layouts for badge wrapping, share-button hit targets, and chapter-row/card readability.
+
 ## 2026-07-16 05:52 Asia/Kolkata - Manual QA for standalone Writer navigation and deletion
 
 Status: NEEDS REVIEW

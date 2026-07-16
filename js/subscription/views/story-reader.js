@@ -216,10 +216,28 @@ function getLockTierClass(ch) {
 }
 
 function getLockColor(ch) {
-  const t = String(ch.tier || ch.required_tier_name || "").toLowerCase().trim();
-  if (t.includes("tyrant")) return "#ffc107";
-  if (t.includes("licker")) return "#9a7ed1";
-  return "rgba(255, 255, 255, 0.35)";
+  return chapterTierVisual(ch).accent;
+}
+
+function chapterTierVisual(ch) {
+  if (!ch.required_tier_id) return { rgb:"16, 185, 129", accent:"#34d399", label:"Free Access" };
+  const name = String(ch.required_tier_name || ch.tier || "").toLowerCase();
+  if (name.includes("licker")) return { rgb:"168, 85, 247", accent:"#c084fc", label:ch.required_tier_name || ch.tier };
+  if (name.includes("tyrant")) return { rgb:"245, 158, 11", accent:"#fbbf24", label:ch.required_tier_name || ch.tier };
+  if (name.includes("nemesis")) return { rgb:"244, 63, 94", accent:"#fb7185", label:ch.required_tier_name || ch.tier };
+  if (name.includes("evil")) return { rgb:"14, 165, 233", accent:"#38bdf8", label:ch.required_tier_name || ch.tier };
+  const palette = [
+    { rgb:"99, 102, 241", accent:"#818cf8" },
+    { rgb:"236, 72, 153", accent:"#f472b6" },
+    { rgb:"20, 184, 166", accent:"#2dd4bf" }
+  ];
+  const seed = String(ch.required_tier_id || name).split("").reduce((sum, char)=>sum+char.charCodeAt(0),0);
+  return { ...palette[seed % palette.length], label:ch.required_tier_name || ch.tier || "Member Access" };
+}
+
+function chapterTierStyle(ch) {
+  const visual = chapterTierVisual(ch);
+  return `--chapter-tier-rgb:${visual.rgb};--chapter-tier-accent:${visual.accent};`;
 }
 
 function chapterGridCard(ch, story) {
@@ -238,18 +256,20 @@ function chapterGridCard(ch, story) {
       : `<span style="opacity:0.35; display:inline-flex;">${I.book}</span>`);
   
   const tierClass = locked ? getLockTierClass(ch) : "";
+  const tierVisual = chapterTierVisual(ch);
   
   return `
-  <div class="chapter-card ${read?'read':''} ${locked?'locked':''} ${tierClass} ${now_?'now':''}" style="${story?storyAccentVars(story):''}" ${act}>
+  <div class="chapter-card chapter-access-coded ${read?'read':''} ${locked?'locked':''} ${tierClass} ${now_?'now':''}" style="${story?storyAccentVars(story):''}${chapterTierStyle(ch)}" ${act}>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; width:100%;">
       <div style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border-2); color:var(--text-dim);">
         ${statusIcon}
       </div>
       <div style="display:flex; gap:6px; align-items:center;">
-        ${locked && ch.required_tier_name ? `<span class="badge ${tierClass}" style="font-size:0.68rem; padding:2px 8px; border-radius:12px; border:1px solid currentColor;">${ch.required_tier_name}</span>` : ''}
+        <span class="badge chapter-tier-badge" style="font-size:0.68rem; padding:2px 8px; border-radius:12px;">${esc(tierVisual.label)}</span>
         ${ch.is_nsfw ? `<span class="badge external" style="background:rgba(255,68,68,0.12); color:var(--bad); border:1px solid rgba(255,68,68,0.22); font-size:0.68rem; padding:2px 8px; border-radius:12px;">External</span>` : ''}
         ${r.isEarly ? `<span class="badge early" style="background:rgba(224,138,74,0.12); color:var(--early); border:1px solid rgba(224,138,74,0.2); font-size:0.68rem; padding:2px 8px; border-radius:12px;">Early</span>` : ''}
         ${illus ? `<span class="badge illus" style="background:rgba(111,182,201,0.12); color:var(--frost, #6fb6c9); border:1px solid rgba(111,182,201,0.2); font-size:0.68rem; padding:2px 8px; border-radius:12px;">Illus</span>` : ''}
+        <button class="chapter-share" type="button" data-act="share-chapter" data-chapter-id="${ch.id}" aria-label="Share direct link to ${esc(ch.title)}" title="Share chapter link">${I.share}</button>
       </div>
     </div>
     <div class="chapter-card-body" style="display:flex; flex-direction:column; flex-grow:1;">
@@ -281,11 +301,10 @@ function chapterRow(ch, story){
       : `<span style="opacity:0.25; display:inline-flex;">${I.book}</span>`);
       
   const tierClass = locked ? getLockTierClass(ch) : "";
-  const tierBadge = (locked && ch.required_tier_name)
-    ? `<span class="badge ${tierClass}" style="margin-right:8px; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:12px; border:1px solid currentColor; display:inline-flex; align-items:center;">${ch.required_tier_name}</span>`
-    : '';
+  const tierVisual = chapterTierVisual(ch);
+  const tierBadge = `<span class="badge chapter-tier-badge" style="margin-right:8px; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:6px;"><span class="chapter-tier-dot"></span>${esc(tierVisual.label)}</span>`;
       
-  return `<div class="row ${read?'read':''} ${now_?'now':''} ${locked?'locked':''} ${tierClass}" style="${story?storyAccentVars(story):''}" ${act}>
+  return `<div class="row chapter-access-coded ${read?'read':''} ${now_?'now':''} ${locked?'locked':''} ${tierClass}" style="${story?storyAccentVars(story):''}${chapterTierStyle(ch)}" ${act}>
     <span class="num">${statusIcon}</span>
     <span class="body">
       <span class="t"><span class="tt">${ch.title}</span>${r.isEarly?badge('early','Early'):''}${illus?badge('illus','Illus'):''}${ch.state==='key'?badge('key','Key'):''}</span>
@@ -293,6 +312,7 @@ function chapterRow(ch, story){
       ${(!compact && reasonFor(ch,r))?`<span class="reason">${reasonFor(ch,r)}</span>`:""}
     </span>
     <span class="cta" style="display:flex; align-items:center;">
+      <button class="chapter-share" type="button" data-act="share-chapter" data-chapter-id="${ch.id}" aria-label="Share direct link to ${esc(ch.title)}" title="Share chapter link" style="margin-right:8px">${I.share}</button>
       ${tierBadge}
       ${ctaFor(ch,r,story,{small:true})}
     </span>
@@ -388,12 +408,15 @@ function readerNavButtons(ch, story, index) {
   const nextAct = next ? (isReadable(chapterResolved(next)) ? `data-read="${next.id}"` : `data-lock="${next.id}"`) : 'disabled';
   
   return `
-    <div class="reader-nav-buttons" style="display:flex; justify-content:center; align-items:center; gap:12px; margin: 24px 0 32px; width:100%;">
+    <div class="reader-nav-buttons" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px; margin: 24px 0 32px; width:100%;">
       <button class="btn sm ghost" ${prevAct} style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface); ${!prev ? 'opacity:0.3; pointer-events:none;' : ''}">
         ${I.chevL} Previous
       </button>
       <button class="btn sm ghost" data-nav="/story/${story.slug}" style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);">
         ${I.book} Book Hub
+      </button>
+      <button class="btn sm ghost" data-act="share-chapter" data-chapter-id="${ch.id}" style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);">
+        ${I.share} Share
       </button>
       <button class="btn sm ghost" ${nextAct} style="display:inline-flex; align-items:center; gap:6px; min-width:105px; justify-content:center; padding: 8px 16px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--surface); ${!next ? 'opacity:0.3; pointer-events:none;' : ''}">
         Next ${I.chevR}
@@ -443,6 +466,7 @@ function readerExternalChapter(ch, story, index, r){
       </div>
       <div class="col-flex" style="gap:9px;max-width:360px;margin:0 auto">
         ${url ? `<a class="btn story block" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${I.external || ""}Open external chapter</a>` : `<button class="btn story block" disabled>${I.alert}External URL missing</button>`}
+        <button class="btn ghost block" data-act="share-chapter" data-chapter-id="${ch.id}">${I.share}Share direct link</button>
         <button class="btn ghost" data-nav="/story/${story.slug}">${I.book}Back to book</button>
       </div>
     </div>
@@ -489,6 +513,7 @@ function readerLocked(ch, story, index, r){
     <div class="col-flex" style="gap:9px;max-width:340px;margin:0 auto">
       ${ch.state==='preview'?`<button class="btn story block" data-preview="${ch.id}">${I.eye}Read the preview</button>`:""}
       <button class="btn ${ch.state==='preview'?'ghost':'story'} block" data-lock="${ch.id}">${I.lockOpen}${r.state==='expired'?'Renew access':'Unlock options'}</button>
+      <button class="btn ghost block" data-act="share-chapter" data-chapter-id="${ch.id}">${I.share}Share direct link</button>
       <button class="btn ghost block" data-act="expected-access">${I.help}Expected this to be unlocked?</button>
       <button class="btn ghost" data-nav="/story/${story.slug}">${I.book}Back to book</button>
     </div>

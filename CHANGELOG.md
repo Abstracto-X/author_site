@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-07-16 16:36 Asia/Kolkata - Color-code and share subscriber chapters
+
+Area: reader
+
+Summary:
+- Applied access-tier color coding to subscriber chapter catalog cards and story chapter rows, including tier-tinted backgrounds, accent rails, dots, badges, borders, and hover states. Free Access is green; the resident tier ladder uses distinct purple, amber, rose, and cyan accents.
+- Added share controls to catalog cards, story rows, open chapter navigation, locked chapter views, and external-only chapter views.
+- Direct shares use the existing `#/read/<chapter-id>` route, opening the native share sheet when available or copying the URL otherwise. Recipient authentication and entitlement checks remain unchanged.
+
+Files changed:
+- `js/subscription/utils.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/events.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-16 05:52 Asia/Kolkata - Expand standalone Writer chapter workflow
 
 Area: admin | writer

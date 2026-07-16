@@ -14,6 +14,8 @@ Recent CMS rebuild reader changes:
 | `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags; converts `<hr>` and standalone `--` into scene breaks. |
 | `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
 | `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |
+| `js/subscription/views/story-reader.js` | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Assigns Free Access and each configured tier a consistent accent used by chapter catalog cards, story rows, badges, and share controls. |
+| `js/subscription/events.js` | `chapterDirectUrl(chapterId)` / `shareChapterLink(chapterId)` | Builds a direct `#/read/<chapter-id>` URL and opens the native share sheet or copies the link while preserving normal reader access checks. |
 | `js/subscription/router.js` | `parseHash()` | Redirects `/studio/*` to `admin.html`; the reader-side Author Studio prototype is inactive. |
 
 Recent reader notification/profile changes:
@@ -281,6 +283,7 @@ Recent reader notification/profile changes:
 | 218 | `getLockColor(ch)` | Helper to get border/shadow/icon color based on chapter required access tier. |
 | 225 | `chapterGridCard(ch, story)` | Renders a premium card for the chapter catalog grid. |
 | 264 | `chapterRow(ch, story)` | Renders a table row in the story hub chapter list. |
+| n/a | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Maps Free Access and named/fallback member tiers to reusable reader accent variables. |
 | 321 | `readerShell(themeClass, inner, settings)` | Renders the global layout/shell for the reader stage. |
 | 335 | `readerBar()` | Renders the bottom navigation bar for settings/reactions/comments. |
 | 348 | `renderBlocks(blocks, chId)` | Builds and returns or injects the HTML for the chapter blocks. |
@@ -339,6 +342,8 @@ Recent reader notification/profile changes:
 | 11 | `connectPatreonGo()` | Helper used by this module. |
 | 26 | `redeemKey(code)` | Helper used by this module. |
 | 52 | `copyText(t)` | Helper used by this module. |
+| n/a | `chapterDirectUrl(chapterId)` | Builds the canonical hash-route URL for a published chapter. |
+| n/a | `shareChapterLink(chapterId)` | Uses the native share sheet when available and otherwise copies the direct chapter URL. |
 | 55 | `renderReaderOnly()` | Builds and returns or injects the HTML for this UI section. |
 | 64 | `updateReaderBar()` | Persists changes to Supabase or updates local state. |
 | 68 | `afterRender()` | Builds and returns or injects the HTML for this UI section. |

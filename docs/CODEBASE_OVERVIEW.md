@@ -78,7 +78,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 | `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
 | `router.js` | Hash route parsing and render dispatch. | Preserves route names and view registry behavior. |
 | `views/home-library.js` | Home/library routes. | Published story discovery, hero/library presentation, empty setup state. |
-| `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering. |
+| `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering, including tier-color-coded chapter cards/rows and direct chapter-share controls. |
 | `views/account-access.js` | Updates, calendar, collections, vault, shelf, notifications, benefits, onboarding. | Must not render hardcoded fake backend content. |
 | `views/help-support.js` | Help/support routes. | Mostly static support copy/forms. |
 | `views/studio-preview.js` | Archived/inactive studio placeholder module. | Not loaded by `index.html`; `/studio/*` redirects to `admin.html`. |
@@ -110,7 +110,7 @@ Common route groups include:
 | `/`, `/library` | `views/home-library.js` | Home and story discovery/library. |
 | `/story/<slug>` | `views/story-reader.js` | Story hub/details. |
 | `/story/<slug>/chapters` | `views/story-reader.js` | Chapter shelf/catalog. |
-| `/read/<chapter>` | `views/story-reader.js` | Chapter reader. |
+| `/read/<chapter>` | `views/story-reader.js` | Directly addressable chapter reader route; share controls generate this hash URL, while authentication and tier checks still apply to the recipient. |
 | `/vault`, `/shelf`, `/notifications`, `/benefits`, `/onboarding` | `views/account-access.js` | Member/account/access surfaces. |
 | `/updates`, `/calendar`, `/collections` | `views/account-access.js` | Backend-aware update/calendar/collection surfaces; must show honest empty states if no DB data exists. |
 | `/help`, `/support` | `views/help-support.js` | Help/support pages. |
