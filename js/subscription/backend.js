@@ -448,6 +448,34 @@ async function loadReaderNotifications(options = {}){
     return [];
   }
 }
+let readerNotificationPollTimer = null;
+let readerNotificationVisibilityBound = false;
+function notificationStoreSignature(){
+  return (store.notifs || []).map(n=>`${n.id}:${n.read?1:0}:${n.dismissed?1:0}`).join("|");
+}
+async function refreshReaderNotifications(options = {}){
+  if (!authState.user) return [];
+  const before = notificationStoreSignature();
+  const rows = await loadReaderNotifications({ browser:options.browser !== false });
+  const changed = before !== notificationStoreSignature();
+  if (changed && options.updateUi !== false) {
+    if (route?.name === "notifications") render();
+    else if (document.querySelector(".topbar") && typeof topbar === "function") document.querySelector(".topbar").outerHTML = topbar();
+  }
+  return rows;
+}
+function startReaderNotificationPolling(){
+  if (readerNotificationPollTimer) clearInterval(readerNotificationPollTimer);
+  readerNotificationPollTimer = setInterval(()=>{
+    if (document.visibilityState === "visible") refreshReaderNotifications().catch(()=>{});
+  }, 60000);
+  if (!readerNotificationVisibilityBound) {
+    document.addEventListener("visibilitychange", ()=>{
+      if (document.visibilityState === "visible") refreshReaderNotifications().catch(()=>{});
+    });
+    readerNotificationVisibilityBound = true;
+  }
+}
 async function markReaderNotificationsRead(ids){
   const client = getSupabase();
   if (!client || !authState.user || !ids.length) return false;

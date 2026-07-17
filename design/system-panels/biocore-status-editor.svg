@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#02060b"/><stop offset=".48" stop-color="#07131d"/><stop offset="1" stop-color="#020509"/></linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a2635" stop-opacity=".92"/><stop offset=".48" stop-color="#06131e" stop-opacity=".96"/><stop offset="1" stop-color="#08101a" stop-opacity=".98"/></linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#6ff7ff"/><stop offset=".45" stop-color="#16c8ed"/><stop offset="1" stop-color="#0877ab"/></linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#fff2a0"/><stop offset=".45" stop-color="#f4b94d"/><stop offset="1" stop-color="#e56d21"/></linearGradient>
+    <radialGradient id="core"><stop stop-color="#30ddff" stop-opacity=".3"/><stop offset=".5" stop-color="#0ba8d6" stop-opacity=".08"/><stop offset="1" stop-color="#00131d" stop-opacity="0"/></radialGradient>
+    <pattern id="hex" width="52" height="45" patternUnits="userSpaceOnUse"><path d="M13 1h26l12 21-12 21H13L1 22z" fill="none" stroke="#35d9ff" stroke-opacity=".055"/></pattern>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#9aefff" opacity=".025"/></pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="16"/></filter>
+    <clipPath id="shellClip"><path d="M95 40h1260l150 150v610l-150 150H245L95 800z"/></clipPath>
+    <style>
+      .micro{font-family:Arial,sans-serif;font-size:11px;letter-spacing:3px;fill:#5e8497}.label{font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;fill:#82a7b7}.value{font-family:Arial,sans-serif;font-size:21px;font-weight:700;fill:#e6faff}.cyan{fill:#66efff}.amber{fill:#ffc867}.line{stroke:#27d9ff;stroke-opacity:.38;fill:none}.thin{stroke-width:1}.med{stroke-width:2}.hot{filter:url(#glow)}
+      .fo{font-family:Arial,sans-serif;color:#eafcff}.fo *{box-sizing:border-box}.screen{display:grid;grid-template-columns:1fr 1fr;gap:7px 22px}.field{min-height:52px;padding:7px 15px 7px 18px;border-left:2px solid rgba(53,222,255,.52);background:linear-gradient(90deg,rgba(16,130,164,.16),rgba(3,13,21,.08));position:relative}.field:after{content:"";position:absolute;right:0;top:0;width:22px;height:1px;background:#2fe3ff;opacity:.5}.field.wide{grid-column:1/-1}.field label{display:block;font-size:9px;font-weight:800;letter-spacing:2.4px;color:#78a7ba;text-transform:uppercase;margin-bottom:3px}.field input,.field select{width:100%;border:0;border-bottom:1px solid rgba(83,229,255,.32);outline:0;background:transparent;color:#ecfbff;font:700 16px Arial,sans-serif;padding:1px 0 3px}.field input:focus,.field select:focus{border-color:#65efff;filter:drop-shadow(0 0 5px rgba(58,222,255,.4))}.field select option{background:#06131d}.integrity{display:flex;gap:14px;align-items:center}.integrity input{width:85px}.meter{height:8px;flex:1;background:#071c27;border:1px solid rgba(78,226,255,.23);position:relative}.meter i{display:block;width:88%;height:100%;background:linear-gradient(90deg,#13a7ce,#70f6ff);box-shadow:0 0 12px #35dfff}.chips{display:flex;gap:5px;flex-wrap:wrap}.chip{padding:4px 9px;border:1px solid rgba(88,230,255,.32);background:rgba(15,137,169,.11);clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);font-size:11px;color:#c8f7ff}.chip.active{border-color:#ffc15a;background:rgba(230,134,39,.13);color:#ffe1a3}.detail{float:right;margin-top:-20px;border:1px solid rgba(60,222,255,.35);background:#071822;color:#54e9ff;padding:4px 8px;font-size:8px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}.nav{display:flex;gap:10px;justify-content:center;margin-top:8px}.nav button{min-width:150px;padding:9px 20px;border:1px solid rgba(65,224,255,.42);background:linear-gradient(180deg,rgba(17,103,132,.3),rgba(2,12,19,.75));color:#bff8ff;font-size:10px;font-weight:800;letter-spacing:2px;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+      .toolbar{display:flex;gap:8px;justify-content:flex-end}.toolbar button{border:1px solid rgba(76,221,255,.35);background:#06131e;color:#8fefff;padding:7px 12px;font-size:10px;font-weight:800;letter-spacing:1.4px}.toolbar button.on{background:#0e5268;color:#fff}.preview .field input,.preview .field select{pointer-events:none;border-color:transparent}.preview .edit-note{display:none}.editing .preview-note{display:none}
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#hex)"/>
+  <ellipse cx="1260" cy="230" rx="360" ry="310" fill="url(#core)"/>
+  <g opacity=".38"><circle cx="1275" cy="205" r="155" fill="none" stroke="#26dfff"/><circle cx="1275" cy="205" r="119" fill="none" stroke="#26dfff" stroke-dasharray="3 16" stroke-width="3"/><path d="M1085 205h380M1275 15v380" stroke="#26dfff" stroke-opacity=".25"/><path d="M1160 94l230 222M1390 94l-230 222" stroke="#26dfff" stroke-opacity=".12"/></g>
+  <path d="M95 40h1260l150 150v610l-150 150H245L95 800z" fill="url(#panel)" stroke="#35dfff" stroke-opacity=".4" stroke-width="2"/>
+  <g clip-path="url(#shellClip)"><rect x="95" y="40" width="1410" height="910" fill="url(#scan)"/><path d="M90 210h1420M90 866h1420" stroke="#35dfff" stroke-opacity=".11"/><path d="M1180 40l325 325M1030 950l475-475" stroke="#35dfff" stroke-opacity=".055" stroke-width="70"/></g>
+
+  <g class="line med hot"><path d="M95 226V40h450"/><path d="M1505 374V800l-150 150h-300"/><path d="M95 740v60l150 150h220"/><path d="M1260 40h95l150 150v92"/></g>
+  <g fill="#48e8ff"><path d="M95 40h140v7H95z"/><path d="M1360 943h145v7h-145z"/><path d="M88 258h7v92h-7z"/><path d="M1505 410h7v122h-7z"/></g>
+  <g opacity=".7"><path d="M1270 61h76l109 109v43" fill="none" stroke="url(#amber)" stroke-width="3"/><circle cx="1447" cy="222" r="4" fill="#ffbf55" filter="url(#glow)"/></g>
+
+  <text x="150" y="105" class="micro">EVOLUTIONARY CONTROL INTERFACE // HOST LINK ESTABLISHED</text>
+  <text x="150" y="151" font-family="Arial" font-size="34" font-weight="800" fill="#ecfbff" letter-spacing="3">BIOCORE</text>
+  <text x="380" y="151" font-family="Arial" font-size="34" font-weight="300" fill="#48e5ff" letter-spacing="3">STATUS MATRIX</text>
+  <path d="M150 169h650" stroke="url(#cyan)" stroke-width="2"/><path d="M810 169h170" stroke="#e99438" stroke-width="2"/>
+  <g transform="translate(1210 78)"><rect width="205" height="74" rx="4" fill="#06131c" stroke="#36dff9" stroke-opacity=".35"/><circle cx="34" cy="37" r="13" fill="none" stroke="#6df5ff" stroke-width="3" filter="url(#glow)"/><circle cx="34" cy="37" r="5" fill="#6df5ff"/><text x="60" y="31" class="micro" style="letter-spacing:2px">SYSTEM ONLINE</text><text x="60" y="51" font-family="Arial" font-weight="700" font-size="13" fill="#d7faff">SYNC 100% · SECURE</text></g>
+
+  <g transform="translate(150 205)"><path d="M0 0h1180l56 56v42H0z" fill="#071823" stroke="#2cdaef" stroke-opacity=".32"/><text x="25" y="34" class="micro">HOST DESIGNATION</text><text x="215" y="37" class="value">ALEX</text><text x="940" y="34" class="micro">CONDITION</text><rect x="1060" y="15" width="130" height="42" fill="#0a2a29" stroke="#53f5b3"/><text x="1092" y="43" font-family="Arial" font-weight="800" font-size="14" fill="#79ffc5" letter-spacing="2">ALIVE</text></g>
+
+  <foreignObject x="150" y="322" width="1300" height="555">
+    <div xmlns="http://www.w3.org/1999/xhtml" class="fo">
+      <div class="toolbar"><span class="edit-note" style="font-size:10px;color:#f2c067;letter-spacing:1.5px;padding:8px">EDIT VALUES DIRECTLY IN THE SYSTEM</span><span class="preview-note" style="font-size:10px;color:#68eaff;letter-spacing:1.5px;padding:8px">READER PREVIEW</span><button id="editBtn" class="on" onclick="setMode('editing')">EDIT</button><button id="previewBtn" onclick="setMode('preview')">READER PREVIEW</button></div>
+      <div class="screen" style="margin-top:10px">
+        <div class="field"><label>Name</label><input value="Alex"/></div>
+        <div class="field"><label>Status</label><select><option>Alive</option><option>Compromised</option><option>Critical</option></select></div>
+        <div class="field wide"><label>Biological Integrity</label><div class="integrity"><input type="number" min="0" max="100" value="88" oninput="document.getElementById('integrityBar').style.width=this.value+'%'"/><strong>%</strong><span class="meter"><i id="integrityBar"></i></span></div></div>
+        <div class="field wide"><label>Traits</label><button class="detail">Detailed view ›</button><div class="chips"><span class="chip">Better Evolved</span><span class="chip">Controlled Infectiveness</span><span class="chip">Apex Breeding Urge</span><span class="chip">Succubus Scent Glands</span></div></div>
+        <div class="field"><label>Current Biological Form</label><select><option>Cereberus/MA-129 · Uncommon · Evolved</option></select></div>
+        <div class="field"><label>Forms Available</label><button class="detail">Detailed view ›</button><div class="chips"><span class="chip">Cereberus/MA-129</span></div></div>
+        <div class="field"><label>Mutation Slots</label><input type="number" value="2"/></div>
+        <div class="field"><label>Mutations Active</label><div class="chips"><span class="chip active">Select mutation v</span><span class="chip active">Select mutation v</span></div></div>
+        <div class="field wide"><label>Mutations Available</label><button class="detail">Detailed view ›</button><div class="chips"><span style="color:#718e9a;font-size:12px">No unlocked mutations recorded</span></div></div>
+        <div class="field"><label>Evolution Points</label><input type="number" value="1002"/></div>
+        <div class="field"><label>Next Evolution Milestone</label><input type="number" value="10000"/></div>
+      </div>
+      <div class="nav"><button>SHOP</button><button>LOTTERY</button><button>WORLDS</button></div>
+    </div>
+  </foreignObject>
+
+  <g transform="translate(150 915)"><text class="micro">ADAPTIVE BIOLOGICAL NETWORK</text><text x="930" class="micro">EP TO NEXT MILESTONE</text><text x="1184" y="2" font-family="Arial" font-size="17" font-weight="800" fill="#ffc45e">8,998</text></g>
+  <script><![CDATA[
+    function setMode(mode){
+      document.documentElement.setAttribute('class', mode);
+      document.getElementById('editBtn').classList.toggle('on',mode==='editing');
+      document.getElementById('previewBtn').classList.toggle('on',mode==='preview');
+      document.querySelectorAll('input,select').forEach(function(control){ control.disabled=mode==='preview'; });
+    }
+    setMode('editing');
+  ]]></script>
+</svg>

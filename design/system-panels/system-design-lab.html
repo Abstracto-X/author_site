@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>System UI Design Lab</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#050608;color:#e8f7fb;font-family:Inter,system-ui,sans-serif}.labbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(5,7,10,.94);border-bottom:1px solid #27323a;backdrop-filter:blur(14px)}.labbar h1{font-size:16px;margin:0;letter-spacing:.08em}.labbar p{margin:3px 0 0;color:#7e909a;font-size:12px}.tabs{display:flex;gap:8px}.tabs button{border:1px solid #344650;background:#0d1419;color:#a7bbc5;border-radius:5px;padding:9px 13px;cursor:pointer}.tabs button.active{border-color:#49dbf4;color:#dffbff;background:#12303a}.stage{padding:22px}.frame{width:min(1600px,100%);margin:auto;aspect-ratio:16/10;border:1px solid #22313a;background:#020507;box-shadow:0 30px 100px #000;display:none}.frame.active{display:block}.frame object{display:block;width:100%;height:100%;border:0}.note{max-width:1000px;margin:18px auto;color:#81959f;font-size:13px;line-height:1.6}.note strong{color:#d8f8ff}
+  </style>
+</head>
+<body>
+  <header class="labbar"><div><h1>AAA SYSTEM UI — SEPARATE DESIGN LAB</h1><p>Nothing on this page is wired into Writer or the reader.</p></div><nav class="tabs"><button class="active" data-screen="status">Status + inline editing</button><button data-screen="shop">Shop</button><button data-screen="mutations">Mutations</button></nav></header>
+  <main class="stage">
+    <section class="frame active" id="status"><object data="biocore-status-editor.svg" type="image/svg+xml"></object></section>
+    <section class="frame" id="shop"><object data="red-queen-shop.svg" type="image/svg+xml"></object></section>
+    <section class="frame" id="mutations"><object data="mutation-nexus.svg" type="image/svg+xml"></object></section>
+    <p class="note"><strong>Status screen:</strong> edit values directly inside the system dialogue, then click <em>Reader Preview</em> within the SVG. The Shop and Mutations screens establish two additional page-specific visual languages without changing the system data model.</p>
+  </main>
+  <script>document.querySelectorAll('[data-screen]').forEach(button=>button.onclick=()=>{document.querySelectorAll('[data-screen],.frame').forEach(el=>el.classList.remove('active'));button.classList.add('active');document.getElementById(button.dataset.screen).classList.add('active')});</script>
+</body>
+</html>

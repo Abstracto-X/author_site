@@ -77,7 +77,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 | `utils.js` | Pure-ish UI/data helpers. | Escaping, formatting, icons, cards, access labels, generated cover art, text parsing. |
 | `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
 | `router.js` | Hash route parsing and render dispatch. | Preserves route names and view registry behavior. |
-| `views/home-library.js` | Home/library routes. | Published story discovery, hero/library presentation, empty setup state. |
+| `views/home-library.js` | Home/library routes. | Published story discovery, mobile-safe home layout, tier-colored chapter availability overview, fixed-position access pills, and empty setup state. |
 | `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering, including tier-color-coded chapter cards/rows and direct chapter-share controls. |
 | `views/account-access.js` | Updates, calendar, collections, vault, shelf, notifications, benefits, onboarding. | Must not render hardcoded fake backend content. |
 | `views/help-support.js` | Help/support routes. | Mostly static support copy/forms. |
@@ -97,7 +97,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
 7. `backend.js` loads reader community state for open chapters: public comments from `comments` and reaction totals from `chapter_reactions`.
-8. Signed-in readers load `reader_notifications` and `reader_notification_preferences`; the Settings sheet can save email/browser chapter alert preferences, and browser notifications are shown while the site is open if permission is granted.
+8. Signed-in readers load `reader_notifications` and `reader_notification_preferences`; the client refreshes alerts every minute while visible and when returning to the tab. The Settings sheet saves email/browser chapter alert preferences, and browser notifications are shown while the site is open if permission is granted.
 9. `events.js` handles delegated interactions, profile edits/avatar uploads, notification preference saves, comment/reaction writes, and re-renders or opens sheets as needed.
 10. `onboarding.js` optionally highlights key UI regions after render when reader guides are enabled; a separate versioned "What's new" sheet appears once per signed-in user after reader updates.
 
@@ -224,3 +224,12 @@ supabase db query --linked "select * from public.get_chapter_catalog('<story_uui
 ```
 
 Manual verification is preferred over automated browser testing unless explicitly requested.
+
+---
+
+## 2026-07-17 - Versioned story-system foundation and visual approval gate
+
+- Structured system data uses `story_systems`, `story_system_versions`, `story_system_checkpoints`, and `reader_system_progress`. Raw definitions/checkpoints remain admin-only; reader access is resolved through `get_reader_system_state`.
+- `js/system-core.js`, `js/writer-system.js`, and `js/subscription/system-panel.js` are currently inactive implementation references. Neither `writer.html` nor `index.html` loads them.
+- The initial plain frontend prototype was deliberately detached. Production integration is blocked on visual approval and must use in-dialogue/WYSIWYG value editing plus a chapter-context Reader Preview.
+- `design/system-panels/system-design-lab.html` is a dependency-free review surface for the BioCore status editor, Red Queen shop, and Mutation Nexus SVG concepts. It is not a production route.

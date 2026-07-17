@@ -112,13 +112,36 @@ function memberArchivePanel(){
 }
 function updateRow(u){
   const s=bySlug(u.story); if(!s) return "";
-  const kindLabel={early:"Early access","public-unlock":"Public release","newly-available":"Newly unlocked","member-drop":"Member drop",note:"Author note",schedule:"Schedule",campaign:"Key campaign"}[u.kind]||"Update";
+  const found=u.chapter?byId(u.chapter):null;
+  const ch=found?.ch || null;
+  const tierLabel=ch?(!ch.required_tier_id ? "Free Access" : (ch.required_tier_name || ch.tier || "Member Access")):"";
+  const kindLabel=tierLabel || {early:"Early access","public-unlock":"Public release","newly-available":"Newly unlocked",note:"Author note",schedule:"Schedule",campaign:"Key campaign"}[u.kind]||"Update";
   const kColor={early:"early","public-unlock":"free","newly-available":"gold","member-drop":"key",note:"",schedule:"",campaign:"key"}[u.kind]||"";
-  return `<div class="row" ${u.chapter?`data-read="${u.chapter}"`:`data-nav="/story/${s.slug}/updates"`}>
+  const tierStyle=ch && typeof chapterTierStyle==="function" ? chapterTierStyle(ch) : "";
+  return `<div class="row home-update-row ${ch?'chapter-access-coded':''}" style="${tierStyle}" ${u.chapter?`data-read="${u.chapter}"`:`data-nav="/story/${s.slug}/updates"`}>
     <span class="ic-col" style="color:var(--${kColor||'text-dim'})">${u.chapter?I.feed:I.msg}</span>
-    <span class="body"><span class="t"><span class="tt">${u.title}</span>${badge(kColor,kindLabel)}</span>
+    <span class="body"><span class="t"><span class="tt">${u.title}</span></span>
     <span class="sub">${meta([`<i>${I.clock}</i>${u.when}`,s.title,u.note])}</span></span>
+    <span class="update-tier-slot">${badge(ch?'chapter-tier-badge':kColor,kindLabel)}</span>
     <span class="cta">${u.chapter?`<button class="btn sm" data-read="${u.chapter}">Read</button>`:`<span class="faint">${I.chevR}</span>`}</span>
+  </div>`;
+}
+
+function homeChapterAccessRow(ch, story){
+  const r=chapterResolved(ch);
+  const readable=isReadable(r);
+  const tierName=!ch.required_tier_id ? "Free Access" : (ch.required_tier_name || ch.tier || "Member Access");
+  const accessLabel=readable ? "Available" : r.state==="preview" ? "Preview" : r.state==="unavailable" ? "Unavailable" : "Locked";
+  const accessIcon=readable ? I.checkCirc : r.state==="preview" ? I.eye : I.lock;
+  const action=readable || r.state==="preview" ? `data-read="${ch.id}"` : `data-lock="${ch.id}"`;
+  const tierStyle=typeof chapterTierStyle==="function" ? chapterTierStyle(ch) : "";
+  const displayTitle=/^chapter\b/i.test(ch.title || "") ? ch.title : `Chapter ${ch.n}: ${ch.title}`;
+  return `<div class="home-chapter-row chapter-access-coded" style="${tierStyle}">
+    <button class="home-chapter-title" ${action} aria-label="Open ${esc(displayTitle)}">
+      <span class="chapter-tier-dot"></span><span class="home-chapter-copy"><b>${esc(displayTitle)}</b><small>${ch.wordCount || (ch.readTime * 220) || 0} words</small></span>
+    </button>
+    <span class="badge chapter-tier-badge home-tier-pill" title="Required access: ${esc(tierName)}">${esc(tierName)}</span>
+    <button class="home-access-state ${readable?'is-readable':r.state==='preview'?'is-preview':'is-locked'}" ${action} title="${esc(accessLabel)}">${accessIcon}<span>${accessLabel}</span></button>
   </div>`;
 }
 
@@ -213,6 +236,10 @@ VIEWS.home = function(){
   const updatesHtml = D.UPDATES.length
     ? D.UPDATES.slice(0, 10).map(updateRow).join("")
     : `<div class="empty-state-card" style="text-align:center;padding:32px 16px"><span style="font-size:2rem;display:block;margin-bottom:8px">🔔</span><p class="faint" style="margin:0">No updates in the archive yet.</p></div>`;
+  const latestChapters = [...primary.chapters].sort((a,b)=>{
+    const dateDelta=new Date(b.updated_at || b.created_at || 0)-new Date(a.updated_at || a.created_at || 0);
+    return dateDelta || (Number(b.n)||0)-(Number(a.n)||0);
+  }).slice(0,10);
 
   return `
   ${announcement()}
@@ -295,6 +322,15 @@ VIEWS.home = function(){
 
     <!-- Right Column: Latest Updates -->
     <div class="home-main-col">
+      <div class="card home-chapter-access-card">
+        <div class="section-head">
+          <div><h2>Chapter Access</h2><p class="faint home-section-note">Tier colors and availability for your current access.</p></div>
+          <button class="btn ghost sm" data-nav="/story/${primary.slug}/chapters">All chapters ${I.chevR}</button>
+        </div>
+        <div class="home-chapter-list">
+          ${latestChapters.length ? latestChapters.map(ch=>homeChapterAccessRow(ch,primary)).join("") : `<div class="empty"><p>No published chapters yet.</p></div>`}
+        </div>
+      </div>
       <div class="card updates-list-card">
         <div class="section-head">
           <h2>Latest Updates</h2>

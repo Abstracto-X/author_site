@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-07-17 10:41 Asia/Kolkata - Add versioned story-system foundation and separate AAA UI lab
+
+Area: database | design
+
+Summary:
+- Added a story-agnostic structured system model with versioned page/field definitions, full chapter-end checkpoints, global page appearance, safe calculated fields, catalog references, slot validation, reader progress, RLS, and guarded RPCs.
+- Seeded the supplied Resident Evil Version 1 and Alex values as an unpublished, admin-only baseline draft so no historical reader spoilers are exposed.
+- Added a production-detached SVG design lab with BioCore Status Matrix, Red Queen Shop, and Mutation Nexus concepts. The status concept edits values directly inside the dialogue and includes an author/reader-preview toggle.
+- Removed the initial plain frontend prototype from Writer and the reader. No new system UI is loaded by either production surface until the visual direction is approved.
+
+Files changed:
+- `design/system-panels/system-design-lab.html`
+- `design/system-panels/biocore-status-editor.svg`, `red-queen-shop.svg`, `mutation-nexus.svg`
+- Inactive implementation modules: `js/system-core.js`, `js/writer-system.js`, `js/subscription/system-panel.js`
+- `supabase/migrations/20260717080000_story_systems.sql`, `database/sql/20260717080000_story_systems.sql`
+- Project documentation and state files
+
+## 2026-07-16 19:10 Asia/Kolkata - Repair mobile home access overview and notification refresh
+
+Area: reader
+
+Summary:
+- Reworked the subscriber home screen for narrow phones, removing horizontal overflow, hiding desktop-only admin shortcuts, containing long controls, and tightening the cover/actions/cards without collapsing the content hierarchy.
+- Added a latest-chapter access panel directly to Home with the same tier colors used by the story catalog, explicit Available/Preview/Locked state, and current-reader entitlement resolution.
+- Replaced generic chapter update labels such as “Member drop” with the actual required access-tier name. Update titles now truncate inside a fixed grid column instead of pushing the tier pill and Read button around.
+- Made in-app notifications refresh on startup, every minute while visible, and immediately after returning to the tab; added a manual Refresh control, a proper empty state, and read-state persistence when an alert is opened.
+
+Files changed:
+- `js/subscription/aether-app.js`
+- `js/subscription/auth.js`
+- `js/subscription/backend.js`
+- `js/subscription/chrome.js`
+- `js/subscription/events.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/home-library.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-16 16:36 Asia/Kolkata - Color-code and share subscriber chapters
 
 Area: reader

@@ -10,7 +10,7 @@ function init(){
   delegate();
   window.addEventListener("hashchange", render);
   render();
-  initAuth().then(async ()=>{ await loadBackendLibrary(); saveStore(); render(); if (authState.passwordRecovery && authState.user) setTimeout(() => openSheet(sheetUpdatePassword), 0); }).catch(err=>console.error("Auth bridge init failed", err));
+  initAuth().then(async ()=>{ await loadBackendLibrary(); if (typeof startReaderNotificationPolling === "function") startReaderNotificationPolling(); saveStore(); render(); if (authState.passwordRecovery && authState.user) setTimeout(() => openSheet(sheetUpdatePassword), 0); }).catch(err=>console.error("Auth bridge init failed", err));
   // welcome toast for first bridge load
   if(!LS.getItem("aether-welcomed")){ LS.setItem("aether-welcomed","1"); setTimeout(()=>toast(`Welcome to ${SITE_NAME}`,"Loading the published member library.",{icon:"spark",ms:6500}),900); }
 }

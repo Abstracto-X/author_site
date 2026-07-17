@@ -64,6 +64,15 @@ function chapterDirectUrl(chapterId){
   url.hash = `/read/${chapterId}`;
   return url.href;
 }
+function openReaderNotification(id, chapterId, notificationUrl){
+  const item=(store.notifs||[]).find(n=>String(n.id)===String(id));
+  if (item) item.read=true;
+  saveStore();
+  if (id) markReaderNotificationsRead([id]).catch(err=>console.warn("Unable to mark notification read",err));
+  if (chapterId) nav("/read/"+chapterId);
+  else if (notificationUrl && notificationUrl.startsWith("#/")) nav(notificationUrl.slice(1));
+  else render();
+}
 
 async function shareChapterLink(chapterId){
   if (!chapterId) {
@@ -321,6 +330,8 @@ function handleAct(act, el){
     case "reader-savequote": saveQuote(); break;
     case "reader-comments": { const c=document.getElementById("cmtblock"); if(c){ c.scrollIntoView({behavior:"smooth"}); } break; }
     case "share-chapter": shareChapterLink(el.dataset.chapterId || currentChapter?.ch.id); break;
+    case "open-notification": openReaderNotification(el.dataset.notificationId, el.dataset.chapterId, el.dataset.notificationUrl); break;
+    case "refresh-notifications": refreshReaderNotifications({browser:false}).then(()=>toast("Notifications refreshed",null,{icon:"bell"})).catch(err=>toast("Refresh failed",err.message||"Unable to load alerts.",{icon:"alert",kind:"bad"})); break;
     case "offline-queue": toast("Offline reading unavailable","This site currently streams chapters after access is verified.",{icon:"download",ms:4000}); break;
     case "extra-open": toast("Opening bonus material","Author note · reader format.",{icon:"spark"}); break;
     case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); break;

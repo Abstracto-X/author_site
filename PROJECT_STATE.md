@@ -2,6 +2,83 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-17 10:41 Asia/Kolkata - Structured-system visual approval and integration
+
+Status: NEEDS REVIEW
+
+Area:
+- design
+- writer
+- reader
+- database
+
+Files touched:
+- `design/system-panels/*`
+- `js/system-core.js`, `js/writer-system.js`, `js/subscription/system-panel.js` (inactive prototypes)
+- `supabase/migrations/20260717080000_story_systems.sql`
+
+Summary:
+- Versioned structured system schema is applied to the linked project and migration history records `20260717080000` as applied.
+- Resident Evil Version 1 and the supplied Alex state are seeded as an admin-only baseline draft, not reader-visible.
+- The first production UI prototype was detached after visual review. Writer and the subscription reader do not load the system scripts or expose the unfinished controls.
+- A separate SVG design lab now establishes three higher-fidelity AAA directions. The BioCore status screen demonstrates editing structured values inside the system dialogue itself and switching to Reader Preview.
+
+Remaining work:
+- Obtain visual approval for the standalone BioCore, Red Queen, and Mutation Nexus concepts before production integration.
+- After approval, implement the Writer System Builder and chapter update as a WYSIWYG system-dialogue editor, including an in-chapter Reader Preview—not a separate value form.
+- Then integrate the persistent reader widget, choose the canonically correct initial/chapter boundary, and publish the seeded draft only after confirming it does not spoil earlier chapters.
+
+Risks / notes:
+- Earlier local migrations `20260707222500`, `20260707223000`, and `20260708140000` remain absent from remote migration history; this feature was applied directly and its own migration history repaired without applying unrelated pending migrations.
+- Structural versions are locked after checkpoint publication; clone a new version and choose its “activates after chapter” boundary for later fields/pages.
+- Do not reconnect `js/writer-system.js` or `js/subscription/system-panel.js` merely because the data model exists; their old presentation is intentionally inactive pending the approved SVG/WYSIWYG implementation.
+
+Verification needed:
+- Review all three standalone designs at desktop and mobile widths and approve/revise the visual language.
+- After integration, exercise inline value editing, version cloning, field/page additions, catalog editing, mutation slot enforcement, draft save, checkpoint publication, and chapter Reader Preview.
+- Confirm Chapter N shows N-1 state until the ending, then reveals N; confirm rereading an older chapter rewinds contextual state while the story hub retains furthest progress.
+- Test signed-in progress on two devices, anonymous local progress, free/gated/expired access, and responsive drawer/dialog layout.
+
+## 2026-07-16 19:10 Asia/Kolkata - Home access and notification delivery follow-up
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- database operations
+
+Files touched:
+- `js/subscription/aether-app.js`
+- `js/subscription/auth.js`
+- `js/subscription/backend.js`
+- `js/subscription/chrome.js`
+- `js/subscription/events.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/home-library.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Home now exposes tier-colored chapter access and fixed-position tier pills, with narrow-phone containment verified at 390x844.
+- In-app/browser notification state now refreshes during an active session and an opened alert is persisted as read.
+- Linked-project inspection found 1,088 in-app notification rows and 1,088 matching email-queue rows, confirming the publish trigger is firing.
+
+Remaining work:
+- Configure a trusted scheduled invocation for the deployed `send-reader-email-queue` Edge Function. All 1,088 email rows were still `queued`, and the linked database currently has no `cron.job` relation, so email delivery is not being drained automatically.
+
+Risks / notes:
+- Do not expose a service-role key in browser code or hard-code it into a public migration merely to schedule the email sender.
+- Browser popups remain opt-in and require browser permission; in-app bell notifications work independently.
+
+Verification needed:
+- Test Home while signed in at each real tier and confirm Available/Locked state matches the story catalog.
+- Test a newly published chapter in a signed-in session and confirm the bell updates within one minute or immediately after returning to the tab.
+- After configuring the email scheduler/secrets, confirm queued rows transition to `sent` and a test recipient receives one email only.
+
 ## 2026-07-16 16:36 Asia/Kolkata - Manual QA for subscriber tier colors and chapter sharing
 
 Status: NEEDS REVIEW

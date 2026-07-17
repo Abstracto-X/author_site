@@ -13,7 +13,7 @@ function topbar(){
     <a class="brand" href="#/" data-nav="/">${brandMark()}<span class="btxt"><span class="serif">${esc(SITE_NAME)}</span><small>${esc(SITE_TAGLINE)}</small></span></a>
     <span class="spacer"></span>
     <button class="access-chip" data-state="${state}" data-nav="/vault"><span class="pulse"></span>${label}</button>
-    ${isAdmin()?`<a class="tb-btn" href="writer.html" aria-label="Writer">${I.book}</a><a class="tb-btn" href="admin.html" aria-label="Admin CMS">${I.shield}</a>`:""}
+    ${isAdmin()?`<a class="tb-btn admin-shortcut" href="writer.html" aria-label="Writer">${I.book}</a><a class="tb-btn admin-shortcut" href="admin.html" aria-label="Admin CMS">${I.shield}</a>`:""}
     <button class="tb-btn" data-nav="/notifications" aria-label="Notifications">${I.bell}${unread?`<span class="dot"></span>`:""}</button>
     <button class="tb-btn" data-sheet="persona" aria-label="Account and access">${I.user}</button>
   </header>`;

@@ -15,6 +15,7 @@ Recent CMS rebuild reader changes:
 | `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
 | `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |
 | `js/subscription/views/story-reader.js` | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Assigns Free Access and each configured tier a consistent accent used by chapter catalog cards, story rows, badges, and share controls. |
+| `js/subscription/views/home-library.js` | `homeChapterAccessRow(ch, story)` / `updateRow(u)` | Brings tier-colored chapter availability to the home screen and keeps update tier pills in a fixed column with truncated titles. |
 | `js/subscription/events.js` | `chapterDirectUrl(chapterId)` / `shareChapterLink(chapterId)` | Builds a direct `#/read/<chapter-id>` URL and opens the native share sheet or copies the link while preserving normal reader access checks. |
 | `js/subscription/router.js` | `parseHash()` | Redirects `/studio/*` to `admin.html`; the reader-side Author Studio prototype is inactive. |
 
@@ -25,7 +26,9 @@ Recent reader notification/profile changes:
 | `js/subscription/auth.js` | `profileAvatar()` / `uploadReaderAvatar(file)` / `updateReaderProfile(...)` | Supports signed-in reader profile edits, username/display name changes, and avatar uploads to the `Reader/<user_id>/profile/...` storage path. |
 | `js/subscription/backend.js` | `loadNotificationPreferences()` / `saveNotificationPreferences(prefs)` | Loads and saves signed-in reader email/browser chapter notification preferences. |
 | `js/subscription/backend.js` | `loadReaderNotifications(options)` / `markReaderNotificationsRead(ids)` / `dismissReaderNotification(id)` | Syncs DB-backed reader notifications into the existing notifications view and updates read/dismissed state. |
+| `js/subscription/backend.js` | `refreshReaderNotifications(options)` / `startReaderNotificationPolling()` | Refreshes alerts while the tab is active, updates the bell/notification view, and resumes promptly when the tab becomes visible. |
 | `js/subscription/backend.js` | `requestBrowserNotifications()` / `maybeShowBrowserNotifications(items)` | Requests browser notification permission and displays new chapter browser notifications while the site is open. |
+| `js/subscription/events.js` | `openReaderNotification(id, chapterId, notificationUrl)` | Marks an opened alert read in local and Supabase state before navigating to its chapter/route. |
 | `js/subscription/sheets.js` | `sheetProfile()` / `sheetWhatsNew()` | Adds a profile editor sheet and versioned "What's new" update popup. |
 | `js/subscription/events.js` | `maybeShowWhatsNew()` / `dismissWhatsNew()` | Shows the update popup once per signed-in user/version and persists dismissal in local storage. |
 | `js/subscription/config.js` | `applyAppBackground(url)` | Applies Admin-configured reader background imagery to the app shell. |
@@ -194,6 +197,9 @@ Recent reader notification/profile changes:
 | 148 | `loadChapterCommunity(chapterId, options = {})` | Loads chapter comments and reaction totals from Supabase. |
 | 187 | `postChapterComment(chapterId, text, para)` | Persists a signed-in reader note to Supabase comments. |
 | 210 | `saveChapterReaction(chapterId, reaction)` | Persists or removes a signed-in reader chapter reaction. |
+| 453 | `notificationStoreSignature()` | Builds a compact signature used to detect notification UI changes. |
+| 456 | `refreshReaderNotifications(options = {})` | Reloads signed-in reader alerts and updates the notification view or top-bar bell when changed. |
+| 467 | `startReaderNotificationPolling()` | Refreshes alerts every minute while visible and whenever the tab becomes visible again. |
 | 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
 | 119 | `loadBackendLibrary(options = {})` | Loads fresh data/state from Supabase or local runtime state. |
 | 168 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
@@ -270,6 +276,7 @@ Recent reader notification/profile changes:
 | 86 | `accessBanner(kind,title,sub,link,label)` | Helper used by this module. |
 | 94 | `memberArchivePanel()` | Helper used by this module. |
 | 113 | `updateRow(u)` | Persists changes to Supabase or updates local state. |
+| 130 | `homeChapterAccessRow(ch, story)` | Renders a fixed-column, tier-colored chapter access row for the home screen. |
 | 131 | `matches(s)` | Helper used by this module. |
 | 197 | `bookHero(s, o)` | Helper used by this module. |
 | 202 | `buildBookFeed(s)` | Helper used by this module. |
@@ -344,6 +351,7 @@ Recent reader notification/profile changes:
 | 52 | `copyText(t)` | Helper used by this module. |
 | n/a | `chapterDirectUrl(chapterId)` | Builds the canonical hash-route URL for a published chapter. |
 | n/a | `shareChapterLink(chapterId)` | Uses the native share sheet when available and otherwise copies the direct chapter URL. |
+| 67 | `openReaderNotification(id, chapterId, notificationUrl)` | Marks an alert read before opening its chapter or internal route. |
 | 55 | `renderReaderOnly()` | Builds and returns or injects the HTML for this UI section. |
 | 64 | `updateReaderBar()` | Persists changes to Supabase or updates local state. |
 | 68 | `afterRender()` | Builds and returns or injects the HTML for this UI section. |
@@ -400,3 +408,9 @@ Recent reader notification/profile changes:
 - Standalone `writer.html` now marks Quill `sys-msg-box` blocks that contain hyperlinks with a caption variant so linked system dialogs render red in the editor while normal system dialogs remain blue.
 - `js/subscription/backend.js` now tags parsed saved system-message blocks that contain links as `variant: "caption"`.
 - `js/subscription/views/story-reader.js` renders linked system messages with `reader-system-caption`, and `styles.css` gives those linked/caption system dialogs a red treatment in the subscription reader.
+
+## 2026-07-17 10:41 Asia/Kolkata - Structured system integration status
+
+- The subscription reader does not load a persistent structured-system panel yet. The initial reader prototype was detached pending approval of the standalone SVG designs.
+- `js/subscription/system-panel.js` and `js/system-core.js` are inactive implementation references, not runtime modules in `index.html`.
+- Existing narrative system-message rendering remains unchanged while the new persistent widget is redesigned.

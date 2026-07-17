@@ -230,7 +230,7 @@ async function initAuth(){
     await refreshProfile();
     await refreshEntitlements();
     if (authState.user && typeof loadNotificationPreferences === "function") await loadNotificationPreferences();
-    if (authState.user && typeof loadReaderNotifications === "function") await loadReaderNotifications({ browser:false });
+    if (authState.user && typeof loadReaderNotifications === "function") await loadReaderNotifications();
     if (authState.user && store.pendingAuthAction === "connect-patreon") {
       store.pendingAuthAction = "";
       saveStore();

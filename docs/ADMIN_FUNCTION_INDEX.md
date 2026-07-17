@@ -242,3 +242,10 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `App.quickSetChapterTier(id, tierId)` changes access directly from the chapter index; `tierRowVisual(tierId)` gives each tier a stable row tint/accent while Free Access stays green; `App.deleteChapter(id)` confirms and deletes from either the index or editor settings.
 - `Editor.deleteCurrentSystemMessage()` deletes the system-message block containing the current cursor.
 - `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, blockquoted system messages, and `---` scene dividers.
+
+## 2026-07-17 10:41 Asia/Kolkata - Structured system integration status
+
+- `writer.html` does not currently load or expose the structured system builder. The initial frontend prototype was detached pending visual approval.
+- `js/writer-system.js` remains an inactive implementation reference for version/checkpoint workflows; do not treat its functions as active Writer routes.
+- The approved implementation must edit chapter values directly inside the system dialogue and provide a Reader Preview in chapter context.
+- Standalone visual concepts live under `design/system-panels/` and deliberately have no Writer or reader dependencies.

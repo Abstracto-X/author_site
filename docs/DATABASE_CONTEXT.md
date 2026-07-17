@@ -10,7 +10,7 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
 - Reader notification flows use `reader_notifications`, `reader_notification_preferences`, and `reader_email_queue`. Publishing a chapter fans out in-app notifications and queued email rows to readers whose active entitlement/admin role covers the chapter's required tier.
 - Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates or refreshes `user_entitlements` from active `provider_tier_mappings`.
-- Reader email notification delivery uses `supabase/functions/send-reader-email-queue`, which processes queued `reader_email_queue` rows through Resend when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured.
+- Reader email notification delivery uses `supabase/functions/send-reader-email-queue`, which processes queued `reader_email_queue` rows through Resend when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured. The Edge Function is deployed, but as of 2026-07-16 the linked database has no `cron.job` relation/scheduled drain; queued email rows therefore require a separately configured trusted scheduler/invocation. In-app `reader_notifications` are generated independently by the chapter trigger.
 - Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
 - Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider grants are idempotent: the highest matched internal tier is kept as the single active provider entitlement for a reader/provider, existing rows are refreshed instead of duplicated, and a partial unique index prevents concurrent duplicate active provider rows. Patreon free/zero-dollar tiers are treated as connected accounts without paid access and are not written as noisy `*_no_matching_tier` audit failures. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
 - After durable schema changes, run `NOTIFY pgrst, 'reload schema';`.
@@ -1090,3 +1090,15 @@ $function$
 ```
 
 </details>
+
+## 2026-07-17 - Versioned story system schema
+
+- `public.story_systems`: one optional system per story, enabled state, name, and globally applied page appearance JSON.
+- `public.story_system_versions`: page/field definitions with stable IDs and `activation_after_chapter_id`; published checkpoint use locks a version.
+- `public.story_system_checkpoints`: full draft/published/archived initial or chapter-end states and changed-field metadata.
+- `public.reader_system_progress`: authenticated reader's furthest revealed chapter per story, protected by own-row RLS.
+- `get_reader_system_state(story, chapter, include_chapter)` returns only the latest currently accessible published checkpoint and its pinned definition.
+- `advance_reader_system_progress(story, chapter)` advances signed-in progress monotonically after checking access.
+- `publish_story_system_checkpoint(...)` is admin-only and atomically archives/replaces the published checkpoint at a boundary.
+
+The Resident Evil story (`a-zombie-tale`) has a seeded Version 1 structure and admin-only draft baseline containing the supplied Alex status values, linked Traits/Forms/Mutations pages, and empty Shop/Lottery/Worlds catalogs. It remains invisible to readers until explicitly published at the correct narrative boundary.

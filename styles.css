@@ -2618,9 +2618,64 @@ body[data-reader-theme="aether"]::before {
 .home-main-col {
   display: flex;
   flex-direction: column;
+  gap: 16px;
   min-width: 0;
   height: 100%;
 }
+
+/* Home chapter access overview */
+.home-chapter-access-card { padding:20px; min-width:0; }
+.home-section-note { margin:3px 0 0; font-size:.76rem; }
+.home-chapter-list { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.home-chapter-row {
+  --chapter-tier-rgb:113,113,122;
+  --chapter-tier-accent:#a1a1aa;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(104px,132px) 92px;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid rgba(var(--chapter-tier-rgb),.34);
+  border-radius:var(--radius-sm);
+  background:linear-gradient(90deg,rgba(var(--chapter-tier-rgb),.13),rgba(var(--chapter-tier-rgb),.025) 70%);
+  box-shadow:inset 3px 0 0 rgba(var(--chapter-tier-rgb),.75);
+}
+.home-chapter-title { display:flex; align-items:center; gap:9px; min-width:0; text-align:left; color:var(--text); }
+.home-chapter-copy { display:flex; flex-direction:column; min-width:0; }
+.home-chapter-copy b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.84rem; }
+.home-chapter-copy small { color:var(--text-faint); font-size:.68rem; margin-top:2px; }
+.home-tier-pill { width:100%; min-width:0; justify-content:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.home-access-state {
+  display:flex; align-items:center; justify-content:flex-end; gap:5px; min-width:0;
+  color:var(--text-dim); font-size:.7rem; font-weight:700;
+}
+.home-access-state svg { width:14px; height:14px; flex:0 0 auto; }
+.home-access-state.is-readable { color:var(--good); }
+.home-access-state.is-preview { color:var(--info); }
+.home-access-state.is-locked { color:var(--text-dim); }
+
+/* Home update rows keep the tier pill and CTA in fixed columns. */
+.home-update-row {
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) minmax(104px,132px) auto;
+  align-items:center;
+}
+.home-update-row .body { min-width:0; }
+.home-update-row .update-tier-slot { min-width:0; }
+.home-update-row .update-tier-slot .badge { width:100%; justify-content:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.home-update-row .cta { min-width:0; }
+
+/* Notification cards */
+.notification-card { display:flex; gap:12px; align-items:flex-start; min-width:0; }
+.notification-icon { width:36px; height:36px; flex:0 0 auto; border-radius:10px; display:grid; place-items:center; background:var(--surface-2); color:var(--accent); }
+.notification-icon svg { width:18px; height:18px; }
+.notification-copy { flex:1; min-width:0; }
+.notification-title { font-weight:600; font-size:.9rem; overflow-wrap:anywhere; }
+.notification-body { font-size:.8rem; margin-top:1px; overflow-wrap:anywhere; }
+.notification-time { font-size:.7rem; margin-top:4px; }
+.notification-actions { display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex:0 0 auto; }
+.notification-actions .tb-btn { width:30px; height:30px; }
 
 /* Book Cover Card & Constrained Cover Container */
 .book-cover-card {
@@ -3205,6 +3260,44 @@ body[data-reader-theme="aether"]::before {
 .chapter-card.locked .chapter-card-reason {
   color: #ffc107;
   border-top-color: rgba(255, 193, 7, 0.15);
+}
+
+@media (max-width: 759px) {
+  .admin-shortcut { display:none; }
+  .home-grid { gap:18px; margin-bottom:18px; }
+  .home-sidebar-col { gap:12px; }
+  .book-cover-card { max-width:180px !important; margin-bottom:10px !important; }
+  .book-info-under { margin-bottom:10px !important; }
+  .reading-status .between { flex-wrap:nowrap; align-items:center; }
+  .book-actions { flex-wrap:wrap; margin-bottom:12px !important; }
+  .book-actions a.btn,
+  .book-actions button.btn { flex:1 1 145px; height:auto; min-height:40px; white-space:normal; padding-block:8px; line-height:1.2; }
+  .tier-status-card,
+  .benefits-list-card,
+  .home-chapter-access-card,
+  .updates-list-card { padding:15px; }
+  .home-bottom-row { gap:14px; margin-top:18px; }
+  .home-bottom-row .quicklinks { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  .home-chapter-row { grid-template-columns:minmax(0,1fr) 104px 82px; gap:7px; padding:9px 8px; }
+  .home-chapter-copy b { font-size:.78rem; }
+  .home-tier-pill { padding-inline:6px; font-size:.58rem; }
+  .home-access-state { font-size:.64rem; }
+  .home-update-row { grid-template-columns:28px minmax(0,1fr) 104px 48px; gap:7px; padding:10px 7px; }
+  .home-update-row .ic-col { width:28px; height:28px; }
+  .home-update-row .update-tier-slot .badge { padding-inline:6px; font-size:.58rem; }
+  .home-update-row .cta .btn { width:48px; min-height:32px; padding:0 6px; font-size:.7rem; }
+}
+
+@media (max-width: 430px) {
+  .home-chapter-row { grid-template-columns:minmax(0,1fr) 94px 28px; }
+  .home-access-state { justify-content:center; }
+  .home-access-state span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+  .home-update-row { grid-template-columns:minmax(0,1fr) 96px 42px; }
+  .home-update-row .ic-col { display:none; }
+  .home-update-row .body .sub { max-height:1.2em; overflow:hidden; flex-wrap:nowrap; }
+  .home-update-row .cta .btn { width:42px; font-size:.66rem; }
+  .notification-card { display:grid; grid-template-columns:36px minmax(0,1fr); }
+  .notification-actions { grid-column:2; flex-direction:row; align-items:center; justify-content:flex-start; }
 }
 
 /* Access-tier color coding shared by free, unlocked, preview, and locked chapters. */
