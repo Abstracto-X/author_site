@@ -726,6 +726,132 @@
         </div>
     </div>
 
+    <!-- Censorship Modal -->
+    <div id="modal-censor" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center fade-in">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-[800px] max-w-[95vw] overflow-hidden flex flex-col max-h-[85vh] slide-up">
+            <!-- Header -->
+            <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+                <h3 class="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-primary-400"></i>
+                    Censorship Dictionary & Presets
+                </h3>
+                <button onclick="UI.closeModal('modal-censor')" class="text-zinc-500 hover:text-white" aria-label="Close censorship modal">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-hidden flex flex-row divide-x divide-zinc-800">
+                <!-- Sidebar: Presets -->
+                <div class="w-1/3 p-4 flex flex-col gap-4 overflow-y-auto bg-zinc-900/25">
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Censorship Presets</h4>
+                        <div id="censor-presets-list" class="flex flex-col gap-1.5">
+                            <!-- Preset list item -->
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-zinc-800 pt-3 mt-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Create New Preset</h4>
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                id="new-preset-input"
+                                placeholder="Preset name (e.g. lvl 3)..."
+                                class="bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs flex-1 focus:border-primary-500 outline-none text-zinc-200"
+                            >
+                            <button
+                                onclick="App.addCustomPreset()"
+                                class="bg-primary-600 hover:bg-primary-500 text-white px-3 py-1.5 rounded text-xs font-medium transition"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Area: Dictionary -->
+                <div class="flex-1 p-5 flex flex-col gap-4 overflow-hidden">
+                    <div class="flex justify-between items-center gap-3">
+                        <h4 class="text-sm font-semibold text-zinc-200">Dictionary Entries</h4>
+                        <input
+                            type="text"
+                            id="censor-search-input"
+                            oninput="App.renderCensorDictionary()"
+                            placeholder="Search word..."
+                            class="bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-xs w-48 focus:border-primary-500 outline-none text-zinc-200"
+                        >
+                    </div>
+
+                    <!-- Add New Entry Form -->
+                    <div class="bg-zinc-950/50 border border-zinc-800 rounded-lg p-3 flex flex-col gap-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Target Word</label>
+                                <input
+                                    type="text"
+                                    id="new-word-input"
+                                    placeholder="e.g. shit"
+                                    class="bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs focus:border-primary-500 outline-none text-zinc-200"
+                                >
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Replacement</label>
+                                <input
+                                    type="text"
+                                    id="new-replacement-input"
+                                    placeholder="e.g. sh*t"
+                                    class="bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs focus:border-primary-500 outline-none text-zinc-200"
+                                >
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Assign to Presets</label>
+                            <div id="new-entry-presets-check" class="flex flex-wrap gap-x-4 gap-y-1.5 mt-1">
+                                <!-- Checkboxes dynamic list -->
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button
+                                onclick="App.addDictionaryEntry()"
+                                class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-1.5 rounded text-xs font-semibold border border-zinc-700 transition flex items-center gap-1.5"
+                            >
+                                <i class="fa-solid fa-plus text-xs"></i> Add Entry
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dictionary Table -->
+                    <div class="flex-1 overflow-y-auto border border-zinc-800 rounded-lg bg-zinc-950/20">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-zinc-950 border-b border-zinc-800 sticky top-0 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                    <th class="px-4 py-2.5">Word</th>
+                                    <th class="px-4 py-2.5">Replacement</th>
+                                    <th class="px-4 py-2.5">Presets</th>
+                                    <th class="px-4 py-2.5 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="censor-dictionary-body" class="divide-y divide-zinc-900 text-zinc-300">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-5 py-3 border-t border-zinc-800 flex justify-end bg-zinc-900/50">
+                <button
+                    onclick="UI.closeModal('modal-censor')"
+                    class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-1.5 rounded text-xs font-semibold border border-zinc-700 transition"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main App Layout -->
     <div class="flex w-full h-full">
 
@@ -895,7 +1021,7 @@
 
                     <!-- Main Editor Column -->
                     <div class="flex-1 flex flex-col min-w-0 bg-[#09090b]">
-                        <header class="h-16 px-6 border-b border-zinc-800/60 flex items-center justify-between flex-shrink-0 bg-zinc-950">
+                        <header class="h-16 px-6 border-b border-zinc-800/60 flex items-center justify-between flex-shrink-0 bg-zinc-950 relative z-20">
                             <div class="flex items-center gap-3 w-1/2">
                                 <span class="text-zinc-600 font-mono text-sm bg-zinc-900 px-2 rounded border border-zinc-800">CH</span>
 
@@ -928,23 +1054,76 @@
                                 </span>
 
                                 <div class="flex items-center gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-                                    <button
-                                        onclick="App.copyAsMarkdown()"
-                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-                                        title="Copy as Markdown"
-                                        aria-label="Copy as Markdown"
-                                    >
-                                        <i class="fa-brands fa-markdown text-sm"></i>
-                                    </button>
+                                    <div class="relative inline-block text-left" id="export-menu-container">
+                                        <button
+                                            type="button"
+                                            onclick="App.toggleExportMenu(event)"
+                                            class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                                            title="Export & Copy Options"
+                                            id="export-menu-btn"
+                                        >
+                                            <i class="fa-solid fa-share-nodes text-sm"></i>
+                                            <span>Export</span>
+                                            <i class="fa-solid fa-chevron-down text-[8px] opacity-60"></i>
+                                        </button>
 
-                                    <button
-                                        onclick="App.copyAsRichText()"
-                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-                                        title="Copy as Rich Text"
-                                        aria-label="Copy as Rich Text"
-                                    >
-                                        <i class="fa-solid fa-file-lines text-sm"></i>
-                                    </button>
+                                        <!-- Dropdown Menu -->
+                                        <div
+                                            id="export-dropdown"
+                                            class="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl hidden z-50 py-1.5 divide-y divide-zinc-900"
+                                        >
+                                            <!-- Copy Actions -->
+                                            <div class="py-1">
+                                                <button
+                                                    onclick="App.triggerCopy('markdown')"
+                                                    class="w-full text-left px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-900 transition flex items-center gap-2"
+                                                >
+                                                    <i class="fa-brands fa-markdown text-zinc-500 text-sm w-4"></i>
+                                                    Copy as Markdown
+                                                </button>
+                                                <button
+                                                    onclick="App.triggerCopy('text')"
+                                                    class="w-full text-left px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-900 transition flex items-center gap-2"
+                                                >
+                                                    <i class="fa-solid fa-align-left text-zinc-500 text-sm w-4"></i>
+                                                    Copy as Plain Text
+                                                </button>
+                                                <button
+                                                    onclick="App.triggerCopy('rich')"
+                                                    class="w-full text-left px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-900 transition flex items-center gap-2"
+                                                >
+                                                    <i class="fa-solid fa-file-lines text-zinc-500 text-sm w-4"></i>
+                                                    Copy as Rich Text
+                                                </button>
+                                            </div>
+
+                                            <!-- Censorship Preset -->
+                                            <div class="py-2 px-3">
+                                                <div class="flex justify-between items-center mb-1">
+                                                    <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Censorship</span>
+                                                    <span id="export-censor-status" class="text-[8px] font-semibold px-1 rounded bg-zinc-900 text-zinc-400">Off</span>
+                                                </div>
+                                                <select
+                                                    id="export-preset-select"
+                                                    onchange="App.changeCensorPreset(this.value)"
+                                                    class="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-300 focus:border-primary-500 outline-none cursor-pointer"
+                                                >
+                                                    <!-- Dynamic options -->
+                                                </select>
+                                            </div>
+
+                                            <!-- Manage Config -->
+                                            <div class="py-1">
+                                                <button
+                                                    onclick="App.openCensorModal()"
+                                                    class="w-full text-left px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-300 hover:bg-zinc-900 transition flex items-center gap-2"
+                                                >
+                                                    <i class="fa-solid fa-sliders text-sm w-4"></i>
+                                                    Manage Dictionary...
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <button
                                         onclick="Editor.removeExtraLineBreaks()"
@@ -1435,6 +1614,7 @@
                 try {
                     await DB.requireAdmin();
                     await DB.loadWorkspace(State.activeStoryId);
+                    App.initCensorship();
                     this.populateDropdowns();
                     Editor.initQuill();
                     this.bindEvents();
@@ -1542,6 +1722,16 @@
                     if (mod && event.key === 'Enter') {
                         event.preventDefault();
                         App.publishChapter();
+                    }
+                });
+
+                document.addEventListener('click', event => {
+                    const dropdown = document.getElementById('export-dropdown');
+                    if (dropdown && !dropdown.classList.contains('hidden')) {
+                        const container = document.getElementById('export-menu-container');
+                        if (container && !container.contains(event.target)) {
+                            dropdown.classList.add('hidden');
+                        }
                     }
                 });
             },
@@ -2831,8 +3021,11 @@
             },
 
             copyAsRichText() {
-                const html = Editor.normalizeForSave();
-                const plainText = State.quillInstance.getText();
+                let html = Editor.normalizeForSave();
+                let plainText = State.quillInstance.getText().trim();
+
+                html = this.applyCensorship(html, true);
+                plainText = this.applyCensorship(plainText, false);
 
                 if (navigator.clipboard?.write && window.ClipboardItem) {
                     const htmlBlob = new Blob([html], { type: 'text/html' });
@@ -2855,8 +3048,18 @@
                     .catch(() => UI.showToast('Clipboard access denied.', 'error'));
             },
 
+            copyAsPlainText() {
+                let text = State.quillInstance.getText().trim();
+                text = this.applyCensorship(text, false);
+
+                navigator.clipboard.writeText(text)
+                    .then(() => UI.showToast('Copied as Plain Text.', 'success'))
+                    .catch(() => UI.showToast('Clipboard access denied.', 'error'));
+            },
+
             copyAsMarkdown() {
-                const html = Editor.normalizeForSave();
+                let html = Editor.normalizeForSave();
+                html = this.applyCensorship(html, true);
 
                 const turndownService = new TurndownService({
                     headingStyle: 'atx',
@@ -2870,8 +3073,7 @@
                 turndownService.addRule('systemMessage', {
                     filter: node => node.nodeName === 'DIV' && node.classList.contains('sys-msg-box'),
                     replacement: (content, node) => {
-                        const lines = node.innerText.replace(/\n+$/g, '').split('\n');
-                        return `\n\n> **System message:** ${lines.join('\n> ')}\n\n`;
+                        return `\n\n[${content.trim()}]\n\n`;
                     }
                 });
 
@@ -2895,6 +3097,347 @@
                 navigator.clipboard.writeText(markdown)
                     .then(() => UI.showToast('Copied as Markdown.', 'success'))
                     .catch(() => UI.showToast('Clipboard access denied.', 'error'));
+            },
+
+            toggleExportMenu(event) {
+                event.stopPropagation();
+                const dropdown = document.getElementById('export-dropdown');
+                if (dropdown) {
+                    const isHidden = dropdown.classList.contains('hidden');
+                    dropdown.classList.toggle('hidden', !isHidden);
+                }
+            },
+
+            triggerCopy(format) {
+                document.getElementById('export-dropdown')?.classList.add('hidden');
+                
+                if (format === 'markdown') {
+                    this.copyAsMarkdown();
+                } else if (format === 'text') {
+                    this.copyAsPlainText();
+                } else if (format === 'rich') {
+                    this.copyAsRichText();
+                }
+            },
+
+            initCensorship() {
+                const DEFAULT_DICTIONARY = [
+                    // lvl 1 (High NSFW / Explicit triggers)
+                    { word: 'dick', replacement: 'd*ck', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'cock', replacement: 'c*ck', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'pussy', replacement: 'p*ssy', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'cunt', replacement: 'c*nt', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'fuck', replacement: 'f*ck', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'fucking', replacement: 'f*cking', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'titties', replacement: 't*tties', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'tits', replacement: 't*ts', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'asshole', replacement: 'a**hole', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'blowjob', replacement: 'bl*wjob', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'handjob', replacement: 'h*ndjob', presets: ['lvl 1', 'lvl 2'] },
+                    { word: 'cum', replacement: 'c*m', presets: ['lvl 1', 'lvl 2'] },
+
+                    // lvl 2 (Broad NSFW / Anatomical / Action verbs)
+                    { word: 'suck', replacement: 's*ck', presets: ['lvl 2'] },
+                    { word: 'sucking', replacement: 's*cking', presets: ['lvl 2'] },
+                    { word: 'crotch', replacement: 'cr*tch', presets: ['lvl 2'] },
+                    { word: 'boobs', replacement: 'b*obs', presets: ['lvl 2'] },
+                    { word: 'vagina', replacement: 'v*gina', presets: ['lvl 2'] },
+                    { word: 'clitoris', replacement: 'cl*toris', presets: ['lvl 2'] },
+                    { word: 'nipple', replacement: 'n*pple', presets: ['lvl 2'] },
+                    { word: 'nipples', replacement: 'n*pples', presets: ['lvl 2'] },
+                    { word: 'breast', replacement: 'br*ast', presets: ['lvl 2'] },
+                    { word: 'orgasm', replacement: 'org*sm', presets: ['lvl 2'] },
+                    { word: 'penetrate', replacement: 'pen*trate', presets: ['lvl 2'] },
+                    { word: 'penetration', replacement: 'pen*tration', presets: ['lvl 2'] },
+                    { word: 'masturbate', replacement: 'mast*rbate', presets: ['lvl 2'] },
+                    { word: 'naked', replacement: 'nak*d', presets: ['lvl 2'] },
+                    { word: 'nude', replacement: 'n*de', presets: ['lvl 2'] },
+                    { word: 'ejaculate', replacement: 'ej*culate', presets: ['lvl 2'] },
+                    { word: 'moan', replacement: 'm*an', presets: ['lvl 2'] },
+                    { word: 'moaning', replacement: 'm*aning', presets: ['lvl 2'] },
+                    { word: 'bitch', replacement: 'b*tch', presets: ['lvl 2'] },
+                    { word: 'shit', replacement: 'sh*t', presets: ['lvl 2'] }
+                ];
+                const DEFAULT_PRESETS = ['lvl 1', 'lvl 2'];
+
+                let storedDict = localStorage.getItem('ea-censor-dictionary');
+                if (storedDict) {
+                    try {
+                        State.censorDictionary = JSON.parse(storedDict);
+                    } catch (e) {
+                        State.censorDictionary = DEFAULT_DICTIONARY;
+                    }
+                } else {
+                    State.censorDictionary = DEFAULT_DICTIONARY;
+                    localStorage.setItem('ea-censor-dictionary', JSON.stringify(DEFAULT_DICTIONARY));
+                }
+
+                let storedPresets = localStorage.getItem('ea-censor-presets');
+                if (storedPresets) {
+                    try {
+                        State.censorPresets = JSON.parse(storedPresets);
+                    } catch (e) {
+                        State.censorPresets = DEFAULT_PRESETS;
+                    }
+                } else {
+                    State.censorPresets = DEFAULT_PRESETS;
+                    localStorage.setItem('ea-censor-presets', JSON.stringify(DEFAULT_PRESETS));
+                }
+
+                State.activePreset = localStorage.getItem('ea-censor-active-preset') || 'None';
+                this.updateCensorDropdownAndStatus();
+            },
+
+            updateCensorDropdownAndStatus() {
+                const select = document.getElementById('export-preset-select');
+                if (select) {
+                    let optionsHtml = '<option value="None">None (Disabled)</option>';
+                    for (const preset of State.censorPresets) {
+                        optionsHtml += `<option value="${UI.escapeHtml(preset)}" ${State.activePreset === preset ? 'selected' : ''}>${UI.escapeHtml(preset)} censor</option>`;
+                    }
+                    select.innerHTML = optionsHtml;
+                    select.value = State.activePreset;
+                }
+
+                const statusPill = document.getElementById('export-censor-status');
+                if (statusPill) {
+                    if (State.activePreset === 'None') {
+                        statusPill.innerText = 'Off';
+                        statusPill.className = 'text-[8px] font-semibold px-1 py-0.5 rounded bg-zinc-900 text-zinc-400 border border-zinc-800';
+                    } else {
+                        statusPill.innerText = State.activePreset;
+                        statusPill.className = 'text-[8px] font-semibold px-1 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20';
+                    }
+                }
+            },
+
+            changeCensorPreset(value) {
+                State.activePreset = value;
+                localStorage.setItem('ea-censor-active-preset', value);
+                this.updateCensorDropdownAndStatus();
+            },
+
+            openCensorModal() {
+                document.getElementById('export-dropdown')?.classList.add('hidden');
+                UI.openModal('modal-censor');
+                
+                document.getElementById('new-preset-input').value = '';
+                document.getElementById('new-word-input').value = '';
+                document.getElementById('new-replacement-input').value = '';
+                document.getElementById('censor-search-input').value = '';
+
+                this.renderCensorPresets();
+                this.renderCensorDictionary();
+            },
+
+            renderCensorPresets() {
+                const list = document.getElementById('censor-presets-list');
+                if (!list) return;
+
+                let html = '';
+                for (const preset of State.censorPresets) {
+                    const isSystemPreset = (preset === 'lvl 1' || preset === 'lvl 2');
+                    html += `
+                        <div class="flex items-center justify-between p-2 rounded bg-zinc-950/60 border border-zinc-800/80 hover:border-zinc-700 transition">
+                            <span class="text-xs font-medium text-zinc-300">${UI.escapeHtml(preset)}</span>
+                            ${!isSystemPreset ? `
+                                <button onclick="App.deleteCustomPreset('${UI.escapeHtml(preset)}')" class="text-zinc-500 hover:text-rose-400 transition" title="Delete preset">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            ` : '<span class="text-[9px] text-zinc-500 px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-850">System</span>'}
+                        </div>
+                    `;
+                }
+                list.innerHTML = html;
+            },
+
+            addCustomPreset() {
+                const input = document.getElementById('new-preset-input');
+                let name = input.value.trim().toLowerCase();
+                if (!name) {
+                    UI.showToast('Please enter a preset name.', 'error');
+                    return;
+                }
+                if (name === 'none') {
+                    UI.showToast('Cannot name a preset "none".', 'error');
+                    return;
+                }
+                if (State.censorPresets.includes(name)) {
+                    UI.showToast('Preset already exists.', 'error');
+                    return;
+                }
+                State.censorPresets.push(name);
+                localStorage.setItem('ea-censor-presets', JSON.stringify(State.censorPresets));
+                
+                input.value = '';
+                this.renderCensorPresets();
+                this.renderCensorDictionary();
+                this.updateCensorDropdownAndStatus();
+                UI.showToast(`Preset "${name}" created.`, 'success');
+            },
+
+            async deleteCustomPreset(name) {
+                if (!confirm(`Are you sure you want to delete the preset "${name}"? This will unassign all words from it.`)) return;
+
+                State.censorPresets = State.censorPresets.filter(p => p !== name);
+                localStorage.setItem('ea-censor-presets', JSON.stringify(State.censorPresets));
+
+                for (const entry of State.censorDictionary) {
+                    entry.presets = entry.presets.filter(p => p !== name);
+                }
+                localStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
+
+                if (State.activePreset === name) {
+                    State.activePreset = 'None';
+                    localStorage.setItem('ea-censor-active-preset', 'None');
+                }
+
+                this.renderCensorPresets();
+                this.renderCensorDictionary();
+                this.updateCensorDropdownAndStatus();
+                UI.showToast(`Preset "${name}" deleted.`, 'info');
+            },
+
+            renderCensorDictionary() {
+                const body = document.getElementById('censor-dictionary-body');
+                const search = document.getElementById('censor-search-input').value.trim().toLowerCase();
+                if (!body) return;
+
+                let filtered = State.censorDictionary;
+                if (search) {
+                    filtered = filtered.filter(entry => entry.word.toLowerCase().includes(search) || entry.replacement.toLowerCase().includes(search));
+                }
+
+                const presetsCheck = document.getElementById('new-entry-presets-check');
+                if (presetsCheck) {
+                    let checksHtml = '';
+                    for (const preset of State.censorPresets) {
+                        checksHtml += `
+                            <label class="flex items-center gap-1.5 text-xs text-zinc-300 cursor-pointer">
+                                <input type="checkbox" name="new-entry-preset" value="${UI.escapeHtml(preset)}" class="rounded border-zinc-800 bg-zinc-950 text-primary-600 focus:ring-primary-500">
+                                ${UI.escapeHtml(preset)}
+                            </label>
+                        `;
+                    }
+                    presetsCheck.innerHTML = checksHtml;
+                }
+
+                let html = '';
+                filtered.forEach((entry, index) => {
+                    const presetBadges = entry.presets.map(p => `<span class="text-[9px] font-semibold bg-zinc-900 text-zinc-400 border border-zinc-800 px-1.5 py-0.5 rounded">${UI.escapeHtml(p)}</span>`).join(' ');
+                    html += `
+                        <tr class="hover:bg-zinc-900/30 transition">
+                            <td class="px-4 py-2 text-zinc-200 font-mono">${UI.escapeHtml(entry.word)}</td>
+                            <td class="px-4 py-2 text-zinc-400 font-mono">${UI.escapeHtml(entry.replacement)}</td>
+                            <td class="px-4 py-2 flex flex-wrap gap-1 items-center min-h-[36px]">${presetBadges || '<span class="text-[9px] text-zinc-600 italic">None</span>'}</td>
+                            <td class="px-4 py-2 text-right">
+                                <button onclick="App.deleteDictionaryEntry(${index})" class="text-zinc-500 hover:text-rose-400 transition" title="Delete entry">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if (filtered.length === 0) {
+                    html = `<tr><td colspan="4" class="px-4 py-8 text-center text-zinc-500 italic">No dictionary entries found.</td></tr>`;
+                }
+
+                body.innerHTML = html;
+            },
+
+            addDictionaryEntry() {
+                const wordInput = document.getElementById('new-word-input');
+                const replacementInput = document.getElementById('new-replacement-input');
+                const word = wordInput.value.trim().toLowerCase();
+                const replacement = replacementInput.value.trim();
+
+                if (!word || !replacement) {
+                    UI.showToast('Please enter both target word and replacement.', 'error');
+                    return;
+                }
+
+                const exists = State.censorDictionary.some(entry => entry.word.toLowerCase() === word);
+                if (exists) {
+                    UI.showToast(`The word "${word}" is already in the dictionary.`, 'error');
+                    return;
+                }
+
+                const checkedCheckboxes = document.querySelectorAll('input[name="new-entry-preset"]:checked');
+                const presets = Array.from(checkedCheckboxes).map(cb => cb.value);
+
+                State.censorDictionary.push({ word, replacement, presets });
+                localStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
+
+                wordInput.value = '';
+                replacementInput.value = '';
+                
+                this.renderCensorDictionary();
+                UI.showToast(`Added "${word}" to dictionary.`, 'success');
+            },
+
+            deleteDictionaryEntry(index) {
+                const entry = State.censorDictionary[index];
+                if (!entry) return;
+
+                State.censorDictionary.splice(index, 1);
+                localStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
+
+                this.renderCensorDictionary();
+                UI.showToast(`Removed "${entry.word}" from dictionary.`, 'info');
+            },
+
+            escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            },
+
+            replacePreservingCase(text, word, replacement) {
+                const regex = new RegExp(this.escapeRegExp(word), 'gi');
+                return text.replace(regex, (match) => {
+                    if (match === match.toUpperCase()) {
+                        return replacement.toUpperCase();
+                    }
+                    if (match[0] === match[0].toUpperCase()) {
+                        return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+                    }
+                    return replacement;
+                });
+            },
+
+            applyCensorship(text, isHtml = false) {
+                const activePreset = State.activePreset || 'None';
+                if (activePreset === 'None') return text;
+
+                const dictionary = State.censorDictionary || [];
+                const activeReplacements = dictionary.filter(entry => entry.presets.includes(activePreset));
+
+                if (activeReplacements.length === 0) return text;
+
+                if (isHtml) {
+                    const div = document.createElement('div');
+                    div.innerHTML = text;
+                    const walk = (node) => {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            let val = node.nodeValue;
+                            for (const entry of activeReplacements) {
+                                val = this.replacePreservingCase(val, entry.word, entry.replacement);
+                            }
+                            node.nodeValue = val;
+                        } else if (node.nodeType === Node.ELEMENT_NODE) {
+                            for (const child of node.childNodes) {
+                                walk(child);
+                            }
+                        }
+                    };
+                    walk(div);
+                    return div.innerHTML;
+                } else {
+                    let val = text;
+                    for (const entry of activeReplacements) {
+                        val = this.replacePreservingCase(val, entry.word, entry.replacement);
+                    }
+                    return val;
+                }
             }
         };
 

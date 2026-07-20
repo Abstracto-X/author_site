@@ -241,7 +241,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `App.createNewChapter()` saves a dirty active tab first, creates the next `chapter_order` draft, and opens it from the editor tab-strip plus control.
 - `App.quickSetChapterTier(id, tierId)` changes access directly from the chapter index; `tierRowVisual(tierId)` gives each tier a stable row tint/accent while Free Access stays green; `App.deleteChapter(id)` confirms and deletes from either the index or editor settings.
 - `Editor.deleteCurrentSystemMessage()` deletes the system-message block containing the current cursor.
-- `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, blockquoted system messages, and `---` scene dividers.
+- `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, bracketed system messages, and `---` scene dividers.
 
 ## 2026-07-17 10:41 Asia/Kolkata - Structured system integration status
 

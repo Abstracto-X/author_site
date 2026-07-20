@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-20 16:27 Asia/Kolkata - Fix system message markdown copy format
+
+Area: admin | writer
+
+Summary:
+- Modified the Markdown copy option in `writer.html` to output system message boxes using the original square-bracket notation `[System message content]` instead of blockquoted text (`> **System message:**`).
+
+Files changed:
+- `writer.html`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
 ## 2026-07-17 10:41 Asia/Kolkata - Add versioned story-system foundation and separate AAA UI lab
 
 Area: database | design

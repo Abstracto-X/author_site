@@ -2,6 +2,36 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-20 16:44 Asia/Kolkata - Standalone Writer Export & Censorship QA
+
+Status: NEEDS REVIEW
+
+Area:
+- writer
+- admin
+
+Files touched:
+- `writer.html`
+
+Summary:
+- Replaced header copy buttons with an Export dropdown menu featuring Copy as Markdown, Copy as Plain Text, and Copy as Rich Text.
+- Fixed a layout stacking issue by adding `relative z-20` to the editor header so the absolute-positioned Export dropdown floats cleanly on top of the sticky Quill editor toolbar instead of being clipped by it.
+- Plain text copying trims whitespaces and copies system messages without square brackets.
+- Built an in-editor censorship system with case preservation, HTML safety, customizable presets (lvl 1 and lvl 2 loaded as default), and an interactive dictionary configuration modal.
+
+Remaining work:
+- None.
+
+Risks / notes:
+- The censorship dictionary is client-side and saved in localStorage. Clearing site data will reset the dictionary to defaults.
+
+Verification needed:
+- Open the standalone Writer and confirm that the Export dropdown and Censorship options are available.
+- Select a preset and verify that matched NSFW words and action verbs (like fuck, fucking, dick, cock, sucking, crotch, asshole, pussy, nipples, moan, groan, etc.) are correctly replaced when copying.
+- Verify that case preservation is active (e.g. `Cock` -> `C*ck`, `COCK` -> `C*CK`).
+- Verify that HTML tags/classes/attributes are not modified during rich/markdown copying with censorship active.
+- Verify that managing the dictionary (adding words/presets, deleting entries/presets) behaves correctly in the modal.
+
 ## 2026-07-17 10:41 Asia/Kolkata - Structured-system visual approval and integration
 
 Status: NEEDS REVIEW
