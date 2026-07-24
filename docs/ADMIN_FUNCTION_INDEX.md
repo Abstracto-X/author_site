@@ -243,9 +243,35 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `Editor.deleteCurrentSystemMessage()` deletes the system-message block containing the current cursor.
 - `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, bracketed system messages, and `---` scene dividers.
 
+## 2026-07-20 17:00 Asia/Kolkata - Chapter Scratchpads & Export menu options
+
+- `DB.loadScratchpads(storyId)`, `DB.saveScratchpad(id, record)`, and `DB.deleteScratchpad(id)` manage unlisted reference notes attached to chapters in `public.scratchpads`.
+- `App.createScratchpadForChapter(chapterId)` attaches a new scratchpad note directly to a chapter, opening it as a dashed tab in the editor tab strip and rendering it under its parent chapter in the index table and left sidebar.
+- `App.openEditorForScratchpad(id)` switches the editor view to a scratchpad note, adjusting header badge (`SP`), hiding publish/live controls, and displaying scratchpad settings. `App.closeScratchpadTab(id)` and `App.deleteScratchpad(id)` handle tab closure and permanent deletion.
+- Export menu in `writer.html` provides Copy as Markdown, Copy as Plain Text (without system brackets), Copy as Rich Text, and preset-based text censorship filters.
+
+## 2026-07-23 09:20 Asia/Kolkata - Writer responsive workspace controls
+
+- `UI.syncPanelState()` applies the persisted left-navigation and right-settings rail states; `UI.togglePrimarySidebar()` and `UI.toggleEditorSettings(open)` change and persist each rail's visibility.
+- The Writer keeps the manuscript usable on compact screens by overlaying the chapter-settings rail, compacting dashboard/editor controls, adding horizontal containment for wide tables/toolbars, and reflowing writer modals for narrow phones.
+- The navigation and settings toggles now live beside the Writer Studio brand with supported FontAwesome controls; the manuscript header uses a spinner-free chapter-number capsule and a normalized Export/Save/Publish command group without destructive system-box actions.
+
 ## 2026-07-17 10:41 Asia/Kolkata - Structured system integration status
 
 - `writer.html` does not currently load or expose the structured system builder. The initial frontend prototype was detached pending visual approval.
 - `js/writer-system.js` remains an inactive implementation reference for version/checkpoint workflows; do not treat its functions as active Writer routes.
 - The approved implementation must edit chapter values directly inside the system dialogue and provide a Reader Preview in chapter context.
 - Standalone visual concepts live under `design/system-panels/` and deliberately have no Writer or reader dependencies.
+
+## 2026-07-23 19:20 Asia/Kolkata - Writer Context Workspace phases 1-2
+
+- `ContextWorkspace.load(storyId)` loads story context blocks and saved presets/items from Supabase while reusing the active story's chapter and scratchpad caches.
+- `ContextWorkspace.render()`, `renderLibrary()`, `renderSectionTabs()`, `renderSectionOrder()`, `renderItemOrder()`, and `renderPreview()` build browser-style section tabs, whole-card selection states, ordering controls, prompt preview, and live word/token budget status.
+- `ContextWorkspace.setActiveSection(section)` switches the persisted active library tab. `startLibraryDrag()` / `dropLibraryItem()` persist reusable-block sorting inside a tab; `startAdvancedDrag()` / `dropAdvancedItem()` provide drag sorting across the advanced selected-item order.
+- `ContextWorkspace.stateKey(storyId)`, `restoreState(storyId)`, and `persistState()` maintain a per-story local session snapshot; `setSearch(value)` persists and reapplies the current filter. The snapshot covers transient selection/order, mode, active tab/preset, token budget, and library/preview scroll positions.
+- `ContextWorkspace.editItem(key)`, `duplicateItem(key)`, and `deleteItem(key)` dispatch complete lifecycle actions to the rich context-block drawer or the existing chapter/scratchpad Writer workflows.
+- `ContextWorkspace.openBlockModal()`, `markBlockDirty()`, `formatBlock()`, `saveBlock(event)`, `duplicateOpenBlock()`, `deleteOpenBlock()`, and `closeBlockEditor()` provide integrated rich block editing, live counts, keyboard save, and unsaved-change protection.
+- `ContextWorkspace.selectActiveSection()`, `clearActiveSection()`, and `clearSelection()` provide active-tab and global selection controls.
+- `ContextWorkspace.savePreset(saveAs)`, `loadPreset(id)`, `renamePreset()`, `duplicatePreset()`, and `deletePreset()` manage named context/scene presets with section order, item order, mode, active tab, selection, and token budget.
+- `ContextWorkspace.outputForFormat(format)`, `copy(format)`, and `download(format)` export selected context as Markdown, plain text, or ChatGPT-compatible system/user message JSON.
+- `Router.navigate('context')` exposes the workspace as the third admin Writer surface and persists the current top-level Writer surface; changing the active story reloads its isolated database data and per-story local session.

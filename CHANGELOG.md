@@ -1,5 +1,71 @@
 # Changelog
 
+## 2026-07-23 19:20 Asia/Kolkata — Writer Context Workspace phases 1-2
+
+Area: writer / database / docs
+
+Summary:
+- Added an admin-only, story-scoped Context Workspace to `writer.html` with reusable writing-style, summary, outline, and scratchpad blocks.
+- Added searchable selection of context blocks, existing chapters, and existing chapter scratchpads without duplicating chapter content. A narrow browser-style tabbed library sits beside a dominant prompt-preview canvas and compact preset/order rail.
+- Added complete source-aware card actions: rich drawer editing, duplication, and confirmed deletion for reusable blocks, plus handoff to existing chapter/scratchpad editors and their duplicate/delete workflows.
+- Added whole-card colored selection, select-all/clear-tab/clear-all controls, persistent active tab/section order, reusable-block drag sorting, simple section ordering, and cross-section advanced drag ordering.
+- Added total and per-section word/character/token statistics, configurable budget warnings, clipboard exports, and `.md`, `.txt`, and ChatGPT `.json` downloads.
+- Added named reusable context presets with save, Save As, rename, duplicate, load, and delete; presets persist selection, section/item order, ordering mode, active tab, and token budget.
+- Replaced the horizontally scrolling Context tabs with an equal-size, two-row properties-window tab grid and removed the exposed horizontal scrollbar.
+- Added reload continuity: the Writer restores its last top-level surface, while each story restores its transient Context selection/order, mode, active tab/preset, budget, search, and library/preview scroll positions from local storage.
+- Added and applied idempotent Supabase tables, indexes, constraints, foreign keys, and admin-only RLS policies for context blocks and presets.
+
+Files changed:
+- `writer.html`
+- `database/sql/2026-07-23_add_writer_context_workspace.sql`
+- `supabase/migrations/20260723170000_add_writer_context_workspace.sql`
+- `database/sql/2026-07-23_add_context_preset_active_section.sql`
+- `supabase/migrations/20260723173000_add_context_preset_active_section.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-23 09:20 Asia/Kolkata - Make Writer workspace responsive and collapsible
+
+Area: admin | writer | docs
+
+Summary:
+- Added independently collapsible left navigation and right chapter-settings rails, with each preference persisted locally for desktop use.
+- Converted compact-width chapter settings into an overlay so it no longer steals the manuscript's writing height.
+- Reflowed dashboard controls, editor actions, Quill toolbar, tables, toasts, and Writer modals for narrow screens; added dynamic viewport sizing for mobile browser chrome/keyboard behavior.
+- Moved the rail controls beside the Writer Studio brand, replaced unsupported blank panel icons, rebuilt the chapter-number input as a spinner-free capsule, and normalized the editor header into consistent Export, Save Draft, and Publish actions.
+- Removed cleanup and system-box deletion from the manuscript header; cleanup remains available through `/clean`, while system-box deletion remains in Chapter Settings.
+- Restored the missing `ed-tag-badge` DOM identifier used when switching between chapter and scratchpad tabs.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-20 17:15 Asia/Kolkata - Add chapter-attached Scratchpads feature in Writer
+
+Area: database | writer | docs
+
+Summary:
+- Added `public.scratchpads` table with `ON DELETE CASCADE` reference to `public.chapters` and admin RLS policy (`scratchpads_admin_all`).
+- Implemented `DB.loadScratchpads`, `DB.saveScratchpad`, and `DB.deleteScratchpad` data layer methods.
+- Built interactive Scratchpad note creation directly attached to chapters: rendered as clickable note pills on Dashboard chapter rows and nested sidebar items under chapters.
+- Supported seamless editor tab switching for scratchpads with `SP` header badge, dashed tab styling, autosave, and scratchpad-specific settings sidebar card.
+- Updated database context, admin function index, and walkthrough documentation.
+
+Files changed:
+- `writer.html`
+- `database/sql/2026-07-20_add_scratchpads.sql`
+- `supabase/migrations/20260720170000_add_scratchpads.sql`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-20 16:27 Asia/Kolkata - Fix system message markdown copy format
 
 Area: admin | writer

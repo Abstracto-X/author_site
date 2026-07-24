@@ -532,6 +532,17 @@ Provider-backed active rows are constrained by `user_entitlements_one_active_pro
 | `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
+### `public.scratchpads`
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `id` | uuid | NO | gen_random_uuid() |
+| `chapter_id` | uuid | NO |  |
+| `title` | text | NO |  |
+| `content` | text | YES | ''::text |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+| `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
 ### `storage.buckets`
 
 | Column | Type | Nullable | Default |
@@ -688,6 +699,7 @@ Provider-backed active rows are constrained by `user_entitlements_one_active_pro
 | `public` | `provider_tier_mappings` | `provider_tier_mappings_admin_all` | ALL | public | is_admin() | is_admin() |
 | `public` | `reader_access_tiers` | `reader_access_tiers_admin_all` | ALL | public | is_admin() | is_admin() |
 | `public` | `reader_access_tiers` | `reader_access_tiers_public_read` | SELECT | public | (is_active = true) |  |
+| `public` | `scratchpads` | `scratchpads_admin_all` | ALL | public | is_admin() | is_admin() |
 | `public` | `site_settings` | `parent_compat_site_settings_admin_all` | ALL | public | is_admin() | is_admin() |
 | `public` | `site_settings` | `parent_compat_site_settings_public_read` | SELECT | public | true |  |
 | `public` | `stories` | `stories_admin_all` | ALL | public | is_admin() | is_admin() |
@@ -1102,3 +1114,11 @@ $function$
 - `publish_story_system_checkpoint(...)` is admin-only and atomically archives/replaces the published checkpoint at a boundary.
 
 The Resident Evil story (`a-zombie-tale`) has a seeded Version 1 structure and admin-only draft baseline containing the supplied Alex status values, linked Traits/Forms/Mutations pages, and empty Shop/Lottery/Worlds catalogs. It remains invisible to readers until explicitly published at the correct narrative boundary.
+
+## 2026-07-23 - Writer Context Workspace schema
+
+- `public.writer_context_blocks` stores admin-only reusable story context with `block_type` values `writing_style`, `long_summary`, `chapter_summary`, `outline`, or `scratchpad`, plus content and sort order.
+- `public.writer_context_presets` stores named per-story simple/advanced workspace presets, JSON section order, validated token budget, and `active_section` so loading a preset restores its library tab.
+- `public.writer_context_preset_items` stores the ordered preset selection. Each row references exactly one context block, existing chapter, or existing chapter scratchpad; cascading foreign keys remove stale references.
+- All three tables have RLS enabled and admin-only `ALL` policies using `public.is_admin()`. The reader receives no access to private author context.
+- Migrations: `20260723170000_add_writer_context_workspace.sql` and `20260723173000_add_context_preset_active_section.sql`; both were applied to the linked project and marked applied on 2026-07-23.

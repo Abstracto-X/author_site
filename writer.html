@@ -74,6 +74,11 @@
             background-color: #09090b;
             color: #e4e4e7;
             overflow: hidden;
+            min-height: 100dvh;
+        }
+
+        body.h-screen {
+            height: 100dvh;
         }
 
         body::before {
@@ -288,6 +293,256 @@
             color: #71717a;
             font-size: 0.72rem;
             flex-shrink: 0;
+        }
+
+        #primary-sidebar,
+        #editor-settings {
+            transition: width 0.22s ease, transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        #primary-sidebar {
+            width: 16rem;
+            overflow: hidden;
+        }
+
+        #primary-sidebar.is-collapsed {
+            width: 4.75rem;
+        }
+
+        #primary-sidebar.is-collapsed .sidebar-copy,
+        #primary-sidebar.is-collapsed h1,
+        #primary-sidebar.is-collapsed label,
+        #primary-sidebar.is-collapsed select,
+        #primary-sidebar.is-collapsed .fa-chevron-down {
+            display: none;
+        }
+
+        #primary-sidebar.is-collapsed .sidebar-brand,
+        #primary-sidebar.is-collapsed .sidebar-collapse-row,
+        #primary-sidebar.is-collapsed nav button,
+        #primary-sidebar.is-collapsed .sidebar-user {
+            justify-content: center;
+        }
+
+        #primary-sidebar.is-collapsed .sidebar-collapse-row {
+            padding-inline: 0.75rem;
+        }
+
+        #primary-sidebar.is-collapsed nav button,
+        #primary-sidebar.is-collapsed .sidebar-user {
+            padding-inline: 0.75rem;
+        }
+
+        #editor-settings {
+            width: 20rem;
+            overflow: hidden;
+        }
+
+        #editor-settings.is-collapsed {
+            width: 0;
+            border-left-color: transparent;
+        }
+
+        #editor-settings > * {
+            min-width: 20rem;
+        }
+
+        .panel-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            flex: 0 0 auto;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.6rem;
+            color: #a1a1aa;
+            transition: 0.16s ease;
+        }
+
+        .panel-toggle:hover {
+            color: #fff;
+            background: rgba(129, 140, 248, 0.13);
+            border-color: rgba(129, 140, 248, 0.28);
+        }
+
+        .panel-toggle.is-active {
+            color: #c7d2fe;
+            background: rgba(99,102,241,0.14);
+        }
+
+        .sidebar-brand {
+            gap: 0.75rem;
+        }
+
+        .sidebar-brand-title {
+            min-width: 0;
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .sidebar-brand-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.15rem;
+            flex: 0 0 auto;
+        }
+
+        .sidebar-brand-actions .panel-toggle {
+            width: 2rem;
+            height: 2rem;
+            border-color: transparent;
+            background: transparent;
+        }
+
+        #primary-sidebar-toggle {
+            width: 2rem;
+            height: 2rem;
+            border-color: transparent;
+            background: transparent;
+        }
+
+        #primary-sidebar.is-collapsed .sidebar-brand {
+            padding-inline: 1.3rem;
+        }
+
+        #primary-sidebar.is-collapsed .sidebar-brand > div:first-child {
+            display: none;
+        }
+
+        #primary-sidebar.is-collapsed #editor-settings-toggle {
+            display: none;
+        }
+
+        .chapter-order-control {
+            display: inline-flex;
+            align-items: center;
+            height: 2.65rem;
+            flex: 0 0 auto;
+            padding: 0.25rem 0.45rem 0.25rem 0.35rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            background: rgba(24,24,27,0.78);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+        }
+
+        #ed-tag-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.15rem;
+            height: 1.8rem;
+            padding-inline: 0.45rem;
+            border: 0;
+            border-radius: 0.5rem;
+            background: rgba(129,140,248,0.12);
+            color: #a5b4fc;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .chapter-number-prefix {
+            margin-left: 0.5rem;
+            color: #52525b;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+        }
+
+        #ed-order {
+            width: 2.8rem;
+            height: 2rem;
+            appearance: textfield;
+            -moz-appearance: textfield;
+            color: #f4f4f5;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        #ed-order:disabled {
+            color: #a1a1aa;
+            cursor: not-allowed;
+        }
+
+        #editor-heading {
+            gap: 0.8rem;
+        }
+
+        #editor-actions {
+            gap: 0.65rem;
+        }
+
+        .editor-status-cluster,
+        .editor-command-cluster {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .editor-status-cluster {
+            min-height: 2.5rem;
+            padding-inline: 0.35rem;
+        }
+
+        .editor-command-cluster {
+            padding: 0.2rem;
+            border: 1px solid rgba(255,255,255,0.075);
+            border-radius: 0.8rem;
+            background: rgba(24,24,27,0.68);
+        }
+
+        .editor-action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            height: 2.35rem;
+            padding: 0 0.85rem;
+            border: 1px solid transparent;
+            border-radius: 0.62rem;
+            color: #d4d4d8;
+            font-size: 0.78rem;
+            font-weight: 650;
+            line-height: 1;
+            white-space: nowrap;
+            transition: 0.16s ease;
+        }
+
+        .editor-action-button:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.065);
+        }
+
+        .editor-action-button.secondary {
+            border-color: rgba(255,255,255,0.08);
+            background: rgba(39,39,42,0.82);
+        }
+
+        .editor-action-button.is-active {
+            border-color: rgba(129,140,248,0.3);
+            background: rgba(99,102,241,0.14);
+            color: #c7d2fe;
+        }
+
+        .editor-action-button.primary {
+            min-width: 7rem;
+            border-color: rgba(52,211,153,0.24);
+            background: #059669;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(5,150,105,0.18);
+        }
+
+        .editor-action-button.primary:hover {
+            background: #10b981;
+        }
+
+        #btn-save-draft {
+            min-width: 7rem;
         }
 
         .chapter-mini-list button[aria-current="page"] {
@@ -624,35 +879,43 @@
             .ql-editor {
                 padding-inline: 6%;
             }
+
+            #editor-header {
+                height: auto;
+                min-height: 4rem;
+                flex-wrap: wrap;
+                gap: 0.55rem;
+                padding-block: 0.55rem;
+            }
+
+            #editor-heading {
+                width: auto;
+                min-width: 0;
+                flex: 1 1 19rem;
+            }
+
+            #editor-actions {
+                flex: 0 0 auto;
+            }
         }
 
         @media (max-width: 900px) {
-            aside.w-64 {
-                width: 4.75rem;
-            }
-
-            aside.w-64 span,
-            aside.w-64 h1,
-            aside.w-64 label,
-            aside.w-64 select,
-            aside.w-64 .fa-chevron-down,
-            aside.w-64 p {
-                display: none;
-            }
-
-            aside.w-64 .p-4 {
-                padding-inline: 0.75rem;
-            }
-
             #editor-workspace {
-                flex-direction: column;
+                position: relative;
             }
 
-            #editor-workspace aside.w-80 {
-                width: 100%;
-                max-height: 42vh;
-                border-left: none;
-                border-top: 1px solid #27272a;
+            #editor-settings {
+                position: absolute;
+                inset: 0 0 0 auto;
+                z-index: 30;
+                width: min(22rem, 100%);
+                box-shadow: -18px 0 44px rgba(0,0,0,0.34);
+            }
+
+            #editor-settings.is-collapsed {
+                width: min(22rem, 100%);
+                transform: translateX(100%);
+                border-left-color: transparent;
             }
 
             .editor-meta-bar {
@@ -662,7 +925,289 @@
                 padding-block: 0.45rem;
                 align-items: flex-start;
             }
+
+            #dash-header {
+                height: auto;
+                min-height: 5rem;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                padding: 1rem 1.25rem;
+            }
+
+            #dash-controls {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.65rem;
+            }
+
+            #dash-search {
+                width: min(100%, 20rem);
+            }
+
+            #editor-header {
+                height: auto;
+                min-height: 4rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            #editor-heading {
+                width: auto;
+                min-width: 0;
+                flex: 1 1 15rem;
+            }
+
+            #editor-actions {
+                gap: 0.35rem;
+                min-width: 0;
+            }
+
+            .editor-status-cluster {
+                padding-inline: 0;
+            }
+
+            .ql-toolbar.ql-snow {
+                padding: 0.65rem 0.85rem !important;
+                white-space: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
         }
+
+        @media (max-width: 640px) {
+            body {
+                font-size: 14px;
+            }
+
+            #primary-sidebar {
+                width: min(18rem, 86vw);
+            }
+
+            #primary-sidebar.is-collapsed {
+                width: 3.75rem;
+            }
+
+            #primary-sidebar .sidebar-collapse-row,
+            #primary-sidebar nav,
+            #primary-sidebar .sidebar-user {
+                padding-inline: 0.45rem;
+            }
+
+            #primary-sidebar nav button {
+                justify-content: center;
+                padding-inline: 0.5rem;
+            }
+
+            #primary-sidebar .sidebar-brand {
+                padding-inline: 0.7rem;
+            }
+
+            #primary-sidebar.is-collapsed .sidebar-copy,
+            #primary-sidebar.is-collapsed h1,
+            #primary-sidebar.is-collapsed label,
+            #primary-sidebar.is-collapsed select,
+            #primary-sidebar.is-collapsed .fa-chevron-down {
+                display: none;
+            }
+
+            #dash-header,
+            #dashboard-stats-region,
+            #dashboard-list-region {
+                padding-inline: 1rem;
+            }
+
+            #dash-controls > .relative:first-child,
+            #dash-controls > .relative:nth-child(2) {
+                flex: 1 1 100%;
+            }
+
+            #dash-search {
+                width: 100%;
+            }
+
+            #dash-controls > button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.65rem;
+            }
+
+            #dash-table-wrap {
+                overflow-x: auto;
+            }
+
+            .index-table {
+                min-width: 46rem;
+            }
+
+            #editor-heading {
+                flex-basis: 100%;
+            }
+
+            #editor-settings > * {
+                min-width: 0;
+            }
+
+            #editor-actions {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 0.15rem;
+            }
+
+            .editor-status-cluster,
+            .editor-command-cluster {
+                flex: 0 0 auto;
+            }
+
+            #editor-actions .editor-status-cluster,
+            #editor-actions .editor-divider {
+                display: none;
+            }
+
+            #btn-save-draft,
+            #btn-publish {
+                white-space: nowrap;
+            }
+
+            .ql-editor {
+                padding: 1.5rem 1rem 8rem;
+                font-size: 1rem;
+            }
+
+            .editor-hint {
+                display: none;
+            }
+
+            .editor-meta-bar {
+                padding-inline: 0.85rem;
+                font-size: 0.68rem;
+            }
+
+            #ed-banner {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding-inline: 0.85rem;
+            }
+
+            #toast-container {
+                right: 0.75rem;
+                bottom: calc(0.75rem + env(safe-area-inset-bottom));
+                left: 0.75rem;
+            }
+
+            #modal-media,
+            #modal-censor {
+                align-items: flex-end;
+                padding: 0.5rem;
+            }
+
+            #modal-media-dialog,
+            #modal-censor-dialog {
+                width: 100%;
+                max-width: none;
+                max-height: calc(100dvh - 1rem);
+                border-radius: 1rem;
+            }
+
+            .modal-action-bar {
+                flex-wrap: wrap;
+            }
+
+            .modal-action-bar input[type="text"] {
+                flex-basis: 100%;
+            }
+
+            .modal-action-bar button {
+                flex: 1 1 0;
+                justify-content: center;
+            }
+
+            #media-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                padding: 0.85rem;
+                gap: 0.85rem;
+            }
+
+            .censor-layout {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            .censor-presets-pane {
+                width: 100%;
+                max-height: 12rem;
+                border-bottom: 1px solid #27272a;
+            }
+
+            .censor-dictionary-pane {
+                min-height: 23rem;
+                overflow: visible;
+            }
+
+            #censor-search-input {
+                width: 9rem;
+            }
+
+            .censor-table-wrap {
+                overflow-x: auto;
+            }
+
+            .censor-table-wrap table {
+                min-width: 33rem;
+            }
+        }
+        .context-shell { display:grid; grid-template-columns:290px minmax(480px,1fr) 280px; gap:.8rem; min-height:0; }
+        .context-docks-area { min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border-soft); border-radius:1rem; background:rgba(24,24,27,.58); }
+        .context-docks { min-height:0; flex:1; display:block; }
+        .context-dock { min-width:0; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+        .context-dock-head { padding:.7rem .8rem; display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--border-soft); background:rgba(9,9,11,.92); cursor:default; }
+        .context-dock-body { min-height:0; overflow:auto; padding:.55rem; display:flex; flex-direction:column; gap:.45rem; }
+        #context-dock-toggles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,2.45rem); gap:2px; padding:.5rem .5rem 0; overflow:visible; }
+        .context-dock-toggle { min-width:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; gap:.3rem; padding:.35rem .4rem; border:1px solid #27272a; border-radius:.55rem .55rem 0 0; color:#71717a; background:#18181b; font-size:.65rem; font-weight:650; border-bottom-color:rgba(255,255,255,.08); white-space:nowrap; }
+        .context-dock-toggle > i { flex:0 0 auto; }
+        .context-dock-toggle-label { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+        .context-dock-toggle.is-visible { color:#fff; border-color:rgba(129,140,248,.5); border-bottom-color:#18181b; background:linear-gradient(180deg,rgba(99,102,241,.22),#18181b); box-shadow:inset 0 2px 0 #818cf8; }
+        .context-tab-count { min-width:1.2rem; padding:.05rem .3rem; border-radius:999px; background:#27272a; color:#a1a1aa; text-align:center; font-size:.6rem; }
+        .context-dock-toggle.is-visible .context-tab-count { background:rgba(99,102,241,.3); color:#c7d2fe; }
+        .context-panel { min-height:0; overflow:auto; border:1px solid var(--border-soft); border-radius:1rem; background:rgba(24,24,27,.58); }
+        .context-preview-panel { display:flex; flex-direction:column; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.24); }
+        .context-panel-head { position:sticky; top:0; z-index:4; padding:.9rem 1rem; border-bottom:1px solid var(--border-soft); background:rgba(9,9,11,.94); backdrop-filter:blur(14px); }
+        .context-section { border-bottom:1px solid rgba(255,255,255,.055); }
+        .context-section-title { display:flex; align-items:center; gap:.5rem; padding:.65rem .8rem; color:#d4d4d8; font-size:.72rem; font-weight:750; text-transform:uppercase; letter-spacing:.07em; }
+        .context-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.55rem; align-items:start; padding:.72rem .75rem; border:1px solid rgba(255,255,255,.07); border-radius:.7rem; background:rgba(9,9,11,.48); cursor:pointer; transition:border-color .15s,background .15s,box-shadow .15s,transform .15s; }
+        .context-item:hover { background:rgba(255,255,255,.045); border-color:rgba(255,255,255,.14); }
+        .context-item.is-selected { color:#fff; background:linear-gradient(135deg,rgba(79,70,229,.34),rgba(37,99,235,.16)); border-color:rgba(129,140,248,.7); box-shadow:inset 3px 0 0 #818cf8,0 8px 20px rgba(30,27,75,.25); }
+        .context-item.is-selected .context-item-title { color:#fff; }
+        .context-item[draggable="true"] { cursor:grab; }
+        .context-item[draggable="true"]:active { cursor:grabbing; }
+        .context-item-title { color:#e4e4e7; font-size:.78rem; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .context-item-meta { color:#71717a; font-size:.64rem; margin-top:.15rem; }
+        .context-icon-btn { width:1.7rem; height:1.7rem; display:inline-flex; align-items:center; justify-content:center; border-radius:.45rem; color:#71717a; }
+        .context-icon-btn:hover { color:#fff; background:#27272a; }
+        .context-preview { white-space:pre-wrap; overflow-wrap:anywhere; font-family:"JetBrains Mono",monospace; font-size:.82rem; line-height:1.72; color:#d4d4d8; padding:1.35rem 1.5rem 3rem; width:min(100%,920px); margin:0 auto; }
+        .context-preview-scroll { flex:1; min-height:0; overflow:auto; background:linear-gradient(180deg,rgba(9,9,11,.64),rgba(9,9,11,.9)); }
+        .context-section-stats { display:flex; flex-wrap:wrap; gap:.35rem; padding:.55rem .9rem; border-bottom:1px solid var(--border-soft); background:rgba(24,24,27,.82); }
+        .context-stat-chip { padding:.2rem .48rem; border-radius:999px; border:1px solid #27272a; background:#09090b; color:#71717a; font-size:.62rem; }
+        .context-stat-chip strong { color:#d4d4d8; font-weight:650; }
+        .context-order-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.55rem; padding:.55rem .7rem; border-bottom:1px solid rgba(255,255,255,.05); }
+        .context-order-row.is-draggable { cursor:grab; border:1px solid rgba(129,140,248,.15); margin:.35rem .45rem 0; border-radius:.55rem; background:rgba(99,102,241,.06); }
+        .context-order-row.is-draggable:hover { border-color:rgba(129,140,248,.45); }
+        .context-budget.over { color:#fb7185; }
+        .context-budget.near { color:#fbbf24; }
+        .context-editor-backdrop { background:rgba(0,0,0,.42); backdrop-filter:blur(2px); }
+        .context-modal-card { width:min(680px,calc(100vw - 1rem)); height:100dvh; max-height:100dvh; overflow:hidden; display:flex; flex-direction:column; border-radius:1rem 0 0 1rem; }
+        .context-rich-toolbar { display:flex; flex-wrap:wrap; gap:.35rem; padding:.55rem .7rem; border:1px solid #27272a; border-bottom:0; border-radius:.65rem .65rem 0 0; background:#09090b; }
+        .context-rich-editor { min-height:320px; flex:1; overflow:auto; padding:1rem; border:1px solid #27272a; border-radius:0 0 .65rem .65rem; background:#18181b; color:#e4e4e7; font-size:.84rem; line-height:1.65; outline:none; }
+        .context-rich-editor:focus { border-color:#6366f1; box-shadow:0 0 0 1px #6366f1; }
+        .context-card-actions { opacity:.62; transition:opacity .15s; }
+        .context-item:hover .context-card-actions,.context-item:focus-within .context-card-actions { opacity:1; }
+        @media (max-width:1280px) { .context-shell { grid-template-columns:270px minmax(0,1fr) 260px; } }
+        @media (max-width:1050px) { .context-shell { grid-template-columns:290px minmax(0,1fr); } .context-presets-panel { position:absolute; right:1rem; top:1rem; bottom:1rem; width:310px; z-index:12; box-shadow:0 20px 60px rgba(0,0,0,.55); } }
+        @media (max-width:720px) { .context-shell { display:flex; flex-direction:column; overflow:auto; } .context-docks-area,.context-panel { overflow:visible; flex:none; } .context-dock { height:420px; } .context-preview-panel { min-height:560px; } #view-context { overflow:auto; } #context-dock-toggles { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,2.65rem); } .context-dock-toggle { font-size:.6rem; padding:.3rem .25rem; } .context-presets-panel { position:static; width:auto; } .context-modal-card { width:100vw; border-radius:0; } }
     </style>
 </head>
 
@@ -673,7 +1218,7 @@
 
     <!-- Media Library Modal -->
     <div id="modal-media" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center fade-in">
-        <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-[700px] max-w-[95vw] overflow-hidden flex flex-col max-h-[80vh] slide-up">
+        <div id="modal-media-dialog" class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-[700px] max-w-[95vw] overflow-hidden flex flex-col max-h-[80vh] slide-up">
             <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
                 <h3 class="text-lg font-semibold text-zinc-100">
                     <i class="fa-regular fa-image text-primary-400 mr-2"></i>
@@ -684,7 +1229,7 @@
                 </button>
             </div>
 
-            <div class="p-4 border-b border-zinc-800 flex justify-between items-center gap-3">
+            <div class="modal-action-bar p-4 border-b border-zinc-800 flex justify-between items-center gap-3">
                 <input
                     type="text"
                     id="media-url-input"
@@ -728,7 +1273,7 @@
 
     <!-- Censorship Modal -->
     <div id="modal-censor" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center fade-in">
-        <div class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-[800px] max-w-[95vw] overflow-hidden flex flex-col max-h-[85vh] slide-up">
+        <div id="modal-censor-dialog" class="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-[800px] max-w-[95vw] overflow-hidden flex flex-col max-h-[85vh] slide-up">
             <!-- Header -->
             <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
                 <h3 class="text-lg font-semibold text-zinc-100 flex items-center gap-2">
@@ -741,9 +1286,9 @@
             </div>
 
             <!-- Body -->
-            <div class="flex-1 overflow-hidden flex flex-row divide-x divide-zinc-800">
+            <div class="censor-layout flex-1 overflow-hidden flex flex-row divide-x divide-zinc-800">
                 <!-- Sidebar: Presets -->
-                <div class="w-1/3 p-4 flex flex-col gap-4 overflow-y-auto bg-zinc-900/25">
+                <div class="censor-presets-pane w-1/3 p-4 flex flex-col gap-4 overflow-y-auto bg-zinc-900/25">
                     <div>
                         <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Censorship Presets</h4>
                         <div id="censor-presets-list" class="flex flex-col gap-1.5">
@@ -771,7 +1316,7 @@
                 </div>
 
                 <!-- Main Area: Dictionary -->
-                <div class="flex-1 p-5 flex flex-col gap-4 overflow-hidden">
+                <div class="censor-dictionary-pane flex-1 p-5 flex flex-col gap-4 overflow-hidden">
                     <div class="flex justify-between items-center gap-3">
                         <h4 class="text-sm font-semibold text-zinc-200">Dictionary Entries</h4>
                         <input
@@ -822,7 +1367,7 @@
                     </div>
 
                     <!-- Dictionary Table -->
-                    <div class="flex-1 overflow-y-auto border border-zinc-800 rounded-lg bg-zinc-950/20">
+                    <div class="censor-table-wrap flex-1 overflow-y-auto border border-zinc-800 rounded-lg bg-zinc-950/20">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
                                 <tr class="bg-zinc-950 border-b border-zinc-800 sticky top-0 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
@@ -852,19 +1397,76 @@
         </div>
     </div>
 
+    <div id="modal-context-block" class="context-editor-backdrop fixed inset-0 z-[110] hidden items-stretch justify-end">
+        <form class="context-modal-card border-l border-zinc-800 bg-zinc-950 shadow-2xl" onsubmit="ContextWorkspace.saveBlock(event)">
+            <div class="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+                <div>
+                    <h3 id="context-block-modal-title" class="font-semibold text-zinc-100">New context block</h3>
+                    <p class="text-xs text-zinc-500 mt-1">Reusable private context for the selected story.</p>
+                </div>
+                <button type="button" onclick="ContextWorkspace.closeBlockEditor()" class="context-icon-btn" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="context-block-id">
+            <div class="p-5 space-y-4 flex-1 min-h-0 overflow-auto flex flex-col">
+                <label class="block text-xs font-semibold text-zinc-400">Type
+                    <select id="context-block-type" onchange="ContextWorkspace.markBlockDirty()" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200">
+                        <option value="writing_style">Writing Style</option>
+                        <option value="long_summary">Long Summary</option>
+                        <option value="chapter_summary">Chapter Summary</option>
+                        <option value="outline">Outline</option>
+                        <option value="scratchpad">Scratchpad</option>
+                    </select>
+                </label>
+                <label class="block text-xs font-semibold text-zinc-400">Title
+                    <input id="context-block-title" required maxlength="240" oninput="ContextWorkspace.markBlockDirty()" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100" placeholder="Continuity summary through chapter 40">
+                </label>
+                <div class="flex-1 min-h-0 flex flex-col">
+                    <div class="flex items-center justify-between mb-2"><label class="text-xs font-semibold text-zinc-400">Content</label><span id="context-block-word-count" class="text-[10px] text-zinc-600">0 words</span></div>
+                    <div class="context-rich-toolbar">
+                        <button type="button" onclick="ContextWorkspace.formatBlock('bold')" class="context-icon-btn" title="Bold"><b>B</b></button>
+                        <button type="button" onclick="ContextWorkspace.formatBlock('italic')" class="context-icon-btn" title="Italic"><i>I</i></button>
+                        <button type="button" onclick="ContextWorkspace.formatBlock('underline')" class="context-icon-btn" title="Underline"><u>U</u></button>
+                        <button type="button" onclick="ContextWorkspace.formatBlock('insertUnorderedList')" class="context-icon-btn" title="Bullet list"><i class="fa-solid fa-list-ul"></i></button>
+                        <button type="button" onclick="ContextWorkspace.formatBlock('formatBlock','h3')" class="context-icon-btn" title="Heading"><i class="fa-solid fa-heading"></i></button>
+                        <button type="button" onclick="ContextWorkspace.formatBlock('removeFormat')" class="context-icon-btn" title="Clear formatting"><i class="fa-solid fa-eraser"></i></button>
+                    </div>
+                    <div id="context-block-content" class="context-rich-editor" contenteditable="true" spellcheck="true" oninput="ContextWorkspace.markBlockDirty()" data-placeholder="Paste or write reusable context..."></div>
+                </div>
+            </div>
+            <div class="px-5 py-4 border-t border-zinc-800 flex items-center gap-2">
+                <button id="context-block-delete" type="button" onclick="ContextWorkspace.deleteOpenBlock()" class="hidden px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-300 text-sm"><i class="fa-solid fa-trash mr-2"></i>Delete</button>
+                <button id="context-block-duplicate" type="button" onclick="ContextWorkspace.duplicateOpenBlock()" class="hidden px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm"><i class="fa-solid fa-copy mr-2"></i>Duplicate</button>
+                <span id="context-block-save-status" class="text-[10px] text-zinc-600 ml-auto mr-2">Saved</span>
+                <button type="button" onclick="ContextWorkspace.closeBlockEditor()" class="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold">Save</button>
+            </div>
+        </form>
+    </div>
+
     <!-- Main App Layout -->
     <div class="flex w-full h-full">
 
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-zinc-950 border-r border-zinc-800/60 flex flex-col flex-shrink-0 z-20">
-            <div class="h-16 px-5 border-b border-zinc-800/60 flex items-center gap-3">
+        <aside id="primary-sidebar" class="w-64 bg-zinc-950 border-r border-zinc-800/60 flex flex-col flex-shrink-0 z-20">
+            <div class="sidebar-brand h-16 px-5 border-b border-zinc-800/60 flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
                     <i class="fa-solid fa-feather-pointed text-sm"></i>
                 </div>
-                <h1 class="font-bold text-zinc-100 tracking-wide text-base">Writer Studio</h1>
+                <div class="sidebar-brand-title">
+                    <h1 class="sidebar-copy font-bold text-zinc-100 tracking-wide text-base">Writer Studio</h1>
+                    <div class="sidebar-brand-actions">
+                        <button id="editor-settings-toggle" type="button" onclick="UI.toggleEditorSettings()" class="panel-toggle" title="Toggle chapter settings" aria-label="Toggle chapter settings" aria-expanded="true">
+                            <i class="fa-solid fa-sliders"></i>
+                        </button>
+                        <button id="primary-sidebar-toggle" type="button" onclick="UI.togglePrimarySidebar()" class="panel-toggle" title="Collapse navigation" aria-label="Collapse navigation" aria-expanded="true">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div class="p-4 border-b border-zinc-800/60">
+            <div class="sidebar-collapse-row p-4 border-b border-zinc-800/60 flex items-center gap-2">
+                <div class="sidebar-copy flex-1 min-w-0">
                 <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Active Story</label>
                 <div class="relative">
                     <select
@@ -872,6 +1474,7 @@
                         class="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 p-2.5 appearance-none outline-none font-medium cursor-pointer transition hover:border-zinc-700"
                     ></select>
                     <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-zinc-500 text-xs pointer-events-none"></i>
+                </div>
                 </div>
             </div>
 
@@ -882,7 +1485,7 @@
                     class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition active-nav"
                 >
                     <i class="fa-solid fa-table-list w-4 text-center"></i>
-                    <span class="font-medium">Chapter Index</span>
+                    <span class="sidebar-copy font-medium">Chapter Index</span>
                 </button>
 
                 <button
@@ -891,13 +1494,22 @@
                     class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition"
                 >
                     <i class="fa-solid fa-pen-nib w-4 text-center"></i>
-                    <span class="font-medium">Active Editor</span>
+                    <span class="sidebar-copy font-medium">Active Editor</span>
+                </button>
+
+                <button
+                    onclick="Router.navigate('context')"
+                    id="nav-context"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition"
+                >
+                    <i class="fa-solid fa-layer-group w-4 text-center"></i>
+                    <span class="sidebar-copy font-medium">Context Workspace</span>
                 </button>
             </nav>
 
             <section class="flex-1 min-h-0 border-t border-zinc-800/60 flex flex-col">
                 <div class="px-4 pt-4 pb-2 flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Chapters</span>
+                    <span class="sidebar-copy text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Chapters</span>
                     <button type="button" onclick="App.createNewChapter()" class="text-zinc-500 hover:text-white" title="New chapter" aria-label="New chapter">
                         <i class="fa-solid fa-plus text-xs"></i>
                     </button>
@@ -905,11 +1517,11 @@
                 <div id="sidebar-chapter-list" class="chapter-mini-list flex-1 min-h-0 overflow-y-auto px-2 pb-3 custom-scrollbar"></div>
             </section>
 
-            <div class="p-4 border-t border-zinc-800/60 flex items-center gap-3">
+            <div class="sidebar-user p-4 border-t border-zinc-800/60 flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
                     <i class="fa-solid fa-user-shield"></i>
                 </div>
-                <div>
+                <div class="sidebar-copy">
                     <p class="text-xs font-semibold text-zinc-200">Admin Session</p>
                     <p class="text-[10px] text-zinc-500">Connected to Supabase</p>
                 </div>
@@ -921,13 +1533,13 @@
 
             <!-- Dashboard View -->
             <div id="view-dashboard" class="absolute inset-0 flex flex-col z-10 bg-zinc-950 fade-in">
-                <header class="h-20 px-8 flex items-center justify-between flex-shrink-0 border-b border-zinc-800/60">
+                <header id="dash-header" class="h-20 px-8 flex items-center justify-between flex-shrink-0 border-b border-zinc-800/60">
                     <div>
                         <h2 class="text-2xl font-bold text-white">Chapters</h2>
                         <p class="text-zinc-400 text-sm mt-0.5" id="dash-story-title">Manage contents for Selected Story</p>
                     </div>
 
-                    <div class="flex items-center gap-4">
+                    <div id="dash-controls" class="flex items-center gap-4">
                         <div class="relative">
                             <select id="dash-sort" class="bg-zinc-900 border border-zinc-800 rounded-full py-2 pl-4 pr-9 text-sm text-zinc-300 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition appearance-none cursor-pointer" aria-label="Sort chapters">
                                 <option value="chapter-asc">Chapter order</option>
@@ -958,12 +1570,12 @@
                     </div>
                 </header>
 
-                <section class="px-8 pt-6">
+                <section id="dashboard-stats-region" class="px-8 pt-6">
                     <div id="dash-stats" class="stat-grid"></div>
                 </section>
 
-                <div class="flex-1 overflow-auto p-8">
-                    <div class="border border-zinc-800/80 rounded-xl overflow-hidden bg-zinc-900/30 shadow-xl">
+                <div id="dashboard-list-region" class="flex-1 overflow-auto p-8">
+                    <div id="dash-table-wrap" class="border border-zinc-800/80 rounded-xl overflow-hidden bg-zinc-900/30 shadow-xl">
                         <table class="w-full text-left border-collapse index-table">
                             <thead>
                                 <tr class="text-zinc-400 text-xs uppercase tracking-wider border-b border-zinc-800">
@@ -979,6 +1591,84 @@
                             <tbody id="dash-chapter-list" class="text-sm divide-y divide-zinc-800/50"></tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Context Workspace View -->
+            <div id="view-context" class="absolute inset-0 flex flex-col z-10 bg-zinc-950 hidden">
+                <header class="min-h-20 px-6 py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 border-b border-zinc-800/60">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Context Workspace</h2>
+                        <p id="context-story-title" class="text-zinc-400 text-sm mt-0.5">Assemble reusable long-story context.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input id="context-search" oninput="ContextWorkspace.setSearch(this.value)" class="bg-zinc-900 border border-zinc-800 rounded-full py-2 px-4 text-sm text-zinc-200 w-52" placeholder="Search context...">
+                        <div class="flex rounded-full border border-zinc-800 bg-zinc-900 p-1" aria-label="Context ordering mode">
+                            <button id="context-mode-simple" onclick="ContextWorkspace.setMode('simple')" class="px-3 py-1 rounded-full text-xs font-semibold">Simple</button>
+                            <button id="context-mode-advanced" onclick="ContextWorkspace.setMode('advanced')" class="px-3 py-1 rounded-full text-xs font-semibold">Advanced</button>
+                        </div>
+                        <button onclick="ContextWorkspace.createForActiveSection()" class="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>New item</button>
+                    </div>
+                </header>
+                <div class="context-shell flex-1 min-h-0 p-4">
+                    <section class="context-docks-area">
+                        <div id="context-dock-toggles" class="border-b border-zinc-800" role="tablist" aria-label="Context sections"></div>
+                        <div class="flex items-center gap-2 px-3 py-2 border-b border-zinc-800">
+                            <p id="context-library-count" class="text-[11px] text-zinc-500 min-w-0 flex-1 truncate"></p>
+                            <button onclick="ContextWorkspace.selectActiveSection()" class="text-[10px] text-indigo-300 hover:text-white">Select all</button>
+                            <button onclick="ContextWorkspace.clearActiveSection()" class="text-[10px] text-zinc-500 hover:text-white">Clear tab</button>
+                            <button onclick="ContextWorkspace.clearSelection()" class="text-[10px] text-zinc-500 hover:text-white">Clear all</button>
+                        </div>
+                        <div id="context-library" class="context-docks"></div>
+                    </section>
+                    <section class="context-panel context-preview-panel">
+                        <div class="context-panel-head">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <h3 class="font-semibold text-zinc-100">Prompt Preview</h3>
+                                    <p id="context-budget-status" class="context-budget text-[11px] text-zinc-500 mt-1">0 words · ~0 tokens</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label class="text-[10px] uppercase font-bold text-zinc-500">Budget
+                                        <input id="context-token-budget" type="number" min="1000" max="2000000" step="1000" value="32000" onchange="ContextWorkspace.setBudget(this.value)" class="ml-1 w-24 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-200">
+                                    </label>
+                                    <button onclick="ContextWorkspace.copy('markdown')" class="context-icon-btn" title="Copy Markdown"><i class="fa-brands fa-markdown"></i></button>
+                                    <button onclick="ContextWorkspace.copy('text')" class="context-icon-btn" title="Copy plain text"><i class="fa-solid fa-align-left"></i></button>
+                                    <button onclick="ContextWorkspace.copy('json')" class="context-icon-btn" title="Copy ChatGPT JSON"><i class="fa-solid fa-code"></i></button>
+                                    <select id="context-download-format" class="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-400" aria-label="Download format"><option value="markdown">.md</option><option value="text">.txt</option><option value="json">.json</option></select>
+                                    <button onclick="ContextWorkspace.download(document.getElementById('context-download-format').value)" class="context-icon-btn" title="Download context"><i class="fa-solid fa-download"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="context-section-stats" class="context-section-stats"></div>
+                        <div class="context-preview-scroll"><pre id="context-preview" class="context-preview"></pre></div>
+                    </section>
+                    <section class="context-panel context-presets-panel">
+                        <div class="context-panel-head">
+                            <h3 class="font-semibold text-zinc-100">Presets & Ordering</h3>
+                            <p class="text-[11px] text-zinc-500 mt-1">Save reusable scene/context selections.</p>
+                        </div>
+                        <div class="p-3 border-b border-zinc-800 space-y-2">
+                            <select id="context-preset-select" onchange="ContextWorkspace.loadPreset(this.value)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200"></select>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="ContextWorkspace.savePreset(false)" class="px-2 py-2 rounded-lg bg-primary-600 text-xs font-semibold">Save</button>
+                                <button onclick="ContextWorkspace.savePreset(true)" class="px-2 py-2 rounded-lg bg-zinc-800 text-xs font-semibold">Save as</button>
+                                <button onclick="ContextWorkspace.deletePreset()" class="px-2 py-2 rounded-lg bg-zinc-900 text-rose-300 text-xs font-semibold">Delete</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="ContextWorkspace.renamePreset()" class="px-2 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-semibold">Rename</button>
+                                <button onclick="ContextWorkspace.duplicatePreset()" class="px-2 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-semibold">Duplicate</button>
+                            </div>
+                        </div>
+                        <div class="p-3 border-b border-zinc-800">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">Section order</div>
+                            <div id="context-section-order"></div>
+                        </div>
+                        <div>
+                            <div id="context-order-help" class="px-3 pt-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500">Selected items</div>
+                            <div id="context-item-order" class="pb-3"></div>
+                        </div>
+                    </section>
                 </div>
             </div>
 
@@ -1021,18 +1711,19 @@
 
                     <!-- Main Editor Column -->
                     <div class="flex-1 flex flex-col min-w-0 bg-[#09090b]">
-                        <header class="h-16 px-6 border-b border-zinc-800/60 flex items-center justify-between flex-shrink-0 bg-zinc-950 relative z-20">
-                            <div class="flex items-center gap-3 w-1/2">
-                                <span class="text-zinc-600 font-mono text-sm bg-zinc-900 px-2 rounded border border-zinc-800">CH</span>
-
-                                <input
-                                    type="number"
-                                    id="ed-order"
-                                    class="bg-transparent border-none text-zinc-300 w-12 text-center text-lg font-medium outline-none focus:ring-0 p-0"
-                                    placeholder="#"
-                                >
-
-                                <div class="h-6 w-px bg-zinc-800 mx-1"></div>
+                        <header id="editor-header" class="h-16 px-6 border-b border-zinc-800/60 flex items-center justify-between flex-shrink-0 bg-zinc-950 relative z-20">
+                            <div id="editor-heading" class="flex items-center w-1/2">
+                                <label class="chapter-order-control" title="Chapter number">
+                                    <span id="ed-tag-badge">CH</span>
+                                    <span class="chapter-number-prefix">#</span>
+                                    <input
+                                        type="number"
+                                        id="ed-order"
+                                        class="bg-transparent border-none outline-none focus:ring-0 p-0"
+                                        placeholder="0"
+                                        aria-label="Chapter number"
+                                    >
+                                </label>
 
                                 <input
                                     type="text"
@@ -1042,23 +1733,25 @@
                                 >
                             </div>
 
-                            <div class="flex items-center gap-4">
-                                <span id="ed-status-pill" class="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                                    <i class="fa-solid fa-circle text-[6px]"></i>
-                                    Draft
-                                </span>
+                            <div id="editor-actions" class="flex items-center">
+                                <div class="editor-status-cluster">
+                                    <span id="ed-status-pill" class="editor-status inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                                        <i class="fa-solid fa-circle text-[6px]"></i>
+                                        Draft
+                                    </span>
 
-                                <span id="ed-save-status" class="text-xs font-medium text-zinc-500">
-                                    <i class="fa-solid fa-check text-emerald-500 mr-1"></i>
-                                    Saved
-                                </span>
+                                    <span id="ed-save-status" class="editor-status text-xs font-medium text-zinc-500">
+                                        <i class="fa-solid fa-check text-emerald-500 mr-1"></i>
+                                        Saved
+                                    </span>
+                                </div>
 
-                                <div class="flex items-center gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+                                <div class="editor-command-cluster">
                                     <div class="relative inline-block text-left" id="export-menu-container">
                                         <button
                                             type="button"
                                             onclick="App.toggleExportMenu(event)"
-                                            class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                                            class="editor-action-button"
                                             title="Export & Copy Options"
                                             id="export-menu-btn"
                                         >
@@ -1126,41 +1819,23 @@
                                     </div>
 
                                     <button
-                                        onclick="Editor.removeExtraLineBreaks()"
-                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-                                        title="Remove extra line breaks"
-                                        aria-label="Remove extra line breaks"
+                                        id="btn-save-draft"
+                                        onclick="App.saveDraft()"
+                                        class="editor-action-button secondary"
                                     >
-                                        <i class="fa-solid fa-broom text-sm"></i>
+                                        <i class="fa-regular fa-floppy-disk"></i>
+                                        Save Draft
                                     </button>
 
                                     <button
-                                        onclick="Editor.deleteCurrentSystemMessage()"
-                                        class="px-3 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-rose-300 hover:bg-zinc-800 transition"
-                                        title="Delete selected system box"
-                                        aria-label="Delete selected system box"
+                                        onclick="App.publishChapter()"
+                                        id="btn-publish"
+                                        class="editor-action-button primary"
                                     >
-                                        <i class="fa-solid fa-message-slash text-sm"></i>
+                                        <i class="fa-solid fa-rocket"></i>
+                                        Publish
                                     </button>
                                 </div>
-
-                                <div class="h-6 w-px bg-zinc-800"></div>
-
-                                <button
-                                    onclick="App.saveDraft()"
-                                    class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition border border-zinc-700 shadow-sm"
-                                >
-                                    Save Draft
-                                </button>
-
-                                <button
-                                    onclick="App.publishChapter()"
-                                    id="btn-publish"
-                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
-                                >
-                                    <i class="fa-solid fa-rocket"></i>
-                                    Publish
-                                </button>
                             </div>
                         </header>
 
@@ -1220,14 +1895,17 @@
                     </div>
 
                     <!-- Right Settings Sidebar -->
-                    <aside class="w-80 bg-zinc-900 border-l border-zinc-800 flex flex-col flex-shrink-0 z-20">
-                        <div class="h-16 px-5 border-b border-zinc-800 flex items-center">
-                            <h3 class="font-semibold text-zinc-200">Chapter Settings</h3>
+                    <aside id="editor-settings" class="w-80 bg-zinc-900 border-l border-zinc-800 flex flex-col flex-shrink-0 z-20">
+                        <div class="h-16 px-5 border-b border-zinc-800 flex items-center justify-between gap-3">
+                            <h3 id="ed-sidebar-title" class="font-semibold text-zinc-200">Chapter Settings</h3>
+                            <button type="button" onclick="UI.toggleEditorSettings(false)" class="panel-toggle" title="Close chapter settings" aria-label="Close chapter settings">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
                         </div>
 
                         <div class="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
 
-                            <section class="settings-card space-y-4">
+                            <section id="ed-card-access" class="settings-card space-y-4">
                                 <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                                     <i class="fa-solid fa-lock text-zinc-600"></i>
                                     Access Control
@@ -1256,7 +1934,7 @@
                                 </div>
                             </section>
 
-                            <section class="settings-card space-y-4">
+                            <section id="ed-card-nsfw" class="settings-card space-y-4">
                                 <h4 class="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-2">
                                     <i class="fa-solid fa-triangle-exclamation text-rose-500/70"></i>
                                     Content Rules
@@ -1287,7 +1965,7 @@
                                 </div>
                             </section>
 
-                            <section class="settings-card space-y-4 pb-1">
+                            <section id="ed-card-media" class="settings-card space-y-4 pb-1">
                                 <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                                     <i class="fa-solid fa-image text-zinc-600"></i>
                                     Media
@@ -1314,7 +1992,24 @@
                                 </div>
                             </section>
 
-                            <section class="settings-card border-rose-500/20">
+                            <section id="ed-card-scratchpad" class="settings-card space-y-4 hidden">
+                                <h4 class="text-[10px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fa-regular fa-note-sticky text-amber-400"></i>
+                                    Scratchpad Info
+                                </h4>
+                                <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs space-y-2">
+                                    <p id="ed-sp-parent-info" class="text-zinc-300 font-medium"></p>
+                                    <p class="text-zinc-500 leading-relaxed">
+                                        Scratchpads are private working notes attached to a chapter. They are not published or listed in reader indexes.
+                                    </p>
+                                </div>
+                                <button type="button" onclick="App.deleteScratchpad(State.activeScratchpadId)" class="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    Delete Scratchpad
+                                </button>
+                            </section>
+
+                            <section id="ed-card-delete-chapter" class="settings-card border-rose-500/20">
                                 <button type="button" onclick="Editor.deleteCurrentSystemMessage()" class="mb-2 w-full flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm font-medium text-zinc-300 hover:border-rose-500/30 hover:text-rose-300 transition">
                                     <i class="fa-solid fa-message-slash"></i>
                                     Delete Selected System Box
@@ -1342,7 +2037,7 @@
         const CONFIGURED_SUPABASE = SUPABASE_URL && SUPABASE_ANON_KEY && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME/i.test(`${SUPABASE_URL} ${SUPABASE_ANON_KEY}`);
         const supabaseClient = CONFIGURED_SUPABASE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-        const MockDB = { tiers: [], stories: [], chapters: [] };
+        const MockDB = { tiers: [], stories: [], chapters: [], scratchpads: [] };
 
         function rankOf(tier) { return Number(tier?.tier_rank ?? tier?.rank ?? 0); }
         function wordCountFromHtml(html) {
@@ -1478,12 +2173,29 @@
                 if (!MockDB.stories.some(story => story.id === State.activeStoryId)) State.activeStoryId = MockDB.stories[0]?.id || '';
                 if (State.activeStoryId) localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                 await this.loadChapters(State.activeStoryId);
+                await this.loadScratchpads(State.activeStoryId);
             },
             async loadChapters(storyId) {
-                if (!storyId) { MockDB.chapters = []; return; }
+                if (!storyId) { MockDB.chapters = []; MockDB.scratchpads = []; return; }
                 const { data, error } = await supabaseClient.from('chapters').select('*').eq('story_id', storyId).order('chapter_order', { ascending: true });
                 if (error) throw error;
                 MockDB.chapters = (data || []).map(normalizeChapterRow);
+                await this.loadScratchpads(storyId);
+            },
+            async loadScratchpads(storyId) {
+                if (!storyId || !MockDB.chapters.length) { MockDB.scratchpads = []; return; }
+                const chapterIds = MockDB.chapters.map(c => c.id);
+                const { data, error } = await supabaseClient
+                    .from('scratchpads')
+                    .select('*')
+                    .in('chapter_id', chapterIds)
+                    .order('created_at', { ascending: true });
+                if (error) {
+                    console.warn('Scratchpads table error:', error);
+                    MockDB.scratchpads = [];
+                    return;
+                }
+                MockDB.scratchpads = data || [];
             },
             async saveChapter(id, record) {
                 record.word_count = wordCountFromHtml(record.content || '');
@@ -1495,6 +2207,17 @@
                 const { data, error } = await supabaseClient.from('chapters').insert(record).select().single();
                 if (error) throw error;
                 return normalizeChapterRow(data);
+            },
+            async saveScratchpad(id, record) {
+                record.updated_at = new Date().toISOString();
+                if (id) {
+                    const { data, error } = await supabaseClient.from('scratchpads').update(record).eq('id', id).select().single();
+                    if (error) throw error;
+                    return data;
+                }
+                const { data, error } = await supabaseClient.from('scratchpads').insert(record).select().single();
+                if (error) throw error;
+                return data;
             },
             async updateChapterFields(id, fields) {
                 const { data, error } = await supabaseClient
@@ -1509,19 +2232,32 @@
             async deleteChapter(id) {
                 const { error } = await supabaseClient.from('chapters').delete().eq('id', id);
                 if (error) throw error;
+            },
+            async deleteScratchpad(id) {
+                const { error } = await supabaseClient.from('scratchpads').delete().eq('id', id);
+                if (error) throw error;
             }
         };
 
+        const initialCompactLayout = window.matchMedia('(max-width: 900px)').matches;
         const State = {
             activeStoryId: localStorage.getItem('ea-admin-last-story-id') || '',
+            currentView: ['dashboard', 'editor', 'context'].includes(localStorage.getItem('ea-writer-current-view'))
+                ? localStorage.getItem('ea-writer-current-view')
+                : 'dashboard',
             activeChapterId: null,
+            activeScratchpadId: null,
+            activeTabType: 'chapter', // 'chapter' | 'scratchpad'
             unsavedChanges: false,
             quillInstance: null,
             autosaveTimer: null,
             commandRunning: false,
             isHydratingEditor: false,
             openChapterIds: [],
-            dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc'
+            openScratchpadIds: [],
+            dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
+            primarySidebarCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true',
+            editorSettingsCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-editor-settings-collapsed') === 'true'
         };
 
         // ==========================================
@@ -1586,6 +2322,9 @@
         // ==========================================
         const Router = {
             navigate(view) {
+                if (!['dashboard', 'editor', 'context'].includes(view)) view = 'dashboard';
+                State.currentView = view;
+                localStorage.setItem('ea-writer-current-view', view);
                 document.querySelectorAll('.active-nav').forEach(el => {
                     el.classList.remove('active-nav', 'bg-zinc-900', 'text-zinc-100');
                     el.classList.add('text-zinc-400');
@@ -1600,11 +2339,14 @@
 
                 document.getElementById('view-dashboard').classList.add('hidden');
                 document.getElementById('view-editor').classList.add('hidden');
+                document.getElementById('view-context').classList.add('hidden');
 
                 document.getElementById(`view-${view}`).classList.remove('hidden');
 
                 if (view === 'dashboard') {
                     Dashboard.render();
+                } else if (view === 'context') {
+                    ContextWorkspace.render();
                 }
             }
         };
@@ -1614,11 +2356,13 @@
                 try {
                     await DB.requireAdmin();
                     await DB.loadWorkspace(State.activeStoryId);
+                    await ContextWorkspace.load(State.activeStoryId);
                     App.initCensorship();
                     this.populateDropdowns();
                     Editor.initQuill();
+                    this.syncPanelState();
                     this.bindEvents();
-                    Router.navigate('dashboard');
+                    Router.navigate(State.currentView);
                 } catch (error) {
                     this.showToast(error.message || 'Writer failed to initialize.', 'error');
                     document.getElementById('dash-story-title').innerText = error.message || 'Writer unavailable';
@@ -1657,6 +2401,45 @@
                     });
             },
 
+            syncPanelState() {
+                const primarySidebar = document.getElementById('primary-sidebar');
+                const primaryButton = document.getElementById('primary-sidebar-toggle');
+                const settingsPanel = document.getElementById('editor-settings');
+                const settingsButton = document.getElementById('editor-settings-toggle');
+
+                primarySidebar?.classList.toggle('is-collapsed', State.primarySidebarCollapsed);
+                settingsPanel?.classList.toggle('is-collapsed', State.editorSettingsCollapsed);
+
+                if (primaryButton) {
+                    primaryButton.setAttribute('aria-expanded', String(!State.primarySidebarCollapsed));
+                    primaryButton.setAttribute('aria-label', State.primarySidebarCollapsed ? 'Expand navigation' : 'Collapse navigation');
+                    primaryButton.title = State.primarySidebarCollapsed ? 'Expand navigation' : 'Collapse navigation';
+                    primaryButton.innerHTML = `<i class="fa-solid ${State.primarySidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'}"></i>`;
+                }
+
+                if (settingsButton) {
+                    settingsButton.setAttribute('aria-expanded', String(!State.editorSettingsCollapsed));
+                    settingsButton.setAttribute('aria-label', State.editorSettingsCollapsed ? 'Open chapter settings' : 'Close chapter settings');
+                    settingsButton.title = State.editorSettingsCollapsed ? 'Open chapter settings' : 'Close chapter settings';
+                    settingsButton.classList.toggle('is-active', !State.editorSettingsCollapsed);
+                    settingsButton.innerHTML = '<i class="fa-solid fa-sliders"></i>';
+                }
+            },
+
+            togglePrimarySidebar() {
+                State.primarySidebarCollapsed = !State.primarySidebarCollapsed;
+                localStorage.setItem('ea-writer-primary-sidebar-collapsed', String(State.primarySidebarCollapsed));
+                this.syncPanelState();
+            },
+
+            toggleEditorSettings(open = null) {
+                State.editorSettingsCollapsed = typeof open === 'boolean'
+                    ? !open
+                    : !State.editorSettingsCollapsed;
+                localStorage.setItem('ea-writer-editor-settings-collapsed', String(State.editorSettingsCollapsed));
+                this.syncPanelState();
+            },
+
             bindEvents() {
                 document.getElementById('story-selector').addEventListener('change', async event => {
                     State.activeStoryId = event.target.value;
@@ -1667,7 +2450,12 @@
                     clearTimeout(State.autosaveTimer);
                     document.getElementById('editor-workspace').classList.add('hidden');
                     document.getElementById('editor-empty').classList.remove('hidden');
-                    try { await DB.loadChapters(State.activeStoryId); Dashboard.render(); Dashboard.renderEditorTabs(); }
+                    try {
+                        await DB.loadChapters(State.activeStoryId);
+                        await ContextWorkspace.load(State.activeStoryId);
+                        Dashboard.render();
+                        Dashboard.renderEditorTabs();
+                    }
                     catch (error) { UI.showToast(error.message || 'Could not load chapters.', 'error'); }
                 });
 
@@ -1710,18 +2498,31 @@
 
                     if (mod && event.key.toLowerCase() === 's') {
                         event.preventDefault();
-                        App.saveDraft();
+                        const contextModal = document.getElementById('modal-context-block');
+                        if (contextModal && !contextModal.classList.contains('hidden')) {
+                            contextModal.querySelector('form')?.requestSubmit();
+                        } else {
+                            App.saveDraft();
+                        }
                     }
 
                     if (mod && event.key.toLowerCase() === 'k') {
                         event.preventDefault();
-                        Router.navigate('dashboard');
-                        document.getElementById('dash-search')?.focus();
+                        const contextVisible = !document.getElementById('view-context')?.classList.contains('hidden');
+                        if (contextVisible) document.getElementById('context-search')?.focus();
+                        else {
+                            Router.navigate('dashboard');
+                            document.getElementById('dash-search')?.focus();
+                        }
                     }
 
                     if (mod && event.key === 'Enter') {
                         event.preventDefault();
-                        App.publishChapter();
+                        if (document.getElementById('modal-context-block')?.classList.contains('hidden')) App.publishChapter();
+                    }
+
+                    if (event.key === 'Escape' && !document.getElementById('modal-context-block')?.classList.contains('hidden')) {
+                        ContextWorkspace.closeBlockEditor();
                     }
                 });
 
@@ -1877,6 +2678,8 @@
                     ].join('');
                     const tierVisual = tierRowVisual(chapter.required_tier_id);
 
+                    const scratchpads = MockDB.scratchpads.filter(sp => sp.chapter_id === chapter.id);
+
                     const dateStr = new Date(chapter.updated_at).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -1897,7 +2700,18 @@
                                 <div class="font-semibold text-zinc-200">${UI.escapeHtml(chapter.title || 'Untitled')}</div>
                                 ${statusPill}
                             </div>
-                            <div class="text-xs text-zinc-600 mt-1">${UI.escapeHtml(chapter.id)}</div>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                ${scratchpads.map(sp => `
+                                    <button type="button" onclick="event.stopPropagation(); App.openEditorForScratchpad('${UI.escapeHtml(sp.id)}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition" title="Open scratchpad note">
+                                        <i class="fa-regular fa-note-sticky text-[9px]"></i>
+                                        <span>${UI.escapeHtml(sp.title || 'Scratchpad')}</span>
+                                    </button>
+                                `).join('')}
+                                <button type="button" onclick="event.stopPropagation(); App.createScratchpadForChapter('${UI.escapeHtml(chapter.id)}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:bg-zinc-800 transition" title="Add scratchpad note to this chapter">
+                                    <i class="fa-solid fa-plus text-[8px]"></i>
+                                    <span>Scratchpad</span>
+                                </button>
+                            </div>
                         </td>
                         <td class="px-6 py-4">${statusHtml}</td>
                         <td class="px-6 py-4">
@@ -1934,13 +2748,32 @@
                     return;
                 }
 
-                list.innerHTML = chapters.map(chapter => `
-                    <button type="button" onclick="App.openEditorForChapter('${UI.escapeHtml(chapter.id)}')" aria-current="${chapter.id === State.activeChapterId ? 'page' : 'false'}" class="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 transition">
-                        <span class="w-6 flex-shrink-0 text-center font-mono text-[10px] text-zinc-600">${Number(chapter.chapter_order) || '–'}</span>
-                        <span class="min-w-0 flex-1 truncate">${UI.escapeHtml(chapter.title || 'Untitled')}</span>
-                        ${chapter.is_published ? '<i class="fa-solid fa-circle text-[6px] text-emerald-400" title="Published"></i>' : ''}
-                    </button>
-                `).join('');
+                list.innerHTML = chapters.map(chapter => {
+                    const scratchpads = MockDB.scratchpads.filter(sp => sp.chapter_id === chapter.id);
+                    const isChapterActive = State.activeTabType === 'chapter' && chapter.id === State.activeChapterId;
+                    return `
+                        <div class="space-y-0.5 mb-1">
+                            <button type="button" onclick="App.openEditorForChapter('${UI.escapeHtml(chapter.id)}')" aria-current="${isChapterActive ? 'page' : 'false'}" class="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 transition">
+                                <span class="w-6 flex-shrink-0 text-center font-mono text-[10px] text-zinc-600">${Number(chapter.chapter_order) || '–'}</span>
+                                <span class="min-w-0 flex-1 truncate">${UI.escapeHtml(chapter.title || 'Untitled')}</span>
+                                ${chapter.is_published ? '<i class="fa-solid fa-circle text-[6px] text-emerald-400" title="Published"></i>' : ''}
+                            </button>
+                            ${scratchpads.length > 0 ? `
+                                <div class="pl-6 space-y-0.5 border-l border-zinc-800/80 ml-3.5 my-0.5">
+                                    ${scratchpads.map(sp => {
+                                        const isSpActive = State.activeTabType === 'scratchpad' && sp.id === State.activeScratchpadId;
+                                        return `
+                                            <button type="button" onclick="App.openEditorForScratchpad('${UI.escapeHtml(sp.id)}')" aria-current="${isSpActive ? 'page' : 'false'}" class="w-full flex items-center gap-1.5 px-2 py-1 rounded text-left text-[11px] ${isSpActive ? 'text-amber-300 font-semibold bg-amber-500/10' : 'text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/10'} transition italic truncate">
+                                                <i class="fa-regular fa-note-sticky text-[9px] flex-shrink-0"></i>
+                                                <span class="truncate">${UI.escapeHtml(sp.title || 'Scratchpad')}</span>
+                                            </button>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
             },
 
             renderEditorTabs() {
@@ -1948,10 +2781,12 @@
                 if (!tabs) return;
 
                 State.openChapterIds = State.openChapterIds.filter(id => MockDB.chapters.some(chapter => chapter.id === id));
+                State.openScratchpadIds = State.openScratchpadIds.filter(id => MockDB.scratchpads.some(sp => sp.id === id));
+
                 const chapterTabs = State.openChapterIds.map(id => {
                     const chapter = MockDB.chapters.find(item => item.id === id);
                     if (!chapter) return '';
-                    const active = id === State.activeChapterId;
+                    const active = State.activeTabType === 'chapter' && id === State.activeChapterId;
                     return `
                         <div class="editor-tab ${active ? 'active' : ''}">
                             <button type="button" onclick="App.openEditorForChapter('${UI.escapeHtml(id)}')" class="editor-tab-title text-xs" title="${UI.escapeHtml(chapter.title || 'Untitled')}">${UI.escapeHtml(chapter.title || 'Untitled')}</button>
@@ -1960,7 +2795,22 @@
                     `;
                 }).join('');
 
-                tabs.innerHTML = `${chapterTabs}
+                const scratchpadTabs = State.openScratchpadIds.map(id => {
+                    const sp = MockDB.scratchpads.find(item => item.id === id);
+                    if (!sp) return '';
+                    const active = State.activeTabType === 'scratchpad' && id === State.activeScratchpadId;
+                    return `
+                        <div class="editor-tab ${active ? 'active border-b-2 border-amber-400 bg-amber-500/10' : 'border-b-2 border-dashed border-amber-500/30'}">
+                            <button type="button" onclick="App.openEditorForScratchpad('${UI.escapeHtml(id)}')" class="editor-tab-title text-xs text-amber-300 flex items-center gap-1.5" title="${UI.escapeHtml(sp.title || 'Scratchpad')}">
+                                <i class="fa-regular fa-note-sticky text-[10px] text-amber-400"></i>
+                                <span class="italic truncate">${UI.escapeHtml(sp.title || 'Scratchpad')}</span>
+                            </button>
+                            <button type="button" onclick="App.closeScratchpadTab('${UI.escapeHtml(id)}')" class="text-zinc-600 hover:text-zinc-200" title="Close tab" aria-label="Close scratchpad tab"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        </div>
+                    `;
+                }).join('');
+
+                tabs.innerHTML = `${chapterTabs}${scratchpadTabs}
                     <button type="button" onclick="App.createNewChapter()" class="editor-tab-add" title="Open a new chapter tab at the next chapter index" aria-label="Open new chapter tab">
                         <i class="fa-solid fa-plus text-xs"></i>
                     </button>
@@ -1972,7 +2822,7 @@
                 const published = chapters.filter(chapter => chapter.is_published).length;
                 const drafts = chapters.filter(chapter => !chapter.is_published).length;
                 const gated = chapters.filter(chapter => chapter.required_tier_id).length;
-                const nsfw = chapters.filter(chapter => chapter.is_nsfw).length;
+                const scratchpads = MockDB.scratchpads.length;
                 const totalWords = chapters.reduce((sum, chapter) => sum + (chapter.word_count || 0), 0);
 
                 document.getElementById('dash-stats').innerHTML = `
@@ -1992,8 +2842,8 @@
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-card-label">Gated</div>
-                        <div class="stat-card-value">${gated}</div>
+                        <div class="stat-card-label">Scratchpads</div>
+                        <div class="stat-card-value">${scratchpads}</div>
                     </div>
 
                     <div class="stat-card">
@@ -2658,7 +3508,7 @@
 
                 clearTimeout(State.autosaveTimer);
 
-                if (State.activeChapterId) {
+                if (State.activeTabType === 'scratchpad' ? State.activeScratchpadId : State.activeChapterId) {
                     State.autosaveTimer = setTimeout(() => {
                         App.saveDraft({ silent: true });
                     }, 1500);
@@ -2686,14 +3536,14 @@
         // ==========================================
         // APPLICATION CONTROLLERS
         // ==========================================
-                const App = {
+        const App = {
             async createNewChapter() {
                 if (!State.activeStoryId) {
                     UI.showToast('Create/select a story first.', 'error');
                     return;
                 }
 
-                if (State.activeChapterId && State.unsavedChanges) {
+                if (State.unsavedChanges) {
                     const savedBeforeCreate = await this.saveDraft({ silent: true });
                     if (!savedBeforeCreate) return;
                 }
@@ -2731,18 +3581,49 @@
                 }
             },
 
+            async createScratchpadForChapter(chapterId) {
+                const chapter = MockDB.chapters.find(c => c.id === chapterId);
+                if (!chapter) return;
+
+                if (State.unsavedChanges) {
+                    const savedBeforeCreate = await this.saveDraft({ silent: true });
+                    if (!savedBeforeCreate) return;
+                }
+
+                const existingCount = MockDB.scratchpads.filter(s => s.chapter_id === chapterId).length;
+                const defaultTitle = existingCount === 0
+                    ? `Notes - Ch. ${chapter.chapter_order}`
+                    : `Notes - Ch. ${chapter.chapter_order} (${existingCount + 1})`;
+
+                try {
+                    const saved = await DB.saveScratchpad(null, {
+                        chapter_id: chapterId,
+                        title: defaultTitle,
+                        content: ''
+                    });
+
+                    MockDB.scratchpads.push(saved);
+                    await this.openEditorForScratchpad(saved.id);
+                    Dashboard.render();
+
+                    UI.showToast('New scratchpad note created.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not create scratchpad.', 'error');
+                }
+            },
+
             async openEditorForChapter(id) {
                 const chapter = MockDB.chapters.find(item => item.id === id);
                 if (!chapter) return;
 
-                if (State.activeChapterId === id) {
+                if (State.activeTabType === 'chapter' && State.activeChapterId === id) {
                     Router.navigate('editor');
                     Dashboard.renderSidebarChapters();
                     Dashboard.renderEditorTabs();
                     return;
                 }
 
-                if (State.activeChapterId && State.activeChapterId !== id && State.unsavedChanges) {
+                if (State.unsavedChanges) {
                     const savedBeforeSwitch = await this.saveDraft({ silent: true });
                     if (!savedBeforeSwitch) return;
                 }
@@ -2751,15 +3632,28 @@
                     State.openChapterIds.push(id);
                 }
 
+                State.activeTabType = 'chapter';
                 State.activeChapterId = id;
+                State.activeScratchpadId = null;
                 State.isHydratingEditor = true;
 
                 try {
                     document.getElementById('editor-empty').classList.add('hidden');
                     document.getElementById('editor-workspace').classList.remove('hidden');
 
+                    const tagBadge = document.getElementById('ed-tag-badge');
+                    if (tagBadge) {
+                        tagBadge.innerText = 'CH';
+                        tagBadge.className = 'text-zinc-600 font-mono text-sm bg-zinc-900 px-2 rounded border border-zinc-800';
+                    }
+
+                    const edOrder = document.getElementById('ed-order');
+                    if (edOrder) {
+                        edOrder.value = chapter.chapter_order || '';
+                        edOrder.disabled = false;
+                    }
+
                     document.getElementById('ed-title').value = chapter.title || '';
-                    document.getElementById('ed-order').value = chapter.chapter_order || '';
                     document.getElementById('ed-tier').value = chapter.required_tier_id || '';
                     document.getElementById('ed-release-date').value = datetimeLocal(chapter.public_release_at);
 
@@ -2769,6 +3663,13 @@
 
                     document.getElementById('ed-external-url').value = chapter.external_url || '';
                     document.getElementById('ed-cover').value = chapter.cover_image_url || '';
+
+                    document.getElementById('ed-sidebar-title').innerText = 'Chapter Settings';
+                    document.getElementById('ed-card-access')?.classList.remove('hidden');
+                    document.getElementById('ed-card-nsfw')?.classList.remove('hidden');
+                    document.getElementById('ed-card-media')?.classList.remove('hidden');
+                    document.getElementById('ed-card-delete-chapter')?.classList.remove('hidden');
+                    document.getElementById('ed-card-scratchpad')?.classList.add('hidden');
 
                     State.quillInstance.setText('', 'silent');
                     State.quillInstance.clipboard.dangerouslyPasteHTML(
@@ -2781,6 +3682,8 @@
                     const banner = document.getElementById('ed-banner');
                     const btn = document.getElementById('btn-publish');
                     const statusPill = document.getElementById('ed-status-pill');
+
+                    btn.classList.remove('hidden');
 
                     if (chapter.is_published) {
                         banner.classList.remove('hidden');
@@ -2803,32 +3706,190 @@
                 }
             },
 
+            async openEditorForScratchpad(id) {
+                const sp = MockDB.scratchpads.find(item => item.id === id);
+                if (!sp) return;
+
+                if (State.activeTabType === 'scratchpad' && State.activeScratchpadId === id) {
+                    Router.navigate('editor');
+                    Dashboard.renderSidebarChapters();
+                    Dashboard.renderEditorTabs();
+                    return;
+                }
+
+                if (State.unsavedChanges) {
+                    const savedBeforeSwitch = await this.saveDraft({ silent: true });
+                    if (!savedBeforeSwitch) return;
+                }
+
+                if (!State.openScratchpadIds.includes(id)) {
+                    State.openScratchpadIds.push(id);
+                }
+
+                State.activeTabType = 'scratchpad';
+                State.activeScratchpadId = id;
+                State.activeChapterId = null;
+                State.isHydratingEditor = true;
+
+                try {
+                    document.getElementById('editor-empty').classList.add('hidden');
+                    document.getElementById('editor-workspace').classList.remove('hidden');
+
+                    const parentChapter = MockDB.chapters.find(c => c.id === sp.chapter_id);
+
+                    const tagBadge = document.getElementById('ed-tag-badge');
+                    if (tagBadge) {
+                        tagBadge.innerText = 'SP';
+                        tagBadge.className = 'text-amber-400 font-mono text-sm bg-amber-400/10 px-2 rounded border border-amber-400/20';
+                    }
+
+                    const edOrder = document.getElementById('ed-order');
+                    if (edOrder) {
+                        edOrder.value = parentChapter ? parentChapter.chapter_order : '';
+                        edOrder.disabled = true;
+                    }
+
+                    document.getElementById('ed-title').value = sp.title || '';
+
+                    document.getElementById('ed-banner')?.classList.add('hidden');
+                    document.getElementById('btn-publish')?.classList.add('hidden');
+
+                    const statusPill = document.getElementById('ed-status-pill');
+                    if (statusPill) {
+                        statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
+                        statusPill.innerHTML = '<i class="fa-regular fa-note-sticky text-[8px]"></i> Scratchpad Note';
+                    }
+
+                    document.getElementById('ed-sidebar-title').innerText = 'Scratchpad Settings';
+                    document.getElementById('ed-card-access')?.classList.add('hidden');
+                    document.getElementById('ed-card-nsfw')?.classList.add('hidden');
+                    document.getElementById('ed-card-media')?.classList.add('hidden');
+                    document.getElementById('ed-card-delete-chapter')?.classList.add('hidden');
+
+                    const spCard = document.getElementById('ed-card-scratchpad');
+                    if (spCard) {
+                        spCard.classList.remove('hidden');
+                        document.getElementById('ed-sp-parent-info').innerText = parentChapter
+                            ? `Attached to Chapter ${parentChapter.chapter_order}: ${parentChapter.title}`
+                            : 'Attached Note';
+                    }
+
+                    State.quillInstance.setText('', 'silent');
+                    State.quillInstance.clipboard.dangerouslyPasteHTML(
+                        0,
+                        legacyBracketSystemToHtml(sp.content || ''),
+                        'silent'
+                    );
+                    updateSystemMessageVariants();
+
+                    Router.navigate('editor');
+                    Dashboard.renderSidebarChapters();
+                    Dashboard.renderEditorTabs();
+                } finally {
+                    State.isHydratingEditor = false;
+                    Editor.markSaved();
+                }
+            },
+
             async closeChapterTab(id) {
                 const closingIndex = State.openChapterIds.indexOf(id);
                 if (closingIndex === -1) return;
 
-                if (id === State.activeChapterId && State.unsavedChanges) {
+                if (State.activeTabType === 'chapter' && id === State.activeChapterId && State.unsavedChanges) {
                     const savedBeforeClose = await this.saveDraft({ silent: true });
                     if (!savedBeforeClose) return;
                 }
 
                 State.openChapterIds.splice(closingIndex, 1);
 
-                if (id !== State.activeChapterId) {
+                if (State.activeTabType !== 'chapter' || id !== State.activeChapterId) {
                     Dashboard.renderEditorTabs();
                     return;
                 }
 
-                const nextId = State.openChapterIds[Math.min(closingIndex, State.openChapterIds.length - 1)];
                 State.activeChapterId = null;
 
-                if (nextId) {
-                    await this.openEditorForChapter(nextId);
+                const nextChapterId = State.openChapterIds[Math.min(closingIndex, State.openChapterIds.length - 1)];
+                if (nextChapterId) {
+                    await this.openEditorForChapter(nextChapterId);
+                } else if (State.openScratchpadIds.length) {
+                    await this.openEditorForScratchpad(State.openScratchpadIds.at(-1));
                 } else {
                     document.getElementById('editor-workspace').classList.add('hidden');
                     document.getElementById('editor-empty').classList.remove('hidden');
                     Dashboard.renderEditorTabs();
                     Dashboard.renderSidebarChapters();
+                }
+            },
+
+            async closeScratchpadTab(id) {
+                const closingIndex = State.openScratchpadIds.indexOf(id);
+                if (closingIndex === -1) return;
+
+                if (State.activeTabType === 'scratchpad' && id === State.activeScratchpadId && State.unsavedChanges) {
+                    const savedBeforeClose = await this.saveDraft({ silent: true });
+                    if (!savedBeforeClose) return;
+                }
+
+                State.openScratchpadIds.splice(closingIndex, 1);
+
+                if (State.activeTabType !== 'scratchpad' || id !== State.activeScratchpadId) {
+                    Dashboard.renderEditorTabs();
+                    return;
+                }
+
+                State.activeScratchpadId = null;
+
+                const nextSpId = State.openScratchpadIds[Math.min(closingIndex, State.openScratchpadIds.length - 1)];
+                if (nextSpId) {
+                    await this.openEditorForScratchpad(nextSpId);
+                } else if (State.openChapterIds.length) {
+                    await this.openEditorForChapter(State.openChapterIds.at(-1));
+                } else {
+                    document.getElementById('editor-workspace').classList.add('hidden');
+                    document.getElementById('editor-empty').classList.remove('hidden');
+                    Dashboard.renderEditorTabs();
+                    Dashboard.renderSidebarChapters();
+                }
+            },
+
+            async deleteScratchpad(id) {
+                if (!id) return;
+                const sp = MockDB.scratchpads.find(item => item.id === id);
+                if (!sp) return;
+
+                const confirmed = confirm(`Delete scratchpad “${sp.title || 'Untitled'}” permanently? This cannot be undone.`);
+                if (!confirmed) return;
+
+                try {
+                    if (State.activeTabType === 'scratchpad' && State.activeScratchpadId === id) {
+                        clearTimeout(State.autosaveTimer);
+                    }
+                    await DB.deleteScratchpad(id);
+                    MockDB.scratchpads = MockDB.scratchpads.filter(item => item.id !== id);
+                    State.openScratchpadIds = State.openScratchpadIds.filter(itemId => itemId !== id);
+
+                    if (State.activeTabType === 'scratchpad' && State.activeScratchpadId === id) {
+                        State.activeScratchpadId = null;
+                        State.unsavedChanges = false;
+
+                        const nextSpId = State.openScratchpadIds.at(-1);
+                        if (nextSpId) {
+                            await this.openEditorForScratchpad(nextSpId);
+                        } else if (State.openChapterIds.length) {
+                            await this.openEditorForChapter(State.openChapterIds.at(-1));
+                        } else {
+                            document.getElementById('editor-workspace').classList.add('hidden');
+                            document.getElementById('editor-empty').classList.remove('hidden');
+                            Router.navigate('dashboard');
+                        }
+                    }
+
+                    Dashboard.render();
+                    Dashboard.renderEditorTabs();
+                    UI.showToast('Scratchpad deleted.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not delete scratchpad.', 'error');
                 }
             },
 
@@ -2874,6 +3935,8 @@
                     await DB.deleteChapter(id);
                     MockDB.chapters = MockDB.chapters.filter(item => item.id !== id);
                     State.openChapterIds = State.openChapterIds.filter(itemId => itemId !== id);
+                    // Also delete local scratchpads attached to this chapter
+                    MockDB.scratchpads = MockDB.scratchpads.filter(sp => sp.chapter_id !== id);
 
                     if (State.activeChapterId === id) {
                         State.activeChapterId = null;
@@ -2916,6 +3979,38 @@
             },
 
             async saveDraft(options = {}) {
+                if (State.activeTabType === 'scratchpad') {
+                    if (!State.activeScratchpadId) return false;
+                    if (options.silent && !State.unsavedChanges) return true;
+
+                    const index = MockDB.scratchpads.findIndex(sp => sp.id === State.activeScratchpadId);
+                    if (index === -1) return false;
+
+                    const existing = MockDB.scratchpads[index];
+
+                    try {
+                        const saved = await DB.saveScratchpad(State.activeScratchpadId, {
+                            chapter_id: existing.chapter_id,
+                            title: document.getElementById('ed-title').value.trim() || 'Scratchpad',
+                            content: Editor.normalizeForSave()
+                        });
+
+                        MockDB.scratchpads[index] = saved;
+                        Editor.markSaved();
+                        Dashboard.renderSidebarChapters();
+                        Dashboard.renderEditorTabs();
+
+                        if (!options.silent) {
+                            Dashboard.render();
+                            UI.showToast('Scratchpad saved.', 'success');
+                        }
+                        return true;
+                    } catch (error) {
+                        UI.showToast(error.message || 'Could not save scratchpad.', 'error');
+                        return false;
+                    }
+                }
+
                 if (!State.activeChapterId) return false;
 
                 if (options.silent && !State.unsavedChanges) {
@@ -3442,10 +4537,980 @@
         };
 
         // ==========================================
+        // LONG-STORY CONTEXT WORKSPACE
+        // ==========================================
+        const ContextWorkspace = {
+            sectionOrder: ['writing_style', 'long_summary', 'chapter_summary', 'chapter', 'outline', 'scratchpad'],
+            labels: {
+                writing_style: 'Writing Style',
+                long_summary: 'Long Summary',
+                chapter_summary: 'Chapter Summary',
+                chapter: 'Chapters',
+                outline: 'Outlines',
+                scratchpad: 'Scratchpads'
+            },
+            blocks: [],
+            presets: [],
+            presetItems: [],
+            selected: new Set(),
+            order: [],
+            mode: 'simple',
+            activePresetId: '',
+            tokenBudget: 32000,
+            available: true,
+            error: '',
+            activeSection: localStorage.getItem('ea-writer-context-active-section') || 'writing_style',
+            searchQuery: '',
+            libraryScroll: {},
+            previewScroll: 0,
+            previewRendered: false,
+            draggedLibraryKey: '',
+            draggedOrderIndex: -1,
+            blockEditorDirty: false,
+
+            async load(storyId) {
+                try {
+                    const savedOrder = JSON.parse(localStorage.getItem('ea-writer-context-dock-order') || 'null');
+                    if (Array.isArray(savedOrder) && savedOrder.length === this.sectionOrder.length && this.sectionOrder.every(section => savedOrder.includes(section))) {
+                        this.sectionOrder = savedOrder;
+                    }
+                } catch (_error) {}
+                this.blocks = [];
+                this.presets = [];
+                this.presetItems = [];
+                this.selected = new Set();
+                this.order = [];
+                this.mode = 'simple';
+                this.activePresetId = '';
+                this.tokenBudget = 32000;
+                this.available = true;
+                this.error = '';
+                this.activeSection = localStorage.getItem('ea-writer-context-active-section') || 'writing_style';
+                this.searchQuery = '';
+                this.libraryScroll = {};
+                this.previewScroll = 0;
+                this.previewRendered = false;
+                if (!storyId) {
+                    this.render();
+                    return;
+                }
+                try {
+                    const [{ data: blocks, error: blockError }, { data: presets, error: presetError }] = await Promise.all([
+                        supabaseClient.from('writer_context_blocks').select('*').eq('story_id', storyId).order('sort_order').order('created_at'),
+                        supabaseClient.from('writer_context_presets').select('*').eq('story_id', storyId).order('name')
+                    ]);
+                    if (blockError) throw blockError;
+                    if (presetError) throw presetError;
+                    this.blocks = blocks || [];
+                    this.presets = presets || [];
+                    const presetIds = this.presets.map(preset => preset.id);
+                    if (presetIds.length) {
+                        const { data: items, error: itemError } = await supabaseClient
+                            .from('writer_context_preset_items')
+                            .select('*')
+                            .in('preset_id', presetIds)
+                            .order('position');
+                        if (itemError) throw itemError;
+                        this.presetItems = items || [];
+                    }
+                    this.restoreState(storyId);
+                } catch (error) {
+                    console.warn('Context Workspace unavailable:', error);
+                    this.available = false;
+                    this.error = error.message || 'Apply the Writer Context Workspace migration.';
+                }
+                this.render();
+            },
+
+            stateKey(storyId = State.activeStoryId) {
+                return `ea-writer-context-session:${storyId || 'none'}`;
+            },
+
+            restoreState(storyId) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(this.stateKey(storyId)) || 'null');
+                    if (!saved || typeof saved !== 'object') return;
+                    const availableKeys = new Set(this.allItems().map(item => item.key));
+                    if (saved.mode === 'advanced' || saved.mode === 'simple') this.mode = saved.mode;
+                    if (this.sectionOrder.includes(saved.activeSection)) this.activeSection = saved.activeSection;
+                    if (Array.isArray(saved.sectionOrder) && saved.sectionOrder.length === this.sectionOrder.length && this.sectionOrder.every(section => saved.sectionOrder.includes(section))) {
+                        this.sectionOrder = saved.sectionOrder;
+                    }
+                    this.selected = new Set((Array.isArray(saved.selected) ? saved.selected : []).filter(key => availableKeys.has(key)));
+                    this.order = (Array.isArray(saved.order) ? saved.order : []).filter(key => this.selected.has(key));
+                    [...this.selected].forEach(key => {
+                        if (!this.order.includes(key)) this.order.push(key);
+                    });
+                    this.activePresetId = this.presets.some(preset => preset.id === saved.activePresetId) ? saved.activePresetId : '';
+                    this.tokenBudget = Math.max(1000, Math.min(2000000, Number(saved.tokenBudget) || 32000));
+                    this.searchQuery = typeof saved.searchQuery === 'string' ? saved.searchQuery : '';
+                    this.libraryScroll = saved.libraryScroll && typeof saved.libraryScroll === 'object' ? saved.libraryScroll : {};
+                    this.previewScroll = Math.max(0, Number(saved.previewScroll) || 0);
+                } catch (_error) {}
+            },
+
+            persistState() {
+                try {
+                    localStorage.setItem(this.stateKey(), JSON.stringify({
+                        mode: this.mode,
+                        activeSection: this.activeSection,
+                        sectionOrder: this.sectionOrder,
+                        selected: [...this.selected],
+                        order: this.order,
+                        activePresetId: this.activePresetId,
+                        tokenBudget: this.tokenBudget,
+                        searchQuery: this.searchQuery,
+                        libraryScroll: this.libraryScroll,
+                        previewScroll: this.previewScroll
+                    }));
+                } catch (_error) {}
+            },
+
+            setSearch(value) {
+                this.searchQuery = String(value || '');
+                this.libraryScroll[this.activeSection] = 0;
+                this.persistState();
+                this.renderLibrary();
+            },
+
+            plain(value) {
+                const template = document.createElement('template');
+                template.innerHTML = value || '';
+                return (template.content.textContent || '').replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+            },
+
+            wordCount(value) {
+                const text = String(value || '').trim();
+                return text ? text.split(/\s+/).filter(Boolean).length : 0;
+            },
+
+            allItems() {
+                const blocks = this.blocks.map(block => ({
+                    key: `block:${block.id}`,
+                    itemType: 'context_block',
+                    id: block.id,
+                    section: block.block_type,
+                    title: block.title,
+                    content: this.plain(block.content),
+                    meta: this.labels[block.block_type] || block.block_type,
+                    editable: true,
+                    sort: Number(block.sort_order) || 0
+                }));
+                const chapters = MockDB.chapters.map(chapter => ({
+                    key: `chapter:${chapter.id}`,
+                    itemType: 'chapter',
+                    id: chapter.id,
+                    section: 'chapter',
+                    title: `Ch. ${chapter.chapter_order}: ${chapter.title || 'Untitled'}`,
+                    content: this.plain(chapter.content),
+                    meta: `${chapter.is_published ? 'Live' : 'Draft'}${chapter.required_tier_id ? ` · ${MockDB.tiers.find(tier => tier.id === chapter.required_tier_id)?.name || 'Tiered'}` : ' · Free'}`,
+                    editable: false,
+                    sort: Number(chapter.chapter_order) || 0
+                }));
+                const chapterById = Object.fromEntries(MockDB.chapters.map(chapter => [chapter.id, chapter]));
+                const scratchpads = MockDB.scratchpads.map(scratchpad => ({
+                    key: `scratchpad:${scratchpad.id}`,
+                    itemType: 'scratchpad',
+                    id: scratchpad.id,
+                    section: 'scratchpad',
+                    title: scratchpad.title || 'Scratchpad',
+                    content: this.plain(scratchpad.content),
+                    meta: chapterById[scratchpad.chapter_id] ? `Chapter ${chapterById[scratchpad.chapter_id].chapter_order}` : 'Detached note',
+                    editable: false,
+                    sort: Number(chapterById[scratchpad.chapter_id]?.chapter_order) || 0
+                }));
+                return [...blocks, ...chapters, ...scratchpads];
+            },
+
+            itemMap() {
+                return new Map(this.allItems().map(item => [item.key, item]));
+            },
+
+            selectedItemsInOrder() {
+                const map = this.itemMap();
+                if (this.mode === 'advanced') {
+                    const keys = [...this.order, ...this.selected].filter((key, index, list) => this.selected.has(key) && list.indexOf(key) === index);
+                    return keys.map(key => map.get(key)).filter(Boolean);
+                }
+                const sectionRank = Object.fromEntries(this.sectionOrder.map((section, index) => [section, index]));
+                return [...this.selected]
+                    .map(key => map.get(key))
+                    .filter(Boolean)
+                    .sort((a, b) =>
+                        (sectionRank[a.section] ?? 99) - (sectionRank[b.section] ?? 99)
+                        || a.sort - b.sort
+                        || a.title.localeCompare(b.title)
+                    );
+            },
+
+            itemActionsHtml(item) {
+                return `<span class="context-card-actions flex">
+                    <button type="button" onclick="event.stopPropagation();ContextWorkspace.editItem('${item.key}')" class="context-icon-btn" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" onclick="event.stopPropagation();ContextWorkspace.duplicateItem('${item.key}')" class="context-icon-btn" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+                    <button type="button" onclick="event.stopPropagation();ContextWorkspace.deleteItem('${item.key}')" class="context-icon-btn hover:text-rose-300" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </span>`;
+            },
+
+            sectionCreateHtml(section) {
+                if (section === 'chapter') {
+                    return `<button type="button" onclick="App.createNewChapter()" class="context-icon-btn" title="New chapter"><i class="fa-solid fa-plus"></i></button>`;
+                }
+                if (section === 'scratchpad') {
+                    const options = MockDB.chapters.map(chapter => `<option value="${chapter.id}">Ch. ${UI.escapeHtml(chapter.chapter_order)} — ${UI.escapeHtml(chapter.title || 'Untitled')}</option>`).join('');
+                    return `<select id="context-scratchpad-parent" class="max-w-40 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-400">${options}</select><button type="button" onclick="ContextWorkspace.createScratchpadFromContext()" class="context-icon-btn" title="New scratchpad"><i class="fa-solid fa-plus"></i></button>`;
+                }
+                return `<button type="button" onclick="ContextWorkspace.openBlockModal('', '${section}')" class="context-icon-btn" title="Add ${UI.escapeHtml(this.labels[section] || section)}"><i class="fa-solid fa-plus"></i></button>`;
+            },
+
+            createForActiveSection() {
+                if (this.activeSection === 'chapter') return App.createNewChapter();
+                if (this.activeSection === 'scratchpad') return this.createScratchpadFromContext();
+                this.openBlockModal('', this.activeSection);
+            },
+
+            render() {
+                const story = MockDB.stories.find(item => item.id === State.activeStoryId);
+                const storyTitle = document.getElementById('context-story-title');
+                if (storyTitle) storyTitle.textContent = story ? `Build reusable AI context for ${story.title}.` : 'Select a story to begin.';
+                this.renderModeControls();
+                const budget = document.getElementById('context-token-budget');
+                if (budget) budget.value = this.tokenBudget;
+                const search = document.getElementById('context-search');
+                if (search && search.value !== this.searchQuery) search.value = this.searchQuery;
+                if (!this.available) {
+                    const library = document.getElementById('context-library');
+                    if (library) library.innerHTML = `<div class="p-5 text-sm text-amber-300"><i class="fa-solid fa-database mr-2"></i>${UI.escapeHtml(this.error)}<p class="text-xs text-zinc-500 mt-2">Run the 20260723170000 Writer Context Workspace migration, then reload.</p></div>`;
+                    const preview = document.getElementById('context-preview');
+                    if (preview) preview.textContent = '';
+                    return;
+                }
+                this.renderSectionTabs();
+                this.renderLibrary();
+                this.renderPresets();
+                this.renderSectionOrder();
+                this.renderItemOrder();
+                this.renderPreview();
+                this.persistState();
+            },
+
+            renderLibrary() {
+                const root = document.getElementById('context-library');
+                if (!root || !this.available) return;
+                const existingDock = root.querySelector('[data-context-dock]');
+                const existingBody = root.querySelector('.context-dock-body');
+                if (existingBody && existingDock?.dataset.contextDock) this.libraryScroll[existingDock.dataset.contextDock] = existingBody.scrollTop;
+                const query = this.searchQuery.trim().toLowerCase();
+                const items = this.allItems().filter(item => !query || `${item.title}\n${item.content}`.toLowerCase().includes(query));
+                if (!this.sectionOrder.includes(this.activeSection)) this.activeSection = this.sectionOrder[0];
+                const section = this.activeSection;
+                const sectionItems = items.filter(item => item.section === section);
+                document.getElementById('context-library-count').textContent = `${this.labels[section] || section}: ${sectionItems.length} shown · ${this.selected.size} selected overall`;
+                root.innerHTML = `<section class="context-dock" data-context-dock="${section}" role="tabpanel" aria-label="${UI.escapeHtml(this.labels[section] || section)}">
+                        <div class="context-dock-head">
+                            <i class="fa-solid ${section === 'chapter' ? 'fa-book-open' : section === 'scratchpad' ? 'fa-note-sticky' : 'fa-window-maximize'} text-zinc-600"></i>
+                            <strong class="text-xs text-zinc-200">${UI.escapeHtml(this.labels[section] || section)}</strong>
+                            <span class="text-[10px] text-zinc-600">${sectionItems.length}</span>
+                            <span class="ml-auto flex items-center">
+                                ${this.sectionCreateHtml(section)}
+                            </span>
+                        </div>
+                        <div class="context-dock-body">
+                        ${sectionItems.map(item => {
+                            const words = this.wordCount(item.content);
+                            return `<article class="context-item ${this.selected.has(item.key) ? 'is-selected' : ''}"
+                                role="button" tabindex="0" aria-pressed="${this.selected.has(item.key)}"
+                                onclick="ContextWorkspace.toggleItem('${item.key}')"
+                                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ContextWorkspace.toggleItem('${item.key}')}"
+                                draggable="${item.editable}"
+                                ondragstart="ContextWorkspace.startLibraryDrag(event,'${item.key}')"
+                                ondragover="ContextWorkspace.allowLibraryDrop(event,'${item.key}')"
+                                ondrop="ContextWorkspace.dropLibraryItem(event,'${item.key}')">
+                                <span class="min-w-0"><span class="context-item-title block">${UI.escapeHtml(item.title)}</span><span class="context-item-meta block">${UI.escapeHtml(item.meta || '')} · ${words.toLocaleString()} words · ~${Math.ceil(item.content.length / 4).toLocaleString()} tokens</span></span>
+                                ${this.itemActionsHtml(item)}
+                            </article>`;
+                        }).join('') || `<div class="p-3 text-xs text-zinc-600">No matching items.</div>`}
+                        </div>
+                    </section>`;
+                const body = root.querySelector('.context-dock-body');
+                if (body) {
+                    body.scrollTop = Math.max(0, Number(this.libraryScroll[section]) || 0);
+                    body.addEventListener('scroll', () => {
+                        this.libraryScroll[section] = body.scrollTop;
+                        this.persistState();
+                    }, { passive: true });
+                }
+            },
+
+            renderSectionTabs() {
+                const root = document.getElementById('context-dock-toggles');
+                if (!root) return;
+                const items = this.allItems();
+                root.innerHTML = this.sectionOrder.map(section => {
+                    const total = items.filter(item => item.section === section).length;
+                    const selected = items.filter(item => item.section === section && this.selected.has(item.key)).length;
+                    return `<button type="button" role="tab" onclick="ContextWorkspace.setActiveSection('${section}')" class="context-dock-toggle ${this.activeSection === section ? 'is-visible' : ''}" aria-selected="${this.activeSection === section}">
+                        <i class="fa-solid ${section === 'chapter' ? 'fa-book-open' : section === 'scratchpad' ? 'fa-note-sticky' : 'fa-layer-group'}"></i>
+                        <span class="context-dock-toggle-label">${UI.escapeHtml(this.labels[section] || section)}</span>
+                        <span class="context-tab-count">${selected ? `${selected}/` : ''}${total}</span>
+                    </button>`;
+                }).join('');
+            },
+
+            setActiveSection(section) {
+                if (!this.sectionOrder.includes(section)) return;
+                this.activeSection = section;
+                localStorage.setItem('ea-writer-context-active-section', section);
+                this.persistState();
+                this.renderSectionTabs();
+                this.renderLibrary();
+            },
+
+            toggleItem(key) {
+                if (!this.selected.has(key)) {
+                    this.selected.add(key);
+                    if (!this.order.includes(key)) this.order.push(key);
+                } else {
+                    this.selected.delete(key);
+                    this.order = this.order.filter(item => item !== key);
+                }
+                this.renderSectionTabs();
+                this.renderLibrary();
+                this.renderItemOrder();
+                this.renderPreview();
+                this.persistState();
+            },
+
+            selectActiveSection() {
+                this.allItems().filter(item => item.section === this.activeSection).forEach(item => {
+                    this.selected.add(item.key);
+                    if (!this.order.includes(item.key)) this.order.push(item.key);
+                });
+                this.render();
+            },
+
+            clearActiveSection() {
+                const keys = new Set(this.allItems().filter(item => item.section === this.activeSection).map(item => item.key));
+                this.selected = new Set([...this.selected].filter(key => !keys.has(key)));
+                this.order = this.order.filter(key => !keys.has(key));
+                this.render();
+            },
+
+            startLibraryDrag(event, key) {
+                const item = this.itemMap().get(key);
+                if (!item?.editable) {
+                    event.preventDefault();
+                    return;
+                }
+                this.draggedLibraryKey = key;
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', key);
+            },
+
+            allowLibraryDrop(event, targetKey) {
+                const source = this.itemMap().get(this.draggedLibraryKey);
+                const target = this.itemMap().get(targetKey);
+                if (source?.editable && target?.editable && source.section === target.section) {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'move';
+                }
+            },
+
+            async dropLibraryItem(event, targetKey) {
+                event.preventDefault();
+                event.stopPropagation();
+                const sourceKey = this.draggedLibraryKey;
+                this.draggedLibraryKey = '';
+                if (!sourceKey || sourceKey === targetKey) return;
+                const source = this.itemMap().get(sourceKey);
+                const target = this.itemMap().get(targetKey);
+                if (!source?.editable || !target?.editable || source.section !== target.section) return;
+                const ordered = this.blocks
+                    .filter(block => block.block_type === source.section)
+                    .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+                const sourceIndex = ordered.findIndex(block => block.id === source.id);
+                const targetIndex = ordered.findIndex(block => block.id === target.id);
+                if (sourceIndex < 0 || targetIndex < 0) return;
+                const [moved] = ordered.splice(sourceIndex, 1);
+                ordered.splice(targetIndex, 0, moved);
+                this.blocks = this.blocks.map(block => {
+                    const index = ordered.findIndex(item => item.id === block.id);
+                    return index >= 0 ? { ...block, sort_order: index } : block;
+                });
+                this.renderLibrary();
+                try {
+                    await Promise.all(ordered.map(async (block, index) => {
+                        const { error } = await supabaseClient
+                            .from('writer_context_blocks')
+                            .update({ sort_order: index, updated_at: new Date().toISOString() })
+                            .eq('id', block.id);
+                        if (error) throw error;
+                    }));
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not reorder context blocks.', 'error');
+                    await this.load(State.activeStoryId);
+                }
+            },
+
+            async editItem(key) {
+                const item = this.itemMap().get(key);
+                if (!item) return;
+                if (item.itemType === 'context_block') {
+                    this.openBlockModal(item.id);
+                } else if (item.itemType === 'chapter') {
+                    await App.openEditorForChapter(item.id);
+                } else {
+                    await App.openEditorForScratchpad(item.id);
+                }
+            },
+
+            async duplicateItem(key) {
+                const item = this.itemMap().get(key);
+                if (!item) return;
+                try {
+                    if (item.itemType === 'context_block') {
+                        const source = this.blocks.find(block => block.id === item.id);
+                        const { data, error } = await supabaseClient.from('writer_context_blocks').insert({
+                            story_id: source.story_id,
+                            block_type: source.block_type,
+                            title: `${source.title} Copy`,
+                            content: source.content,
+                            sort_order: this.blocks.filter(block => block.block_type === source.block_type).length,
+                            updated_at: new Date().toISOString()
+                        }).select().single();
+                        if (error) throw error;
+                        this.blocks.push(data);
+                        this.selected.add(`block:${data.id}`);
+                        if (!this.order.includes(`block:${data.id}`)) this.order.push(`block:${data.id}`);
+                    } else if (item.itemType === 'chapter') {
+                        const source = MockDB.chapters.find(chapter => chapter.id === item.id);
+                        const nextOrder = Math.max(0, ...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0)) + 1;
+                        const saved = await DB.saveChapter(null, {
+                            story_id: source.story_id,
+                            title: `${source.title || 'Untitled'} Copy`,
+                            content: source.content || '',
+                            chapter_order: nextOrder,
+                            is_published: false,
+                            required_tier_id: source.required_tier_id || null,
+                            public_release_at: null,
+                            preview_text: source.preview_text || '',
+                            is_nsfw: Boolean(source.is_nsfw),
+                            external_url: source.external_url || null,
+                            cover_image_url: source.cover_image_url || null,
+                            updated_at: new Date().toISOString()
+                        });
+                        MockDB.chapters.push(saved);
+                        this.selected.add(`chapter:${saved.id}`);
+                        this.order.push(`chapter:${saved.id}`);
+                    } else {
+                        const source = MockDB.scratchpads.find(scratchpad => scratchpad.id === item.id);
+                        const saved = await DB.saveScratchpad(null, {
+                            chapter_id: source.chapter_id,
+                            title: `${source.title || 'Scratchpad'} Copy`,
+                            content: source.content || ''
+                        });
+                        MockDB.scratchpads.push(saved);
+                        this.selected.add(`scratchpad:${saved.id}`);
+                        this.order.push(`scratchpad:${saved.id}`);
+                    }
+                    this.render();
+                    UI.showToast('Item duplicated.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not duplicate item.', 'error');
+                }
+            },
+
+            async deleteItem(key) {
+                const item = this.itemMap().get(key);
+                if (!item) return;
+                if (item.itemType === 'context_block') {
+                    await this.deleteBlock(item.id);
+                    return;
+                }
+                if (item.itemType === 'chapter') await App.deleteChapter(item.id);
+                else await App.deleteScratchpad(item.id);
+                if (!this.itemMap().has(key)) {
+                    this.selected.delete(key);
+                    this.order = this.order.filter(itemKey => itemKey !== key);
+                    this.render();
+                }
+            },
+
+            async createScratchpadFromContext() {
+                const chapterId = document.getElementById('context-scratchpad-parent')?.value;
+                if (!chapterId) return UI.showToast('Create a chapter before adding a scratchpad.', 'error');
+                const before = new Set(MockDB.scratchpads.map(item => item.id));
+                await App.createScratchpadForChapter(chapterId);
+                const created = MockDB.scratchpads.find(item => !before.has(item.id));
+                if (created) this.selected.add(`scratchpad:${created.id}`);
+            },
+
+            clearSelection() {
+                this.selected.clear();
+                this.order = [];
+                this.activePresetId = '';
+                this.render();
+            },
+
+            setMode(mode) {
+                this.mode = mode === 'advanced' ? 'advanced' : 'simple';
+                this.renderModeControls();
+                this.renderItemOrder();
+                this.renderPreview();
+                this.persistState();
+            },
+
+            renderModeControls() {
+                ['simple', 'advanced'].forEach(mode => {
+                    const button = document.getElementById(`context-mode-${mode}`);
+                    if (!button) return;
+                    const active = this.mode === mode;
+                    button.classList.toggle('bg-primary-600', active);
+                    button.classList.toggle('text-white', active);
+                    button.classList.toggle('text-zinc-500', !active);
+                    button.setAttribute('aria-pressed', String(active));
+                });
+            },
+
+            setBudget(value) {
+                this.tokenBudget = Math.max(1000, Math.min(2000000, Number(value) || 32000));
+                this.renderPreview();
+                this.persistState();
+            },
+
+            moveSection(index, delta) {
+                const next = index + delta;
+                if (next < 0 || next >= this.sectionOrder.length) return;
+                [this.sectionOrder[index], this.sectionOrder[next]] = [this.sectionOrder[next], this.sectionOrder[index]];
+                localStorage.setItem('ea-writer-context-dock-order', JSON.stringify(this.sectionOrder));
+                this.render();
+            },
+
+            moveItem(index, delta) {
+                if (this.mode !== 'advanced') return;
+                const selectedOrder = this.selectedItemsInOrder().map(item => item.key);
+                const next = index + delta;
+                if (next < 0 || next >= selectedOrder.length) return;
+                [selectedOrder[index], selectedOrder[next]] = [selectedOrder[next], selectedOrder[index]];
+                this.order = selectedOrder;
+                this.renderItemOrder();
+                this.renderPreview();
+                this.persistState();
+            },
+
+            renderSectionOrder() {
+                const root = document.getElementById('context-section-order');
+                if (!root) return;
+                root.innerHTML = this.sectionOrder.map((section, index) => `<div class="context-order-row">
+                    <span class="text-[10px] text-zinc-600">${index + 1}</span>
+                    <span class="text-xs text-zinc-300 truncate">${UI.escapeHtml(this.labels[section] || section)}</span>
+                    <span class="flex"><button onclick="ContextWorkspace.moveSection(${index},-1)" class="context-icon-btn" ${index === 0 ? 'disabled' : ''}><i class="fa-solid fa-chevron-up"></i></button><button onclick="ContextWorkspace.moveSection(${index},1)" class="context-icon-btn" ${index === this.sectionOrder.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-down"></i></button></span>
+                </div>`).join('');
+            },
+
+            renderItemOrder() {
+                const root = document.getElementById('context-item-order');
+                if (!root) return;
+                const items = this.selectedItemsInOrder();
+                const help = document.getElementById('context-order-help');
+                if (help) help.textContent = this.mode === 'advanced'
+                    ? 'Advanced order — drag selected items or use arrows'
+                    : 'Selected items — grouped by section order';
+                root.innerHTML = items.map((item, index) => `<div class="context-order-row ${this.mode === 'advanced' ? 'is-draggable' : ''}"
+                    draggable="${this.mode === 'advanced'}"
+                    ondragstart="ContextWorkspace.startAdvancedDrag(event,${index})"
+                    ondragover="if(ContextWorkspace.mode==='advanced')event.preventDefault()"
+                    ondrop="ContextWorkspace.dropAdvancedItem(event,${index})">
+                    <span class="text-[10px] text-zinc-600">${this.mode === 'advanced' ? '<i class="fa-solid fa-grip-vertical"></i>' : index + 1}</span>
+                    <span class="min-w-0"><span class="text-xs text-zinc-300 block truncate">${UI.escapeHtml(item.title)}</span><span class="text-[9px] uppercase text-zinc-600">${UI.escapeHtml(this.labels[item.section] || item.section)}</span></span>
+                    ${this.mode === 'advanced' ? `<span class="flex"><button onclick="ContextWorkspace.moveItem(${index},-1)" class="context-icon-btn" ${index === 0 ? 'disabled' : ''}><i class="fa-solid fa-chevron-up"></i></button><button onclick="ContextWorkspace.moveItem(${index},1)" class="context-icon-btn" ${index === items.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-down"></i></button></span>` : '<span></span>'}
+                </div>`).join('') || `<div class="p-4 text-xs text-zinc-600">Select library items to assemble a prompt.</div>`;
+            },
+
+            startAdvancedDrag(event, index) {
+                if (this.mode !== 'advanced') {
+                    event.preventDefault();
+                    return;
+                }
+                this.draggedOrderIndex = index;
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', String(index));
+            },
+
+            dropAdvancedItem(event, targetIndex) {
+                if (this.mode !== 'advanced') return;
+                event.preventDefault();
+                const sourceIndex = this.draggedOrderIndex;
+                this.draggedOrderIndex = -1;
+                if (sourceIndex < 0 || sourceIndex === targetIndex) return;
+                const ordered = this.selectedItemsInOrder().map(item => item.key);
+                const [moved] = ordered.splice(sourceIndex, 1);
+                ordered.splice(targetIndex, 0, moved);
+                this.order = ordered;
+                this.renderItemOrder();
+                this.renderPreview();
+                this.persistState();
+            },
+
+            buildMarkdown(items = this.selectedItemsInOrder()) {
+                const chunks = [];
+                let activeSection = '';
+                items.forEach(item => {
+                    if (item.section !== activeSection) {
+                        activeSection = item.section;
+                        chunks.push(`## ${this.labels[item.section] || item.section}`);
+                    }
+                    chunks.push(`### ${item.title}${item.content ? `\n${item.content}` : ''}`);
+                });
+                return chunks.join('\n\n').trim();
+            },
+
+            renderPreview() {
+                const items = this.selectedItemsInOrder();
+                const markdown = this.buildMarkdown(items);
+                const preview = document.getElementById('context-preview');
+                if (preview) {
+                    if (this.previewRendered) this.previewScroll = preview.scrollTop;
+                    preview.textContent = markdown || 'Select context blocks, chapters, or scratchpads from the library.';
+                    preview.scrollTop = this.previewScroll;
+                    this.previewRendered = true;
+                    preview.onscroll = () => {
+                        this.previewScroll = preview.scrollTop;
+                        this.persistState();
+                    };
+                }
+                const words = this.wordCount(markdown);
+                const tokens = Math.ceil(markdown.length / 4);
+                const status = document.getElementById('context-budget-status');
+                if (status) {
+                    const percent = this.tokenBudget ? Math.round(tokens / this.tokenBudget * 100) : 0;
+                    status.textContent = `${words.toLocaleString()} words · ${markdown.length.toLocaleString()} characters · ~${tokens.toLocaleString()} tokens · ${percent}% of budget`;
+                    status.classList.toggle('over', tokens > this.tokenBudget);
+                    status.classList.toggle('near', tokens > this.tokenBudget * .8 && tokens <= this.tokenBudget);
+                }
+                const stats = document.getElementById('context-section-stats');
+                if (stats) {
+                    stats.innerHTML = this.sectionOrder.map(section => {
+                        const sectionItems = items.filter(item => item.section === section);
+                        if (!sectionItems.length) return '';
+                        const sectionText = this.buildMarkdown(sectionItems);
+                        return `<span class="context-stat-chip">${UI.escapeHtml(this.labels[section] || section)} <strong>${sectionItems.length}</strong> · ~${Math.ceil(sectionText.length / 4).toLocaleString()} tok</span>`;
+                    }).join('') || `<span class="text-[10px] text-zinc-600">No selected context.</span>`;
+                }
+            },
+
+            renderPresets() {
+                const select = document.getElementById('context-preset-select');
+                if (!select) return;
+                select.innerHTML = `<option value="">Unsaved selection</option>${this.presets.map(preset => `<option value="${preset.id}">${UI.escapeHtml(preset.name)}</option>`).join('')}`;
+                select.value = this.activePresetId;
+            },
+
+            keyFromPresetItem(item) {
+                if (item.item_type === 'context_block') return `block:${item.context_block_id}`;
+                if (item.item_type === 'chapter') return `chapter:${item.chapter_id}`;
+                return `scratchpad:${item.scratchpad_id}`;
+            },
+
+            loadPreset(id) {
+                this.activePresetId = id || '';
+                if (!id) {
+                    this.selected = new Set();
+                    this.order = [];
+                    this.render();
+                    return;
+                }
+                const preset = this.presets.find(item => item.id === id);
+                if (!preset) return;
+                const validKeys = new Set(this.allItems().map(item => item.key));
+                this.order = this.presetItems
+                    .filter(item => item.preset_id === id)
+                    .sort((a, b) => a.position - b.position)
+                    .map(item => this.keyFromPresetItem(item))
+                    .filter(key => validKeys.has(key));
+                this.selected = new Set(this.order);
+                this.mode = preset.mode === 'advanced' ? 'advanced' : 'simple';
+                this.sectionOrder = Array.isArray(preset.section_order) && preset.section_order.length ? preset.section_order : [...this.sectionOrder];
+                this.tokenBudget = Number(preset.token_budget) || 32000;
+                if (this.sectionOrder.includes(preset.active_section)) {
+                    this.activeSection = preset.active_section;
+                    localStorage.setItem('ea-writer-context-active-section', this.activeSection);
+                }
+                this.render();
+            },
+
+            async savePreset(saveAs) {
+                if (!this.available || !State.activeStoryId) return;
+                let preset = this.presets.find(item => item.id === this.activePresetId);
+                let name = preset?.name || '';
+                if (saveAs || !preset) {
+                    name = prompt('Preset name:', saveAs && name ? `${name} Copy` : name || 'New Scene');
+                    if (!name?.trim()) return;
+                    preset = null;
+                }
+                const record = {
+                    story_id: State.activeStoryId,
+                    name: name.trim(),
+                    mode: this.mode,
+                    section_order: this.sectionOrder,
+                    token_budget: this.tokenBudget,
+                    active_section: this.activeSection,
+                    updated_at: new Date().toISOString()
+                };
+                try {
+                    let saved;
+                    if (preset) {
+                        const { data, error } = await supabaseClient.from('writer_context_presets').update(record).eq('id', preset.id).select().single();
+                        if (error) throw error;
+                        saved = data;
+                    } else {
+                        const { data, error } = await supabaseClient.from('writer_context_presets').insert(record).select().single();
+                        if (error) throw error;
+                        saved = data;
+                    }
+                    const { error: deleteError } = await supabaseClient.from('writer_context_preset_items').delete().eq('preset_id', saved.id);
+                    if (deleteError) throw deleteError;
+                    const rows = this.selectedItemsInOrder().map((item, position) => ({
+                        preset_id: saved.id,
+                        item_type: item.itemType,
+                        context_block_id: item.itemType === 'context_block' ? item.id : null,
+                        chapter_id: item.itemType === 'chapter' ? item.id : null,
+                        scratchpad_id: item.itemType === 'scratchpad' ? item.id : null,
+                        position
+                    }));
+                    if (rows.length) {
+                        const { error: insertError } = await supabaseClient.from('writer_context_preset_items').insert(rows);
+                        if (insertError) throw insertError;
+                    }
+                    await this.load(State.activeStoryId);
+                    this.loadPreset(saved.id);
+                    UI.showToast('Context preset saved.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not save context preset.', 'error');
+                }
+            },
+
+            async deletePreset() {
+                if (!this.activePresetId) return;
+                const preset = this.presets.find(item => item.id === this.activePresetId);
+                if (!confirm(`Delete preset "${preset?.name || 'selected preset'}"?`)) return;
+                const { error } = await supabaseClient.from('writer_context_presets').delete().eq('id', this.activePresetId);
+                if (error) return UI.showToast(error.message, 'error');
+                await this.load(State.activeStoryId);
+                UI.showToast('Context preset deleted.', 'success');
+            },
+
+            async renamePreset() {
+                const preset = this.presets.find(item => item.id === this.activePresetId);
+                if (!preset) return UI.showToast('Load a saved preset first.', 'error');
+                const name = prompt('Rename preset:', preset.name);
+                if (!name?.trim() || name.trim() === preset.name) return;
+                const { data, error } = await supabaseClient
+                    .from('writer_context_presets')
+                    .update({ name: name.trim(), updated_at: new Date().toISOString() })
+                    .eq('id', preset.id)
+                    .select()
+                    .single();
+                if (error) return UI.showToast(error.message, 'error');
+                this.presets = this.presets.map(item => item.id === data.id ? data : item);
+                this.renderPresets();
+                UI.showToast('Preset renamed.', 'success');
+            },
+
+            async duplicatePreset() {
+                const preset = this.presets.find(item => item.id === this.activePresetId);
+                if (!preset) return UI.showToast('Load a saved preset first.', 'error');
+                const name = prompt('Duplicate preset as:', `${preset.name} Copy`);
+                if (!name?.trim()) return;
+                try {
+                    const { data: saved, error } = await supabaseClient.from('writer_context_presets').insert({
+                        story_id: preset.story_id,
+                        name: name.trim(),
+                        mode: preset.mode,
+                        section_order: preset.section_order,
+                        token_budget: preset.token_budget,
+                        active_section: preset.active_section || this.activeSection,
+                        updated_at: new Date().toISOString()
+                    }).select().single();
+                    if (error) throw error;
+                    const rows = this.presetItems
+                        .filter(item => item.preset_id === preset.id)
+                        .map(({ item_type, context_block_id, chapter_id, scratchpad_id, position }) => ({
+                            preset_id: saved.id,
+                            item_type,
+                            context_block_id,
+                            chapter_id,
+                            scratchpad_id,
+                            position
+                        }));
+                    if (rows.length) {
+                        const { error: itemError } = await supabaseClient.from('writer_context_preset_items').insert(rows);
+                        if (itemError) throw itemError;
+                    }
+                    await this.load(State.activeStoryId);
+                    this.loadPreset(saved.id);
+                    UI.showToast('Preset duplicated.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not duplicate preset.', 'error');
+                }
+            },
+
+            openBlockModal(id = '', preferredType = '') {
+                const block = this.blocks.find(item => item.id === id);
+                document.getElementById('context-block-id').value = block?.id || '';
+                document.getElementById('context-block-type').value = block?.block_type || preferredType || 'writing_style';
+                document.getElementById('context-block-title').value = block?.title || '';
+                document.getElementById('context-block-content').innerHTML = block?.content || '';
+                document.getElementById('context-block-modal-title').textContent = block ? 'Edit context block' : 'New context block';
+                document.getElementById('context-block-delete').classList.toggle('hidden', !block);
+                document.getElementById('context-block-duplicate').classList.toggle('hidden', !block);
+                this.blockEditorDirty = false;
+                this.updateBlockEditorCount();
+                document.getElementById('context-block-save-status').textContent = block ? 'Saved' : 'New block';
+                UI.openModal('modal-context-block');
+                setTimeout(() => document.getElementById('context-block-title')?.focus(), 0);
+            },
+
+            closeBlockEditor(force = false) {
+                if (!force && this.blockEditorDirty && !confirm('Discard unsaved context-block changes?')) return;
+                this.blockEditorDirty = false;
+                UI.closeModal('modal-context-block');
+            },
+
+            markBlockDirty() {
+                this.blockEditorDirty = true;
+                const status = document.getElementById('context-block-save-status');
+                if (status) status.textContent = 'Unsaved';
+                this.updateBlockEditorCount();
+            },
+
+            updateBlockEditorCount() {
+                const editor = document.getElementById('context-block-content');
+                const text = (editor?.innerText || '').trim();
+                const words = this.wordCount(text);
+                const counter = document.getElementById('context-block-word-count');
+                if (counter) counter.textContent = `${words.toLocaleString()} words · ~${Math.ceil(text.length / 4).toLocaleString()} tokens`;
+            },
+
+            formatBlock(command, value = null) {
+                document.getElementById('context-block-content')?.focus();
+                document.execCommand(command, false, value);
+                this.markBlockDirty();
+            },
+
+            async saveBlock(event) {
+                event.preventDefault();
+                const id = document.getElementById('context-block-id').value;
+                const blockType = document.getElementById('context-block-type').value;
+                const record = {
+                    story_id: State.activeStoryId,
+                    block_type: blockType,
+                    title: document.getElementById('context-block-title').value.trim(),
+                    content: document.getElementById('context-block-content').innerHTML.trim(),
+                    updated_at: new Date().toISOString()
+                };
+                if (!record.title) return;
+                try {
+                    let saved;
+                    if (id) {
+                        const { data, error } = await supabaseClient.from('writer_context_blocks').update(record).eq('id', id).select().single();
+                        if (error) throw error;
+                        saved = data;
+                        this.blocks = this.blocks.map(block => block.id === id ? saved : block);
+                    } else {
+                        record.sort_order = this.blocks.filter(block => block.block_type === blockType).length;
+                        const { data, error } = await supabaseClient.from('writer_context_blocks').insert(record).select().single();
+                        if (error) throw error;
+                        saved = data;
+                        this.blocks.push(saved);
+                        this.selected.add(`block:${saved.id}`);
+                        if (!this.order.includes(`block:${saved.id}`)) this.order.push(`block:${saved.id}`);
+                    }
+                    this.blockEditorDirty = false;
+                    this.closeBlockEditor(true);
+                    this.render();
+                    UI.showToast('Context block saved.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not save context block.', 'error');
+                }
+            },
+
+            duplicateOpenBlock() {
+                const id = document.getElementById('context-block-id').value;
+                if (id) this.duplicateItem(`block:${id}`);
+            },
+
+            deleteOpenBlock() {
+                const id = document.getElementById('context-block-id').value;
+                if (id) this.deleteBlock(id);
+            },
+
+            async deleteBlock(id) {
+                const block = this.blocks.find(item => item.id === id);
+                if (!block || !confirm(`Delete context block "${block.title}"?`)) return;
+                const { error } = await supabaseClient.from('writer_context_blocks').delete().eq('id', id);
+                if (error) return UI.showToast(error.message, 'error');
+                this.blocks = this.blocks.filter(item => item.id !== id);
+                this.selected.delete(`block:${id}`);
+                this.order = this.order.filter(key => key !== `block:${id}`);
+                if (document.getElementById('context-block-id').value === id) this.closeBlockEditor(true);
+                this.render();
+                UI.showToast('Context block deleted.', 'success');
+            },
+
+            outputForFormat(format) {
+                const items = this.selectedItemsInOrder();
+                const markdown = this.buildMarkdown(items);
+                if (!markdown) return '';
+                let output = markdown;
+                if (format === 'text') {
+                    output = markdown.replace(/^#{2,3}\s+/gm, '');
+                } else if (format === 'json') {
+                    const styleItems = items.filter(item => item.section === 'writing_style');
+                    const userItems = items.filter(item => item.section !== 'writing_style');
+                    const messages = [];
+                    if (styleItems.length) messages.push({ role: 'system', content: this.buildMarkdown(styleItems) });
+                    if (userItems.length) messages.push({ role: 'user', content: this.buildMarkdown(userItems) });
+                    output = JSON.stringify(messages, null, 2);
+                }
+                return output;
+            },
+
+            async copy(format) {
+                const output = this.outputForFormat(format);
+                if (!output) return UI.showToast('Select some context first.', 'error');
+                try {
+                    await navigator.clipboard.writeText(output);
+                    UI.showToast(`Context copied as ${format === 'json' ? 'ChatGPT JSON' : format}.`, 'success');
+                } catch (_error) {
+                    UI.showToast('Clipboard access denied.', 'error');
+                }
+            },
+
+            download(format) {
+                const output = this.outputForFormat(format);
+                if (!output) return UI.showToast('Select some context first.', 'error');
+                const story = MockDB.stories.find(item => item.id === State.activeStoryId);
+                const extension = format === 'json' ? 'json' : format === 'text' ? 'txt' : 'md';
+                const mime = format === 'json' ? 'application/json' : 'text/plain';
+                const slug = String(story?.slug || story?.title || 'story-context')
+                    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const url = URL.createObjectURL(new Blob([output], { type: `${mime};charset=utf-8` }));
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${slug || 'story-context'}-context.${extension}`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+                UI.showToast(`Downloaded ${extension.toUpperCase()} context.`, 'success');
+            }
+        };
+
+        // ==========================================
         // SAFETY GUARD
         // ==========================================
         window.addEventListener('beforeunload', event => {
-            if (State.unsavedChanges) {
+            if (State.unsavedChanges || ContextWorkspace.blockEditorDirty) {
                 event.preventDefault();
                 event.returnValue = '';
             }

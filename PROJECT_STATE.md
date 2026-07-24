@@ -2,13 +2,48 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
-## 2026-07-20 16:44 Asia/Kolkata - Standalone Writer Export & Censorship QA
+## 2026-07-23 09:20 Asia/Kolkata - Writer responsive workspace and collapsible rails
 
 Status: NEEDS REVIEW
 
 Area:
 - writer
-- admin
+
+Files touched:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Added persisted controls to collapse/expand the left Writer navigation and the right chapter-settings rail, including on desktop.
+- At compact widths, the settings rail now overlays the workspace instead of shrinking the Quill editor; dashboard, editor controls, Quill toolbar, tables, toast area, and modals have narrow-screen containment/reflow rules.
+- Follow-up polish moved the panel controls beside the Writer Studio title, replaced the unsupported blank panel icon, removed the native chapter-number spinner, standardized Export/Save/Publish dimensions, and removed cleanup/system-box deletion from the manuscript header.
+
+Remaining work:
+- Perform signed-in browser QA at desktop and phone widths with real chapter and scratchpad data.
+
+Risks / notes:
+- Layout was statically checked and JavaScript syntax-checked, but the in-app browser cannot open the local `file://` Writer page in this environment.
+- The two rail preferences use `ea-writer-primary-sidebar-collapsed` and `ea-writer-editor-settings-collapsed` in localStorage. Compact screens start with both collapsed to protect manuscript space.
+
+Verification needed:
+- At desktop width, collapse and re-open both rails; reload and confirm each preference persists without clipping the editor or settings content.
+- Confirm the Writer Studio brand shows working settings and navigation icons and that the settings icon reflects the open panel state.
+- Confirm the chapter-number capsule accepts keyboard-entered numbers without native up/down controls and switches cleanly between `CH` and `SP` modes.
+- At 390x844 and 320x568, open a chapter, type several paragraphs, toggle settings, open Export, and confirm Save/Publish remain reachable.
+- Open the Media Library and Censorship Dictionary at phone width; confirm controls wrap, content scrolls, and dialogs remain closable.
+- At narrow dashboard widths, verify sort/search/new-chapter controls remain reachable and the index table scrolls horizontally rather than clipping columns.
+
+## 2026-07-20 17:15 Asia/Kolkata - Standalone Writer Export, Censorship & Chapter Scratchpads
+
+Status: DONE
+
+Area:
+- writer
+- database
+- docs
 
 Files touched:
 - `writer.html`
@@ -361,3 +396,40 @@ Remaining work:
 
 Risks / notes:
 - Do not kill unknown processes without user approval.
+
+## 2026-07-23 16:46 Asia/Kolkata - Prompt Dashboard integration assessment
+
+Status: NEEDS REVIEW
+
+Area:
+- writer
+- database
+
+Files touched:
+- `PROJECT_STATE.md`
+
+Summary:
+- Assessed the external PySide6 Prompt Dashboard at `A:\Star wars rebel\prompt\main.pyw` and its `json_database.py` storage layer for integration with the Supabase-backed Writer.
+- The useful product model is a story-level, admin-only context workspace made of reusable blocks (writing style, long summary, chapter summary, chapter, outline, and scratchpad), selectable simple/advanced prompt ordering, saved scene presets, live prompt preview, search, and text/Markdown/ChatGPT JSON export.
+- Completed phases 1-2 by porting those concepts into `writer.html` and Supabase rather than embedding or translating the Python desktop UI. Existing `chapters` and chapter-linked `scratchpads` remain sources of truth and are referenced from context presets instead of duplicated.
+- Replaced the provisional Context UI with a narrow browser-style tabbed library, dominant preview canvas, and compact preset/order rail.
+- Added rich drawer create/edit/save/duplicate/delete for reusable blocks, source-aware edit/duplicate/delete actions for chapters and scratchpads, whole-card selection, active-tab/global selection controls, persistent tab/block ordering, drag-based advanced item order, per-section statistics, downloads, and complete preset management.
+- Replaced the uneven horizontally scrolling section strip with a fixed three-column by two-row equal-size tab grid. Added per-story local workspace snapshots and last-surface restoration so reloads return to the same Context tab, selection/order, mode, preset, budget, search, and library/preview scroll positions.
+- Applied `20260723170000_add_writer_context_workspace.sql` to the linked project and marked that migration version applied.
+- Applied `20260723173000_add_context_preset_active_section.sql` so presets restore their active library section.
+- The inspected `SW_Gray_Tales` project contains 53 indexed blocks and about 157,015 indexed words. All JSON files parsed, indexed HTML/Markdown files existed, saved-scene/order references resolved, and both Python files passed `py_compile`.
+
+Remaining work:
+- Manually verify the signed-in Context Workspace with real content at desktop and phone widths.
+- A desktop JSON project importer remains a separate future phase and was not included in phases 1-2.
+
+Risks / notes:
+- Do not upload the desktop project folders or story text automatically; the source material may be private and is much larger than a practical single AI prompt.
+- The desktop app's local HTML/Markdown files and Supabase chapter HTML use related but non-identical data contracts, so importing requires sanitization, deterministic ID mapping, and duplicate detection.
+- Token totals are deliberately estimates based on roughly four characters per token; actual model tokenization varies.
+
+Verification needed:
+- With an authenticated admin session, create/edit/duplicate/delete each context-block type, exercise chapter/scratchpad lifecycle actions, drag reusable blocks within a tab, drag selected items across sections in advanced mode, and save/load/rename/duplicate/delete two presets.
+- Confirm Markdown, plain-text, and ChatGPT JSON clipboard output and token-budget warning colors.
+- Switch active stories and verify context blocks/presets never leak across stories.
+- Reload from each Writer surface and from two different story Context sessions; confirm the correct surface and each story's independent transient Context state and scroll positions are restored.
