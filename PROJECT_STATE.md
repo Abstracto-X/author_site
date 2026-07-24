@@ -2,6 +2,71 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-25 — Writer AI integration handover
+
+Status: TODO
+
+Area:
+- writer
+- database
+- Supabase Edge Functions
+- docs
+
+Files touched:
+- `docs/AI_INTEGRATION_HANDOVER.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Consolidated the complete AI integration discussion into a self-contained handover for a fresh implementation chat.
+- The chosen direction keeps the Context Workspace, conventional OpenRouter chat, and Google-powered Summary Manager as three separate systems.
+- A focused audit of Deep Chat commit `5dca527bea93` recommends consuming a pinned vendored bundle and configuring it externally; no fork is required initially.
+
+Remaining work:
+- Follow the phased implementation and acceptance criteria in `docs/AI_INTEGRATION_HANDOVER.md`, beginning with a fresh status/schema/current-code audit.
+
+Risks / notes:
+- The repository already contains substantial uncommitted Writer/Context work that must not be reset or overwritten.
+- Chat must not auto-inject Context Workspace content, and neither chat nor summarization may silently modify chapters.
+
+Verification needed:
+- None for this planning-only handover. Runtime verification begins when implementation starts.
+
+## 2026-07-24 12:17 Asia/Kolkata — Desktop context import and Chapter Note follow-up
+
+Status: NEEDS REVIEW
+
+Area:
+- writer
+- database
+
+Files touched:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Independent Scratchpads now use story-level `writer_context_blocks`; existing chapter-linked `scratchpads` rows are presented as Chapter Notes.
+- Chapter Notes open in an in-screen side drawer rather than manuscript tabs. The Context Scratchpads dock can include or hide Chapter Notes.
+- No row migration was required for existing web data, and existing preset references remain valid.
+- Linked-project verification found 1 existing chapter-linked row (now shown as a Chapter Note) and 0 independent scratchpad blocks. The only Supabase story is `Resident Evil: A Zombie Tale`; the desktop `SW_Gray_Tales` project was not auto-mapped to it.
+
+Remaining work:
+- Desktop context import from `A:\Novels\Dead Must Breed` is complete. Five reusable blocks and the mapped `Default Order` preset were imported; all desktop chapter files were skipped.
+- Before any import, a verified local backup of all 40 web chapters and related story data was created at `C:\Users\admis\Documents\author_site_backups\resident_evil_20260724_131801`. No chapter or context rows were changed during the backup operation.
+- Post-import chapter comparison passed for all 40 rows with fingerprint `67224898120399e09bb574564dd72894ffc8aeeed7d46a0eea054fc25558aa67`. The backup folder also contains the import mapping manifest, post-import context snapshots, and refreshed SHA-256 checksums.
+
+Risks / notes:
+- The physical `scratchpads` table and preset `scratchpad_id` column intentionally retain their legacy names for compatibility.
+- Desktop block IDs, ordering, saved-scene references, and local HTML/Markdown need deterministic mapping and duplicate detection before upload.
+
+Verification needed:
+- In an authenticated Writer session, create/edit/delete a Chapter Note from the chapter settings, chapter index, sidebar, and Context Workspace.
+- Confirm Chapter Notes never enter the manuscript tab strip and the Scratchpads “Show chapter notes” checkbox persists independently per story.
+- Confirm existing presets containing `scratchpad_id` references still load and export their Chapter Notes.
+
 ## 2026-07-23 09:20 Asia/Kolkata - Writer responsive workspace and collapsible rails
 
 Status: NEEDS REVIEW

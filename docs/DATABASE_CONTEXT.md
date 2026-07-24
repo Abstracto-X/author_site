@@ -1122,3 +1122,16 @@ The Resident Evil story (`a-zombie-tale`) has a seeded Version 1 structure and a
 - `public.writer_context_preset_items` stores the ordered preset selection. Each row references exactly one context block, existing chapter, or existing chapter scratchpad; cascading foreign keys remove stale references.
 - All three tables have RLS enabled and admin-only `ALL` policies using `public.is_admin()`. The reader receives no access to private author context.
 - Migrations: `20260723170000_add_writer_context_workspace.sql` and `20260723173000_add_context_preset_active_section.sql`; both were applied to the linked project and marked applied on 2026-07-23.
+
+## 2026-07-24 - Scratchpad and Chapter Note terminology
+
+- `public.writer_context_blocks` rows with `block_type = 'scratchpad'` are independent, story-level scratchpads.
+- Existing rows in the legacy-named `public.scratchpads` table are chapter-linked **Chapter Notes**. The table and `writer_context_preset_items.scratchpad_id` column retain their physical names for backward compatibility and to avoid a destructive data migration.
+- No schema or row rewrite was needed: existing chapter-linked scratchpad rows appear as Chapter Notes automatically, while independent scratchpads continue to use `writer_context_blocks`.
+
+## 2026-07-24 - Dead Must Breed context import
+
+- The desktop Prompt Dashboard project at `A:\Novels\Dead Must Breed` is mapped to the existing `Resident Evil: A Zombie Tale` story (`d8c87bf8-94c9-4c6e-8826-d6f3be25d419`).
+- Imported context comprises 5 `writer_context_blocks`: writing style `primary`, long summary `Story till train crash`, chapter summary `From Train Crash Uptill Tearing Monkey Attack`, and two outlines.
+- Imported preset `Default Order` uses advanced mode and contains the three corresponding reusable blocks followed by references to the existing web Chapters 35 and 36.
+- Desktop chapter files were deliberately excluded because Supabase contains the current chapter versions. Post-import comparison against the local backup confirmed all 40 web chapter IDs, content, metadata, publication state, and update timestamps remained unchanged.

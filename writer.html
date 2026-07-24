@@ -866,6 +866,16 @@
             content: "";
         }
 
+        .ql-editor .sys-msg-box .sys-soft-break {
+            display: block;
+            height: 0;
+            line-height: inherit;
+        }
+
+        .ql-editor .sys-msg-box .sys-soft-break + .sys-soft-break {
+            height: 1.6em;
+        }
+
         /* Responsive Pass */
         @media (max-width: 1200px) {
             .stat-grid {
@@ -1205,6 +1215,12 @@
         .context-rich-editor:focus { border-color:#6366f1; box-shadow:0 0 0 1px #6366f1; }
         .context-card-actions { opacity:.62; transition:opacity .15s; }
         .context-item:hover .context-card-actions,.context-item:focus-within .context-card-actions { opacity:1; }
+        .chapter-note-backdrop { background:rgba(0,0,0,.48); backdrop-filter:blur(3px); }
+        .chapter-note-drawer { width:min(440px,100vw); height:100%; display:flex; flex-direction:column; }
+        .chapter-note-editor { min-height:260px; flex:1; overflow:auto; padding:1rem; border:1px solid #27272a; border-radius:.75rem; background:#09090b; color:#e4e4e7; line-height:1.7; outline:none; }
+        .chapter-note-editor:focus { border-color:#f59e0b; box-shadow:0 0 0 1px rgba(245,158,11,.45); }
+        .chapter-note-chip { display:flex; align-items:center; gap:.45rem; width:100%; padding:.5rem .6rem; border:1px solid rgba(245,158,11,.16); border-radius:.55rem; background:rgba(245,158,11,.06); color:#d4d4d8; text-align:left; }
+        .chapter-note-chip:hover { border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.1); color:#fde68a; }
         @media (max-width:1280px) { .context-shell { grid-template-columns:270px minmax(0,1fr) 260px; } }
         @media (max-width:1050px) { .context-shell { grid-template-columns:290px minmax(0,1fr); } .context-presets-panel { position:absolute; right:1rem; top:1rem; bottom:1rem; width:310px; z-index:12; box-shadow:0 20px 60px rgba(0,0,0,.55); } }
         @media (max-width:720px) { .context-shell { display:flex; flex-direction:column; overflow:auto; } .context-docks-area,.context-panel { overflow:visible; flex:none; } .context-dock { height:420px; } .context-preview-panel { min-height:560px; } #view-context { overflow:auto; } #context-dock-toggles { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,2.65rem); } .context-dock-toggle { font-size:.6rem; padding:.3rem .25rem; } .context-presets-panel { position:static; width:auto; } .context-modal-card { width:100vw; border-radius:0; } }
@@ -1439,6 +1455,38 @@
                 <span id="context-block-save-status" class="text-[10px] text-zinc-600 ml-auto mr-2">Saved</span>
                 <button type="button" onclick="ContextWorkspace.closeBlockEditor()" class="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm">Cancel</button>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="chapter-note-drawer" class="chapter-note-backdrop fixed inset-0 z-[108] hidden items-stretch justify-end">
+        <form class="chapter-note-drawer border-l border-zinc-800 bg-zinc-950 shadow-2xl" onsubmit="ChapterNotes.save(event)">
+            <div class="px-5 py-4 border-b border-zinc-800 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <h3 id="chapter-note-heading" class="font-semibold text-zinc-100">Chapter Note</h3>
+                    <p id="chapter-note-parent" class="text-xs text-amber-300/80 mt-1 truncate"></p>
+                </div>
+                <button type="button" onclick="ChapterNotes.close()" class="context-icon-btn" aria-label="Close chapter note"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input id="chapter-note-id" type="hidden">
+            <input id="chapter-note-chapter-id" type="hidden">
+            <div class="p-5 flex-1 min-h-0 overflow-auto flex flex-col gap-4">
+                <label class="text-xs font-semibold text-zinc-400">Title
+                    <input id="chapter-note-title" maxlength="240" required oninput="ChapterNotes.markDirty()" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100" placeholder="Continuity, revision, or scene note">
+                </label>
+                <div class="flex-1 min-h-0 flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold text-zinc-400">Private note</label>
+                        <span id="chapter-note-count" class="text-[10px] text-zinc-600">0 words</span>
+                    </div>
+                    <div id="chapter-note-content" class="chapter-note-editor" contenteditable="true" spellcheck="true" oninput="ChapterNotes.markDirty()" data-placeholder="Add notes for this chapter..."></div>
+                </div>
+            </div>
+            <div class="px-5 py-4 border-t border-zinc-800 flex items-center gap-2">
+                <button id="chapter-note-delete" type="button" onclick="ChapterNotes.deleteCurrent()" class="hidden px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-300 text-sm"><i class="fa-solid fa-trash mr-2"></i>Delete</button>
+                <span id="chapter-note-status" class="text-[10px] text-zinc-600 ml-auto">Saved</span>
+                <button type="button" onclick="ChapterNotes.close()" class="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm">Close</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-sm font-semibold">Save Note</button>
             </div>
         </form>
     </div>
@@ -1992,20 +2040,16 @@
                                 </div>
                             </section>
 
-                            <section id="ed-card-scratchpad" class="settings-card space-y-4 hidden">
+                            <section id="ed-card-chapter-notes" class="settings-card space-y-3">
                                 <h4 class="text-[10px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
                                     <i class="fa-regular fa-note-sticky text-amber-400"></i>
-                                    Scratchpad Info
+                                    Chapter Notes
                                 </h4>
-                                <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs space-y-2">
-                                    <p id="ed-sp-parent-info" class="text-zinc-300 font-medium"></p>
-                                    <p class="text-zinc-500 leading-relaxed">
-                                        Scratchpads are private working notes attached to a chapter. They are not published or listed in reader indexes.
-                                    </p>
-                                </div>
-                                <button type="button" onclick="App.deleteScratchpad(State.activeScratchpadId)" class="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm font-medium text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                    Delete Scratchpad
+                                <p class="text-xs text-zinc-500 leading-relaxed">Private working notes attached to this chapter. They open beside the manuscript instead of taking over an editor tab.</p>
+                                <div id="ed-chapter-notes-list" class="space-y-2"></div>
+                                <button type="button" onclick="ChapterNotes.create(State.activeChapterId)" class="w-full flex items-center justify-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-sm font-medium text-amber-300 hover:bg-amber-500/20 transition">
+                                    <i class="fa-solid fa-plus"></i>
+                                    Add Chapter Note
                                 </button>
                             </section>
 
@@ -2090,6 +2134,31 @@
                 box.innerHTML = UI.escapeHtml(bracket[1].trim()).replace(/\n/g, '<br>');
                 node.replaceWith(box);
             });
+
+            // A BR is interpreted by Quill as a block newline during HTML
+            // hydration. Represent system-box line breaks with the registered
+            // inline embed instead, then merge content previously split by the
+            // old hydration bug back into one adjacent system box.
+            template.content.querySelectorAll('.sys-msg-box br').forEach(br => {
+                const softBreak = document.createElement('span');
+                softBreak.className = 'sys-soft-break';
+                br.replaceWith(softBreak);
+            });
+
+            [...template.content.querySelectorAll('.sys-msg-box')].forEach(box => {
+                if (!template.content.contains(box)) return;
+                let next = box.nextElementSibling;
+                while (next?.classList.contains('sys-msg-box')) {
+                    const softBreak = document.createElement('span');
+                    softBreak.className = 'sys-soft-break';
+                    box.appendChild(softBreak);
+                    while (next.firstChild) box.appendChild(next.firstChild);
+                    const merged = next;
+                    next = next.nextElementSibling;
+                    merged.remove();
+                }
+            });
+
             return template.innerHTML;
         }
         function cleanChapterEditorHtml(value) {
@@ -2118,6 +2187,12 @@
                 let next = br.nextSibling;
                 while (next && next.nodeType === Node.TEXT_NODE && !next.textContent.trim()) next = next.nextSibling;
                 if (next && next.nodeName === 'BR') br.remove();
+            });
+
+            // Store portable HTML, while the hydration path converts these
+            // back to Quill's stable inline soft-break embed.
+            template.content.querySelectorAll('.sys-soft-break').forEach(softBreak => {
+                softBreak.replaceWith(document.createElement('br'));
             });
 
             return template.innerHTML.trim();
@@ -2295,15 +2370,19 @@
 
         const Embed = Quill.import('blots/embed');
 
-        class BreakBlot extends Embed {
+        class SoftBreakBlot extends Embed {
             static create(value) {
                 return super.create(value);
             }
         }
 
-        BreakBlot.blotName = 'break';
-        BreakBlot.tagName = 'br';
-        Quill.register(BreakBlot);
+        // Do not register this as "break": Quill already owns that internal
+        // blot for empty-line placeholders. Overriding it makes Enter inside
+        // system-message blocks unreliable and can collapse inserted lines.
+        SoftBreakBlot.blotName = 'soft-break';
+        SoftBreakBlot.tagName = 'span';
+        SoftBreakBlot.className = 'sys-soft-break';
+        Quill.register(SoftBreakBlot);
 
         class SceneBreakBlot extends Embed {
             static create(value) {
@@ -2320,6 +2399,54 @@
         // ==========================================
         // UI CORE & ROUTER
         // ==========================================
+        function editorSessionKey(storyId = State.activeStoryId) {
+            return `ea-writer-editor-session:${storyId || 'none'}`;
+        }
+
+        function persistEditorSession() {
+            if (!State.activeStoryId) return;
+            localStorage.setItem(editorSessionKey(), JSON.stringify({
+                activeChapterId: State.activeChapterId,
+                openChapterIds: State.openChapterIds,
+                activeTabType: State.activeTabType
+            }));
+        }
+
+        async function restoreEditorSession() {
+            let saved = null;
+            try {
+                saved = JSON.parse(localStorage.getItem(editorSessionKey()) || 'null');
+            } catch (_) {
+                localStorage.removeItem(editorSessionKey());
+            }
+
+            const validIds = new Set(
+                MockDB.chapters
+                    .filter(chapter => chapter.story_id === State.activeStoryId)
+                    .map(chapter => chapter.id)
+            );
+            const savedOpenIds = Array.isArray(saved?.openChapterIds) ? saved.openChapterIds : [];
+            State.openChapterIds = [...new Set(savedOpenIds.filter(id => validIds.has(id)))];
+
+            const savedActiveId = validIds.has(saved?.activeChapterId) ? saved.activeChapterId : null;
+            const targetId = savedActiveId || State.openChapterIds.at(-1) || null;
+            State.activeChapterId = null;
+            State.activeScratchpadId = null;
+            State.activeTabType = 'chapter';
+
+            if (targetId) {
+                if (!State.openChapterIds.includes(targetId)) State.openChapterIds.push(targetId);
+                await App.openEditorForChapter(targetId);
+                return true;
+            }
+
+            document.getElementById('editor-workspace')?.classList.add('hidden');
+            document.getElementById('editor-empty')?.classList.remove('hidden');
+            Dashboard.renderSidebarChapters();
+            Dashboard.renderEditorTabs();
+            return false;
+        }
+
         const Router = {
             navigate(view) {
                 if (!['dashboard', 'editor', 'context'].includes(view)) view = 'dashboard';
@@ -2362,7 +2489,9 @@
                     Editor.initQuill();
                     this.syncPanelState();
                     this.bindEvents();
-                    Router.navigate(State.currentView);
+                    const requestedView = State.currentView;
+                    await restoreEditorSession();
+                    Router.navigate(requestedView);
                 } catch (error) {
                     this.showToast(error.message || 'Writer failed to initialize.', 'error');
                     document.getElementById('dash-story-title').innerText = error.message || 'Writer unavailable';
@@ -2442,6 +2571,7 @@
 
             bindEvents() {
                 document.getElementById('story-selector').addEventListener('change', async event => {
+                    const requestedView = State.currentView;
                     State.activeStoryId = event.target.value;
                     localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                     State.activeChapterId = null;
@@ -2453,8 +2583,9 @@
                     try {
                         await DB.loadChapters(State.activeStoryId);
                         await ContextWorkspace.load(State.activeStoryId);
+                        await restoreEditorSession();
                         Dashboard.render();
-                        Dashboard.renderEditorTabs();
+                        Router.navigate(requestedView);
                     }
                     catch (error) { UI.showToast(error.message || 'Could not load chapters.', 'error'); }
                 });
@@ -2499,7 +2630,10 @@
                     if (mod && event.key.toLowerCase() === 's') {
                         event.preventDefault();
                         const contextModal = document.getElementById('modal-context-block');
-                        if (contextModal && !contextModal.classList.contains('hidden')) {
+                        const noteDrawer = document.getElementById('chapter-note-drawer');
+                        if (noteDrawer && !noteDrawer.classList.contains('hidden')) {
+                            noteDrawer.querySelector('form')?.requestSubmit();
+                        } else if (contextModal && !contextModal.classList.contains('hidden')) {
                             contextModal.querySelector('form')?.requestSubmit();
                         } else {
                             App.saveDraft();
@@ -2518,7 +2652,7 @@
 
                     if (mod && event.key === 'Enter') {
                         event.preventDefault();
-                        if (document.getElementById('modal-context-block')?.classList.contains('hidden')) App.publishChapter();
+                        if (document.getElementById('modal-context-block')?.classList.contains('hidden') && document.getElementById('chapter-note-drawer')?.classList.contains('hidden')) App.publishChapter();
                     }
 
                     if (event.key === 'Escape' && !document.getElementById('modal-context-block')?.classList.contains('hidden')) {
@@ -2702,14 +2836,14 @@
                             </div>
                             <div class="flex flex-wrap items-center gap-1.5 mt-2">
                                 ${scratchpads.map(sp => `
-                                    <button type="button" onclick="event.stopPropagation(); App.openEditorForScratchpad('${UI.escapeHtml(sp.id)}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition" title="Open scratchpad note">
+                                    <button type="button" onclick="event.stopPropagation(); ChapterNotes.open('${UI.escapeHtml(sp.id)}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition" title="Open chapter note">
                                         <i class="fa-regular fa-note-sticky text-[9px]"></i>
-                                        <span>${UI.escapeHtml(sp.title || 'Scratchpad')}</span>
+                                        <span>${UI.escapeHtml(sp.title || 'Chapter Note')}</span>
                                     </button>
                                 `).join('')}
-                                <button type="button" onclick="event.stopPropagation(); App.createScratchpadForChapter('${UI.escapeHtml(chapter.id)}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:bg-zinc-800 transition" title="Add scratchpad note to this chapter">
+                                <button type="button" onclick="event.stopPropagation(); ChapterNotes.create('${UI.escapeHtml(chapter.id)}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:bg-zinc-800 transition" title="Add a private note to this chapter">
                                     <i class="fa-solid fa-plus text-[8px]"></i>
-                                    <span>Scratchpad</span>
+                                    <span>Chapter Note</span>
                                 </button>
                             </div>
                         </td>
@@ -2761,11 +2895,10 @@
                             ${scratchpads.length > 0 ? `
                                 <div class="pl-6 space-y-0.5 border-l border-zinc-800/80 ml-3.5 my-0.5">
                                     ${scratchpads.map(sp => {
-                                        const isSpActive = State.activeTabType === 'scratchpad' && sp.id === State.activeScratchpadId;
                                         return `
-                                            <button type="button" onclick="App.openEditorForScratchpad('${UI.escapeHtml(sp.id)}')" aria-current="${isSpActive ? 'page' : 'false'}" class="w-full flex items-center gap-1.5 px-2 py-1 rounded text-left text-[11px] ${isSpActive ? 'text-amber-300 font-semibold bg-amber-500/10' : 'text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/10'} transition italic truncate">
+                                            <button type="button" onclick="ChapterNotes.open('${UI.escapeHtml(sp.id)}')" class="w-full flex items-center gap-1.5 px-2 py-1 rounded text-left text-[11px] text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/10 transition truncate">
                                                 <i class="fa-regular fa-note-sticky text-[9px] flex-shrink-0"></i>
-                                                <span class="truncate">${UI.escapeHtml(sp.title || 'Scratchpad')}</span>
+                                                <span class="truncate">${UI.escapeHtml(sp.title || 'Chapter Note')}</span>
                                             </button>
                                         `;
                                     }).join('')}
@@ -2781,8 +2914,6 @@
                 if (!tabs) return;
 
                 State.openChapterIds = State.openChapterIds.filter(id => MockDB.chapters.some(chapter => chapter.id === id));
-                State.openScratchpadIds = State.openScratchpadIds.filter(id => MockDB.scratchpads.some(sp => sp.id === id));
-
                 const chapterTabs = State.openChapterIds.map(id => {
                     const chapter = MockDB.chapters.find(item => item.id === id);
                     if (!chapter) return '';
@@ -2795,26 +2926,12 @@
                     `;
                 }).join('');
 
-                const scratchpadTabs = State.openScratchpadIds.map(id => {
-                    const sp = MockDB.scratchpads.find(item => item.id === id);
-                    if (!sp) return '';
-                    const active = State.activeTabType === 'scratchpad' && id === State.activeScratchpadId;
-                    return `
-                        <div class="editor-tab ${active ? 'active border-b-2 border-amber-400 bg-amber-500/10' : 'border-b-2 border-dashed border-amber-500/30'}">
-                            <button type="button" onclick="App.openEditorForScratchpad('${UI.escapeHtml(id)}')" class="editor-tab-title text-xs text-amber-300 flex items-center gap-1.5" title="${UI.escapeHtml(sp.title || 'Scratchpad')}">
-                                <i class="fa-regular fa-note-sticky text-[10px] text-amber-400"></i>
-                                <span class="italic truncate">${UI.escapeHtml(sp.title || 'Scratchpad')}</span>
-                            </button>
-                            <button type="button" onclick="App.closeScratchpadTab('${UI.escapeHtml(id)}')" class="text-zinc-600 hover:text-zinc-200" title="Close tab" aria-label="Close scratchpad tab"><i class="fa-solid fa-xmark text-[10px]"></i></button>
-                        </div>
-                    `;
-                }).join('');
-
-                tabs.innerHTML = `${chapterTabs}${scratchpadTabs}
+                tabs.innerHTML = `${chapterTabs}
                     <button type="button" onclick="App.createNewChapter()" class="editor-tab-add" title="Open a new chapter tab at the next chapter index" aria-label="Open new chapter tab">
                         <i class="fa-solid fa-plus text-xs"></i>
                     </button>
                 `;
+                persistEditorSession();
             },
 
             renderStats() {
@@ -2842,7 +2959,7 @@
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-card-label">Scratchpads</div>
+                        <div class="stat-card-label">Chapter Notes</div>
                         <div class="stat-card-value">${scratchpads}</div>
                     </div>
 
@@ -3017,7 +3134,7 @@
                                                 quill.deleteText(range.index, range.length, 'user');
                                             }
 
-                                            quill.insertEmbed(range.index, 'break', true, 'user');
+                                            quill.insertEmbed(range.index, 'soft-break', true, 'user');
                                             quill.setSelection(range.index + 1, 0, 'silent');
 
                                             return false;
@@ -3060,6 +3177,7 @@
                                 ['bold', 'italic', 'underline', 'strike'],
                                 ['blockquote', 'code-block'],
                                 [{ list: 'ordered' }, { list: 'bullet' }],
+                                [{ align: [] }],
                                 ['link', 'image'],
                                 ['clean']
                             ],
@@ -3088,6 +3206,13 @@
 
                     this.updateSlashMenu();
                 });
+
+                // Quill treats clipboard newlines as separate block records.
+                // Inside a system box that would discard/replace earlier lines,
+                // so preserve multiline plain text with our inline soft breaks.
+                State.quillInstance.root.addEventListener('paste', event => {
+                    this.handleSystemMessagePaste(event);
+                }, true);
 
                 State.quillInstance.root.addEventListener('paste', event => {
                     const clipboard = event.clipboardData || event.originalEvent?.clipboardData;
@@ -3149,11 +3274,60 @@
                     el.setAttribute('title', 'Heading level');
                     el.setAttribute('aria-label', 'Heading level');
                 });
+
+                toolbar.querySelectorAll('.ql-align').forEach(el => {
+                    el.setAttribute('title', 'Text alignment: left, center, right, or justified');
+                    el.setAttribute('aria-label', 'Text alignment');
+                });
             },
 
             isSystemLineAt(index) {
                 const [line] = State.quillInstance.getLine(index);
                 return Boolean(line?.domNode?.classList?.contains('sys-msg-box'));
+            },
+
+            handleSystemMessagePaste(event) {
+                const quill = State.quillInstance;
+                const range = quill?.getSelection();
+                const clipboard = event.clipboardData;
+                if (!quill || !range || !clipboard || !this.isSystemLineAt(range.index)) return;
+
+                const text = clipboard.getData('text/plain');
+                if (!text || !/[\r\n]/.test(text)) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const lines = text.replace(/\r\n?/g, '\n').split('\n');
+                let cursor = range.index;
+                State.commandRunning = true;
+
+                try {
+                    if (range.length) {
+                        quill.deleteText(cursor, range.length, 'user');
+                    }
+
+                    lines.forEach((line, index) => {
+                        if (line) {
+                            quill.insertText(cursor, line, 'user');
+                            cursor += line.length;
+                        }
+
+                        if (index < lines.length - 1) {
+                            quill.insertEmbed(cursor, 'soft-break', true, 'user');
+                            cursor += 1;
+                        }
+                    });
+
+                    quill.setSelection(cursor, 0, 'silent');
+                } finally {
+                    State.commandRunning = false;
+                }
+
+                updateSystemMessageVariants();
+                this.updateMeta();
+                this.markUnsaved();
+                this.updateSlashMenu();
             },
 
             deleteCurrentSystemMessage() {
@@ -3582,6 +3756,7 @@
             },
 
             async createScratchpadForChapter(chapterId) {
+                return ChapterNotes.create(chapterId);
                 const chapter = MockDB.chapters.find(c => c.id === chapterId);
                 if (!chapter) return;
 
@@ -3620,6 +3795,7 @@
                     Router.navigate('editor');
                     Dashboard.renderSidebarChapters();
                     Dashboard.renderEditorTabs();
+                    ChapterNotes.renderForChapter(id);
                     return;
                 }
 
@@ -3669,7 +3845,8 @@
                     document.getElementById('ed-card-nsfw')?.classList.remove('hidden');
                     document.getElementById('ed-card-media')?.classList.remove('hidden');
                     document.getElementById('ed-card-delete-chapter')?.classList.remove('hidden');
-                    document.getElementById('ed-card-scratchpad')?.classList.add('hidden');
+                    document.getElementById('ed-card-chapter-notes')?.classList.remove('hidden');
+                    ChapterNotes.renderForChapter(id);
 
                     State.quillInstance.setText('', 'silent');
                     State.quillInstance.clipboard.dangerouslyPasteHTML(
@@ -3707,6 +3884,7 @@
             },
 
             async openEditorForScratchpad(id) {
+                return ChapterNotes.open(id);
                 const sp = MockDB.scratchpads.find(item => item.id === id);
                 if (!sp) return;
 
@@ -3854,6 +4032,7 @@
             },
 
             async deleteScratchpad(id) {
+                return ChapterNotes.delete(id);
                 if (!id) return;
                 const sp = MockDB.scratchpads.find(item => item.id === id);
                 if (!sp) return;
@@ -4536,6 +4715,148 @@
             }
         };
 
+        const ChapterNotes = {
+            dirty: false,
+
+            current() {
+                return MockDB.scratchpads.find(note => note.id === document.getElementById('chapter-note-id')?.value) || null;
+            },
+
+            renderForChapter(chapterId) {
+                const root = document.getElementById('ed-chapter-notes-list');
+                if (!root) return;
+                const notes = MockDB.scratchpads.filter(note => note.chapter_id === chapterId);
+                root.innerHTML = notes.map(note => `
+                    <button type="button" onclick="ChapterNotes.open('${UI.escapeHtml(note.id)}')" class="chapter-note-chip">
+                        <i class="fa-regular fa-note-sticky text-amber-400"></i>
+                        <span class="min-w-0 flex-1 truncate text-xs">${UI.escapeHtml(note.title || 'Chapter Note')}</span>
+                        <i class="fa-solid fa-chevron-right text-[9px] text-zinc-600"></i>
+                    </button>
+                `).join('') || '<p class="text-xs text-zinc-600">No notes for this chapter.</p>';
+            },
+
+            create(chapterId) {
+                const chapter = MockDB.chapters.find(item => item.id === chapterId);
+                if (!chapter) return UI.showToast('Select a chapter before adding a note.', 'error');
+                if (!this.canSwitch()) return;
+                const count = MockDB.scratchpads.filter(note => note.chapter_id === chapterId).length;
+                this.show({
+                    id: '',
+                    chapter_id: chapterId,
+                    title: count ? `Chapter Note ${count + 1}` : `Notes — Chapter ${chapter.chapter_order}`,
+                    content: ''
+                });
+            },
+
+            open(id) {
+                const note = MockDB.scratchpads.find(item => item.id === id);
+                if (!note) return UI.showToast('Chapter note not found.', 'error');
+                if (!this.canSwitch(id)) return;
+                this.show(note);
+            },
+
+            canSwitch(nextId = '') {
+                const drawer = document.getElementById('chapter-note-drawer');
+                const currentId = document.getElementById('chapter-note-id')?.value || '';
+                if (!drawer || drawer.classList.contains('hidden') || !this.dirty || currentId === nextId) return true;
+                return confirm('Discard unsaved chapter-note changes?');
+            },
+
+            show(note) {
+                const chapter = MockDB.chapters.find(item => item.id === note.chapter_id);
+                document.getElementById('chapter-note-id').value = note.id || '';
+                document.getElementById('chapter-note-chapter-id').value = note.chapter_id || '';
+                document.getElementById('chapter-note-title').value = note.title || '';
+                document.getElementById('chapter-note-content').innerHTML = note.content || '';
+                document.getElementById('chapter-note-heading').textContent = note.id ? 'Edit Chapter Note' : 'New Chapter Note';
+                document.getElementById('chapter-note-parent').textContent = chapter
+                    ? `Chapter ${chapter.chapter_order}: ${chapter.title || 'Untitled'}`
+                    : 'Chapter note';
+                document.getElementById('chapter-note-delete').classList.toggle('hidden', !note.id);
+                const drawer = document.getElementById('chapter-note-drawer');
+                drawer.classList.remove('hidden');
+                drawer.classList.add('flex');
+                this.dirty = false;
+                this.updateCount();
+                document.getElementById('chapter-note-status').textContent = 'Saved';
+                setTimeout(() => document.getElementById('chapter-note-title')?.focus(), 0);
+            },
+
+            markDirty() {
+                this.dirty = true;
+                document.getElementById('chapter-note-status').textContent = 'Unsaved';
+                this.updateCount();
+            },
+
+            updateCount() {
+                const text = ContextWorkspace.plain(document.getElementById('chapter-note-content')?.innerHTML || '');
+                const words = ContextWorkspace.wordCount(text);
+                const count = document.getElementById('chapter-note-count');
+                if (count) count.textContent = `${words.toLocaleString()} words · ~${Math.ceil(text.length / 4).toLocaleString()} tokens`;
+            },
+
+            async save(event) {
+                event?.preventDefault();
+                const id = document.getElementById('chapter-note-id').value || null;
+                const chapterId = document.getElementById('chapter-note-chapter-id').value;
+                if (!chapterId) return UI.showToast('Chapter note is missing its parent chapter.', 'error');
+                try {
+                    const saved = await DB.saveScratchpad(id, {
+                        chapter_id: chapterId,
+                        title: document.getElementById('chapter-note-title').value.trim() || 'Chapter Note',
+                        content: document.getElementById('chapter-note-content').innerHTML
+                    });
+                    const index = MockDB.scratchpads.findIndex(note => note.id === saved.id);
+                    if (index >= 0) MockDB.scratchpads[index] = saved;
+                    else MockDB.scratchpads.push(saved);
+                    document.getElementById('chapter-note-id').value = saved.id;
+                    document.getElementById('chapter-note-delete').classList.remove('hidden');
+                    this.dirty = false;
+                    document.getElementById('chapter-note-status').textContent = 'Saved';
+                    this.renderForChapter(chapterId);
+                    Dashboard.render();
+                    ContextWorkspace.render();
+                    UI.showToast('Chapter note saved.', 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not save chapter note.', 'error');
+                }
+            },
+
+            async delete(id) {
+                const note = MockDB.scratchpads.find(item => item.id === id);
+                if (!note) return false;
+                if (!confirm(`Delete chapter note “${note.title || 'Untitled'}” permanently? This cannot be undone.`)) return false;
+                try {
+                    await DB.deleteScratchpad(id);
+                    MockDB.scratchpads = MockDB.scratchpads.filter(item => item.id !== id);
+                    ContextWorkspace.selected.delete(`scratchpad:${id}`);
+                    ContextWorkspace.order = ContextWorkspace.order.filter(key => key !== `scratchpad:${id}`);
+                    this.renderForChapter(note.chapter_id);
+                    Dashboard.render();
+                    ContextWorkspace.render();
+                    if (document.getElementById('chapter-note-id')?.value === id) this.close(true);
+                    UI.showToast('Chapter note deleted.', 'success');
+                    return true;
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not delete chapter note.', 'error');
+                    return false;
+                }
+            },
+
+            deleteCurrent() {
+                const id = document.getElementById('chapter-note-id').value;
+                if (id) this.delete(id);
+            },
+
+            close(force = false) {
+                if (!force && this.dirty && !confirm('Discard unsaved chapter-note changes?')) return;
+                const drawer = document.getElementById('chapter-note-drawer');
+                drawer.classList.add('hidden');
+                drawer.classList.remove('flex');
+                this.dirty = false;
+            }
+        };
+
         // ==========================================
         // LONG-STORY CONTEXT WORKSPACE
         // ==========================================
@@ -4564,6 +4885,7 @@
             libraryScroll: {},
             previewScroll: 0,
             previewRendered: false,
+            showChapterNotes: true,
             draggedLibraryKey: '',
             draggedOrderIndex: -1,
             blockEditorDirty: false,
@@ -4590,6 +4912,7 @@
                 this.libraryScroll = {};
                 this.previewScroll = 0;
                 this.previewRendered = false;
+                this.showChapterNotes = true;
                 if (!storyId) {
                     this.render();
                     return;
@@ -4646,6 +4969,7 @@
                     this.searchQuery = typeof saved.searchQuery === 'string' ? saved.searchQuery : '';
                     this.libraryScroll = saved.libraryScroll && typeof saved.libraryScroll === 'object' ? saved.libraryScroll : {};
                     this.previewScroll = Math.max(0, Number(saved.previewScroll) || 0);
+                    this.showChapterNotes = saved.showChapterNotes !== false;
                 } catch (_error) {}
             },
 
@@ -4661,7 +4985,8 @@
                         tokenBudget: this.tokenBudget,
                         searchQuery: this.searchQuery,
                         libraryScroll: this.libraryScroll,
-                        previewScroll: this.previewScroll
+                        previewScroll: this.previewScroll,
+                        showChapterNotes: this.showChapterNotes
                     }));
                 } catch (_error) {}
             },
@@ -4692,7 +5017,7 @@
                     section: block.block_type,
                     title: block.title,
                     content: this.plain(block.content),
-                    meta: this.labels[block.block_type] || block.block_type,
+                    meta: block.block_type === 'scratchpad' ? 'Independent Scratchpad' : (this.labels[block.block_type] || block.block_type),
                     editable: true,
                     sort: Number(block.sort_order) || 0
                 }));
@@ -4710,12 +5035,12 @@
                 const chapterById = Object.fromEntries(MockDB.chapters.map(chapter => [chapter.id, chapter]));
                 const scratchpads = MockDB.scratchpads.map(scratchpad => ({
                     key: `scratchpad:${scratchpad.id}`,
-                    itemType: 'scratchpad',
+                    itemType: 'chapter_note',
                     id: scratchpad.id,
                     section: 'scratchpad',
-                    title: scratchpad.title || 'Scratchpad',
+                    title: scratchpad.title || 'Chapter Note',
                     content: this.plain(scratchpad.content),
-                    meta: chapterById[scratchpad.chapter_id] ? `Chapter ${chapterById[scratchpad.chapter_id].chapter_order}` : 'Detached note',
+                    meta: chapterById[scratchpad.chapter_id] ? `Chapter note · Chapter ${chapterById[scratchpad.chapter_id].chapter_order}` : 'Chapter note',
                     editable: false,
                     sort: Number(chapterById[scratchpad.chapter_id]?.chapter_order) || 0
                 }));
@@ -4756,15 +5081,14 @@
                     return `<button type="button" onclick="App.createNewChapter()" class="context-icon-btn" title="New chapter"><i class="fa-solid fa-plus"></i></button>`;
                 }
                 if (section === 'scratchpad') {
-                    const options = MockDB.chapters.map(chapter => `<option value="${chapter.id}">Ch. ${UI.escapeHtml(chapter.chapter_order)} — ${UI.escapeHtml(chapter.title || 'Untitled')}</option>`).join('');
-                    return `<select id="context-scratchpad-parent" class="max-w-40 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-400">${options}</select><button type="button" onclick="ContextWorkspace.createScratchpadFromContext()" class="context-icon-btn" title="New scratchpad"><i class="fa-solid fa-plus"></i></button>`;
+                    return `<button type="button" onclick="ContextWorkspace.openBlockModal('', 'scratchpad')" class="context-icon-btn" title="New independent scratchpad"><i class="fa-solid fa-plus"></i></button>`;
                 }
                 return `<button type="button" onclick="ContextWorkspace.openBlockModal('', '${section}')" class="context-icon-btn" title="Add ${UI.escapeHtml(this.labels[section] || section)}"><i class="fa-solid fa-plus"></i></button>`;
             },
 
             createForActiveSection() {
                 if (this.activeSection === 'chapter') return App.createNewChapter();
-                if (this.activeSection === 'scratchpad') return this.createScratchpadFromContext();
+                if (this.activeSection === 'scratchpad') return this.openBlockModal('', 'scratchpad');
                 this.openBlockModal('', this.activeSection);
             },
 
@@ -4803,7 +5127,7 @@
                 const items = this.allItems().filter(item => !query || `${item.title}\n${item.content}`.toLowerCase().includes(query));
                 if (!this.sectionOrder.includes(this.activeSection)) this.activeSection = this.sectionOrder[0];
                 const section = this.activeSection;
-                const sectionItems = items.filter(item => item.section === section);
+                const sectionItems = items.filter(item => item.section === section && (section !== 'scratchpad' || this.showChapterNotes || item.itemType !== 'chapter_note'));
                 document.getElementById('context-library-count').textContent = `${this.labels[section] || section}: ${sectionItems.length} shown · ${this.selected.size} selected overall`;
                 root.innerHTML = `<section class="context-dock" data-context-dock="${section}" role="tabpanel" aria-label="${UI.escapeHtml(this.labels[section] || section)}">
                         <div class="context-dock-head">
@@ -4815,6 +5139,20 @@
                             </span>
                         </div>
                         <div class="context-dock-body">
+                        ${section === 'scratchpad' ? `
+                            <div class="mb-1 p-2 rounded-lg border border-zinc-800 bg-zinc-950/70 space-y-2">
+                                <label class="flex items-center gap-2 text-[10px] text-zinc-400 cursor-pointer">
+                                    <input type="checkbox" ${this.showChapterNotes ? 'checked' : ''} onchange="ContextWorkspace.setShowChapterNotes(this.checked)" class="accent-amber-500">
+                                    Show chapter notes
+                                </label>
+                                <div class="flex items-center gap-1">
+                                    <select id="context-chapter-note-parent" class="min-w-0 flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-400">
+                                        ${MockDB.chapters.map(chapter => `<option value="${chapter.id}">Ch. ${UI.escapeHtml(chapter.chapter_order)} — ${UI.escapeHtml(chapter.title || 'Untitled')}</option>`).join('')}
+                                    </select>
+                                    <button type="button" onclick="ContextWorkspace.createChapterNoteFromContext()" class="context-icon-btn" title="Add chapter note"><i class="fa-solid fa-note-sticky"></i></button>
+                                </div>
+                                <p class="text-[9px] text-zinc-600">Independent scratchpads use + above. Chapter notes stay attached to their chapter.</p>
+                            </div>` : ''}
                         ${sectionItems.map(item => {
                             const words = this.wordCount(item.content);
                             return `<article class="context-item ${this.selected.has(item.key) ? 'is-selected' : ''}"
@@ -4865,6 +5203,12 @@
                 this.renderLibrary();
             },
 
+            setShowChapterNotes(show) {
+                this.showChapterNotes = Boolean(show);
+                this.persistState();
+                this.renderLibrary();
+            },
+
             toggleItem(key) {
                 if (!this.selected.has(key)) {
                     this.selected.add(key);
@@ -4881,7 +5225,7 @@
             },
 
             selectActiveSection() {
-                this.allItems().filter(item => item.section === this.activeSection).forEach(item => {
+                this.allItems().filter(item => item.section === this.activeSection && (this.activeSection !== 'scratchpad' || this.showChapterNotes || item.itemType !== 'chapter_note')).forEach(item => {
                     this.selected.add(item.key);
                     if (!this.order.includes(item.key)) this.order.push(item.key);
                 });
@@ -4959,7 +5303,7 @@
                 } else if (item.itemType === 'chapter') {
                     await App.openEditorForChapter(item.id);
                 } else {
-                    await App.openEditorForScratchpad(item.id);
+                    ChapterNotes.open(item.id);
                 }
             },
 
@@ -5005,7 +5349,7 @@
                         const source = MockDB.scratchpads.find(scratchpad => scratchpad.id === item.id);
                         const saved = await DB.saveScratchpad(null, {
                             chapter_id: source.chapter_id,
-                            title: `${source.title || 'Scratchpad'} Copy`,
+                            title: `${source.title || 'Chapter Note'} Copy`,
                             content: source.content || ''
                         });
                         MockDB.scratchpads.push(saved);
@@ -5027,7 +5371,7 @@
                     return;
                 }
                 if (item.itemType === 'chapter') await App.deleteChapter(item.id);
-                else await App.deleteScratchpad(item.id);
+                else await ChapterNotes.delete(item.id);
                 if (!this.itemMap().has(key)) {
                     this.selected.delete(key);
                     this.order = this.order.filter(itemKey => itemKey !== key);
@@ -5035,13 +5379,10 @@
                 }
             },
 
-            async createScratchpadFromContext() {
-                const chapterId = document.getElementById('context-scratchpad-parent')?.value;
-                if (!chapterId) return UI.showToast('Create a chapter before adding a scratchpad.', 'error');
-                const before = new Set(MockDB.scratchpads.map(item => item.id));
-                await App.createScratchpadForChapter(chapterId);
-                const created = MockDB.scratchpads.find(item => !before.has(item.id));
-                if (created) this.selected.add(`scratchpad:${created.id}`);
+            createChapterNoteFromContext() {
+                const chapterId = document.getElementById('context-chapter-note-parent')?.value;
+                if (!chapterId) return UI.showToast('Create a chapter before adding a chapter note.', 'error');
+                ChapterNotes.create(chapterId);
             },
 
             clearSelection() {
@@ -5271,10 +5612,10 @@
                     if (deleteError) throw deleteError;
                     const rows = this.selectedItemsInOrder().map((item, position) => ({
                         preset_id: saved.id,
-                        item_type: item.itemType,
+                        item_type: item.itemType === 'chapter_note' ? 'scratchpad' : item.itemType,
                         context_block_id: item.itemType === 'context_block' ? item.id : null,
                         chapter_id: item.itemType === 'chapter' ? item.id : null,
-                        scratchpad_id: item.itemType === 'scratchpad' ? item.id : null,
+                        scratchpad_id: item.itemType === 'chapter_note' ? item.id : null,
                         position
                     }));
                     if (rows.length) {
@@ -5510,7 +5851,7 @@
         // SAFETY GUARD
         // ==========================================
         window.addEventListener('beforeunload', event => {
-            if (State.unsavedChanges || ContextWorkspace.blockEditorDirty) {
+            if (State.unsavedChanges || ContextWorkspace.blockEditorDirty || ChapterNotes.dirty) {
                 event.preventDefault();
                 event.returnValue = '';
             }

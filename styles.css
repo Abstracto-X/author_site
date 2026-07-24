@@ -586,6 +586,9 @@ body.has-sheet #main, body.locked-scroll { overflow: hidden; }
 .reader h1.ch-title { font-family: var(--serif); font-size: 1.9rem; line-height:1.12; font-weight:700; margin:0 0 4px; letter-spacing:.2px; }
 .reader .ch-by { font-size:.82rem; color: var(--read-dim); margin-bottom: 26px; }
 .prose p { font-family: var(--serif); font-size: var(--fs, 1.12rem); line-height: var(--lh, 1.78); margin: 0 0 1.18em; color: var(--read-fg); }
+.prose .ql-align-center { text-align: center; }
+.prose .ql-align-right { text-align: right; }
+.prose .ql-align-justify { text-align: justify; }
 .prose p:first-of-type::first-letter { font-size: 3.1em; float:left; line-height:.8; padding: 6px 10px 0 0; font-weight:700; color: var(--s); }
 .prose .scene { text-align:center; margin: 2.1em 0; color: var(--read-dim); letter-spacing:.4em; font-size:.7rem; }
 .prose .reader-system-message {

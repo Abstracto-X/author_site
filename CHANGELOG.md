@@ -841,3 +841,36 @@ Files changed:
 - `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
 - `docs/ADMIN_FUNCTION_INDEX.md`
 - `CHANGELOG.md`
+## 2026-07-24 13:22 Asia/Kolkata — Dead Must Breed desktop context import
+
+Area: writer / database content / docs
+
+Summary:
+- Imported the non-chapter context from `A:\Novels\Dead Must Breed` into the existing `Resident Evil: A Zombie Tale` story: one writing-style block, one long summary, one chapter summary, and two outlines.
+- Imported the desktop `Default Order` as an advanced web preset. Its chapter references resolve to the existing web Chapters 35 and 36.
+- Explicitly skipped every desktop chapter file. No web chapter was inserted, updated, deleted, reordered, published, or unpublished.
+- Created and verified a local pre-import backup containing all 40 web chapters, individual chapter HTML/metadata files, story data, Chapter Notes, tiers, and context data at `C:\Users\admis\Documents\author_site_backups\resident_evil_20260724_131801`.
+
+Files changed:
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+- `docs/DATABASE_CONTEXT.md`
+
+## 2026-07-24 12:17 Asia/Kolkata — Independent Scratchpads and in-screen Chapter Notes
+
+Area: writer / docs
+
+Summary:
+- Reclassified reusable `writer_context_blocks` scratchpads as independent story-level Scratchpads and existing chapter-linked `scratchpads` rows as Chapter Notes without rewriting or deleting existing data.
+- Removed Chapter Notes from the manuscript tab strip and added a dedicated in-screen side drawer with create, edit, save, delete, live word/token count, dirty-state confirmation, keyboard save, and unload protection.
+- Added Chapter Notes to the active chapter settings panel and kept them accessible beneath chapters in the index/sidebar.
+- Updated the Context Workspace Scratchpads dock to show independent scratchpads and optionally include Chapter Notes through a persisted checkbox; creating a normal Scratchpad now creates an independent reusable block.
+- Preserved existing context-preset foreign keys and compatibility entry points, so saved presets and current chapter-note rows remain valid.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
