@@ -194,19 +194,34 @@ VIEWS.chapters = function(){
   <p class="page-sub">0 chapters published.</p>
   <div class="empty"><div class="em">${I.book}</div><h3>No chapters yet</h3><p>The story is published, but no chapters are published for it yet.</p></div>`;
 
-  // Default order is Newest first (descending)
-  const chapters = [...s.chapters].reverse();
+  // Default order is Ascending (Chapter 1 -> N) so readers can read sequentially
+  const sortOrder = store.filters.chapterSort || "asc";
+  const chapters = sortOrder === "desc" ? [...s.chapters].reverse() : [...s.chapters];
   
   return `
   <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
-  <h1 class="page-title">Chapter Catalog</h1>
-  <p class="page-sub">${s.chapters.length} chapters · ${s.chapters.filter(c=>isReadable(chapterResolved(c))).length} readable for you now</p>
+  
+  <div class="between" style="align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h1 class="page-title" style="margin:0">Chapter Catalog</h1>
+      <p class="page-sub" style="margin:4px 0 0">${s.chapters.length} chapters · ${s.chapters.filter(c=>isReadable(chapterResolved(c))).length} readable for you now</p>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;background:var(--surface-solid-2);padding:4px;border-radius:999px;border:1px solid var(--border)">
+      <button class="btn sm ${sortOrder === 'asc' ? 'story' : 'ghost'}" data-chapter-sort="asc" style="font-size:.72rem;padding:4px 12px;border-radius:999px">
+        Chapter 1 → ${s.chapters.length}
+      </button>
+      <button class="btn sm ${sortOrder === 'desc' ? 'story' : 'ghost'}" data-chapter-sort="desc" style="font-size:.72rem;padding:4px 12px;border-radius:999px">
+        Newest first
+      </button>
+    </div>
+  </div>
   
   <div class="chapter-catalog-grid">
     ${chapters.map(c => chapterGridCard(c, s)).join("")}
   </div>
   `;
 };
+
 
 function getLockTierClass(ch) {
   const t = String(ch.tier || ch.required_tier_name || "").toLowerCase().trim();

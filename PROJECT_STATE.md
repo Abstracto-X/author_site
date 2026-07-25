@@ -2,7 +2,37 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-26 03:10 Asia/Kolkata — Tile glow removal & chapter catalog ascending order alignment
+
+Status: DONE
+
+Area:
+- reader
+- styles
+- views
+
+Files touched:
+- `styles.css`
+- `js/subscription/views/story-reader.js`
+
+Summary:
+- Stripped heavy glowing `box-shadow` styles, continuous `cta-pulse` button keyframe animations, radial gradient overlays, and `.archive-card-glow` dots across all cards and tiles in `styles.css`.
+- Updated `VIEWS.chapters` in `js/subscription/views/story-reader.js` to default the Chapter Catalog to **Ascending Order** (`Chapter 1 → Chapter N`), allowing readers to start from Chapter 1 without confusion.
+- Added a sort control toggle (`[Chapter 1 → N (Ascending)]` vs `[Newest first (Descending)]`) saved in `store.filters.chapterSort`.
+- All 16 subscription reader JS files passed `node --check` syntax verification.
+
+Remaining work:
+- None.
+
+Risks / notes:
+- None.
+
+Verification needed:
+- Open `#/story/<slug>/chapters` in reader to verify ascending order (`Chapter 1` at top) and test the sort toggle.
+- Verify smooth, lag-free scrolling across home feed, chapter cards, and gallery tiles.
+
 ## 2026-07-25 23:10 Asia/Kolkata — Character Gallery & Visual Archive import
+
 
 Status: NEEDS REVIEW
 
