@@ -61,7 +61,7 @@ function sheetSettings(){
 
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Settings</h2><p class="sheet-sub">Theme &amp; reading comfort. Saved to this device.</p>
   <div class="set-group"><label>Site theme</label>${themeSwatches()}</div>
-  <div class="set-group"><label>Reader lighting</label><div class="seg">${["aether","twilight","parchment"].map(t=>`<button class="${st.readerTheme===t?'active':''}" data-set-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div></div>
+  <div class="set-group"><label>Reader lighting</label><div class="seg">${[["dark","Dark"],["light","Light"],["parchment","Parchment"]].map(([t,l])=>`<button class="${(st.readerTheme===t || (!st.readerTheme && t==='dark') || (st.readerTheme==='aether' && t==='dark') || (st.readerTheme==='twilight' && t==='dark'))?'active':''}" data-set-theme="${t}">${l}</button>`).join("")}</div></div>
   <div class="set-group"><label>Reading preset</label><div class="seg">${[["none","Default"],["focus","Focus"],["bedtime","Bedtime"],["dyslexia","Dyslexia"],["compact","Compact"]].map(([k,l])=>`<button class="${st.preset===k?'active':''}" data-set-preset="${k}">${l}</button>`).join("")}</div></div>
   
   <div class="set-group"><label>Background mode</label>

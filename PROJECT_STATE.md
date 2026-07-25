@@ -2,6 +2,43 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-26 03:35 Asia/Kolkata — Universal 3-mode theme system & contrast remediation
+
+Status: DONE
+
+Area:
+- reader
+- styles
+- utils
+- sheets
+
+Files touched:
+- `styles.css`
+- `js/subscription/utils.js`
+- `js/subscription/sheets.js`
+
+Summary:
+- Replaced 6 fantasy presets (*Aether, Ember, Frost, Midnight, Sage, Parchment*) with a universal **3-Mode Theme System**: **Dark Mode** (`dark`, default), **Light Mode** (`light`), and **Parchment Mode** (`parchment`).
+- Configured CSS design tokens for `[data-theme="light"]` (`#f5f7fb` background, `#ffffff` card surfaces, `#1e293b` dark slate text, `#2563eb` blue accent) and refined `[data-theme="parchment"]` (`#f4efe2` sepia background, `#fbf7ee` cream surfaces, `#2d2319` warm dark text, `#8c5a2b` brown accent).
+- Added automatic theme normalization in `js/subscription/utils.js` (`normalizeTheme()`) so legacy saved themes (`aether`, `ember`, `frost`, `midnight`, `sage`) seamlessly migrate to `dark` mode without breaking user settings.
+- Fixed topbar and bottomnav chrome background mismatch by replacing hardcoded dark green `rgba(10, 14, 11, 0.98)` with dynamic `rgb(var(--chrome) / 0.96)`.
+- Fixed hero header text contrast by replacing hardcoded faint greenish-grey `#c4cfc6` with `var(--text-dim)`.
+- Fixed text-only chapter card contrast mismatch by removing forced white text and hardcoded dark green card backgrounds (`rgba(10, 14, 12, 0.96)`); text-only tiles now use `var(--surface-solid)` / `var(--surface-solid-2)` with a subtle `--chapter-tier-rgb` tint and high-contrast dark text (`var(--text)`) in light and parchment modes.
+- Preserved white text (`#ffffff`) and dark backdrop gradient overlays (`.archive-chapter-shade`) on cover photo cards (`.has-art`) for 100% legibility over full-bleed imagery across all themes.
+- Replaced hardcoded dark background (`rgba(11,17,13,.86)`) on footer quick nav cards (`.archive-home-links > a`) with `var(--surface-solid-2)`.
+- Updated Reader Lighting options in `js/subscription/sheets.js` to `Dark`, `Light`, and `Parchment`.
+- All 16 reader JS files passed `node --check` syntax verification.
+
+Remaining work:
+- None.
+
+Risks / notes:
+- None.
+
+Verification needed:
+- Open reader site and toggle between Dark Mode, Light Mode, and Parchment Mode in Settings to verify smooth rendering and high contrast across all pages.
+- Check text-only cards, image cards, topbar, hero header, and quick nav footer cards in both Light Mode and Parchment Mode.
+
 ## 2026-07-26 03:10 Asia/Kolkata — Tile glow removal & chapter catalog ascending order alignment
 
 Status: DONE
@@ -17,9 +54,14 @@ Files touched:
 
 Summary:
 - Stripped heavy glowing `box-shadow` styles, continuous `cta-pulse` button keyframe animations, radial gradient overlays, and `.archive-card-glow` dots across all cards and tiles in `styles.css`.
+- Completely disabled moving light sweep (`archiveUnreadSweep`) and pulsing glow (`archiveUnreadPulse`) animations on unread chapter cards.
 - Updated `VIEWS.chapters` in `js/subscription/views/story-reader.js` to default the Chapter Catalog to **Ascending Order** (`Chapter 1 → Chapter N`), allowing readers to start from Chapter 1 without confusion.
 - Added a sort control toggle (`[Chapter 1 → N (Ascending)]` vs `[Newest first (Descending)]`) saved in `store.filters.chapterSort`.
+- Converted all homepage surfaces in `styles.css` from hardcoded dark green colors (`#090d0b`, `#080b09`, `rgba(4,8,6,...)`, `rgba(9,13,11,...)`) to CSS design tokens (`var(--surface-solid)`, `var(--surface-2)`, `var(--bg)`, `var(--border)`, `var(--text)`), allowing the homepage to dynamically respond to all theme presets (Aether, Ember, Frost, Midnight Ink, Sage, Parchment).
+- Updated `t.dataset.siteTheme` in `js/subscription/events.js` to call `render()`.
 - All 16 subscription reader JS files passed `node --check` syntax verification.
+
+
 
 Remaining work:
 - None.

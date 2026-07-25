@@ -170,7 +170,8 @@ function delegate(){
   document.addEventListener("click",(e)=>{
     const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-shelf-view],[data-quote-card],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
     if(!t) return;
-    if (t.dataset.siteTheme!=null){ setTheme(t.dataset.siteTheme); openSheet(currentSheet?currentSheet.builder:sheetSettings, currentSheet?currentSheet.opts:null); toast("Theme: "+(THEMES.find(x=>x.id===t.dataset.siteTheme)?.name), null, {icon:"palette"}); return; }
+    if (t.dataset.siteTheme!=null){ setTheme(t.dataset.siteTheme); openSheet(currentSheet?currentSheet.builder:sheetSettings, currentSheet?currentSheet.opts:null); toast("Theme: "+(THEMES.find(x=>x.id===t.dataset.siteTheme)?.name), null, {icon:"palette"}); render(); return; }
+
     if (t.dataset.studioState!=null){ const p=t.closest(".state-pills"); if(p) p.querySelectorAll(".state-pill").forEach(b=>b.classList.remove("active")); t.classList.add("active"); toast("Access state set", "Chapter will be "+t.textContent.trim()+" on publish.", {icon:"lock"}); return; }
     if (t.dataset.nav!=null){ e.preventDefault(); nav(t.dataset.nav); return; }
     if (t.dataset.read!=null){ e.preventDefault(); nav("/read/"+t.dataset.read); return; }

@@ -3,15 +3,20 @@
 
 /* ============ site themes ============ */
 const THEMES = [
-  { id:"aether", name:"Aether", dot:"linear-gradient(135deg,#1a1d28,#d4b06a)" },
-  { id:"ember", name:"Ember", dot:"linear-gradient(135deg,#241711,#e08a4a)" },
-  { id:"frost", name:"Frost", dot:"linear-gradient(135deg,#14212b,#6fb6c9)" },
-  { id:"midnight", name:"Midnight Ink", dot:"linear-gradient(135deg,#161324,#9a7ed1)" },
-  { id:"sage", name:"Sage", dot:"linear-gradient(135deg,#161e14,#8fb98a)" },
-  { id:"parchment", name:"Parchment", dot:"linear-gradient(135deg,#efe8d8,#9a6b3f)" }
+  { id:"dark", name:"Dark Mode", dot:"linear-gradient(135deg,#14161f,#d4b06a)" },
+  { id:"light", name:"Light Mode", dot:"linear-gradient(135deg,#ffffff,#2563eb)" },
+  { id:"parchment", name:"Parchment", dot:"linear-gradient(135deg,#efe7d5,#8c5a2b)" }
 ];
-function applyTheme(){ document.documentElement.setAttribute("data-theme", store.theme || "aether"); }
-function setTheme(id){ store.theme = id; saveStore(); applyTheme(); }
+function normalizeTheme(id) {
+  if (!id) return "dark";
+  if (id === "light" || id === "parchment") return id;
+  return "dark"; // maps aether, ember, frost, midnight, sage, etc. to dark
+}
+function applyTheme(){
+  const theme = normalizeTheme(store.theme);
+  document.documentElement.setAttribute("data-theme", theme);
+}
+function setTheme(id){ store.theme = normalizeTheme(id); saveStore(); applyTheme(); }
 applyTheme();
 
 /* ============ access-state resolver ============ */
