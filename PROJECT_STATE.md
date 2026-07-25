@@ -2,9 +2,9 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
-## 2026-07-25 — Writer AI integration handover
+## 2026-07-25 — Writer AI integration
 
-Status: TODO
+Status: NEEDS REVIEW
 
 Area:
 - writer
@@ -14,22 +14,55 @@ Area:
 
 Files touched:
 - `docs/AI_INTEGRATION_HANDOVER.md`
+- `writer.html`
+- `js/writer-ai-chat.js`
+- `js/writer-summary-manager.js`
+- `styles/writer-ai-chat.css`
+- `styles/writer-summary-manager.css`
+- `vendor/deep-chat/*`
+- `supabase/functions/writer-openrouter-chat/index.ts`
+- `supabase/functions/writer-generate-summary/index.ts`
+- `supabase/config.toml`
+- `supabase/migrations/20260725093000_add_writer_ai_chat.sql`
+- `supabase/migrations/20260725101500_add_writer_summary_details.sql`
+- `database/sql/2026-07-25_add_writer_ai_chat.sql`
+- `database/sql/2026-07-25_add_writer_summary_details.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
 - `PROJECT_STATE.md`
 
 Summary:
-- Consolidated the complete AI integration discussion into a self-contained handover for a fresh implementation chat.
-- The chosen direction keeps the Context Workspace, conventional OpenRouter chat, and Google-powered Summary Manager as three separate systems.
-- A focused audit of Deep Chat commit `5dca527bea93` recommends consuming a pinned vendored bundle and configuring it externally; no fork is required initially.
+- Completed the AI-chat and separate review-first Summary Manager slices while preserving separation between Context, conventional chat, summary generation, and chapter editing.
+- Added pinned Deep Chat 2.5.0 with story-scoped Supabase history, thread CRUD/search, per-thread model/settings, streaming/Stop, copy, and independent-Scratchpad saves.
+- Applied and recorded migration `20260725093000`, deployed the authenticated admin-only `writer-openrouter-chat` Edge Function, and confirmed unauthenticated calls return HTTP 401.
+- Added **Copy context & open AI**; it copies and opens only and never pastes or sends.
+- Added exact-source Short/Long Summary generation, separate style references, private draft/review/accept/archive/supersede lifecycle, and Context filtering so only accepted summaries are reusable.
+- Applied and recorded migration `20260725101500`, deployed authenticated admin-only `writer-generate-summary`, and confirmed unauthenticated calls return HTTP 401.
+- The pre-slice chapter safety check found 40 rows. The final check found 39 rows with the same latest update timestamp; comparison to the verified backup identified missing Chapter 41 (`32708465-5373-4533-be19-54ca3655fa7c`). Neither migration nor either AI Edge Function has a chapter write/delete path, so the row was not automatically restored.
 
 Remaining work:
-- Follow the phased implementation and acceptance criteria in `docs/AI_INTEGRATION_HANDOVER.md`, beginning with a fresh status/schema/current-code audit.
+- Configure the `OPENROUTER_API_KEY` Supabase Edge Function secret. Optional attribution secrets are `WRITER_AI_SITE_URL` and `WRITER_AI_APP_TITLE`.
+- Configure the `GEMINI_API_KEY` Supabase Edge Function secret.
+- Run authenticated end-to-end Writer QA for thread CRUD, model changes, streaming, Stop, refresh/resume, story switching, and both Scratchpad save actions.
+- Run authenticated end-to-end Summary Manager QA for Short/Long generation, style-only references, drafts, acceptance, archiving, supersession, Context visibility, and story switching.
 
 Risks / notes:
-- The repository already contains substantial uncommitted Writer/Context work that must not be reset or overwritten.
-- Chat must not auto-inject Context Workspace content, and neither chat nor summarization may silently modify chapters.
+- Live OpenRouter responses cannot succeed until the server-side key is configured; the deployed function returns a controlled configuration error instead of exposing a key.
+- Live Gemma summary generation cannot succeed until `GEMINI_API_KEY` is configured; generation otherwise fails without creating a draft or modifying a chapter.
+- Chapter 41 disappeared from the live table during the work window. The cause is unknown because there is no chapter audit table; confirm whether this was an intentional concurrent deletion before restoring from the verified backup.
+- The drawer shell was browser-checked while signed out at desktop and 390x844, but an authenticated session was unavailable for full Deep Chat/Supabase interaction testing.
+- The Summary Manager shell was browser-checked while signed out at desktop; authenticated source loading and provider generation remain unverified.
+- Chat does not auto-inject Context Workspace content, and neither AI Edge Function has a chapter write path.
 
 Verification needed:
-- None for this planning-only handover. Runtime verification begins when implementation starts.
+- Sign in as admin, open Writer AI on Dashboard, Editor, and Context, then create/rename/delete chats and confirm each story has isolated history.
+- Send a streaming response, Stop one mid-stream, reload, switch threads/stories, and confirm saved sequence/order and partial-response metadata.
+- Save the latest user and assistant messages to independent Scratchpads and confirm no row is added to legacy chapter-linked `scratchpads`.
+- Generate and review Short and Long Summary drafts, verify only explicit acceptance exposes them in Context, and verify archive/supersede behavior.
+- Confirm whether missing Chapter 41 was intentionally deleted. If not, restore only that verified backup row with explicit approval, then recompute the chapter fingerprint.
+- Verify no provider key appears in browser source or network responses and confirm chapters remain unchanged.
 
 ## 2026-07-24 12:17 Asia/Kolkata — Desktop context import and Chapter Note follow-up
 

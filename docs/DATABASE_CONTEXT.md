@@ -1135,3 +1135,19 @@ The Resident Evil story (`a-zombie-tale`) has a seeded Version 1 structure and a
 - Imported context comprises 5 `writer_context_blocks`: writing style `primary`, long summary `Story till train crash`, chapter summary `From Train Crash Uptill Tearing Monkey Attack`, and two outlines.
 - Imported preset `Default Order` uses advanced mode and contains the three corresponding reusable blocks followed by references to the existing web Chapters 35 and 36.
 - Desktop chapter files were deliberately excluded because Supabase contains the current chapter versions. Post-import comparison against the local backup confirmed all 40 web chapter IDs, content, metadata, publication state, and update timestamps remained unchanged.
+
+## 2026-07-25 - Writer AI chat schema and OpenRouter proxy
+
+- `public.writer_ai_chat_threads` stores story-scoped Writer conversations with the creating user, title, OpenRouter model identifier, JSON settings, and timestamps. Story deletion cascades to its chats.
+- `public.writer_ai_chat_messages` stores ordered `system`, `user`, and `assistant` text, optional assistant model identifiers, JSON metadata, and a unique `(thread_id, sequence)` contract. Thread deletion cascades to messages.
+- Both tables have RLS enabled with admin-only `ALL` policies using `public.is_admin()`. Subscription readers receive no access to private Writer chats.
+- Migration `20260725093000_add_writer_ai_chat.sql` was applied and recorded in linked migration history on 2026-07-25. Matching reference SQL is `database/sql/2026-07-25_add_writer_ai_chat.sql`.
+- `writer-openrouter-chat` requires a valid Supabase user JWT, confirms `public.is_admin()`, validates bounded request payloads, and streams OpenRouter chat completions. `OPENROUTER_API_KEY` is read only from Edge Function secrets.
+
+## 2026-07-25 - Writer Summary Manager schema and Google proxy
+
+- `public.writer_summary_details` is a one-to-one lifecycle/provenance extension of summary rows in `writer_context_blocks`. It stores `short`/`long` kind, `draft`/`accepted`/`archived` status, chapter range, exact chapter or source-summary UUID arrays, a separate style-reference block, provider/model/prompt data, immutable generation snapshots/metadata, timestamps, and optional supersession.
+- Deleting a context block cascades to its summary details. Source and style/supersession references use foreign keys, and constraints prevent mixed Short/Long source arrays or invalid ranges.
+- RLS is enabled with admin-only `ALL` access through `public.is_admin()`. Legacy summary blocks without a details row remain accepted for backward compatibility.
+- Migration `20260725101500_add_writer_summary_details.sql` was applied and recorded in linked migration history on 2026-07-25. Matching reference SQL is `database/sql/2026-07-25_add_writer_summary_details.sql`.
+- `writer-generate-summary` requires a valid Supabase JWT, confirms admin status, reloads every factual source from Supabase, and accepts only `gemma-4-26b-a4b-it` or `gemma-4-31b-it`. It reads `GEMINI_API_KEY` only from Edge Function secrets and returns generated text plus provenance without writing summaries or chapters.

@@ -24,6 +24,9 @@ admin.html                 # admin CMS entry
 writer.html                # standalone admin-only chapter writer workspace
 styles.css                 # shared/reader-heavy stylesheet
 js/admin-writer.js         # legacy/alternate standalone writer helper; current `writer.html` keeps its active logic inline
+js/writer-ai-chat.js       # active Writer AI drawer, Supabase history, streaming, and Scratchpad export
+styles/writer-ai-chat.css  # isolated responsive Writer AI drawer styling
+vendor/deep-chat/          # pinned Deep Chat 2.5.0 browser bundle and MIT license
 js/subscription/           # subscription reader modules and config
 database/sql/              # human-readable setup/migration SQL
 supabase/                  # Supabase CLI config, Edge Functions, migrations
@@ -162,6 +165,7 @@ Primary references:
 - `supabase/migrations/` — Supabase CLI migration files.
 - `supabase/functions/` — Edge Functions for provider/Patreon-related flows.
 - `send-reader-email-queue` processes queued reader chapter email notifications when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured.
+- `writer-openrouter-chat` is the authenticated admin-only OpenRouter streaming proxy; its provider key stays in Edge Function secrets.
 
 Storage expectations:
 
@@ -224,6 +228,25 @@ supabase db query --linked "select * from public.get_chapter_catalog('<story_uui
 ```
 
 Manual verification is preferred over automated browser testing unless explicitly requested.
+
+---
+
+## 2026-07-25 - Writer AI chat drawer
+
+- `writer.html` exposes a persistent, resizable, full-height AI drawer from Dashboard, Editor, and Context surfaces. The shell preserves open state and width locally while canonical threads and messages live in Supabase.
+- `js/writer-ai-chat.js` owns story-scoped thread CRUD/search, per-thread OpenRouter model/temperature/token settings, Deep Chat lifecycle, streaming/Stop, SSE parsing, message persistence, copy actions, and explicit saves to independent `writer_context_blocks` Scratchpads.
+- Context remains manual: **Copy context & open AI** copies assembled Markdown and opens the drawer, but never pastes, creates a message, selects a model, or sends a request.
+- `vendor/deep-chat/deepChat.bundle.js` is pinned to Deep Chat 2.5.0 with its MIT license. Deep Chat browser storage is not canonical history.
+- The AI chat remains separate from the review-first Summary Manager and has no summary-generation or chapter-write path.
+
+## 2026-07-25 - Writer Summary Manager
+
+- `writer.html`, `js/writer-summary-manager.js`, and `styles/writer-summary-manager.css` provide a separate, responsive Summary Manager for exact-source Short and Long Summary generation.
+- Short Summaries use explicitly selected saved chapters. Long Summaries use explicitly selected accepted Short Summaries. A style reference is selected separately and is never treated as a factual source.
+- Google Gemma generation runs through the authenticated, admin-only `writer-generate-summary` Edge Function. The browser never receives `GEMINI_API_KEY`.
+- Generated text remains a private draft until the author explicitly accepts it. Draft and archived summary blocks are filtered out of reusable Context; accepted summaries become available after Context reload.
+- Summary metadata records coverage, exact source IDs, source snapshots, provider/model/prompt provenance, lifecycle status, and explicit supersession in `writer_summary_details`.
+- The Summary Manager never writes to `chapters`; it only reads saved chapter sources and writes summary/context records.
 
 ---
 

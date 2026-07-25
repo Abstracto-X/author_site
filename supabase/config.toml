@@ -3,3 +3,9 @@ verify_jwt = false
 
 [functions.provider-webhook]
 verify_jwt = false
+
+[functions.writer-openrouter-chat]
+verify_jwt = true
+
+[functions.writer-generate-summary]
+verify_jwt = true

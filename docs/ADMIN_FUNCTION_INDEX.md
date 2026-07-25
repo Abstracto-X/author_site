@@ -278,3 +278,20 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `Router.navigate('context')` exposes the workspace as the third admin Writer surface and persists the current top-level Writer surface; changing the active story reloads its isolated database data and per-story local session.
 - `ChapterNotes.create(chapterId)`, `open(id)`, `show(note)`, `save(event)`, `delete(id)`, `close(force)`, and `renderForChapter(chapterId)` manage chapter-linked private notes in an in-screen drawer. Dirty-state confirmation and the global reload guard protect unsaved note edits.
 - `App.createScratchpadForChapter(id)`, `openEditorForScratchpad(id)`, and `deleteScratchpad(id)` remain compatibility entry points but now dispatch to `ChapterNotes`; chapter notes are no longer rendered in `Dashboard.renderEditorTabs()`.
+
+## 2026-07-25 09:43 Asia/Kolkata - Standalone Writer AI chat drawer
+
+- `AIChat.init()`, `loadStory(storyId)`, `open()`, `close()`, and `toggle()` initialize the persistent drawer, restore local UI state, and isolate chat data when the active story changes.
+- `AIChat.createThread()`, `openThread(id)`, `renameThread(id)`, `deleteThread(id)`, `threadMenu(event, id)`, and `renderThreads()` provide story-scoped Supabase thread CRUD, search, selection, and reload continuity.
+- `AIChat.loadModels()`, `renderHeader()`, `queueSettingsSave()`, and `saveThreadSettings()` load the public OpenRouter model catalog with a bounded local cache and persist model, temperature, and maximum-token settings per thread.
+- `AIChat.mountChat(thread, messages)` recreates the pinned Deep Chat component for each selected thread, supplies Supabase history, configures Writer-compatible styles, and attaches the custom streaming handler without Deep Chat browser storage.
+- `AIChat.handleRequest(threadId, body, signals)`, `providerMessages(body)`, `stopStream()`, `persistUserMessage()`, `persistMessage()`, and `autoTitleThread()` call the authenticated Edge Function, parse SSE deltas, support Stop, and persist sequence-ordered messages.
+- `AIChat.copyLatest()`, `saveLatestToScratchpad(role)`, and `copyContextAndOpen()` provide explicit copy/save actions. AI saves create independent `writer_context_blocks` Scratchpads; the Context shortcut copies and opens only.
+
+## 2026-07-25 10:15 Asia/Kolkata - Standalone Writer Summary Manager
+
+- `SummaryManager.init()`, `loadStory(storyId)`, `open()`, `close()`, `newSummary(kind)`, `setKind(kind)`, and `selectRecord(id)` initialize the separate summary surface and isolate its library by active story.
+- `SummaryManager.sourceItems()`, `toggleSource(id, selected)`, `selectRangeSources()`, `requestPayload()`, `requestSignature()`, and `renderWarnings()` maintain exact factual sources, structured coverage, stale-setting detection, and visible gap/overlap/unsaved-source warnings.
+- `SummaryManager.generate()` calls the authenticated `writer-generate-summary` Edge Function with the selected Gemma model, exact source IDs, separate style reference, range, and instructions. It does not write a summary or chapter.
+- `SummaryManager.saveDraft()`, `accept()`, `archive()`, and `setRecordStatus()` persist review lifecycle metadata. Only explicit acceptance exposes a summary to reusable Context; accepted edits create a new draft instead of silently overwriting the accepted row.
+- `ContextWorkspace.load(storyId)` joins summary lifecycle state and includes legacy or accepted summaries while excluding managed drafts and archived summaries.

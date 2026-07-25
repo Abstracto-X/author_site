@@ -1,5 +1,59 @@
 # Changelog
 
+## 2026-07-25 10:15 Asia/Kolkata - Add review-first Writer Summary Manager
+
+Area: writer / database / edge-functions / docs
+
+Summary:
+- Added a separate responsive Summary Manager with exact saved-chapter sources for Short Summaries and exact accepted Short Summary sources for Long Summaries.
+- Added distinct style-reference selection, coverage/gap/overlap warnings, source-setting staleness protection, private review editing, draft saves, explicit acceptance, archiving, and supersession.
+- Added and applied the admin-only `writer_summary_details` lifecycle/provenance schema; managed drafts and archived summaries are excluded from reusable Context.
+- Added and deployed the authenticated admin-only `writer-generate-summary` Edge Function using the official Google Gemma 4 model identifiers. The Google key remains server-side.
+- Preserved the manuscript boundary: generation reads saved sources but has no chapter insert/update/delete path.
+
+Files changed:
+- `writer.html`
+- `js/writer-summary-manager.js`
+- `styles/writer-summary-manager.css`
+- `supabase/functions/writer-generate-summary/index.ts`
+- `supabase/config.toml`
+- `supabase/migrations/20260725101500_add_writer_summary_details.sql`
+- `database/sql/2026-07-25_add_writer_summary_details.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/AI_INTEGRATION_HANDOVER.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-25 09:43 Asia/Kolkata - Add story-scoped Writer AI chat
+
+Area: writer / database / edge-functions / docs
+
+Summary:
+- Added a persistent, resizable, responsive Writer AI drawer with story-scoped thread CRUD/search, reload continuity, and per-thread OpenRouter settings.
+- Vendored Deep Chat 2.5.0 and its MIT license; canonical history remains in Supabase rather than component browser storage.
+- Added streaming and Stop through an authenticated, admin-authorized Supabase Edge Function that keeps the OpenRouter key server-side.
+- Added copy actions and explicit saves of the latest input or response as independent Context Workspace Scratchpads.
+- Added **Copy context & open AI**, which copies assembled Context Markdown and opens the drawer without pasting or sending.
+- Added and applied admin-only `writer_ai_chat_threads` and `writer_ai_chat_messages` tables with RLS, indexes, constraints, and cascading relationships.
+- Deployed `writer-openrouter-chat`; live provider calls require `OPENROUTER_API_KEY` to be configured in Supabase secrets.
+
+Files changed:
+- `writer.html`
+- `js/writer-ai-chat.js`
+- `styles/writer-ai-chat.css`
+- `vendor/deep-chat/*`
+- `supabase/functions/writer-openrouter-chat/index.ts`
+- `supabase/config.toml`
+- `supabase/migrations/20260725093000_add_writer_ai_chat.sql`
+- `database/sql/2026-07-25_add_writer_ai_chat.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-23 19:20 Asia/Kolkata — Writer Context Workspace phases 1-2
 
 Area: writer / database / docs

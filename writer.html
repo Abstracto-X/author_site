@@ -50,6 +50,9 @@
     <!-- Site Config + Supabase -->
     <script src="js/subscription/site-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles/writer-ai-chat.css">
+    <link rel="stylesheet" href="styles/writer-summary-manager.css">
+    <script type="module" src="vendor/deep-chat/deepChat.bundle.js"></script>
 
     <!-- Quill Editor & Markdown Parsers -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
@@ -1553,6 +1556,14 @@
                     <i class="fa-solid fa-layer-group w-4 text-center"></i>
                     <span class="sidebar-copy font-medium">Context Workspace</span>
                 </button>
+
+                <button
+                    onclick="SummaryManager.open()"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition"
+                >
+                    <i class="fa-solid fa-file-lines w-4 text-center"></i>
+                    <span class="sidebar-copy font-medium">Summary Manager</span>
+                </button>
             </nav>
 
             <section class="flex-1 min-h-0 border-t border-zinc-800/60 flex flex-col">
@@ -1656,6 +1667,8 @@
                             <button id="context-mode-advanced" onclick="ContextWorkspace.setMode('advanced')" class="px-3 py-1 rounded-full text-xs font-semibold">Advanced</button>
                         </div>
                         <button onclick="ContextWorkspace.createForActiveSection()" class="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>New item</button>
+                        <button onclick="AIChat.copyContextAndOpen()" class="border border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 px-4 py-2 rounded-full text-sm font-semibold" title="Copy the assembled context and open chat without pasting or sending it"><i class="fa-solid fa-copy mr-2"></i>Copy context &amp; open AI</button>
+                        <button onclick="SummaryManager.open()" class="border border-emerald-500/35 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 px-4 py-2 rounded-full text-sm font-semibold"><i class="fa-solid fa-file-lines mr-2"></i>Summary Manager</button>
                     </div>
                 </header>
                 <div class="context-shell flex-1 min-h-0 p-4">
@@ -2071,6 +2084,132 @@
         </main>
     </div>
 
+    <button id="writer-ai-toggle" type="button" class="writer-ai-toggle" onclick="AIChat.toggle()" aria-controls="writer-ai-drawer" aria-expanded="false">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Writer AI</span>
+    </button>
+
+    <section id="writer-ai-drawer" class="writer-ai-drawer" aria-label="Writer AI chat" aria-hidden="true">
+        <div id="writer-ai-resize" class="writer-ai-resize" aria-hidden="true"></div>
+        <aside class="writer-ai-thread-rail">
+            <div class="writer-ai-rail-head">
+                <button type="button" class="writer-ai-new" onclick="AIChat.createThread()"><i class="fa-solid fa-plus mr-2"></i>New chat</button>
+                <input id="writer-ai-search" class="writer-ai-search" type="search" placeholder="Search chats…" aria-label="Search chats">
+            </div>
+            <div id="writer-ai-thread-list" class="writer-ai-thread-list custom-scrollbar"></div>
+            <div class="writer-ai-rail-footer">Chats are private, story-scoped, and saved to Supabase. Context is copied manually.</div>
+        </aside>
+        <div class="writer-ai-main">
+            <header class="writer-ai-main-head">
+                <div class="min-w-0">
+                    <h2 id="writer-ai-title" class="writer-ai-title">Writer AI</h2>
+                    <div class="writer-ai-model-row">
+                        <label class="writer-ai-field-label">Model
+                            <input id="writer-ai-model" class="writer-ai-field" list="writer-ai-models" value="openrouter/auto" autocomplete="off">
+                            <datalist id="writer-ai-models"></datalist>
+                        </label>
+                        <label class="writer-ai-field-label">Temperature
+                            <input id="writer-ai-temperature" class="writer-ai-field" type="number" min="0" max="2" step="0.1" value="0.7">
+                        </label>
+                        <label class="writer-ai-field-label">Max tokens
+                            <input id="writer-ai-max-tokens" class="writer-ai-field" type="number" min="1" max="32768" step="128" value="4096">
+                        </label>
+                    </div>
+                </div>
+                <div class="writer-ai-head-actions">
+                    <button id="writer-ai-rename" type="button" class="writer-ai-icon" onclick="AIChat.renameThread()" title="Rename chat" aria-label="Rename chat"><i class="fa-solid fa-pen"></i></button>
+                    <button id="writer-ai-delete" type="button" class="writer-ai-icon" onclick="AIChat.deleteThread()" title="Delete chat" aria-label="Delete chat"><i class="fa-solid fa-trash-can"></i></button>
+                    <button type="button" class="writer-ai-icon" onclick="AIChat.close()" title="Close AI chat" aria-label="Close AI chat"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </header>
+            <div id="writer-ai-status" class="writer-ai-status" role="status">Writer AI is ready.</div>
+            <div id="writer-ai-chat-host" class="writer-ai-chat-host"></div>
+            <footer class="writer-ai-actions">
+                <button id="writer-ai-copy-latest" type="button" class="writer-ai-action" onclick="AIChat.copyLatest()" disabled><i class="fa-solid fa-copy mr-1"></i>Copy response</button>
+                <button id="writer-ai-save-input" type="button" class="writer-ai-action" onclick="AIChat.saveLatestToScratchpad('user')" disabled><i class="fa-regular fa-note-sticky mr-1"></i>Save input to Scratchpad</button>
+                <button id="writer-ai-save-response" type="button" class="writer-ai-action" onclick="AIChat.saveLatestToScratchpad('assistant')" disabled><i class="fa-solid fa-note-sticky mr-1"></i>Save response to Scratchpad</button>
+            </footer>
+        </div>
+    </section>
+
+    <section id="summary-manager" class="summary-manager-backdrop" aria-label="Summary Manager" aria-hidden="true">
+        <div class="summary-manager-panel">
+            <aside class="summary-manager-library">
+                <div class="summary-manager-library-head">
+                    <button type="button" class="summary-manager-new" onclick="SummaryManager.newSummary()"><i class="fa-solid fa-plus mr-2"></i>New summary</button>
+                    <input id="summary-manager-filter" class="summary-manager-filter" type="search" placeholder="Search summaries…" aria-label="Search summaries">
+                </div>
+                <div id="summary-manager-list" class="summary-manager-list custom-scrollbar"></div>
+            </aside>
+            <div class="summary-manager-main">
+                <header class="summary-manager-header">
+                    <div>
+                        <h2>Summary Manager</h2>
+                        <p>Generate from saved sources, review privately, then explicitly accept.</p>
+                    </div>
+                    <button type="button" class="summary-manager-close" onclick="SummaryManager.close()" aria-label="Close Summary Manager"><i class="fa-solid fa-xmark"></i></button>
+                </header>
+                <div class="summary-manager-body">
+                    <section class="summary-manager-config custom-scrollbar">
+                        <div class="summary-kind-tabs" aria-label="Summary type">
+                            <button id="summary-kind-short" type="button" onclick="SummaryManager.setKind('short')">Short Summary</button>
+                            <button id="summary-kind-long" type="button" onclick="SummaryManager.setKind('long')">Long Summary</button>
+                        </div>
+                        <div class="summary-field-grid">
+                            <label class="summary-field">Start chapter
+                                <input id="summary-start" class="summary-input" type="number" min="1" value="1">
+                            </label>
+                            <label class="summary-field">End chapter
+                                <input id="summary-end" class="summary-input" type="number" min="1" value="1">
+                            </label>
+                            <label class="summary-field is-wide">Title
+                                <input id="summary-title" class="summary-input" type="text" maxlength="240">
+                            </label>
+                            <label class="summary-field is-wide">Gemma model
+                                <select id="summary-model" class="summary-select">
+                                    <option value="gemma-4-26b-a4b-it">Gemma 4 26B A4B IT</option>
+                                    <option value="gemma-4-31b-it">Gemma 4 31B IT</option>
+                                </select>
+                            </label>
+                            <label class="summary-field is-wide">Style reference only
+                                <select id="summary-style-reference" class="summary-select"></select>
+                            </label>
+                            <label class="summary-field is-wide">Additional generation instructions
+                                <textarea id="summary-instructions" class="summary-textarea" maxlength="8000" placeholder="Optional emphasis, density, or continuity instructions…"></textarea>
+                            </label>
+                        </div>
+                        <div class="summary-source-head">
+                            <h3 id="summary-source-title">Exact source chapters</h3>
+                            <span id="summary-source-count">0 selected</span>
+                        </div>
+                        <div id="summary-source-list" class="summary-source-list custom-scrollbar"></div>
+                        <div id="summary-warnings" class="summary-warnings"></div>
+                    </section>
+                    <section class="summary-manager-review custom-scrollbar">
+                        <div class="summary-review-head">
+                            <h3>Review draft</h3>
+                            <span id="summary-output-count">0 words</span>
+                        </div>
+                        <textarea id="summary-output" class="summary-output" placeholder="Generated summary appears here for review and editing."></textarea>
+                        <div class="summary-field-grid">
+                            <label class="summary-field is-wide">Supersede on acceptance
+                                <select id="summary-supersedes" class="summary-select"></select>
+                            </label>
+                        </div>
+                        <div class="summary-manager-actions">
+                            <button id="summary-generate" type="button" class="summary-action primary" onclick="SummaryManager.generate()"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Generate / Regenerate</button>
+                            <button id="summary-save-draft" type="button" class="summary-action" onclick="SummaryManager.saveDraft()"><i class="fa-solid fa-floppy-disk mr-1"></i>Save Draft</button>
+                            <button id="summary-accept" type="button" class="summary-action accept" onclick="SummaryManager.accept()"><i class="fa-solid fa-check mr-1"></i>Accept</button>
+                            <button id="summary-archive" type="button" class="summary-action danger" onclick="SummaryManager.archive()" disabled><i class="fa-solid fa-box-archive mr-1"></i>Archive</button>
+                            <button type="button" class="summary-action" onclick="SummaryManager.cancelReview()">Cancel review</button>
+                        </div>
+                    </section>
+                </div>
+                <div id="summary-manager-status" class="summary-manager-status" role="status">Summary Manager is ready.</div>
+            </div>
+        </div>
+    </section>
+
     <script>
         // ==========================================
         // SUPABASE DATABASE & STATE
@@ -2484,6 +2623,8 @@
                     await DB.requireAdmin();
                     await DB.loadWorkspace(State.activeStoryId);
                     await ContextWorkspace.load(State.activeStoryId);
+                    await AIChat.init();
+                    await SummaryManager.init();
                     App.initCensorship();
                     this.populateDropdowns();
                     Editor.initQuill();
@@ -2583,6 +2724,8 @@
                     try {
                         await DB.loadChapters(State.activeStoryId);
                         await ContextWorkspace.load(State.activeStoryId);
+                        await AIChat.loadStory(State.activeStoryId);
+                        await SummaryManager.loadStory(State.activeStoryId);
                         await restoreEditorSession();
                         Dashboard.render();
                         Router.navigate(requestedView);
@@ -4865,7 +5008,7 @@
             labels: {
                 writing_style: 'Writing Style',
                 long_summary: 'Long Summary',
-                chapter_summary: 'Chapter Summary',
+                chapter_summary: 'Short Summary',
                 chapter: 'Chapters',
                 outline: 'Outlines',
                 scratchpad: 'Scratchpads'
@@ -4918,13 +5061,20 @@
                     return;
                 }
                 try {
-                    const [{ data: blocks, error: blockError }, { data: presets, error: presetError }] = await Promise.all([
+                    const [{ data: blocks, error: blockError }, { data: presets, error: presetError }, { data: summaryDetails, error: summaryDetailError }] = await Promise.all([
                         supabaseClient.from('writer_context_blocks').select('*').eq('story_id', storyId).order('sort_order').order('created_at'),
-                        supabaseClient.from('writer_context_presets').select('*').eq('story_id', storyId).order('name')
+                        supabaseClient.from('writer_context_presets').select('*').eq('story_id', storyId).order('name'),
+                        supabaseClient.from('writer_summary_details').select('context_block_id,status')
                     ]);
                     if (blockError) throw blockError;
                     if (presetError) throw presetError;
-                    this.blocks = blocks || [];
+                    if (summaryDetailError) throw summaryDetailError;
+                    const summaryStatus = new Map((summaryDetails || []).map(detail => [detail.context_block_id, detail.status]));
+                    this.blocks = (blocks || []).filter(block => {
+                        if (!['chapter_summary', 'long_summary'].includes(block.block_type)) return true;
+                        const status = summaryStatus.get(block.id);
+                        return !status || status === 'accepted';
+                    });
                     this.presets = presets || [];
                     const presetIds = this.presets.map(preset => preset.id);
                     if (presetIds.length) {
@@ -5851,7 +6001,7 @@
         // SAFETY GUARD
         // ==========================================
         window.addEventListener('beforeunload', event => {
-            if (State.unsavedChanges || ContextWorkspace.blockEditorDirty || ChapterNotes.dirty) {
+            if (State.unsavedChanges || ContextWorkspace.blockEditorDirty || ChapterNotes.dirty || AIChat.isStreaming || SummaryManager.dirty || SummaryManager.generating) {
                 event.preventDefault();
                 event.returnValue = '';
             }
@@ -5864,5 +6014,7 @@
             UI.init().catch(error => UI.showToast(error.message || 'Writer failed to start.', 'error'));
         });
     </script>
+    <script src="js/writer-ai-chat.js"></script>
+    <script src="js/writer-summary-manager.js"></script>
 </body>
 </html>
