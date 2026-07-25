@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-07-25 22:25 Asia/Kolkata - Reader mobile and responsive audit remediation (31 issues fixed)
+
+Area: reader / styles / chrome
+
+Summary:
+- Resolved 31 screenshot-grounded mobile (381px) and desktop (944px) audit rendering bugs and design issues across the subscription reader surface.
+- Fixed root cause of middle-floating titles on artwork cards (`Chapter 23`, `Chapter 22`, etc.): removed conflicting `margin-top: auto` from `.archive-card-footer` and enforced `margin-top: 8px !important` on footers and `margin-top: auto !important` on `.archive-chapter-copy`. The chapter title and footer are now locked together at the bottom of the card over the dark gradient backdrop with zero vertical gap.
+- Eliminated slot-stealing logic in `homeFeedItems()`: chapters are now strictly sorted in descending chapter index order (`Chapter 46, 45, 44, 43, 42, 41, 40...`). Older chapters with artwork (such as Chapter 23 and Chapter 22) are never pulled out of numerical sequence to fill early slots.
+- Implemented feed artwork curation & pagination: up to 6 artwork cards (gallery images + character illustrations) are interspersed smoothly across the feed without breaking chapter sequence. Added a "Load More Chapters & Artwork" pagination button at the bottom of the grid.
+- Simplified chapter card layout: removed top widget bar (`● NEW`, `CHAPTER`, `✓ Available` tickmark) and redundant card footer button (`Open chapter` / `Read ✓`). The entire tile remains natively clickable.
+- Removed unused legacy `memberArchivePanel` component from the library view.
+- Applied rich, fully-colored tier backgrounds (`radial-gradient` + `linear-gradient` using `--chapter-tier-rgb` / `--chapter-tier-accent`) across all chapter cards, replacing plain dark blue/default tiles. Free Access (emerald), Resident Licker (violet), Resident Tyrant (amber), Resident Nemesis (rose), and Resident Evil (cyan) cards now carry distinct tier-colored surfaces and glows.
+- Added visual contrast for read vs unread state: unread chapters feature bright, vibrant tier backgrounds, glowing tier accents, and crisp white titles; read/completed chapters automatically shift to darker, subdued, muted tier shades with soft text and `Read ✓` action badges.
+- Converted mobile viewports (`< 560px` / `381px`) to a clean 1-column feed layout (`flex-direction: column`). Cards receive full width (~350px), eliminating horizontal smushing, single-line text wrapping traps, kicker overlaps, and vertical text compression.
+- Sticky topbar and fixed bottomnav now render as solid opaque dark surfaces (`rgba(10, 14, 11, 0.98)` / `var(--surface-solid)`) with backdrop blur and `z-index: 100`, eliminating content bleed and label overlay issues.
+- Fixed `Chapter 23` creature image layering by enforcing proper stacking contexts (`img` `z-index: 0`, gradient shade `z-index: 1`, body `z-index: 2` with `position: relative`), preventing images from obscuring titles or metadata.
+- Replaced fixed 174px/190px mobile card heights with content-driven vertical expansion and `16px` padding, ensuring titles, word counts, and tier badges remain 100% unclipped.
+- Centered root main layout (`width: 100%; max-width: var(--maxw); margin: 0 auto`) to eliminate uncentered right-side empty space at 944px width.
+- Enhanced hero progress bar track visibility/accessibility, boosted text contrast for secondary labels (`#c4cfc6`), fixed gallery card image clipping and zoom touch targets (`44px x 44px`), and updated selected filter chip states to use neutral brand accent colors.
+
+Files changed:
+- `styles.css`
+- `js/subscription/chrome.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/utils.js`
+
+## 2026-07-25 21:07 Asia/Kolkata - Multi-line system message block rendering alignment
+
+Area: reader / writer
+
+Summary:
+- Updated `js/subscription/backend.js` `textToBlocks` parser to merge consecutive system message blocks into a single multi-line system card joined with `<br>` tags and replace `.sys-soft-break` embeds.
+- Updated `writer.html` `cleanChapterEditorHtml` to merge adjacent `.sys-msg-box` sibling elements into single system blocks when saving HTML to Supabase.
+- Aligned reader multi-line system message display with the Writer editor layout so multi-line system dialogs render in one unified system card instead of separate single-line boxes.
+
+Files changed:
+- `js/subscription/backend.js`
+- `writer.html`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+
 ## 2026-07-25 10:15 Asia/Kolkata - Add review-first Writer Summary Manager
 
 Area: writer / database / edge-functions / docs
@@ -928,3 +968,15 @@ Files changed:
 - `docs/DATABASE_CONTEXT.md`
 - `CHANGELOG.md`
 - `PROJECT_STATE.md`
+## 2026-07-25 19:41 Asia/Kolkata — Reader mixed archive home feed
+
+- **Area:** Subscription reader
+- Reworked the primary home experience into a cinematic story masthead—cover, reading controls, character artwork, synopsis, and story statistics—followed by a responsive editorial feed shared by chapter and gallery content.
+- Added real Supabase loading and normalization for published characters and `character_gallery_images`; empty gallery data remains an honest empty/filter state.
+- Added newest-first All, Chapters, Gallery, and dynamic character filters, compact image-led/editorial tiles, gallery image tiles, and a focused image sheet.
+- Added `chapter_feed_images` plus an automatic trigger/backfill that indexes image URLs already embedded or referenced by published chapters without exposing chapter prose.
+- Illustrated chapter tiles now show public indexed chapter artwork directly for every visitor, prioritize durable storage media near the top of the feed, fall back to compact text tiles when an external image fails, and open from the entire tile.
+- Gallery cards size themselves from the artwork's natural aspect ratio and use uncropped `contain` rendering over an ambient backdrop.
+- Added reduced-motion-aware unread chapter pulses and staggered sheen effects.
+- Explicit mature gallery tags remain excluded from the general homepage pending a dedicated opt-in gallery flow.
+- **Files changed:** `js/subscription/config.js`, `js/subscription/backend.js`, `js/subscription/utils.js`, `js/subscription/views/home-library.js`, `js/subscription/events.js`, `styles.css`, `database/sql/2026-07-25_add_chapter_feed_images.sql`, `database/sql/2026-07-25_fix_chapter_feed_images_public_read.sql`, `database/sql/2026-07-25_simplify_chapter_feed_images_public_read.sql`, matching Supabase migrations, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.

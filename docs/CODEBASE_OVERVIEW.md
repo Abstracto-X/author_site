@@ -231,6 +231,19 @@ Manual verification is preferred over automated browser testing unless explicitl
 
 ---
 
+## 2026-07-25 - Mixed chapter and gallery home feed
+
+- The subscription home route is story-first: a compact cinematic masthead combines cover art, reading progress/actions, primary-character artwork, a short synopsis, and live chapter/word/adult-content statistics.
+- `backend.js` loads published `characters` and `character_gallery_images` alongside the story catalog. Normalized rows are exposed as `D.CHARACTERS` and `D.GALLERY_IMAGES`; there is no local/sample gallery fallback.
+- The home archive feed merges published chapter catalog rows and non-mature published gallery images for the primary story, promotes the latest chapter as the lead feature, and renders a capped set of type-specific cards in one responsive irregular editorial grid.
+- Feed filters support All, Chapters, Gallery, and character-specific selections. Gallery cards open an image sheet; chapter cards preserve existing read/preview/lock behavior and tier-color semantics.
+- `chapter_feed_images` indexes image URLs already referenced or embedded in published chapter content. Valid chapter artwork is visible to all visitors and earns the larger media-led feed positions; failed external URLs gracefully become compact text tiles, and the complete chapter tile is the read/preview/access target.
+- Gallery artwork cards measure each image after load and grow to the grid-row span required to show the complete uncropped image over a blurred ambient backdrop.
+- Unread chapters receive a tier-colored pulse and intermittent sheen, disabled under reduced-motion preferences.
+- Images tagged `r18`, `mature`, or `nsfw` are intentionally excluded from the general home feed. A dedicated opt-in gallery experience can expose them later.
+
+---
+
 ## 2026-07-25 - Writer AI chat drawer
 
 - `writer.html` exposes a persistent, resizable, full-height AI drawer from Dashboard, Editor, and Context surfaces. The shell preserves open state and width locally while canonical threads and messages live in Supabase.

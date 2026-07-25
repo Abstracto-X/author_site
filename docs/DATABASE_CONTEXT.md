@@ -123,6 +123,26 @@ The reader now consumes `public.site_settings` for production site identity:
 
 `is_nsfw = true` chapters are external-only in the reader: local `content` is not returned by `get_reader_chapter`; the reader shows an external prompt using `external_url`.
 
+### `public.chapter_feed_images`
+
+Public feed-media index synchronized from published chapter content. `sync_chapter_feed_images()` rebuilds a chapter's rows after changes to `content`, `referenced_image_urls`, publication state, or story ownership. It indexes HTTP(S) URLs from both `referenced_image_urls` and saved `<img src>` elements without exposing chapter prose.
+
+| Column | Type | Nullable | Default |
+|---|---|---:|---|
+| `id` | uuid | NO | gen_random_uuid() |
+| `story_id` | uuid | NO |  |
+| `chapter_id` | uuid | NO |  |
+| `image_url` | text | NO |  |
+| `source_kind` | text | NO | 'content'::text |
+| `caption` | text | YES |  |
+| `sort_order` | integer / `int4` | NO | 0 |
+| `is_published` | boolean / `bool` | NO | true |
+| `blur_for_guests` | boolean / `bool` | NO | true |
+| `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
+| `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
+
+Public SELECT is limited to rows whose mirrored `is_published` flag is true. Only the SECURITY DEFINER synchronization trigger and admins maintain rows. The current home feed intentionally renders valid indexed artwork for all visitors; `blur_for_guests` remains stored for backward compatibility but is not applied by this surface.
+
 ### `public.character_gallery_images`
 
 | Column | Type | Nullable | Default |

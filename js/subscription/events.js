@@ -121,7 +121,7 @@ function afterRender(){
   const isReader = route.name==="read";
   if (typeof applyBgSettings === "function") applyBgSettings();
   if (!isReader){
-    // home search etc handled globally
+    if (route.name === "home" && typeof sizeHomeGalleryTiles === "function") sizeHomeGalleryTiles();
   }
   if (isReader){ setupReader(); }
   if (window.ReaderGuides && typeof window.ReaderGuides.afterRender === "function") window.ReaderGuides.afterRender();
@@ -312,6 +312,22 @@ function ensureQuoteFab(show){ if(show){ if(quoteFab) return; quoteFab=document.
 function handleAct(act, el){
   switch(act){
     case "close-sheet": closeSheet(); break;
+    case "home-feed-filter":
+      store.filters.homeFeed = el.dataset.feedFilter || "all";
+      store.homeFeedLimit = 10;
+      saveStore();
+      render();
+      break;
+    case "home-feed-load-more":
+      store.homeFeedLimit = (Number(store.homeFeedLimit || 10)) + 10;
+      render();
+      break;
+    case "open-home-gallery":
+      openSheet(
+        () => homeGalleryImageSheet(el.dataset.galleryUrl, el.dataset.galleryCaption, el.dataset.galleryCharacter),
+        { wide:true }
+      );
+      break;
     case "clear-filters": store.filters={q:"",chips:[]}; saveStore(); render(); break;
     case "toggle": { /* handled by data-toggle */ break; }
     case "connect-patreon-go": connectPatreonGo(); break;

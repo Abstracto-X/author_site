@@ -11,7 +11,7 @@ Recent CMS rebuild reader changes:
 | `js/subscription/views/home-library.js` | `VIEWS.home()` | Uses resolved reader access for start buttons/counts/tier display so admin accounts do not appear subscription-locked on the home page. |
 | `js/subscription/views/account-access.js` | `VIEWS.vault()` | Displays the admin reader override in the Vault separately from Patreon/member entitlements. |
 | `js/subscription/sheets.js` | `sheetPersona()` | Shows the admin reader override in the account sheet while keeping it distinct from paid/direct entitlements. |
-| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags; converts `<hr>` and standalone `--` into scene breaks. |
+| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags; converts `<hr>` and standalone `--` into scene breaks; merges consecutive system message blocks into unified multi-line system cards. |
 | `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
 | `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |
 | `js/subscription/views/story-reader.js` | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Assigns Free Access and each configured tier a consistent accent used by chapter catalog cards, story rows, badges, and share controls. |
@@ -273,6 +273,17 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
+| n/a | `homeSafeMediaUrl(value)` | Allows only HTTP(S) gallery media URLs before rendering them in the home feed or image sheet. |
+| n/a | `homeIsMatureGalleryImage(image)` | Detects explicitly mature gallery tags so those images stay out of the general home feed. |
+| n/a | `homeFeedDate(value)` | Normalizes feed timestamps for newest-first sorting. |
+| n/a | `homeFeedItems(story)` | Merges real chapter catalog rows and published gallery rows into the primary story home feed. |
+| n/a | `homeFeedFilterLabel(value)` | Resolves human-readable labels for home feed filters. |
+| n/a | `homeFeedLayoutClass(index, type, hasArtwork)` | Assigns compact text or media-led span patterns for the mixed feed. |
+| n/a | `homeFeedChapterCard(item, index)` | Renders a tier-aware chapter tile for the mixed archive feed. |
+| n/a | `homeFeedImageFailed(image)` | Converts an unavailable chapter-art tile back into a compact text tile. |
+| n/a | `homeFeedGalleryCard(item, index)` | Renders an image-led gallery tile for the mixed archive feed. |
+| n/a | `sizeHomeGalleryTiles()` | Measures loaded gallery artwork and expands its grid-row span so the complete image remains visible. |
+| n/a | `homeGalleryImageSheet(url, caption, character)` | Builds the focused image sheet opened from a home gallery tile. |
 | 86 | `accessBanner(kind,title,sub,link,label)` | Helper used by this module. |
 | 94 | `memberArchivePanel()` | Helper used by this module. |
 | 113 | `updateRow(u)` | Persists changes to Supabase or updates local state. |

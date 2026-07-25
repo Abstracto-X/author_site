@@ -47,6 +47,19 @@ function backendStateToAether(row){
   if (row.preview_text) return "preview";
   return "locked";
 }
+function mergeConsecutiveSystemBlocks(blocks){
+  const merged = [];
+  for (const b of blocks) {
+    const prev = merged[merged.length - 1];
+    if (b.t === "system" && prev && prev.t === "system") {
+      prev.v = prev.v + "<br>" + b.v;
+      if (b.variant === "caption") prev.variant = "caption";
+    } else {
+      merged.push({ ...b });
+    }
+  }
+  return merged;
+}
 function textToBlocks(value){
   const raw = String(value || "").trim();
   if (!raw) return [];
@@ -55,6 +68,7 @@ function textToBlocks(value){
     const container = document.createElement("div");
     container.innerHTML = withoutImports;
     container.querySelectorAll("script,style,iframe,object,embed,link,meta").forEach(node => node.remove());
+    container.querySelectorAll(".sys-soft-break").forEach(node => node.replaceWith(document.createElement("br")));
     container.querySelectorAll("*").forEach(node => {
       if (!["P","DIV","BR","STRONG","B","EM","I","BLOCKQUOTE","H2","H3","H4","HR","UL","OL","LI","A","IMG","SPAN","U","S","SUB","SUP","PRE","CODE"].includes(node.tagName)) {
         const frag = document.createDocumentFragment();
@@ -73,7 +87,7 @@ function textToBlocks(value){
       if (isSystemMessage || bracketSystem) node.dataset.systemMessage = "true";
     });
     const nodes = Array.from(container.children);
-    const blocks = nodes.map(node => {
+    const rawBlocks = nodes.map(node => {
       if (node.tagName === "HR") return { t:"scene" };
       if (["P","DIV"].includes(node.tagName) && (node.textContent || "").replace(/\u00a0/g, " ").trim() === "--") return { t:"scene" };
       if (node.dataset.systemMessage === "true") {
@@ -87,21 +101,22 @@ function textToBlocks(value){
       if (["P","DIV"].includes(node.tagName)) return { t:"p", v:node.innerHTML || esc(node.textContent || "") };
       return { t:"p", v:node.outerHTML };
     }).filter(b => b.t === "scene" || String(b.v || "").trim());
+    const blocks = mergeConsecutiveSystemBlocks(rawBlocks);
     if (blocks.length) return blocks;
     const text = (container.textContent || "").trim();
-    return text ? text.split(/\n{2,}/).map(part => {
+    return text ? mergeConsecutiveSystemBlocks(text.split(/\n{2,}/).map(part => {
       const trimmed = part.trim();
       const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
       if (trimmed === "--") return { t:"scene" };
       return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
-    }).filter(b=>b.v) : [];
+    }).filter(b=>b.v)) : [];
   }
-  return withoutImports.split(/\n{2,}|\r?\n/).map(part => {
+  return mergeConsecutiveSystemBlocks(withoutImports.split(/\n{2,}|\r?\n/).map(part => {
     const trimmed = part.trim();
     const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
     if (trimmed === "--") return { t:"scene" };
     return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
-  }).filter(b => b.v);
+  }).filter(b => b.v));
 }
 function normalizeBackendChapter(row, story){
   const state = backendStateToAether(row);
@@ -124,6 +139,7 @@ function normalizeBackendChapter(row, story){
     excerpt: row.preview_text || "",
     preview,
     content: null,
+    feed_images: [],
     is_nsfw: !!row.is_nsfw,
     external_url: row.external_url || "",
     views: Number(row.views || 0),
@@ -309,6 +325,35 @@ async function loadBackendLibrary(options = {}){
       console.warn("Could not load characters:", e);
     }
 
+    // Load published character gallery images for the mixed home feed.
+    let galleryRows = [];
+    try {
+      const { data, error } = await client
+        .from("character_gallery_images")
+        .select("id, character_id, image_url, caption, image_tags, sort_order, created_at, characters!inner(id, story_id, name, role_title, profile_image_url)")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(60);
+      if (!error) galleryRows = data || [];
+      else console.warn("Could not load gallery images:", error);
+    } catch (e) {
+      console.warn("Could not load gallery images:", e);
+    }
+
+    // Load the public teaser index of images already embedded in published chapters.
+    let chapterFeedImageRows = [];
+    try {
+      const { data, error } = await client
+        .from("chapter_feed_images")
+        .select("id, story_id, chapter_id, image_url, source_kind, caption, sort_order, blur_for_guests")
+        .eq("is_published", true)
+        .order("sort_order", { ascending: true });
+      if (!error) chapterFeedImageRows = data || [];
+      else console.warn("Could not load chapter feed images:", error.message || error.code || error);
+    } catch (e) {
+      console.warn("Could not load chapter feed images:", e);
+    }
+
     // Load glossary (lore entries)
     let loreRows = [];
     try {
@@ -338,6 +383,19 @@ async function loadBackendLibrary(options = {}){
       const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
       if (error) throw error;
       story.chapters = (data || []).map(row => normalizeBackendChapter(row, story));
+      story.chapters.forEach(chapter => {
+        chapter.feed_images = chapterFeedImageRows
+          .filter(image => image.chapter_id === chapter.id)
+          .map(image => ({
+            id: image.id,
+            image_url: image.image_url || "",
+            source_kind: image.source_kind || "content",
+            caption: image.caption || "",
+            sort_order: Number(image.sort_order || 0),
+            blur_for_guests: image.blur_for_guests !== false
+          }))
+          .filter(image => image.image_url);
+      });
       
       story.cast = castRows
         .filter(c => c.story_id === story.id)
@@ -354,6 +412,42 @@ async function loadBackendLibrary(options = {}){
     if (stories.length) {
       D.STORIES = stories;
       D.UPDATES = buildBackendUpdates(stories);
+      D.CHARACTERS = castRows.map(c => ({
+        id: c.id,
+        story_id: c.story_id,
+        name: c.name || "Character",
+        role_title: c.role_title || "",
+        profile_image_url: c.profile_image_url || ""
+      }));
+      D.GALLERY_IMAGES = galleryRows.map(row => {
+        const character = Array.isArray(row.characters) ? row.characters[0] : row.characters;
+        return {
+          id: row.id,
+          character_id: row.character_id,
+          story_id: character?.story_id || "",
+          image_url: row.image_url || "",
+          caption: row.caption || "",
+          image_tags: Array.isArray(row.image_tags) ? row.image_tags : [],
+          sort_order: Number(row.sort_order || 0),
+          created_at: row.created_at || "",
+          character: {
+            id: character?.id || row.character_id,
+            name: character?.name || "Character",
+            role_title: character?.role_title || "",
+            profile_image_url: character?.profile_image_url || ""
+          }
+        };
+      }).filter(row => row.image_url);
+      D.CHAPTER_FEED_IMAGES = chapterFeedImageRows.map(row => ({
+        id: row.id,
+        story_id: row.story_id,
+        chapter_id: row.chapter_id,
+        image_url: row.image_url || "",
+        source_kind: row.source_kind || "content",
+        caption: row.caption || "",
+        sort_order: Number(row.sort_order || 0),
+        blur_for_guests: row.blur_for_guests !== false
+      })).filter(row => row.image_url);
       D.PRIMARY_SLUG = stories[0].slug;
       D.FEATURED_SLUGS = stories.slice(0, 2).map(story => story.slug);
       backendState.usingFixtures = false;
@@ -519,6 +613,9 @@ async function requestBrowserNotifications(){
     backendState.usingFixtures = false;
     D.STORIES = [];
     D.UPDATES = [];
+    D.CHARACTERS = [];
+    D.GALLERY_IMAGES = [];
+    D.CHAPTER_FEED_IMAGES = [];
     return false;
   } catch (err) {
     backendState.error = err;
@@ -526,6 +623,9 @@ async function requestBrowserNotifications(){
     backendState.usingFixtures = false;
     D.STORIES = [];
     D.UPDATES = [];
+    D.CHARACTERS = [];
+    D.GALLERY_IMAGES = [];
+    D.CHAPTER_FEED_IMAGES = [];
     return false;
   } finally {
     backendState.loading = false;

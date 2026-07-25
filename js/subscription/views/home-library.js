@@ -64,7 +64,6 @@ VIEWS.home = function(){
    </div>
 
    <div>
-    ${memberArchivePanel()}
     <div class="section">
       <div class="section-head"><h2>Newly available to you</h2></div>
       <div class="card" style="padding:14px">
@@ -91,25 +90,6 @@ function accessBanner(kind,title,sub,link,label){
     <button class="btn sm" data-nav="${link}">${label}</button>
   </div>`;
 }
-function memberArchivePanel(){
-  const P=persona();
-  const illus = D.STORIES.reduce((n,s)=>n+s.chapters.filter(hasImages).length,0);
-  return `<div class="card tinted" style="margin-bottom:6px">
-    <div class="between" style="margin-bottom:12px"><div class="eyebrow">Member Archive</div>${P.signedIn?badge("gold",P.tier||"Signed in"):badge("", "Guest")}</div>
-    <div class="stat-grid">
-      <div class="stat"><div class="n">${countReadable()}</div><div class="l">Readable now</div></div>
-      <div class="stat"><div class="n">${totalComments()}</div><div class="l">Reader notes</div></div>
-      <div class="stat"><div class="n">${illus}</div><div class="l">Illustrated</div></div>
-      <div class="stat"><div class="n">${store.followed.length}</div><div class="l">Following</div></div>
-    </div>
-    <div class="quicklinks" style="margin-top:14px">
-      <a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Threads &amp; quotes</small></a>
-      <a data-nav="/benefits">${I.spark}<span>Benefits</span><small>What access unlocks</small></a>
-      <a data-nav="/support/check-access">${I.shield}<span>Access Check</span><small>Verify access</small></a>
-      <a data-nav="/updates">${I.feed}<span>Updates</span><small>Latest posts</small></a>
-    </div>
-  </div>`;
-}
 function updateRow(u){
   const s=bySlug(u.story); if(!s) return "";
   const found=u.chapter?byId(u.chapter):null;
@@ -130,13 +110,16 @@ function updateRow(u){
 function homeChapterAccessRow(ch, story){
   const r=chapterResolved(ch);
   const readable=isReadable(r);
+  const progress = Number(store.progress[ch.id]?.pct || 0);
+  const isRead = store.readMarked[ch.id] || progress >= 100;
+  const readClass = isRead ? "is-read" : "is-unread";
   const tierName=!ch.required_tier_id ? "Free Access" : (ch.required_tier_name || ch.tier || "Member Access");
-  const accessLabel=readable ? "Available" : r.state==="preview" ? "Preview" : r.state==="unavailable" ? "Unavailable" : "Locked";
-  const accessIcon=readable ? I.checkCirc : r.state==="preview" ? I.eye : I.lock;
+  const accessLabel=isRead ? "Read ✓" : readable ? "Available" : r.state==="preview" ? "Preview" : r.state==="unavailable" ? "Unavailable" : "Locked";
+  const accessIcon=isRead ? I.check : readable ? I.checkCirc : r.state==="preview" ? I.eye : I.lock;
   const action=readable || r.state==="preview" ? `data-read="${ch.id}"` : `data-lock="${ch.id}"`;
   const tierStyle=typeof chapterTierStyle==="function" ? chapterTierStyle(ch) : "";
   const displayTitle=/^chapter\b/i.test(ch.title || "") ? ch.title : `Chapter ${ch.n}: ${ch.title}`;
-  return `<div class="home-chapter-row chapter-access-coded" style="${tierStyle}">
+  return `<div class="home-chapter-row chapter-access-coded ${readClass}" style="${tierStyle}">
     <button class="home-chapter-title" ${action} aria-label="Open ${esc(displayTitle)}">
       <span class="chapter-tier-dot"></span><span class="home-chapter-copy"><b>${esc(displayTitle)}</b><small>${ch.wordCount || (ch.readTime * 220) || 0} words</small></span>
     </button>
@@ -380,6 +363,319 @@ VIEWS.home = function(){
 
   ${mainArchiveEnabled()?`<p class="faint center" style="font-size:.74rem;margin-top:18px">Deep lore, maps &amp; galleries live in the main author archive. <button class="btn sm ghost" data-act="main-archive" style="margin-left:6px">${I.external}Open archive</button></p>`:""}`;
 };
+
+/* ============ HOME (story masthead + mixed archive feed) ============ */
+function homeSafeMediaUrl(value){
+  const raw = String(value || "").trim();
+  if (!raw || /^(undefined|null)$/i.test(raw)) return "";
+  try {
+    const url = new URL(raw, location.href);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch (_) {
+    return "";
+  }
+}
+function homeIsMatureGalleryImage(image){
+  const mature = new Set(["r18", "mature", "nsfw"]);
+  return (image.image_tags || []).some(tag => mature.has(String(tag || "").toLowerCase()));
+}
+function homeFeedDate(value){
+  const stamp = new Date(value || 0).getTime();
+  return Number.isFinite(stamp) ? stamp : 0;
+}
+function homeFeedItems(story){
+  // 1. All published chapters for this story, sorted strictly by chapter index `n` descending (Chapter 46, 45, 44, 43, 42, 41...)
+  const chapterItems = (story.chapters || [])
+    .slice()
+    .sort((a,b) => Number(b.n || 0) - Number(a.n || 0))
+    .map(chapter => ({
+      id:`chapter-${chapter.id}`,
+      type:"chapter",
+      date:chapter.updated_at || chapter.created_at || chapter.publicDate || "",
+      chapter,
+      story
+    }));
+
+  // 2. Standalone gallery items from D.GALLERY_IMAGES + character profile artworks
+  const rawGallery = (D.GALLERY_IMAGES || [])
+    .filter(image => image.story_id === story.id && !homeIsMatureGalleryImage(image))
+    .map(image => ({
+      id:`gallery-${image.id}`,
+      type:"gallery",
+      date:image.created_at || "",
+      image,
+      story
+    }));
+
+  const charArtworks = (D.CHARACTERS || [])
+    .filter(character => character.story_id === story.id && character.profile_image_url)
+    .map(character => ({
+      id:`gallery-char-${character.id}`,
+      type:"gallery",
+      date:character.created_at || "",
+      image:{
+        id:`char-${character.id}`,
+        image_url:character.profile_image_url,
+        caption:character.bio || `${character.name} profile illustration`,
+        character_name:character.name,
+        story_id:story.id
+      },
+      story
+    }));
+
+  // Combine gallery items up to max 6 images
+  const maxImages = 6;
+  const galleryPool = [...rawGallery, ...charArtworks].slice(0, maxImages);
+
+  // Intersperse gallery artwork items cleanly between chapter cards
+  // Chapters ALWAYS remain in strict descending index order (46, 45, 44, 43, 42...)
+  const result = [];
+  let galIdx = 0;
+
+  chapterItems.forEach((chItem, idx) => {
+    result.push(chItem);
+    // Insert an artwork card after every 3 chapters if available, up to maxImages
+    if ((idx === 0 || (idx + 1) % 3 === 0) && galIdx < galleryPool.length) {
+      result.push(galleryPool[galIdx]);
+      galIdx++;
+    }
+  });
+
+  // Append any remaining gallery images up to max 6
+  while (galIdx < galleryPool.length) {
+    result.push(galleryPool[galIdx]);
+    galIdx++;
+  }
+
+  return result;
+}
+function homeFeedFilterLabel(value){
+  if (value === "chapters") return "Chapters";
+  if (value === "gallery") return "Gallery";
+  if (value.startsWith("character:")) {
+    const id = value.slice("character:".length);
+    return (D.CHARACTERS || []).find(character => character.id === id)?.name || "Character";
+  }
+  return "All";
+}
+function homeFeedLayoutClass(index, type, hasArtwork){
+  const slot = Math.max(0, Math.min(Number(index) || 0, 9));
+  if (hasArtwork || type === "gallery") {
+    return `feed-media-${slot % 5}${slot === 0 ? " feed-media-lead" : ""}`;
+  }
+  return `feed-text-${slot % 4}`;
+}
+function homeFeedChapterCard(item, index){
+  const ch = item.chapter;
+  const resolved = chapterResolved(ch);
+  const readable = isReadable(resolved);
+  const action = readable || resolved.state === "preview" ? `data-read="${ch.id}"` : `data-lock="${ch.id}"`;
+  const tierName = !ch.required_tier_id ? "Free Access" : (ch.required_tier_name || ch.tier || "Member Access");
+  const accessLabel = readable ? "Available" : resolved.state === "preview" ? "Preview" : "Locked";
+  const rawTitle = String(ch.title || "").trim();
+  const hasChapterPrefix = /^chapter\b/i.test(rawTitle);
+  const displayTitle = hasChapterPrefix ? rawTitle : (ch.n ? `Chapter ${ch.n}: ${rawTitle}` : rawTitle);
+  const cleanArc = ch.arc && !/member\s*archive/i.test(ch.arc) ? ch.arc : "";
+  const kickerSub = cleanArc || (hasChapterPrefix ? "" : (ch.n ? `Chapter ${ch.n}` : ""));
+  const excerpt = String(ch.excerpt || "").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,150);
+  const feedImage = (ch.feed_images || []).find(image => homeSafeMediaUrl(image.image_url));
+  // Chapter media is intentionally public in this feed: it is a visual index, not gated prose.
+  const artUrl = homeSafeMediaUrl(feedImage?.image_url);
+  const progress = Number(store.progress[ch.id]?.pct || 0);
+  const isRead = store.readMarked[ch.id] || progress >= 100;
+  const unread = !isRead && progress <= 0;
+  const readClass = isRead ? "is-read" : "is-unread";
+  const leadClass = artUrl && index === 0 ? "is-featured" : "";
+  const layoutClass = `${homeFeedLayoutClass(index, "chapter", !!artUrl)} ${leadClass} ${artUrl?"has-art":""} ${readClass}`;
+  return `<button class="archive-feed-card archive-chapter-card ${layoutClass} chapter-access-coded" style="${chapterTierStyle(ch)}--unread-delay:-${(index%5)*1.1}s" ${action} data-feed-image-count="${(ch.feed_images || []).length}" aria-label="${esc(accessLabel)}: ${esc(displayTitle)}">
+    ${artUrl?`<img class="archive-chapter-art" src="${esc(artUrl)}" alt="" loading="${index===0?"eager":"lazy"}" decoding="async" onerror="homeFeedImageFailed(this)"><div class="archive-chapter-shade"></div>`:""}
+    <div class="archive-card-glow"></div>
+    <div class="archive-card-body">
+      <div class="archive-chapter-copy">
+        ${kickerSub?`<div class="archive-chapter-number">${esc(kickerSub)}</div>`:""}
+        <h3>${esc(displayTitle)}</h3>
+        ${excerpt?`<p>${esc(excerpt)}</p>`:""}
+      </div>
+      <div class="archive-card-footer">
+        <div class="archive-footer-meta">
+          <strong>${Number(ch.wordCount || (ch.readTime * 220) || 0).toLocaleString()} words</strong>
+          <span class="archive-tier-pill">${esc(tierName)}</span>
+        </div>
+      </div>
+    </div>
+  </button>`;
+}
+function homeFeedImageFailed(image){
+  const card = image.closest(".archive-chapter-card");
+  if (!card) return;
+  const mediaClass = [...card.classList].find(name => name.startsWith("feed-media-"));
+  if (mediaClass) {
+    card.classList.remove(mediaClass);
+    card.classList.add(`feed-text-${mediaClass.replace("feed-media-", "")}`);
+  }
+  card.classList.remove("has-art", "is-featured");
+  image.remove();
+  card.querySelector(".archive-chapter-shade")?.remove();
+}
+function homeFeedGalleryCard(item, index){
+  const image = item.image;
+  const url = homeSafeMediaUrl(image.image_url);
+  if (!url) return "";
+  const character = image.character?.name || "Gallery";
+  const caption = image.caption || `${character} artwork`;
+  const tagLine = image.image_tags?.length ? image.image_tags.slice(0,2).join(" · ") : "New artwork";
+  return `<article class="archive-feed-card archive-gallery-card ${homeFeedLayoutClass(index, "gallery", true)}">
+    <button class="archive-gallery-open" data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
+      <span class="archive-gallery-backdrop" style="background-image:url('${esc(url).replace(/'/g,"%27")}')"></span>
+      <img class="archive-gallery-image" src="${esc(url)}" alt="${esc(caption)}" loading="lazy" decoding="async">
+      <span class="archive-image-shade"></span>
+      <span class="archive-card-badge">${I.spark} Gallery</span>
+      <span class="archive-gallery-copy"><small>${esc(tagLine)}</small><strong>${esc(caption)}</strong><span>${esc(character)}</span></span>
+      <span class="archive-gallery-zoom">${I.grid}</span>
+    </button>
+  </article>`;
+}
+function sizeHomeGalleryTiles(){
+  document.querySelectorAll(".archive-gallery-card").forEach(card => {
+    const image = card.querySelector(".archive-gallery-image");
+    if (!image) return;
+    const applySize = () => {
+      if (!image.naturalWidth || !image.naturalHeight || !card.clientWidth) return;
+      const rowHeight = window.innerWidth <= 760 ? 270 : 245;
+      const gap = window.innerWidth <= 760 ? 10 : 10;
+      const desiredHeight = card.clientWidth * (image.naturalHeight / image.naturalWidth);
+      const span = Math.max(1, Math.min(5, Math.ceil((desiredHeight + gap) / (rowHeight + gap))));
+      card.style.gridRowEnd = `span ${span}`;
+    };
+    if (image.complete) applySize();
+    else image.addEventListener("load", applySize, { once:true });
+  });
+}
+function homeGalleryImageSheet(url, caption, character){
+  const safeUrl = homeSafeMediaUrl(url);
+  if (!safeUrl) return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="empty"><h3>Image unavailable</h3><p>This gallery image could not be opened.</p></div>`;
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span>
+    <div class="home-gallery-sheet">
+      <img src="${esc(safeUrl)}" alt="${esc(caption || character || "Gallery image")}">
+      <div><div class="eyebrow">${esc(character || "Gallery")}</div><h3>${esc(caption || "Untitled artwork")}</h3></div>
+    </div>`;
+}
+VIEWS.home = function(){
+  const P = persona();
+  const primary = bySlug(D.PRIMARY_SLUG) || D.STORIES[0];
+  if (!primary) return backendSetupView();
+
+  let banner = "";
+  if (P.expired) banner = accessBanner("expired","Your member access has expired","Some chapters are now locked. Renew to continue reading.","/vault","Renew access");
+  else if (P.pending) banner = accessBanner("pending","We're verifying your access","Your provider connection is syncing — we'll update automatically.","/support/check-access","Check status");
+  else if (P.noTier) banner = accessBanner("none","Your provider tier doesn't include access","You're connected, but your tier doesn't unlock this library.","/benefits","See what unlocks");
+  else if (!P.signedIn) banner = accessBanner("anon","Browsing as a guest","Read free chapters and previews. Sign in or redeem a key to unlock more.","/vault","Activate access");
+
+  const lastRead = activeReads().find(item => item.story.id === primary.id);
+  const firstReadable = primary.chapters.find(ch => isReadable(chapterResolved(ch)));
+  const continueChapter = lastRead?.ch || firstReadable || primary.chapters[0] || null;
+  const continueResolved = continueChapter ? chapterResolved(continueChapter) : null;
+  const continueAction = continueChapter
+    ? (isReadable(continueResolved) || continueResolved.state === "preview" ? `data-read="${continueChapter.id}"` : `data-lock="${continueChapter.id}"`)
+    : `data-nav="/story/${primary.slug}/chapters"`;
+  const continueLabel = lastRead?.ch ? "Continue Reading" : firstReadable ? "Start Reading" : continueChapter ? "Unlock Chapters" : "Browse Chapters";
+  const readCount = primary.chapters.filter(ch => store.readMarked[ch.id] || Number(store.progress[ch.id]?.pct || 0) >= 100).length;
+  const readPercent = primary.chapters.length ? Math.round(readCount / primary.chapters.length * 100) : 0;
+  const primaryCharacter = (D.CHARACTERS || []).find(character => character.story_id === primary.id && character.profile_image_url);
+  const heroArtUrl = homeSafeMediaUrl(primaryCharacter?.profile_image_url || primary.background_image_url);
+  const heroSummary = String(primary.premise || primary.tagline || "A premium serial fiction archive.")
+    .replace(/<[^>]*>/g," ")
+    .replace(/\s+/g," ")
+    .trim()
+    .slice(0,230);
+  const totalWords = primary.chapters.reduce((sum,ch) => sum + Number(ch.wordCount || (ch.readTime * 220) || 0), 0);
+  const adultChapters = primary.chapters.filter(ch => ch.is_nsfw).length;
+
+  const allItems = homeFeedItems(primary);
+  const availableCharacters = (D.CHARACTERS || []).filter(character =>
+    character.story_id === primary.id && allItems.some(item => item.type === "gallery" && item.image.character_id === character.id)
+  );
+  const selectedFilter = store.filters.homeFeed || "all";
+  const filteredItems = allItems.filter(item => {
+    if (selectedFilter === "chapters") return item.type === "chapter";
+    if (selectedFilter === "gallery") return item.type === "gallery";
+    if (selectedFilter.startsWith("character:")) return item.type === "gallery" && item.image.character_id === selectedFilter.slice(10);
+    return true;
+  });
+  const filterButtons = [
+    ["all","All",I.grid],
+    ["chapters","Chapters",I.book],
+    ["gallery","Gallery",I.spark],
+    ...availableCharacters.slice(0,4).map(character => [`character:${character.id}`,character.name,I.user])
+  ];
+
+  const feedLimit = Number(store.homeFeedLimit || 10);
+  const visibleItems = filteredItems.slice(0, feedLimit);
+  const hasMoreFeed = filteredItems.length > feedLimit;
+
+  return `
+    ${announcement()}
+    ${banner}
+    <section class="archive-home" data-indexed-chapter-images="${(D.CHAPTER_FEED_IMAGES || []).length}" style="${storyAccentVars(primary)}">
+      <div class="archive-home-hero">
+        <div class="archive-hero-story">
+          <div class="archive-hero-cover">${coverArt(primary)}</div>
+          <div class="archive-hero-copy">
+            <h1>${esc(primary.title)}</h1>
+            <div class="archive-hero-author">by ${esc(primary.author)}</div>
+            <div class="archive-reading-progress">
+              <div><span>Reading Progress</span><strong>${readPercent}% read (${readCount}/${primary.chapters.length} chapters)</strong></div>
+              ${progressBar(readPercent)}
+            </div>
+            <div class="archive-hero-actions">
+              <button class="btn primary" ${continueAction}>${I.play}${continueLabel}</button>
+              <button class="btn ghost" data-nav="/story/${primary.slug}/chapters">Browse Every Chapter ${I.chevR}</button>
+            </div>
+          </div>
+        </div>
+        <div class="archive-hero-art ${heroArtUrl?"has-image":""}">
+          ${heroArtUrl?`<img src="${esc(heroArtUrl)}" alt="" loading="eager" decoding="async">`:""}
+        </div>
+        <div class="archive-hero-details">
+          <p>${esc(heroSummary)}${heroSummary.length>=230?"…":""}</p>
+          <div class="archive-hero-stats">
+            <div>${I.book}<strong>${primary.chapters.length}</strong><span>Chapters</span></div>
+            <div>${I.feed}<strong>${totalWords>=1000?Math.round(totalWords/1000)+"K+":totalWords}</strong><span>Total Words</span></div>
+            <div>${I.shield}<strong>${adultChapters || "18+"}</strong><span>${adultChapters?"Adult Chapters":"Adult Content"}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="archive-feed-toolbar">
+        <div class="archive-feed-filters">${filterButtons.map(([value,label,icon]) => `<button class="${selectedFilter===value?"active":""}" data-act="home-feed-filter" data-feed-filter="${esc(value)}">${icon}${esc(label)}</button>`).join("")}</div>
+        <div class="archive-feed-sort"><span>Latest First</span>${I.chevR}</div>
+      </div>
+
+      <div class="archive-feed-heading">
+        <div><h2>Latest from the Archive</h2><p>New chapters, gallery releases, and visual discoveries.</p></div>
+        ${selectedFilter!=="all"?`<span>${esc(homeFeedFilterLabel(selectedFilter))} · ${filteredItems.length}</span>`:""}
+      </div>
+
+      ${visibleItems.length
+        ? `<div class="archive-feed-grid">${visibleItems.map((item,index) => item.type === "gallery" ? homeFeedGalleryCard(item,index) : homeFeedChapterCard(item,index)).join("")}</div>
+           ${hasMoreFeed ? `
+             <div class="archive-feed-loadmore">
+               <button class="btn primary" data-act="home-feed-load-more">
+                 Load More Chapters &amp; Artwork (${filteredItems.length - feedLimit} remaining) ${I.chevR}
+               </button>
+             </div>
+           ` : ""}`
+        : `<div class="archive-feed-empty">${I.spark}<h3>Nothing published here yet</h3><p>This filter will fill automatically when matching Supabase content is published.</p><button class="btn ghost sm" data-act="home-feed-filter" data-feed-filter="all">Show everything</button></div>`}
+
+      <div class="archive-home-links">
+        <a data-nav="/story/${primary.slug}/chapters">${I.book}<span><strong>All Chapters</strong><small>Browse the full story archive.</small></span>${I.chevR}</a>
+        <a data-nav="/story/${primary.slug}/extras">${I.spark}<span><strong>Story Extras</strong><small>Characters, artwork, and lore.</small></span>${I.chevR}</a>
+        <a data-nav="/benefits">${I.key}<span><strong>Membership</strong><small>Manage your tier and access.</small></span>${I.chevR}</a>
+        <a data-sheet="persona">${I.user}<span><strong>Account</strong><small>Profile, preferences, and security.</small></span>${I.chevR}</a>
+      </div>
+    </section>`;
+};
+
 function bookHero(s, o){
   const hasChapters = !!o.latestCh;
   const r = hasChapters ? chapterResolved(o.latestCh) : null;

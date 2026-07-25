@@ -151,7 +151,15 @@ function coverArt(s){
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function badge(kind, text){ return `<span class="badge ${kind||""}">${text}</span>`; }
 function chip(label, act, active, svg){ return `<button class="chip ${active?"active":""}" ${act?`data-${act}`:""}>${svg?`<span class="ic">${I[svg]||""}</span>`:""}<span>${label}</span></button>`; }
-function storyAccentVars(s){ return `--s:${s.accent};--s2:${s.accent2};--s-soft:${hexA(s.accent,0.14)};`; }
+function storyAccentVars(s){
+  const accent = String(s.accent || "#d4b06a");
+  const full = /^#[0-9a-f]{3}$/i.test(accent)
+    ? `#${accent[1]}${accent[1]}${accent[2]}${accent[2]}${accent[3]}${accent[3]}`
+    : accent;
+  const match = full.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  const rgb = match ? `${parseInt(match[1],16)},${parseInt(match[2],16)},${parseInt(match[3],16)}` : "212,176,106";
+  return `--s:${accent};--s2:${s.accent2 || accent};--s-rgb:${rgb};--s-soft:${hexA(accent,0.14)};`;
+}
 function hexA(hex,a){ const h=hex.replace("#","");const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return `rgba(${r},${g},${b},${a})`; }
 
 function accessTag(r){
@@ -172,7 +180,7 @@ function accessTag(r){
 }
 function axInline(r){ const m=accessTag(r); return `<span class="ax ${m[0]}"><span class="ic">${m[2]}</span>${m[1]}</span>`; }
 
-function progressBar(pct){ return `<div class="bar"><i style="width:${Math.min(100,Math.max(0,pct))}%"></i></div>`; }
+function progressBar(pct){ const p=Math.min(100,Math.max(0,Number(pct)||0)); return `<div class="bar" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="${p}% progress"><i style="width:${p}%"></i></div>`; }
 function ring(pct){ return `<div class="ring" style="--p:${pct}"><span>${pct}%</span></div>`; }
 
 function commentCount(chId){ const c=store.comments[chId]||[]; return c.length; }

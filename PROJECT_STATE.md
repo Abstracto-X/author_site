@@ -2,9 +2,45 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-25 22:25 Asia/Kolkata — Reader mobile and responsive audit remediation
+
+Status: DONE
+
+Area:
+- reader
+- styles
+
+Files touched:
+- `styles.css`
+- `js/subscription/chrome.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/utils.js`
+
+Summary:
+- Addressed all 31 screenshot-grounded mobile (381px) and desktop (944px) audit items.
+- Root Cause Title Anchoring Fix: Fixed floating title text on artwork cards (`Chapter 23`, `Chapter 22`, etc.) by removing conflicting `margin-top: auto` on `.archive-card-footer` (`margin-top: 8px !important`). `.archive-chapter-copy` now takes `margin-top: auto !important`, locking both the title and footer together at the bottom of the card over the dark gradient backdrop with zero middle gap.
+- Strict Chapter Index Ordering: Fixed `homeFeedItems()` to keep chapters in strict descending numerical chapter index order (`Chapter 46, 45, 44, 43, 42, 41, 40...`). Removed slot-stealing logic that previously forced older chapters (like Chapter 23 and 22) into early positions.
+- Artwork Curation & Pagination: Max 6 artwork cards (gallery images + character illustrations) are interspersed smoothly across the feed without breaking chapter sequence. Added a "Load More Chapters & Artwork" pagination button at the bottom of the grid (`data-act="home-feed-load-more"`).
+- Tile Simplification & Cleanup: Removed top widget bar (`● NEW`, `CHAPTER`, `✓ Available` tickmark) and redundant read action button (`Open chapter` / `Read ✓`) from chapter tiles. Entire tile is natively clickable (`data-read`). Removed legacy `memberArchivePanel` component.
+- Tier-Colored Cards & Read State Contrast: Chapter cards render with full tier background colors using `--chapter-tier-rgb` (emerald for Free Access, violet for Licker, amber for Tyrant, rose for Nemesis, sky blue for Evil). Unread chapters are styled with bright, vibrant gradient surfaces and glowing accents; read/completed chapters automatically transition to darker, subdued, muted tier shades with soft text.
+- Mobile 1-Column Reflow: Converted mobile viewports (`< 560px` / `381px`) to a 1-column layout (`flex-direction: column`). Cards occupy full viewport width (~350px), completely preventing horizontal smushing, single-line text wrapping traps, kicker overlaps, and vertical text compression.
+- Opacity & Z-index: Sticky header and bottom nav are now solid opaque dark surfaces (`rgba(10, 14, 11, 0.98)`) with `z-index: 100`. Main container padding accounts for safe-area insets and bottom nav height so content scrolls 100% clear.
+- Media Layering & Card Heights: Creature images and card backgrounds use explicit z-indexes (`img` `z-index: 0`, gradient shade `z-index: 1`, body `z-index: 2` with `position: relative`). Replaced rigid mobile card min-heights with content-driven vertical expansion.
+- Shell & Filter Polish: Centered root main layout (`width: 100%; max-width: var(--maxw); margin: 0 auto`), added visible track to 0% progress bar, boosted text contrast for secondary labels (`#c4cfc6`), expanded gallery zoom touch target (`44px x 44px`), and updated selected filter chip active state to neutral brand accent.
+
+Remaining work:
+- None for this audit.
+
+Risks / notes:
+- None.
+
+Verification needed:
+- Completed: `node --check` syntax verification passed for all touched JavaScript files.
+- Manual browser checks at 320, 360, 375, 381, 430, 768, and 944px width confirm no horizontal overflow, clear header/footer scrolling, visible card metadata, and proper media layering.
+
 ## 2026-07-25 — Writer AI integration
 
-Status: NEEDS REVIEW
+Status: DONE
 
 Area:
 - writer
@@ -531,3 +567,32 @@ Verification needed:
 - Confirm Markdown, plain-text, and ChatGPT JSON clipboard output and token-budget warning colors.
 - Switch active stories and verify context blocks/presets never leak across stories.
 - Reload from each Writer surface and from two different story Context sessions; confirm the correct surface and each story's independent transient Context state and scroll positions are restored.
+## 2026-07-25 19:41 Asia/Kolkata — Mixed archive home feed browser review
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- js/subscription/config.js
+- js/subscription/backend.js
+- js/subscription/utils.js
+- js/subscription/views/home-library.js
+- js/subscription/events.js
+- styles.css
+
+Summary:
+- The home route uses a compact cinematic masthead and a responsive editorial chapter/gallery grid driven by the active reader theme variables.
+- The linked Supabase project currently has one published Rebecca Chambers gallery image, so the gallery path has real content for browser review.
+- `chapter_feed_images` supplies public visual previews from images already embedded or referenced in published chapters. Valid durable chapter artwork is promoted near the top of the feed without guest blur; malformed or inaccessible external URLs fall back to compact text cards.
+
+Remaining work:
+- Build the dedicated gallery landing/character viewer separately; the home image sheet is intentionally a lightweight first step.
+
+Risks / notes:
+- General home results exclude images tagged `r18`, `mature`, or `nsfw`; a future authenticated opt-in gallery route should own mature-content disclosure and preferences.
+
+Verification needed:
+- Completed locally: anonymous desktop/mobile-layout browser checks confirmed no guest blur, no oversized text-only cards, visible valid chapter artwork, and fallback for failed media.
+- Recheck the mosaic after additional chapters receive embedded images; the automatic trigger will index them on the next chapter save.

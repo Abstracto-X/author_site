@@ -2334,6 +2334,18 @@
                 softBreak.replaceWith(document.createElement('br'));
             });
 
+            [...template.content.querySelectorAll('.sys-msg-box')].forEach(box => {
+                if (!template.content.contains(box)) return;
+                let next = box.nextElementSibling;
+                while (next?.classList.contains('sys-msg-box')) {
+                    box.appendChild(document.createElement('br'));
+                    while (next.firstChild) box.appendChild(next.firstChild);
+                    const merged = next;
+                    next = next.nextElementSibling;
+                    merged.remove();
+                }
+            });
+
             return template.innerHTML.trim();
         }
 
