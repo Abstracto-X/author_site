@@ -32,6 +32,9 @@ Recent reader notification/profile changes:
 | `js/subscription/sheets.js` | `sheetProfile()` / `sheetWhatsNew()` | Adds a profile editor sheet and versioned "What's new" update popup. |
 | `js/subscription/events.js` | `maybeShowWhatsNew()` / `dismissWhatsNew()` | Shows the update popup once per signed-in user/version and persists dismissal in local storage. |
 | `js/subscription/config.js` | `applyAppBackground(url)` | Applies Admin-configured reader background imagery to the app shell. |
+| `js/subscription/views/gallery.js` | `VIEWS.gallery()` / `VIEWS.galleryChar()` | Renders the Visual Archive landing page and individual character gallery viewer with tag filtering, search, view modes, interactive lightbox, and upvote/downvote support. |
+| `js/subscription/backend.js` | `fetchGalleryVotes(imageIds)` / `submitGalleryVote(imageId, value)` | Synchronizes artwork upvotes and downvotes with Supabase `image_votes` table. |
+
 
 ## `js/subscription/config.js`
 

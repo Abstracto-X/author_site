@@ -420,21 +420,21 @@ async function loadBackendLibrary(options = {}){
         profile_image_url: c.profile_image_url || ""
       }));
       D.GALLERY_IMAGES = galleryRows.map(row => {
-        const character = Array.isArray(row.characters) ? row.characters[0] : row.characters;
+        const character = castRows.find(c => c.id === row.character_id) || {};
         return {
           id: row.id,
           character_id: row.character_id,
-          story_id: character?.story_id || "",
+          story_id: character.story_id || "",
           image_url: row.image_url || "",
           caption: row.caption || "",
           image_tags: Array.isArray(row.image_tags) ? row.image_tags : [],
           sort_order: Number(row.sort_order || 0),
           created_at: row.created_at || "",
           character: {
-            id: character?.id || row.character_id,
-            name: character?.name || "Character",
-            role_title: character?.role_title || "",
-            profile_image_url: character?.profile_image_url || ""
+            id: character.id || row.character_id,
+            name: character.name || "Character",
+            role_title: character.role_title || "",
+            profile_image_url: character.profile_image_url || ""
           }
         };
       }).filter(row => row.image_url);
@@ -453,7 +453,32 @@ async function loadBackendLibrary(options = {}){
       backendState.usingFixtures = false;
       backendState.loaded = true;
       backendState.error = stories.some(story => story.chapters.length) ? null : new Error("Published stories were found, but no published chapters exist yet.");
-  return true;
+      return true;
+    } else {
+      backendState.error = new Error("No published backend stories were found.");
+      backendState.usingFixtures = false;
+      D.STORIES = [];
+      D.UPDATES = [];
+      D.CHARACTERS = [];
+      D.GALLERY_IMAGES = [];
+      D.CHAPTER_FEED_IMAGES = [];
+      backendState.loaded = true;
+      return false;
+    }
+  } catch (err) {
+    backendState.error = err;
+    console.error("Subscription backend library load failed; no local content fallback will be used.", err);
+    backendState.usingFixtures = false;
+    D.STORIES = [];
+    D.UPDATES = [];
+    D.CHARACTERS = [];
+    D.GALLERY_IMAGES = [];
+    D.CHAPTER_FEED_IMAGES = [];
+    backendState.loaded = true;
+    return false;
+  } finally {
+    backendState.loading = false;
+  }
 }
 
 function normalizeNotification(row){
@@ -609,28 +634,7 @@ async function requestBrowserNotifications(){
   saveStore();
   return permission;
 }
-    backendState.error = new Error("No published backend stories were found.");
-    backendState.usingFixtures = false;
-    D.STORIES = [];
-    D.UPDATES = [];
-    D.CHARACTERS = [];
-    D.GALLERY_IMAGES = [];
-    D.CHAPTER_FEED_IMAGES = [];
-    return false;
-  } catch (err) {
-    backendState.error = err;
-    console.error("Subscription backend library load failed; no local content fallback will be used.", err);
-    backendState.usingFixtures = false;
-    D.STORIES = [];
-    D.UPDATES = [];
-    D.CHARACTERS = [];
-    D.GALLERY_IMAGES = [];
-    D.CHAPTER_FEED_IMAGES = [];
-    return false;
-  } finally {
-    backendState.loading = false;
-  }
-}
+
 async function loadReaderChapterFromBackend(chapterId){
   const client = getSupabase();
   const found = byId(chapterId);
@@ -675,3 +679,100 @@ async function incrementChapterViews(chapterId) {
     console.warn("Failed to increment chapter views:", err);
   }
 }
+
+/* ============ Gallery & Voting Bridge ============ */
+async function fetchGalleryVotes(imageIds) {
+  if (!imageIds || !imageIds.length) return {};
+  const client = getSupabase();
+  if (!client) return {};
+  try {
+    const { data, error } = await client
+      .from("image_votes")
+      .select("image_id, user_id, vote_value")
+      .in("image_id", imageIds);
+    if (error) throw error;
+    const voteMap = {};
+    const uid = authState.user ? authState.user.id : null;
+    (data || []).forEach(row => {
+      if (!voteMap[row.image_id]) voteMap[row.image_id] = { score: 0, userVote: 0 };
+      voteMap[row.image_id].score += Number(row.vote_value || 0);
+      if (uid && row.user_id === uid) {
+        voteMap[row.image_id].userVote = Number(row.vote_value || 0);
+      }
+    });
+    imageIds.forEach(id => {
+      if (!voteMap[id]) voteMap[id] = { score: 0, userVote: 0 };
+      State.imageVotes[id] = voteMap[id];
+    });
+    return voteMap;
+  } catch (err) {
+    console.warn("Unable to fetch gallery image votes:", err);
+    return {};
+  }
+}
+
+async function submitGalleryVote(imageId, value) {
+  const client = getSupabase();
+  if (!client || !authState.user) {
+    throw new Error("Please sign in to vote on artwork.");
+  }
+  const uid = authState.user.id;
+  const current = State.imageVotes[imageId] || { score: 0, userVote: 0 };
+  const targetValue = current.userVote === value ? 0 : value;
+
+  try {
+    if (targetValue === 0) {
+      const { error } = await client
+        .from("image_votes")
+        .delete()
+        .eq("image_id", imageId)
+        .eq("user_id", uid);
+      if (error) throw error;
+    } else {
+      const { error } = await client
+        .from("image_votes")
+        .upsert(
+          { user_id: uid, image_id: imageId, vote_value: targetValue },
+          { onConflict: "user_id, image_id" }
+        );
+      if (error) throw error;
+    }
+    await fetchGalleryVotes([imageId]);
+    return State.imageVotes[imageId];
+  } catch (err) {
+    console.error("Failed to submit vote:", err);
+    throw err;
+  }
+}
+
+async function loadCharacterGalleryImages(charId) {
+  const client = getSupabase();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from("character_gallery_images")
+        .select("id, character_id, image_url, caption, image_tags, is_published, sort_order, created_at")
+        .eq("character_id", charId)
+        .eq("is_published", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (!error && data) {
+        const charObj = D.CHARACTERS.find(c => c.id === charId) || {};
+        return data.map(r => ({
+          id: r.id,
+          character_id: r.character_id,
+          image_url: r.image_url || "",
+          caption: r.caption || "",
+          image_tags: Array.isArray(r.image_tags) ? r.image_tags : [],
+          sort_order: Number(r.sort_order || 0),
+          created_at: r.created_at || "",
+          character: charObj
+        }));
+      }
+    } catch (e) {
+      console.warn("Remote character gallery fetch failed, falling back to local dataset.", e);
+    }
+  }
+  return D.GALLERY_IMAGES.filter(img => img.character_id === charId);
+}
+

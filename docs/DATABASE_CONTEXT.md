@@ -156,6 +156,10 @@ Public SELECT is limited to rows whose mirrored `is_published` flag is true. Onl
 | `sort_order` | integer / `int4` | NO | 0 |
 | `created_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
+Published non-mature rows remain publicly readable. Rows whose `image_tags` contain `r18`, `mature`, `nsfw`, or `18+` (case-insensitive) are readable only by admins or authenticated users for whom `public.has_active_gallery_subscription()` finds a current active entitlement attached to an active reader tier. Migration: `20260725180600_gate_nsfw_gallery_by_subscription.sql`, applied to the linked project on 2026-07-25.
+
+The table policy prevents non-subscribers from discovering mature image rows through PostgREST. Existing gallery media still uses public author-storage URLs, so an already-known object URL is not made private by table RLS alone.
+
 ### `public.characters`
 
 | Column | Type | Nullable | Default |

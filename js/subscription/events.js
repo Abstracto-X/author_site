@@ -200,8 +200,21 @@ function delegate(){
   document.addEventListener("input",(e)=>{
     const t=e.target;
     if(t.id==="lib-search"){ store.filters.q=t.value; renderHeaderless(); return; }
+    if(t.id==="gallery-search-input"){ State.gallerySearch=t.value; const grid=document.getElementById("gallery-grid"); if(grid && typeof filterGalleryImages==="function"){ const filtered=sortGalleryImages(filterGalleryImages(State.currentGalleryImages||[])); grid.innerHTML=filtered.map((img,idx)=>renderGalleryCard(img,idx,State.galleryViewMode)).join(''); const lbl=document.querySelector(".gallery-count-label"); if(lbl) lbl.textContent=`${filtered.length} artworks`; } return; }
     if(t.dataset && t.dataset.setRange){ store.settings[t.dataset.setRange]=parseFloat(t.value); saveStore(); const lbl=t.closest(".set-group")?.querySelector("label .faint"); if(lbl){ lbl.textContent = t.dataset.setRange==="fontScale"? Math.round(t.value*100)+"%" : parseFloat(t.value).toFixed(2); } renderReaderOnly(); }
   });
+  document.addEventListener("change",(e)=>{
+    const t=e.target;
+    if(t.id==="gallery-sort-select"){ State.gallerySort=t.value; render(); return; }
+  });
+  document.addEventListener("keydown",(e)=>{
+    if(State.lightboxIndex >= 0){
+      if(e.key==="Escape"){ closeGalleryLightbox(); }
+      else if(e.key==="ArrowLeft"){ openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); }
+      else if(e.key==="ArrowRight"){ openGalleryLightbox(State.lightboxIndex + 1); }
+    }
+  });
+
   document.addEventListener("submit", async (e)=>{
     const f=e.target;
     if(f.dataset.cmtForm!=null){
@@ -348,6 +361,31 @@ function handleAct(act, el){
     case "share-chapter": shareChapterLink(el.dataset.chapterId || currentChapter?.ch.id); break;
     case "open-notification": openReaderNotification(el.dataset.notificationId, el.dataset.chapterId, el.dataset.notificationUrl); break;
     case "refresh-notifications": refreshReaderNotifications({browser:false}).then(()=>toast("Notifications refreshed",null,{icon:"bell"})).catch(err=>toast("Refresh failed",err.message||"Unable to load alerts.",{icon:"alert",kind:"bad"})); break;
+    case "toggle-r18": State.showR18 = !State.showR18; render(); break;
+    case "nav-gallery": nav('/gallery/' + (el.dataset.slug || '')); break;
+    case "nav-gallery-char": nav('/gallery/' + (el.dataset.slug || '') + '/' + (el.dataset.charId || '')); break;
+    case "filter-gallery-tag": State.filterTag = el.dataset.tag || 'All'; render(); break;
+    case "toggle-viewmode": State.galleryViewMode = State.galleryViewMode === 'deck' ? 'grid' : 'deck'; render(); break;
+    case "shuffle-gallery":
+      if (Array.isArray(State.currentGalleryImages)) {
+        State.currentGalleryImages.sort(() => Math.random() - 0.5);
+        render();
+      }
+      break;
+    case "open-lightbox": openGalleryLightbox(Number(el.dataset.imgIndex || 0)); break;
+    case "close-lightbox": closeGalleryLightbox(); break;
+    case "lightbox-prev": openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); break;
+    case "lightbox-next": openGalleryLightbox(State.lightboxIndex + 1); break;
+    case "vote-image": {
+      const imgId = el.dataset.imgId;
+      const val = Number(el.dataset.val || 1);
+      submitGalleryVote(imgId, val).then(() => {
+        if (State.lightboxIndex >= 0) openGalleryLightbox(State.lightboxIndex);
+        else render();
+      }).catch(err => toast("Vote failed", err.message || "Please sign in to vote.", {kind:"bad", icon:"alert"}));
+      break;
+    }
+
     case "offline-queue": toast("Offline reading unavailable","This site currently streams chapters after access is verified.",{icon:"download",ms:4000}); break;
     case "extra-open": toast("Opening bonus material","Author note · reader format.",{icon:"spark"}); break;
     case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); break;

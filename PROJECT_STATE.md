@@ -2,7 +2,62 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-25 23:10 Asia/Kolkata — Character Gallery & Visual Archive import
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- views
+- backend
+- router
+- chrome
+- styles
+
+Files touched:
+- `js/subscription/views/gallery.js`
+- `js/subscription/state.js`
+- `js/subscription/backend.js`
+- `js/subscription/router.js`
+- `js/subscription/chrome.js`
+- `js/subscription/events.js`
+- `index.html`
+- `styles.css`
+- `database/sql/2026-07-25_gate_nsfw_gallery_by_subscription.sql`
+- `supabase/migrations/20260725180600_gate_nsfw_gallery_by_subscription.sql`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/CODEBASE_OVERVIEW.md`
+
+Summary:
+- Successfully imported and integrated the Character Gallery & Visual Archive from Abstracto Tales.
+- Added `VIEWS.gallery` and `VIEWS.galleryChar` in `js/subscription/views/gallery.js`.
+- Implemented featured character hero card, character collection decks, "Fresh Transmissions" feed, tag chips, search input, sort dropdown, view mode toggle (grid/deck), R18 mature content filter, and full interactive Lightbox modal with upvoting.
+- Fixed root cause of page freeze during navigation: added missing `return r;` to `parseHash()` in `js/subscription/router.js`.
+- Fixed root cause of loader spinner lock: reconstructed `loadBackendLibrary()` control flow in `js/subscription/backend.js`. Restored proper `try...catch...finally` scoping so `backendState.loaded = true` is set and `backendState.loading = false` executes cleanly in `finally`.
+- Fixed the remaining `#/gallery` render crash: `gallery.js` called a nonexistent `escAttr()` helper in its landing-page template. Gallery attribute values now use the existing HTML-safe `esc()` helper.
+- Fixed R18 artwork remaining hidden on the Visual Archive landing page after using character-gallery search/tag controls. The landing feed now applies only its visible R18 control instead of inheriting invisible character-view filters.
+- Added a reader-side subscription gate for mature gallery rows. Guests and signed-in readers without an active entitlement see a compact subscription banner instead of the R18 toggle; active subscribers and admins can opt into R18 artwork.
+- Added and applied an idempotent RLS migration that limits published mature-tagged `character_gallery_images` rows to admins or users with a current active entitlement while leaving non-mature published artwork public.
+- All 16 subscription reader JS files passed `node --check` syntax verification.
+
+
+
+Remaining work:
+- None for the subscription gate. The migration is recorded in linked migration history as `20260725180600`.
+
+Risks / notes:
+- Gallery files currently use public author-storage URLs. The RLS migration prevents non-subscribers from discovering mature rows through `character_gallery_images`, but an already-known public object URL remains directly reachable. Cryptographically private media would require moving mature assets to a private bucket and issuing short-lived signed URLs after entitlement verification.
+
+Verification needed:
+- Completed locally: gallery syntax checks and a VM smoke test rendered both the Visual Archive landing view and a character gallery without runtime errors.
+- Completed locally: subscription-gate smoke checks confirmed guests receive one safe image plus the subscription banner, subscribers see the R18 toggle, and enabling it reveals mature rows.
+- Completed against the linked database: anonymous and authenticated-unsubscribed roles returned 8 safe rows and 0 mature rows; active subscriber and admin roles returned 12 total rows including 4 mature rows.
+- Open `#/gallery` in reader to view Visual Archive landing page.
+- Select a character deck to enter `#/gallery/<slug>/<charId>`.
+- Open artwork in Lightbox, test keyboard navigation (ArrowLeft, ArrowRight, Escape) and vote buttons.
+
 ## 2026-07-25 22:25 Asia/Kolkata — Reader mobile and responsive audit remediation
+
 
 Status: DONE
 

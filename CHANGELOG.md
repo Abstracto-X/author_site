@@ -1,6 +1,38 @@
 # Changelog
 
+## 2026-07-25 23:10 Asia/Kolkata — Character Gallery & Visual Archive import
+
+Area: reader / views / state / backend / router / chrome / styles
+
+Summary:
+- Imported and integrated the complete Character Gallery & Visual Archive from Abstracto Tales into the EvilArchives subscription reader.
+- Created `js/subscription/views/gallery.js` with `VIEWS.gallery()` (Visual Archive landing page) and `VIEWS.galleryChar()` (per-character artwork gallery viewer).
+- Implemented featured character hero card with stats, character roster collection decks, "Fresh Transmissions" recent artwork feed with pagination, tag filter chips, search input, sort selection (Curated, Newest, Top Rated), view mode toggle (Grid View vs Deck View), and R18 mature content filter.
+- Added full interactive Lightbox overlay with image zoom, keyboard navigation (ArrowLeft, ArrowRight, Escape), metadata sidebar, tag list, and upvote/downvote action buttons.
+- Extended `js/subscription/state.js` with global gallery state (`gallerySearch`, `gallerySort`, `galleryViewMode`, `filterTag`, `showR18`, `imageVotes`, `lightboxIndex`).
+- Added Supabase database vote bridge in `js/subscription/backend.js` (`fetchGalleryVotes`, `submitGalleryVote`, `loadCharacterGalleryImages`).
+- Registered `#/gallery`, `#/gallery/:slug`, and `#/gallery/:slug/:charId` hash routes in `js/subscription/router.js`. Fixed missing `return r;` in `parseHash()` that caused hash navigation to return `undefined`.
+- Fixed `loadBackendLibrary()` control flow structure in `js/subscription/backend.js`. Restored proper `try...catch...finally` scoping so `backendState.loaded = true` is set and `backendState.loading = false` is cleanly executed in `finally`, resolving the member library loading spinner freeze.
+- Added Gallery navigation links in `js/subscription/chrome.js` (topbar, bottomnav, and sidenav).
+- Included `<script src="js/subscription/views/gallery.js"></script>` in `index.html`.
+- Added namespaced and responsive gallery CSS styles in `styles.css`.
+
+
+
+Files changed:
+- `js/subscription/views/gallery.js` (NEW)
+- `js/subscription/state.js`
+- `js/subscription/backend.js`
+- `js/subscription/router.js`
+- `js/subscription/chrome.js`
+- `js/subscription/events.js`
+- `index.html`
+- `styles.css`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/CODEBASE_OVERVIEW.md`
+
 ## 2026-07-25 22:25 Asia/Kolkata - Reader mobile and responsive audit remediation (31 issues fixed)
+
 
 Area: reader / styles / chrome
 
@@ -980,3 +1012,37 @@ Files changed:
 - Added reduced-motion-aware unread chapter pulses and staggered sheen effects.
 - Explicit mature gallery tags remain excluded from the general homepage pending a dedicated opt-in gallery flow.
 - **Files changed:** `js/subscription/config.js`, `js/subscription/backend.js`, `js/subscription/utils.js`, `js/subscription/views/home-library.js`, `js/subscription/events.js`, `styles.css`, `database/sql/2026-07-25_add_chapter_feed_images.sql`, `database/sql/2026-07-25_fix_chapter_feed_images_public_read.sql`, `database/sql/2026-07-25_simplify_chapter_feed_images_public_read.sql`, matching Supabase migrations, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
+## 2026-07-25 23:25 Asia/Kolkata — Fix Visual Archive route render crash
+
+Area: reader
+
+Summary:
+- Fixed `#/gallery` failing during view rendering because the new gallery template referenced an undefined `escAttr()` helper.
+- Reused the reader's existing HTML-safe `esc()` helper for gallery URLs and `data-*`/form attribute values.
+- Prevented stale character-gallery search/tag state from silently hiding R18 artwork on the Visual Archive landing page; that landing feed now responds only to its visible R18 toggle.
+- Confirmed both the Visual Archive landing view and character gallery render in a local VM smoke test.
+
+Files changed:
+- `js/subscription/views/gallery.js`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-25 23:46 Asia/Kolkata — Gate mature gallery artwork by subscription
+
+Area: reader | database
+
+Summary:
+- Replaced the public mature-gallery path with a subscription-aware reader experience: guests and readers without active entitlements see a compact subscription banner and no mature previews, while active subscribers and admins receive the opt-in R18 toggle.
+- Added and applied `public.has_active_gallery_subscription()` plus a `character_gallery_images` SELECT policy that keeps safe published artwork public and exposes mature-tagged rows only to active subscribers/admins.
+- Verified linked RLS behavior for anonymous, unsubscribed-authenticated, active-subscriber, and admin roles.
+
+Files changed:
+- `js/subscription/views/gallery.js`
+- `styles.css`
+- `database/sql/2026-07-25_gate_nsfw_gallery_by_subscription.sql`
+- `supabase/migrations/20260725180600_gate_nsfw_gallery_by_subscription.sql`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`

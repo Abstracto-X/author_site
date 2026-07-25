@@ -19,11 +19,11 @@ function topbar(){
   </header>`;
 }
 function bottomnav(active){
-  const items=[["home","/","Home"],["library","/library","Library"],["feed","/updates","Updates"],["shelf","/my-shelf","Shelf"],["vault","/vault","Vault"]];
+  const items=[["home","/","Home"],["library","/library","Library"],["spark","/gallery","Gallery"],["feed","/updates","Updates"],["vault","/vault","Vault"]];
   return `<nav class="bottomnav">${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}">${I[ic]}<span>${lbl}</span></a>`).join("")}</nav>`;
 }
 function sidenav(active){
-  const items=[["home","/","Home"],["library","/library","Library"],["feed","/updates","Updates"],["shelf","/my-shelf","Shelf"],["vault","/vault","Vault"]];
+  const items=[["home","/","Home"],["library","/library","Library"],["spark","/gallery","Gallery"],["feed","/updates","Updates"],["vault","/vault","Vault"]];
   return `<nav class="sidenav" aria-label="Primary">${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}" aria-label="${lbl}">${I[ic]}<span>${lbl}</span></a>`).join("")}<span class="spacer"></span><a href="#/support/check-access" data-nav="/support/check-access" aria-label="Access help">${I.shield}<span>Help</span></a></nav>`;
 }
 function announcement(){ return ""; }

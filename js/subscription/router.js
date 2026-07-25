@@ -6,6 +6,7 @@ let route = { name:"home", params:{} };
 function parseHash(){
   const raw = location.hash.replace(/^#\/?/, "");
   const p = raw.split("/").filter(Boolean);
+
   const r = { name:"home", params:{} };
   if (!p.length) return r;
   if (p[0]==="library") r.name="library";
@@ -22,6 +23,14 @@ function parseHash(){
   else if (p[0]==="onboarding") r.name="onboarding";
   else if (p[0]==="help") r.name="help";
   else if (p[0]==="support"){ r.name = { "check-access":"checkAccess","wrong-account":"wrongAccount","contact":"contact" }[p[1]] || "help"; }
+  else if (p[0]==="gallery"){
+    if (p.length >= 3) { r.name = "galleryChar"; r.params.slug = p[1]; r.params.charId = p[2]; }
+    else if (p.length === 2) {
+      const isChar = D.CHARACTERS.some(c => c.id === p[1]);
+      if (isChar) { r.name = "galleryChar"; r.params.charId = p[1]; }
+      else { r.name = "gallery"; r.params.slug = p[1]; }
+    } else { r.name = "gallery"; r.params.slug = D.PRIMARY_SLUG || (D.STORIES[0]?.slug || ""); }
+  }
   else if (p[0]==="story"){ r.params.slug=p[1]; r.name = { chapters:"chapters", recap:"recap", extras:"extras", updates:"storyUpdates" }[p[2]] || "story"; }
   else if (p[0]==="read"){ r.params.id=p[1]; r.name="read"; }
   else if (p[0]==="studio"){
@@ -30,6 +39,7 @@ function parseHash(){
   }
   return r;
 }
+
 function nav(path){ if(path===location.hash||( "#"+path)===location.hash){ render(); } else { location.hash = path; } }
 
 

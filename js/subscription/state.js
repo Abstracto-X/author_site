@@ -54,3 +54,19 @@ function loadStore(){
 }
 function saveStore(){ try { LS.setItem("aether-pages-prod-bridge-v2-realdb", JSON.stringify(store)); } catch(e){} }
 loadStore();
+
+/* ============ global UI state ============ */
+const State = window.State || {
+  gallerySearch: "",
+  gallerySort: "curated",
+  galleryViewMode: "grid",
+  filterTag: "All",
+  showR18: false,
+  currentStory: null,
+  currentChars: [],
+  currentGalleryImages: [],
+  latestGalleryImages: [],
+  imageVotes: {},
+  lightboxIndex: -1
+};
+window.State = State;
