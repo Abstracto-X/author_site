@@ -3309,7 +3309,11 @@
                     UI.showLoading();
                     const imgFile = document.getElementById('f-profile_image_url_file').files[0];
                     let imgUrl = document.getElementById('f-profile_image_url_url').value;
-                    if (imgFile) imgUrl = await Utils.uploadImage(imgFile, 'characters', '', { maxDimension: 1800, quality: 0.84 });
+                    if (imgFile) imgUrl = await Utils.uploadImage(imgFile, 'characters', '', {
+                        maxDimension: 1800,
+                        quality: 0.84,
+                        cacheControl: '31536000'
+                    });
 
                     const record = {
                         story_id: State.selectedStoryId,
@@ -3449,7 +3453,11 @@
 
                     if (imgFiles && imgFiles.length > 0) {
                         for (let i = 0; i < imgFiles.length; i++) {
-                            const uploadedUrl = await Utils.uploadImage(imgFiles[i], 'characters', '', { maxDimension: 2560, quality: 0.85 });
+                            const uploadedUrl = await Utils.uploadImage(imgFiles[i], 'characters', '', {
+                                maxDimension: 2560,
+                                quality: 0.85,
+                                cacheControl: '31536000'
+                            });
                             const record = {
                                 character_id: selectedCharacterId,
                                 image_url: uploadedUrl,

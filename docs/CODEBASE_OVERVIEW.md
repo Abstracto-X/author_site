@@ -176,8 +176,8 @@ Storage expectations:
 |---|---|
 | `covers` | Story cover images. |
 | `backgrounds` | Story/chapter/background/hero images. |
-| `chapter-images` | Chapter inline/reference images. |
-| `characters` | Character imagery. |
+| `chapter-images` | Chapter inline/reference images. Writer uploads use unique object paths and a one-year browser cache lifetime; stored chapter HTML and `chapter_feed_images` must reference the new path whenever an image is replaced. |
+| `characters` | Character profile/gallery imagery. Admin uploads use unique paths and an explicit one-year browser cache lifetime; database rows must move to the new path whenever an image is replaced or backfilled. |
 | `lore` | Lore imagery/assets. |
 | `maps` | Map imagery/assets. |
 | `author` | Author profile/site imagery. |
@@ -239,6 +239,7 @@ Manual verification is preferred over automated browser testing unless explicitl
 - The subscription home route is story-first: a compact cinematic masthead combines cover art, reading progress/actions, primary-character artwork, a short synopsis, and live chapter/word/adult-content statistics.
 - `backend.js` loads published `characters` and `character_gallery_images` alongside the story catalog. Normalized rows are exposed as `D.CHARACTERS` and `D.GALLERY_IMAGES`; there is no local/sample gallery fallback.
 - The home archive feed merges published chapter catalog rows and non-mature published gallery images for the primary story, promotes the latest chapter as the lead feature, and renders a capped set of type-specific cards in one responsive irregular editorial grid.
+- Readers can switch the home archive between the original `Multigrid` feed and a persisted `Traditional` view. Traditional view places a newest-first, tier-color-coded chapter index beside an uncropped masonry artwork archive on desktop and stacks the two panels on narrow/mobile screens.
 - Feed filters support All, Chapters, Gallery, and character-specific selections. Gallery cards open an image sheet; chapter cards preserve existing read/preview/lock behavior and tier-color semantics.
 - `chapter_feed_images` indexes image URLs already referenced or embedded in published chapter content. Valid chapter artwork is visible to all visitors and earns the larger media-led feed positions; failed external URLs gracefully become compact text tiles, and the complete chapter tile is the read/preview/access target.
 - Gallery artwork cards measure each image after load and grow to the grid-row span required to show the complete uncropped image over a blurred ambient backdrop.

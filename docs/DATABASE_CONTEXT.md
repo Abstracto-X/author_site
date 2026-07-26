@@ -127,6 +127,10 @@ The reader now consumes `public.site_settings` for production site identity:
 
 Public feed-media index synchronized from published chapter content. `sync_chapter_feed_images()` rebuilds a chapter's rows after changes to `content`, `referenced_image_urls`, publication state, or story ownership. It indexes HTTP(S) URLs from both `referenced_image_urls` and saved `<img src>` elements without exposing chapter prose.
 
+Chapter images are immutable/versioned assets in the public `chapter-images` bucket. The Writer uploads each file to a unique path with `cacheControl: '31536000'` and `upsert: false`. When an existing asset is backfilled or replaced, update the URL in the owning chapter fields (`content`, `referenced_image_urls`, `media`, or `cover_image_url` as applicable); the chapter synchronization trigger then rebuilds matching `chapter_feed_images` rows.
+
+Character profile and gallery images follow the same immutable/versioned convention in the public `characters` bucket. Admin uploads explicitly use `cacheControl: '31536000'`; replacements or cache backfills must update `characters.profile_image_url` and/or `character_gallery_images.image_url` to the new object URL.
+
 | Column | Type | Nullable | Default |
 |---|---|---:|---|
 | `id` | uuid | NO | gen_random_uuid() |

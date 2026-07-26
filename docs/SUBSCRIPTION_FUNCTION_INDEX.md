@@ -279,12 +279,15 @@ Recent reader notification/profile changes:
 | n/a | `homeSafeMediaUrl(value)` | Allows only HTTP(S) gallery media URLs before rendering them in the home feed or image sheet. |
 | n/a | `homeIsMatureGalleryImage(image)` | Detects explicitly mature gallery tags so those images stay out of the general home feed. |
 | n/a | `homeFeedDate(value)` | Normalizes feed timestamps for newest-first sorting. |
+| n/a | `homeGalleryItems(story)` | Builds the complete newest-first, non-mature gallery collection used by the traditional masonry panel and capped mixed feed. |
 | n/a | `homeFeedItems(story)` | Merges real chapter catalog rows and published gallery rows into the primary story home feed. |
 | n/a | `homeFeedFilterLabel(value)` | Resolves human-readable labels for home feed filters. |
 | n/a | `homeFeedLayoutClass(index, type, hasArtwork)` | Assigns compact text or media-led span patterns for the mixed feed. |
 | n/a | `homeFeedChapterCard(item, index)` | Renders a tier-aware chapter tile for the mixed archive feed. |
 | n/a | `homeFeedImageFailed(image)` | Converts an unavailable chapter-art tile back into a compact text tile. |
 | n/a | `homeFeedGalleryCard(item, index)` | Renders an image-led gallery tile for the mixed archive feed. |
+| n/a | `homeTraditionalChapterRow(item)` | Renders a newest-first chapter index row with tier, availability, date, word-count, read-time, and read-state metadata. |
+| n/a | `homeTraditionalGalleryCard(item)` | Renders an uncropped masonry artwork tile for the traditional split view. |
 | n/a | `sizeHomeGalleryTiles()` | Measures loaded gallery artwork and expands its grid-row span so the complete image remains visible. |
 | n/a | `homeGalleryImageSheet(url, caption, character)` | Builds the focused image sheet opened from a home gallery tile. |
 | 86 | `accessBanner(kind,title,sub,link,label)` | Helper used by this module. |

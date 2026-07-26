@@ -383,21 +383,8 @@ function homeFeedDate(value){
   const stamp = new Date(value || 0).getTime();
   return Number.isFinite(stamp) ? stamp : 0;
 }
-function homeFeedItems(story){
-  // 1. All published chapters for this story, sorted strictly by chapter index `n` descending (Chapter 46, 45, 44, 43, 42, 41...)
-  const chapterItems = (story.chapters || [])
-    .slice()
-    .sort((a,b) => Number(b.n || 0) - Number(a.n || 0))
-    .map(chapter => ({
-      id:`chapter-${chapter.id}`,
-      type:"chapter",
-      date:chapter.updated_at || chapter.created_at || chapter.publicDate || "",
-      chapter,
-      story
-    }));
-
-  // 2. Standalone gallery items from D.GALLERY_IMAGES + character profile artworks
-  const rawGallery = (D.GALLERY_IMAGES || [])
+function homeGalleryItems(story){
+  const galleryItems = (D.GALLERY_IMAGES || [])
     .filter(image => image.story_id === story.id && !homeIsMatureGalleryImage(image))
     .map(image => ({
       id:`gallery-${image.id}`,
@@ -406,8 +393,7 @@ function homeFeedItems(story){
       image,
       story
     }));
-
-  const charArtworks = (D.CHARACTERS || [])
+  const characterArt = (D.CHARACTERS || [])
     .filter(character => character.story_id === story.id && character.profile_image_url)
     .map(character => ({
       id:`gallery-char-${character.id}`,
@@ -422,10 +408,25 @@ function homeFeedItems(story){
       },
       story
     }));
+  return [...galleryItems, ...characterArt]
+    .sort((a,b) => homeFeedDate(b.date) - homeFeedDate(a.date));
+}
+function homeFeedItems(story){
+  // 1. All published chapters for this story, sorted strictly by chapter index `n` descending (Chapter 46, 45, 44, 43, 42, 41...)
+  const chapterItems = (story.chapters || [])
+    .slice()
+    .sort((a,b) => Number(b.n || 0) - Number(a.n || 0))
+    .map(chapter => ({
+      id:`chapter-${chapter.id}`,
+      type:"chapter",
+      date:chapter.updated_at || chapter.created_at || chapter.publicDate || "",
+      chapter,
+      story
+    }));
 
   // Combine gallery items up to max 6 images
   const maxImages = 6;
-  const galleryPool = [...rawGallery, ...charArtworks].slice(0, maxImages);
+  const galleryPool = homeGalleryItems(story).slice(0, maxImages);
 
   // Intersperse gallery artwork items cleanly between chapter cards
   // Chapters ALWAYS remain in strict descending index order (46, 45, 44, 43, 42...)
@@ -535,6 +536,50 @@ function homeFeedGalleryCard(item, index){
     </button>
   </article>`;
 }
+function homeTraditionalChapterRow(item){
+  const ch = item.chapter;
+  const resolved = chapterResolved(ch);
+  const readable = isReadable(resolved);
+  const action = readable || resolved.state === "preview" ? `data-read="${ch.id}"` : `data-lock="${ch.id}"`;
+  const tierName = !ch.required_tier_id ? "Free Access" : (ch.required_tier_name || ch.tier || "Member Access");
+  const accessLabel = readable ? "Read" : resolved.state === "preview" ? "Preview" : "Locked";
+  const rawTitle = String(ch.title || "").trim();
+  const displayTitle = /^chapter\b/i.test(rawTitle) ? rawTitle : (ch.n ? `Chapter ${ch.n}: ${rawTitle}` : rawTitle);
+  const wordCount = Number(ch.wordCount || (ch.readTime * 220) || 0);
+  const progress = Number(store.progress[ch.id]?.pct || 0);
+  const isRead = store.readMarked[ch.id] || progress >= 100;
+  const releaseDate = ch.publicDate || ch.updated_at || ch.created_at;
+  return `<article class="traditional-chapter-row chapter-access-coded ${isRead?"is-read":"is-unread"}" style="${chapterTierStyle(ch)}">
+    <button class="traditional-chapter-open" ${action} aria-label="${esc(accessLabel)}: ${esc(displayTitle)}">
+      <span class="traditional-chapter-index">${ch.n ? String(ch.n).padStart(2,"0") : I.book}</span>
+      <span class="traditional-chapter-main">
+        <span class="traditional-chapter-title">${esc(displayTitle)}</span>
+        <span class="traditional-chapter-meta">
+          ${releaseDate?`<span>${I.clock}${esc(fmtDate(releaseDate))}</span>`:""}
+          <span>${I.feed}${wordCount.toLocaleString()} words</span>
+          ${ch.readTime?`<span>${I.book}${esc(ch.readTime)} min</span>`:""}
+        </span>
+      </span>
+      <span class="traditional-chapter-access">
+        <span class="traditional-tier-pill">${esc(tierName)}</span>
+        <span class="traditional-access-state">${readable?I.play:resolved.state==="preview"?I.eye:I.lock}${isRead?"Read":accessLabel}</span>
+      </span>
+    </button>
+  </article>`;
+}
+function homeTraditionalGalleryCard(item){
+  const image = item.image;
+  const url = homeSafeMediaUrl(image.image_url);
+  if (!url) return "";
+  const character = image.character?.name || image.character_name || "Gallery";
+  const caption = image.caption || `${character} artwork`;
+  return `<article class="traditional-gallery-card">
+    <button data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
+      <img src="${esc(url)}" alt="${esc(caption)}" loading="lazy" decoding="async">
+      <span class="traditional-gallery-overlay"><small>${esc(character)}</small><strong>${esc(caption)}</strong></span>
+    </button>
+  </article>`;
+}
 function sizeHomeGalleryTiles(){
   document.querySelectorAll(".archive-gallery-card").forEach(card => {
     const image = card.querySelector(".archive-gallery-image");
@@ -592,6 +637,8 @@ VIEWS.home = function(){
   const adultChapters = primary.chapters.filter(ch => ch.is_nsfw).length;
 
   const allItems = homeFeedItems(primary);
+  const traditionalChapters = allItems.filter(item => item.type === "chapter");
+  const traditionalGallery = homeGalleryItems(primary);
   const availableCharacters = (D.CHARACTERS || []).filter(character =>
     character.story_id === primary.id && allItems.some(item => item.type === "gallery" && item.image.character_id === character.id)
   );
@@ -612,6 +659,22 @@ VIEWS.home = function(){
   const feedLimit = Number(store.homeFeedLimit || 10);
   const visibleItems = filteredItems.slice(0, feedLimit);
   const hasMoreFeed = filteredItems.length > feedLimit;
+  const homeLayout = store.homeLayout === "traditional" ? "traditional" : "multigrid";
+  const traditionalContent = `<div class="traditional-home-split">
+    <section class="traditional-chapters-panel">
+      <div class="traditional-panel-head"><div><span class="eyebrow">Story index</span><h2>Latest Chapters</h2></div><span>${traditionalChapters.length} total</span></div>
+      <div class="traditional-chapter-list">
+        ${traditionalChapters.length ? traditionalChapters.map(homeTraditionalChapterRow).join("") : `<div class="archive-feed-empty">${I.book}<h3>No chapters yet</h3><p>Published chapters will appear here automatically.</p></div>`}
+      </div>
+      <button class="traditional-panel-link" data-nav="/story/${primary.slug}/chapters">Browse the complete chapter shelf ${I.chevR}</button>
+    </section>
+    <section class="traditional-gallery-panel">
+      <div class="traditional-panel-head"><div><span class="eyebrow">Visual archive</span><h2>Artwork</h2></div><span>${traditionalGallery.length} images</span></div>
+      ${traditionalGallery.length
+        ? `<div class="traditional-masonry">${traditionalGallery.map(homeTraditionalGalleryCard).join("")}</div>`
+        : `<div class="archive-feed-empty">${I.spark}<h3>No artwork yet</h3><p>Published gallery images will appear here automatically.</p></div>`}
+    </section>
+  </div>`;
 
   return `
     ${announcement()}
@@ -647,10 +710,17 @@ VIEWS.home = function(){
       </div>
 
       <div class="archive-feed-toolbar">
-        <div class="archive-feed-filters">${filterButtons.map(([value,label,icon]) => `<button class="${selectedFilter===value?"active":""}" data-act="home-feed-filter" data-feed-filter="${esc(value)}">${icon}${esc(label)}</button>`).join("")}</div>
-        <div class="archive-feed-sort"><span>Latest First</span>${I.chevR}</div>
+        ${homeLayout==="multigrid"
+          ? `<div class="archive-feed-filters">${filterButtons.map(([value,label,icon]) => `<button class="${selectedFilter===value?"active":""}" data-act="home-feed-filter" data-feed-filter="${esc(value)}">${icon}${esc(label)}</button>`).join("")}</div>`
+          : `<div class="archive-feed-context"><strong>Chapter index + visual archive</strong><span>Latest chapters first</span></div>`}
+        <div class="home-layout-switch" role="group" aria-label="Home archive layout">
+          <button class="${homeLayout==="multigrid"?"active":""}" data-act="home-layout" data-home-layout="multigrid" aria-pressed="${homeLayout==="multigrid"}">${I.grid}<span>Multigrid</span></button>
+          <button class="${homeLayout==="traditional"?"active":""}" data-act="home-layout" data-home-layout="traditional" aria-pressed="${homeLayout==="traditional"}">${I.list}<span>Traditional</span></button>
+        </div>
       </div>
 
+      ${homeLayout==="traditional" ? traditionalContent : ""}
+      <div class="home-multigrid-content" ${homeLayout==="traditional"?"hidden":""}>
       <div class="archive-feed-heading">
         <div><h2>Latest from the Archive</h2><p>New chapters, gallery releases, and visual discoveries.</p></div>
         ${selectedFilter!=="all"?`<span>${esc(homeFeedFilterLabel(selectedFilter))} · ${filteredItems.length}</span>`:""}
@@ -666,6 +736,7 @@ VIEWS.home = function(){
              </div>
            ` : ""}`
         : `<div class="archive-feed-empty">${I.spark}<h3>Nothing published here yet</h3><p>This filter will fill automatically when matching Supabase content is published.</p><button class="btn ghost sm" data-act="home-feed-filter" data-feed-filter="all">Show everything</button></div>`}
+      </div>
 
       <div class="archive-home-links">
         <a data-nav="/story/${primary.slug}/chapters">${I.book}<span><strong>All Chapters</strong><small>Browse the full story archive.</small></span>${I.chevR}</a>

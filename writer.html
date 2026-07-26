@@ -3202,7 +3202,8 @@
         const IMAGE_UPLOAD_CONFIG = {
             bucket: 'chapter-images',
             maxBytes: 4 * 1024 * 1024,
-            allowedTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+            allowedTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+            cacheControlSeconds: '31536000'
         };
 
         function isAllowedInlineImage(file) {
@@ -3249,7 +3250,7 @@
                 .storage
                 .from(IMAGE_UPLOAD_CONFIG.bucket)
                 .upload(path, file, {
-                    cacheControl: '31536000',
+                    cacheControl: IMAGE_UPLOAD_CONFIG.cacheControlSeconds,
                     upsert: false,
                     contentType: file.type
                 });

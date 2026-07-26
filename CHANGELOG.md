@@ -1,5 +1,65 @@
 # Changelog
 
+## 2026-07-26 05:47 Asia/Kolkata — Optional traditional home archive layout
+
+Area: reader / home / styles
+
+Summary:
+- Added a persisted `Multigrid` / `Traditional` layout switch to the subscription home archive.
+- Kept the existing mixed editorial grid intact while adding a two-column desktop view with a newest-first chapter index and an uncropped masonry artwork panel.
+- Chapter rows preserve read, preview, and lock actions while showing tier colors, access state, release/update date, word count, read time, and read status.
+- The traditional panels stack vertically on mobile, and gallery artwork continues to open the existing image sheet.
+
+Files changed:
+- `js/subscription/state.js`
+- `js/subscription/events.js`
+- `js/subscription/views/home-library.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-26 05:35 Asia/Kolkata — Vibrant solid color-filled tier blocks for text-based tiles
+
+Area: reader / styles / views
+
+Summary:
+- Converted all text-based chapter tiles (`:not(.has-art)`) into **bold, fully filled solid color blocks** with a subtle 3D lighting/bevel gradient and high-contrast white text.
+- Aligned tier color scheme to match exact requirements:
+  - **Nemesis Tier**: Vibrant Crimson Red fill (`rgb: 225, 29, 72`, `accent: #fb7185`)
+  - **Tyrant Tier**: Rich Royal Purple fill (`rgb: 147, 51, 234`, `accent: #c084fc`)
+  - **Licker Tier**: Rich Amber / Golden Yellow fill (`rgb: 217, 119, 6`, `accent: #fbbf24`)
+  - **Free Access**: Bright Emerald Green fill (`rgb: 16, 185, 129`, `accent: #34d399`)
+- Styled internal elements on solid color tiles (badges, tier pills, kicker headers, action buttons) with crisp white text and translucent dark controls for contrast.
+- Updated `chapterTierVisual` in `js/subscription/views/story-reader.js` to map Licker to Gold, Tyrant to Purple, Nemesis to Red, and Free to Green.
+- All 16 subscription reader JS files passed `node --check` syntax verification.
+
+Files changed:
+- `styles.css`
+- `js/subscription/views/story-reader.js`
+
+
+
+Area: admin / writer / database / storage
+
+Summary:
+- Copied all 5 referenced `chapter-images` objects to new versioned Storage paths instead of overwriting CDN-visible objects.
+- Copied all 13 referenced character profile/gallery objects to new versioned `characters` paths and updated `characters.profile_image_url` plus `character_gallery_images.image_url`.
+- Set and verified a one-year browser cache lifetime (`public, max-age=31536000`) on every new object.
+- Atomically replaced the old URLs in saved chapter content; the existing synchronization trigger rebuilt `chapter_feed_images`, leaving zero old chapter/feed references.
+- Verified zero old character/gallery references remain and kept the old Storage objects unreferenced as a rollback safety net.
+- Made the Writer's one-year cache setting an explicit upload configuration value; future uploads continue to use unique paths with `upsert: false`.
+- Made one-year caching explicit at both character profile and character gallery upload call sites in the Admin CMS.
+
+Files changed:
+- `admin.html`
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-26 03:35 Asia/Kolkata — Universal 3-mode theme system & contrast remediation
 
 Area: reader / styles / utils / sheets

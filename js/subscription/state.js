@@ -40,6 +40,7 @@ const defaultStore = () => ({
   notificationPrefs: null,
   dismissedNotifs: [],
   filters: { q:"", chips:[] },
+  homeLayout: "multigrid",
   theme: "aether"
 });
 let store;

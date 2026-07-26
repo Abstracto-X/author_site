@@ -2,6 +2,109 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-26 05:47 Asia/Kolkata — Traditional home archive layout
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- styles
+
+Files touched:
+- `js/subscription/state.js`
+- `js/subscription/events.js`
+- `js/subscription/views/home-library.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Added a persisted home layout switch between the existing mixed multigrid feed and a traditional split view.
+- Traditional desktop layout shows newest-first, tier-coded chapter rows on the left and non-mature artwork in an uncropped masonry grid on the right; mobile stacks both panels.
+
+Remaining work:
+- None in code.
+
+Risks / notes:
+- `styles.css` already contained extensive unrelated in-progress theme/tier styling changes before this task; the new traditional layout styles were appended as an isolated section rather than rewriting those edits.
+
+Verification needed:
+- Open `#/`, switch between Multigrid and Traditional, reload to confirm persistence, and check chapter read/preview/lock plus artwork-sheet actions.
+- Check desktop side-by-side layout and mobile stacked layout in Dark, Light, and Parchment themes.
+
+## 2026-07-26 05:35 Asia/Kolkata — Vibrant solid color-filled tier blocks for text-based tiles
+
+Status: DONE
+
+Area:
+- reader
+- styles
+- views
+
+Files touched:
+- `styles.css`
+- `js/subscription/views/story-reader.js`
+
+Summary:
+- Converted all text-based chapter tiles (`:not(.has-art)`) into **bold, fully filled solid color blocks** with a subtle 3D lighting/bevel gradient and high-contrast white text.
+- Aligned tier color scheme to match exact requirements:
+  - **Nemesis Tier**: Vibrant Crimson Red fill (`rgb: 225, 29, 72`, `accent: #fb7185`)
+  - **Tyrant Tier**: Rich Royal Purple fill (`rgb: 147, 51, 234`, `accent: #c084fc`)
+  - **Licker Tier**: Rich Amber / Golden Yellow fill (`rgb: 217, 119, 6`, `accent: #fbbf24`)
+  - **Free Access**: Bright Emerald Green fill (`rgb: 16, 185, 129`, `accent: #34d399`)
+- Styled internal elements on solid color tiles (badges, tier pills, kicker headers, action buttons) with crisp white text and translucent dark controls for contrast.
+- Updated `chapterTierVisual` in `js/subscription/views/story-reader.js` to map Licker to Gold, Tyrant to Purple, Nemesis to Red, and Free to Green.
+- All 16 subscription reader JS files passed `node --check` syntax verification.
+
+Remaining work:
+- None.
+
+Risks / notes:
+- None.
+
+Verification needed:
+- Open `#/` (home library feed) and `#/story/<slug>/chapters` (chapter catalog) to verify that all text-based cards are bold solid color blocks matching their tier color.
+
+## 2026-07-26 05:11 Asia/Kolkata — Versioned chapter and character image cache backfill
+
+
+Status: DONE
+
+Area:
+- admin
+- writer
+- database
+- storage
+
+Files touched:
+- `admin.html`
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Copied the 5 live chapter images to new versioned `chapter-images` paths with a one-year cache lifetime.
+- Replaced every old URL in the owning chapter content and verified the synchronized `chapter_feed_images` rows now use the new URLs.
+- Copied the 13 referenced character profile/gallery images to new versioned `characters` paths and updated all 13 database references.
+- Confirmed zero old chapter/feed or character/gallery references remain and both temporary exact-path upload policies used during maintenance were removed.
+- Future Writer uploads use unique filenames, `upsert: false`, and the explicit `31536000`-second cache configuration.
+- Future character profile and gallery uploads explicitly request the same one-year cache lifetime.
+
+Remaining work:
+- None.
+
+Risks / notes:
+- The 5 old chapter objects and 13 old character objects remain unreferenced as a rollback safety net and may be deleted later after production confidence.
+- Static HTML/CSS/JavaScript caching is controlled by the deployment host and is separate from Supabase image caching.
+
+Verification needed:
+- Open a chapter containing an inline image, reload it, and confirm the image request is served from the browser cache in DevTools.
+- Open `#/gallery`, reload it, and confirm character profile/gallery requests are served from the browser cache.
+
 ## 2026-07-26 03:35 Asia/Kolkata — Universal 3-mode theme system & contrast remediation
 
 Status: DONE
