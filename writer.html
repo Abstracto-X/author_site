@@ -1442,19 +1442,19 @@
                 <div class="flex-1 min-h-0 flex flex-col">
                     <div class="flex items-center justify-between mb-2"><label class="text-xs font-semibold text-zinc-400">Content</label><span id="context-block-word-count" class="text-[10px] text-zinc-600">0 words</span></div>
                     <div class="context-rich-toolbar">
-                        <button type="button" onclick="ContextWorkspace.formatBlock('bold')" class="context-icon-btn" title="Bold"><b>B</b></button>
-                        <button type="button" onclick="ContextWorkspace.formatBlock('italic')" class="context-icon-btn" title="Italic"><i>I</i></button>
-                        <button type="button" onclick="ContextWorkspace.formatBlock('underline')" class="context-icon-btn" title="Underline"><u>U</u></button>
-                        <button type="button" onclick="ContextWorkspace.formatBlock('insertUnorderedList')" class="context-icon-btn" title="Bullet list"><i class="fa-solid fa-list-ul"></i></button>
-                        <button type="button" onclick="ContextWorkspace.formatBlock('formatBlock','h3')" class="context-icon-btn" title="Heading"><i class="fa-solid fa-heading"></i></button>
-                        <button type="button" onclick="ContextWorkspace.formatBlock('removeFormat')" class="context-icon-btn" title="Clear formatting"><i class="fa-solid fa-eraser"></i></button>
+                        <button type="button" onmousedown="event.preventDefault()" onclick="ContextWorkspace.formatBlock('bold')" class="context-icon-btn" title="Bold"><b>B</b></button>
+                        <button type="button" onmousedown="event.preventDefault()" onclick="ContextWorkspace.formatBlock('italic')" class="context-icon-btn" title="Italic"><i>I</i></button>
+                        <button type="button" onmousedown="event.preventDefault()" onclick="ContextWorkspace.formatBlock('underline')" class="context-icon-btn" title="Underline"><u>U</u></button>
+                        <button type="button" onmousedown="event.preventDefault()" onclick="ContextWorkspace.formatBlock('insertUnorderedList')" class="context-icon-btn" title="Bullet list"><i class="fa-solid fa-list-ul"></i></button>
+                        <button type="button" onmousedown="event.preventDefault()" onclick="ContextWorkspace.formatBlock('formatBlock','h3')" class="context-icon-btn" title="Heading"><i class="fa-solid fa-heading"></i></button>
+                        <button type="button" onmousedown="event.preventDefault()" onclick="ContextWorkspace.formatBlock('removeFormat')" class="context-icon-btn" title="Clear formatting"><i class="fa-solid fa-eraser"></i></button>
                     </div>
                     <div id="context-block-content" class="context-rich-editor" contenteditable="true" spellcheck="true" oninput="ContextWorkspace.markBlockDirty()" data-placeholder="Paste or write reusable context..."></div>
                 </div>
             </div>
             <div class="px-5 py-4 border-t border-zinc-800 flex items-center gap-2">
                 <button id="context-block-delete" type="button" onclick="ContextWorkspace.deleteOpenBlock()" class="hidden px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-300 text-sm"><i class="fa-solid fa-trash mr-2"></i>Delete</button>
-                <button id="context-block-duplicate" type="button" onclick="ContextWorkspace.duplicateOpenBlock()" class="hidden px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm"><i class="fa-solid fa-copy mr-2"></i>Duplicate</button>
+                <button id="context-block-copy" type="button" onclick="ContextWorkspace.copyOpenBlock()" class="hidden px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm"><i class="fa-solid fa-clipboard mr-2"></i>Copy</button>
                 <span id="context-block-save-status" class="text-[10px] text-zinc-600 ml-auto mr-2">Saved</span>
                 <button type="button" onclick="ContextWorkspace.closeBlockEditor()" class="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm">Cancel</button>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold">Save</button>
@@ -5164,7 +5164,55 @@
             plain(value) {
                 const template = document.createElement('template');
                 template.innerHTML = value || '';
-                return (template.content.textContent || '').replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+                const blockTags = new Set(['ADDRESS', 'ARTICLE', 'ASIDE', 'BLOCKQUOTE', 'DIV', 'DL', 'FIELDSET', 'FIGCAPTION', 'FIGURE', 'FOOTER', 'FORM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEADER', 'LI', 'MAIN', 'NAV', 'OL', 'P', 'PRE', 'SECTION', 'TABLE', 'TR', 'UL']);
+                const readNode = node => {
+                    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || '';
+                    if (node.nodeType !== Node.ELEMENT_NODE) {
+                        return [...node.childNodes].map(readNode).join('');
+                    }
+                    if (node.tagName === 'BR') return '\n';
+                    if (node.tagName === 'HR') return '\n---\n';
+                    const content = [...node.childNodes].map(readNode).join('');
+                    const prefix = node.tagName === 'LI' ? '- ' : '';
+                    return blockTags.has(node.tagName) ? `${prefix}${content}\n` : content;
+                };
+                return readNode(template.content)
+                    .replace(/\u00a0/g, ' ')
+                    .replace(/[ \t]+\n/g, '\n')
+                    .replace(/\n[ \t]+/g, '\n')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+            },
+
+            markdown(value) {
+                const html = String(value || '').trim();
+                if (!html) return '';
+                if (typeof TurndownService !== 'function') return this.plain(html);
+                const service = new TurndownService({
+                    headingStyle: 'atx',
+                    emDelimiter: '*',
+                    strongDelimiter: '**',
+                    bulletListMarker: '-',
+                    codeBlockStyle: 'fenced',
+                    fence: '```'
+                });
+                service.addRule('contextUnderline', {
+                    filter: 'u',
+                    replacement: content => `<u>${content}</u>`
+                });
+                service.addRule('contextStrikethrough', {
+                    filter: ['del', 's', 'strike'],
+                    replacement: content => `~~${content}~~`
+                });
+                service.addRule('contextLineBreak', {
+                    filter: 'br',
+                    replacement: () => '\n'
+                });
+                service.addRule('contextSceneBreak', {
+                    filter: 'hr',
+                    replacement: () => '\n\n---\n\n'
+                });
+                return service.turndown(html).replace(/\n{3,}/g, '\n\n').trim();
             },
 
             wordCount(value) {
@@ -5179,7 +5227,7 @@
                     id: block.id,
                     section: block.block_type,
                     title: block.title,
-                    content: this.plain(block.content),
+                    content: this.markdown(block.content),
                     meta: block.block_type === 'scratchpad' ? 'Independent Scratchpad' : (this.labels[block.block_type] || block.block_type),
                     editable: true,
                     sort: Number(block.sort_order) || 0
@@ -5190,7 +5238,7 @@
                     id: chapter.id,
                     section: 'chapter',
                     title: `Ch. ${chapter.chapter_order}: ${chapter.title || 'Untitled'}`,
-                    content: this.plain(chapter.content),
+                    content: this.markdown(chapter.content),
                     meta: `${chapter.is_published ? 'Live' : 'Draft'}${chapter.required_tier_id ? ` · ${MockDB.tiers.find(tier => tier.id === chapter.required_tier_id)?.name || 'Tiered'}` : ' · Free'}`,
                     editable: false,
                     sort: Number(chapter.chapter_order) || 0
@@ -5202,7 +5250,7 @@
                     id: scratchpad.id,
                     section: 'scratchpad',
                     title: scratchpad.title || 'Chapter Note',
-                    content: this.plain(scratchpad.content),
+                    content: this.markdown(scratchpad.content),
                     meta: chapterById[scratchpad.chapter_id] ? `Chapter note · Chapter ${chapterById[scratchpad.chapter_id].chapter_order}` : 'Chapter note',
                     editable: false,
                     sort: Number(chapterById[scratchpad.chapter_id]?.chapter_order) || 0
@@ -5234,7 +5282,9 @@
             itemActionsHtml(item) {
                 return `<span class="context-card-actions flex">
                     <button type="button" onclick="event.stopPropagation();ContextWorkspace.editItem('${item.key}')" class="context-icon-btn" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                    <button type="button" onclick="event.stopPropagation();ContextWorkspace.duplicateItem('${item.key}')" class="context-icon-btn" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+                    ${item.itemType === 'context_block'
+                        ? `<button type="button" onclick="event.stopPropagation();ContextWorkspace.copyItem('${item.key}')" class="context-icon-btn" title="Copy rich content to clipboard"><i class="fa-solid fa-clipboard"></i></button>`
+                        : `<button type="button" onclick="event.stopPropagation();ContextWorkspace.duplicateItem('${item.key}')" class="context-icon-btn" title="Duplicate"><i class="fa-solid fa-copy"></i></button>`}
                     <button type="button" onclick="event.stopPropagation();ContextWorkspace.deleteItem('${item.key}')" class="context-icon-btn hover:text-rose-300" title="Delete"><i class="fa-solid fa-trash"></i></button>
                 </span>`;
             },
@@ -5468,6 +5518,34 @@
                 } else {
                     ChapterNotes.open(item.id);
                 }
+            },
+
+            async copyRichContent(html, label = 'Context block') {
+                const richHtml = String(html || '').trim();
+                const plainText = this.plain(richHtml);
+                if (!plainText) return UI.showToast('There is no context content to copy.', 'error');
+                try {
+                    if (navigator.clipboard?.write && window.ClipboardItem) {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({
+                                'text/html': new Blob([richHtml], { type: 'text/html' }),
+                                'text/plain': new Blob([plainText], { type: 'text/plain' })
+                            })
+                        ]);
+                    } else {
+                        await navigator.clipboard.writeText(plainText);
+                    }
+                    UI.showToast(`${label} copied with formatting.`, 'success');
+                } catch (_error) {
+                    UI.showToast('Clipboard access denied.', 'error');
+                }
+            },
+
+            async copyItem(key) {
+                const item = this.itemMap().get(key);
+                if (!item || item.itemType !== 'context_block') return;
+                const block = this.blocks.find(candidate => candidate.id === item.id);
+                if (block) await this.copyRichContent(block.content, block.title || 'Context block');
             },
 
             async duplicateItem(key) {
@@ -5866,7 +5944,7 @@
                 document.getElementById('context-block-content').innerHTML = block?.content || '';
                 document.getElementById('context-block-modal-title').textContent = block ? 'Edit context block' : 'New context block';
                 document.getElementById('context-block-delete').classList.toggle('hidden', !block);
-                document.getElementById('context-block-duplicate').classList.toggle('hidden', !block);
+                document.getElementById('context-block-copy').classList.toggle('hidden', !block);
                 this.blockEditorDirty = false;
                 this.updateBlockEditorCount();
                 document.getElementById('context-block-save-status').textContent = block ? 'Saved' : 'New block';
@@ -5938,9 +6016,10 @@
                 }
             },
 
-            duplicateOpenBlock() {
-                const id = document.getElementById('context-block-id').value;
-                if (id) this.duplicateItem(`block:${id}`);
+            async copyOpenBlock() {
+                const title = document.getElementById('context-block-title').value.trim() || 'Context block';
+                const html = document.getElementById('context-block-content').innerHTML;
+                await this.copyRichContent(html, title);
             },
 
             deleteOpenBlock() {

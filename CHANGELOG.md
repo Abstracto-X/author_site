@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-07-26 15:42 Asia/Kolkata — Writer Context formatting and clipboard fix
+
+Area: writer / context workspace
+
+Summary:
+- Prevented Context rich-toolbar buttons from stealing the editor selection before applying bold, italic, underline, list, heading, or clear-format commands.
+- Preserved rich block, chapter, and Chapter Note formatting in Context prompt preview and exports by converting stored HTML to Markdown instead of flattening every source to plain text.
+- Reworked Context plain-text extraction to preserve paragraph, heading, list-item, explicit `<br>`, horizontal-rule, and other block boundaries instead of merging them into one continuous text blob.
+- Replaced reusable context-block Duplicate controls in library cards and the block editor with rich clipboard Copy actions that provide both HTML and plain-text clipboard formats.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-26 05:47 Asia/Kolkata — Optional traditional home archive layout
 
 Area: reader / home / styles

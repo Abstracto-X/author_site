@@ -2,6 +2,37 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-07-26 15:42 Asia/Kolkata — Writer Context formatting and clipboard fix
+
+Status: NEEDS REVIEW
+
+Area:
+- writer
+- context workspace
+
+Files touched:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Context formatting commands now retain the contenteditable selection, and stored HTML is converted to Markdown for prompt preview/export instead of being flattened to plain text.
+- Plain-text extraction now inserts line boundaries for paragraphs, headings, lists, `<br>` elements, rules, and other block-level content instead of concatenating them.
+- Reusable context-block Duplicate controls were replaced with rich clipboard Copy controls in both the library card and block editor.
+
+Remaining work:
+- None in code.
+
+Risks / notes:
+- Markdown preserves headings, emphasis, lists, rules, and strikethrough; underline is retained as inline `<u>` HTML because standard Markdown has no underline syntax.
+- Clipboard rich formatting depends on browser `ClipboardItem` support and falls back to plain text where unavailable.
+
+Verification needed:
+- In Writer Context, select text and apply every toolbar format, save, close, reopen, and confirm formatting remains.
+- Select formatted sources and confirm prompt preview plus Markdown/JSON downloads retain structure.
+- Use Copy from both a reusable-block card and the editor drawer, then paste into a rich editor and a plain-text editor.
+
 ## 2026-07-26 05:47 Asia/Kolkata — Traditional home archive layout
 
 Status: NEEDS REVIEW
