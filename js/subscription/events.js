@@ -336,6 +336,10 @@ function handleAct(act, el){
       store.homeFeedLimit = (Number(store.homeFeedLimit || 10)) + 10;
       render();
       break;
+    case "home-gallery-load-more":
+      State.homeGalleryLimit = (Number(State.homeGalleryLimit || 18)) + 12;
+      render();
+      break;
     case "home-layout":
       store.homeLayout = el.dataset.homeLayout === "traditional" ? "traditional" : "multigrid";
       saveStore();

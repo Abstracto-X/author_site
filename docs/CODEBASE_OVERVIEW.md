@@ -96,7 +96,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 
 1. Browser loads `site-config.js`, Supabase CDN, and the reader modules. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
 2. `aether-app.js` bootstraps the app after all module globals exist.
-3. `auth.js` initializes the Supabase client/session and refreshes profile/entitlements when configured. If the loaded profile has `role = 'admin'`, the subscription reader exposes an admin reader override for published chapters without creating fake `user_entitlements`.
+3. `auth.js` initializes the Supabase client/session and refreshes profile, entitlements, provider connections, notification preferences, and notifications concurrently when configured. The initial Supabase `INITIAL_SESSION` callback and token-only refresh events do not repeat the already completed startup refresh/library load. Patreon OAuth callback status is consumed on startup, clears pending sync state, refreshes access, presents a safe reader message, and removes callback parameters from the URL. If the loaded profile has `role = 'admin'`, the subscription reader exposes an admin reader override for published chapters without creating fake `user_entitlements`.
 4. `backend.js` loads `site_settings.site_identity` and `site_settings.reader_behavior`, then published stories, chapter catalogs, characters, and gallery artwork from Supabase.
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
@@ -185,6 +185,14 @@ Storage expectations:
 
 Schema-change rule: if frontend code reads/writes a new table, column, RPC, or bucket, add/verify an idempotent SQL migration and reload PostgREST schema cache with `NOTIFY pgrst, 'reload schema';`.
 
+### Database operational safeguards
+
+- Ordinary AI agents connect directly through the restricted `ai_editor` role and `scripts/database/query-ai-db.ps1`, not through a cached Supabase Management API login or the production `postgres` credential.
+- `ai_editor` supports non-destructive production work (`SELECT`, `INSERT`, `UPDATE`, sequence use, and creation in `public`) while database guards reject `DELETE`, `TRUNCATE`, and destructive `DROP` operations.
+- Destructive or existing-schema work is produced as a migration and manually reviewed/executed with an owner credential.
+- `scripts/database/backup-supabase.ps1` creates validated daily PostgreSQL archives on both local `A:` and Google Drive `G:` with 30-day retention. The set covers `public`, Auth data, and Storage metadata; Supabase Storage objects themselves are outside the database backup.
+- Full operating details are in `docs/DATABASE_SAFETY.md`.
+
 ---
 
 ## 6. Current documentation set
@@ -195,6 +203,7 @@ Schema-change rule: if frontend code reads/writes a new table, column, RPC, or b
 | `docs/SUBSCRIPTION_FUNCTION_INDEX.md` | Function list for `js/subscription/*`. | Read before reader code changes; update when reader functions are added/removed/renamed/repurposed. |
 | `docs/ADMIN_FUNCTION_INDEX.md` | Function list for `admin.html`. | Read before admin code changes; update when admin functions are added/removed/renamed/repurposed. |
 | `docs/DATABASE_CONTEXT.md` | Supabase tables, policies, functions, storage. | Read before DB/storage/auth/RLS/query work; update after durable schema/policy/storage/RPC changes. |
+| `docs/DATABASE_SAFETY.md` | Restricted AI database role, backup destinations, retention, and restore boundary. | Read before direct production DB access, destructive migrations, backup changes, or recovery work. |
 | `CHANGELOG.md` | Durable completed implementation history. | Add entries only for durable completed changes. |
 | `PROJECT_STATE.md` | Active memory for unfinished/deferred/risky work. | Update for partial work, follow-ups, deferred decisions, known risks, or manual verification still needed. |
 
@@ -237,12 +246,13 @@ Manual verification is preferred over automated browser testing unless explicitl
 ## 2026-07-25 - Mixed chapter and gallery home feed
 
 - The subscription home route is story-first: a compact cinematic masthead combines cover art, reading progress/actions, primary-character artwork, a short synopsis, and live chapter/word/adult-content statistics.
-- `backend.js` loads published `characters` and `character_gallery_images` alongside the story catalog. Normalized rows are exposed as `D.CHARACTERS` and `D.GALLERY_IMAGES`; there is no local/sample gallery fallback.
-- The home archive feed merges published chapter catalog rows and non-mature published gallery images for the primary story, promotes the latest chapter as the lead feature, and renders a capped set of type-specific cards in one responsive irregular editorial grid.
-- Readers can switch the home archive between the original `Multigrid` feed and a persisted `Traditional` view. Traditional view places a newest-first, tier-color-coded chapter index beside an uncropped masonry artwork archive on desktop and stacks the two panels on narrow/mobile screens.
+- `backend.js` loads site settings, stories, characters, gallery artwork, chapter-feed images, lore, and wallpapers concurrently, then resolves each published story's chapter catalog concurrently. Normalized character/gallery rows are exposed as `D.CHARACTERS` and `D.GALLERY_IMAGES`; there is no local/sample gallery fallback.
+- The home archive feed merges published chapter catalog rows and published gallery images for the primary story, excludes mature-tagged artwork for guests/readers without active access, and includes it for admins/active-entitlement readers. It promotes the latest chapter as the lead feature and renders a capped set of type-specific cards in one responsive irregular editorial grid.
+- Readers can switch the home archive between the original `Multigrid` feed and a persisted `Traditional` view. Traditional view places a newest-first, tier-color-coded chapter index beside an uncropped access-aware masonry artwork archive on desktop and stacks the two panels on narrow/mobile screens. Its artwork DOM starts at 18 images and expands in 12-image batches for the current session.
 - Feed filters support All, Chapters, Gallery, and character-specific selections. Gallery cards open an image sheet; chapter cards preserve existing read/preview/lock behavior and tier-color semantics.
 - `chapter_feed_images` indexes image URLs already referenced or embedded in published chapter content. Valid chapter artwork is visible to all visitors and earns the larger media-led feed positions; failed external URLs gracefully become compact text tiles, and the complete chapter tile is the read/preview/access target.
-- Gallery artwork cards measure each image after load and grow to the grid-row span required to show the complete uncropped image over a blurred ambient backdrop.
+- Homepage artwork, chapter art, and hero images request width-limited Supabase Storage render URLs when the source is a public Supabase object, with an automatic original-URL fallback for projects or formats that cannot transform the image. Multigrid artwork uses one foreground image rather than painting the same source again as a blurred backdrop.
+- Mobile and reduced-motion rendering disables the fixed noise layer, viewport background blur, and fixed navigation backdrop blur to reduce compositing cost.
 - Unread chapters receive a tier-colored pulse and intermittent sheen, disabled under reduced-motion preferences.
 - Images tagged `r18`, `mature`, or `nsfw` are intentionally excluded from the general home feed. A dedicated opt-in gallery experience can expose them later.
 

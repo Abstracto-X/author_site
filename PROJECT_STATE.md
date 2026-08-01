@@ -2,6 +2,127 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-08-01 06:36 Asia/Kolkata — Entitled R18 artwork in home feeds
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- home
+
+Files touched:
+- `js/subscription/views/home-library.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- The shared homepage gallery collection now includes mature-tagged artwork for admins and readers with active entitlements, while filtering it for guests and readers without active access. Both Multigrid and Traditional layouts consume this same access-aware collection.
+
+Remaining work:
+- Manually verify the homepage as a guest, an authenticated reader without active entitlement, and an active paying reader in both layout modes.
+
+Risks / notes:
+- Mature rows still depend on the existing Supabase RLS/query visibility and entitlement refresh completed before `loadBackendLibrary()`; the frontend filter does not grant access to rows the backend did not return.
+
+Verification needed:
+- Open `#/` in both Multigrid and Traditional modes for each access state and confirm mature artwork appears only for the active-entitlement/admin states.
+
+## 2026-07-29 22:42 Asia/Kolkata — Mobile Patreon OAuth/link diagnosis
+
+Status: TODO
+
+Area:
+- reader
+- auth
+- Patreon
+- mobile
+
+Files touched:
+- `supabase/functions/_shared/cors.ts`
+- `supabase/functions/patreon-oauth-start/index.ts`
+- `supabase/functions/patreon-oauth-callback/index.ts`
+- `js/subscription/auth.js`
+- `js/subscription/views/account-access.js`
+- `ENV.example`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- The Patreon handoff uses a same-window redirect rather than a popup, so there is no direct mobile popup-blocker bug.
+- The unauthenticated Google-then-Patreon continuation depends on `store.pendingAuthAction` in browser local storage. If a mobile Patreon/Google app or embedded browser returns in a different browser context, the Supabase reader session and pending continuation may not be available even though the server-side signed Patreon state still identifies the reader.
+- `patreon-oauth-callback` returns raw JSON on denial, expired state, token exchange, identity, or sync errors instead of redirecting the reader back to the Vault with an actionable error. Mobile app switching and the 15-minute state lifetime make that failure mode more visible on phones.
+- The reader does not consume the callback's `?patreon=linked|no_matching_tier&grants=...` status. `store.providerPending` is therefore not cleared on return when no entitlement is granted, producing a permanent-looking Syncing state.
+- Vault provider status is inferred from an active entitlement rather than `provider_connections`, so a successfully linked free/no-matching-tier Patreon account is displayed as Not connected.
+- Linked-project access was restored and a broad live-data intersection was run across `provider_connections`, `entitlement_audit_log`, current Patreon tier metadata/mappings, and `user_entitlements`.
+- Live totals on 2026-07-29: 233 active Patreon connections, 24 readers without any historical `patreon_oauth_grant`, 21 without a current active Patreon entitlement, and 211 whose latest Patreon metadata contains a currently active tier matching a configured site tier.
+- The important intersection is empty: zero readers both have a currently active mapped Patreon tier and lack both a historical OAuth grant and a current active entitlement. The 21 connected readers without entitlements currently appear to be free, former, or otherwise unmapped Patreon memberships rather than missed active site-tier subscribers.
+- Edge logs still confirmed repeated HTTP 500 callback responses for an iPhone flow before a later successful redirect/connection, so the callback/mobile UX failure is real even though the current database contains no active mapped patron left without entitlement.
+- Follow-up classification found that `PATREON_CAMPAIGN_ID` is empty in the local `.env`, absent from deployed Edge Function secret names, and recorded as missing on all 233 connection metadata rows. Consequently Patreon identity sync currently collects memberships/tiers from every creator the reader supports, not only this site's Patreon campaign. This explains the large collection of unrelated paid/free tier titles in connection metadata and makes unscoped aggregate “active tier” counts misleading. Exact numeric tier-ID mappings remain specific, but title-based mappings are unnecessarily exposed to cross-creator name collisions.
+- The creator API subsequently confirmed campaign ID `16299373` for the Patreon page and all four current published tier IDs: Resident Licker `28946758`, Resident Tyrant `29035365`, Resident Nemesis `28946791`, and Resident Evil `29035411`.
+- Campaign scoping remediation completed on 2026-07-29: `PATREON_CAMPAIGN_ID=16299373` is configured locally and as a deployed Edge Function secret, all four mappings now use the verified numeric tier IDs, and all 233 active Patreon connections were resynced successfully.
+- Post-resync reconciliation found 211 current mapped paid memberships, 6 current free memberships, 16 connections with no current tier, and 212 active Patreon entitlements (including one bounded paid-through entitlement). No reader with a current mapped paid tier is missing an active entitlement.
+- Stage 1 callback reliability remediation completed on 2026-07-30: OAuth start now signs only the configured HTTPS reader return URL; callback success, denial, expired/invalid state, token exchange failure, sync failure, and malformed parameters redirect safely to `#/vault` with a short status code instead of returning raw JSON.
+- Reader startup now consumes that result, clears `providerPending`, refreshes entitlements and provider connections, removes callback parameters from the URL, and shows a reader-facing outcome. Vault connection status now reads `provider_connections`, so a linked free/no-tier Patreon account displays as connected rather than Not connected.
+
+Remaining work:
+- Add a durable server-side continuation or explicit resume screen for Google-then-Patreon when mobile browser context changes.
+
+Risks / notes:
+- `PATREON_PUBLIC_RETURN_URL` must remain the real HTTPS reader origin; a wrong value would safely redirect readers to the wrong Vault rather than expose raw OAuth errors.
+- Mobile complaints still benefit from the affected URL/browser context and approximate time for Edge-log correlation. Database audit rows alone cannot count failures that occur before the callback writes a connection/audit row.
+- Campaign-scoped database comparisons are now reliable as of the completed 2026-07-29 bulk resync. Patreon dashboard totals can still differ slightly because dashboard membership categories and database entitlement status are not identical.
+
+Verification needed:
+- Test signed-in flows on iOS Safari and Android Chrome, plus a Patreon/embedded in-app browser.
+- Cover approve, deny, no-matching-tier, expired-state, invalid-state, token-exchange failure, and sync-failure returns; confirm each lands on `#/vault`, clears Syncing, and shows the appropriate message.
+- Test a linked free/no-tier account and confirm Vault shows Connected - no active site tier rather than Not connected.
+- Stage 2 still needs cross-browser/app-switch recovery and durable callback failure diagnostics.
+
+## 2026-07-29 03:19 Asia/Kolkata — Homepage performance diagnosis
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- home
+- performance
+
+Files touched:
+- `js/subscription/auth.js`
+- `js/subscription/backend.js`
+- `js/subscription/state.js`
+- `js/subscription/events.js`
+- `js/subscription/views/home-library.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Independent library queries and per-story chapter-catalog RPCs now run concurrently, and signed-in profile/entitlement/notification requests are grouped into one concurrent account refresh.
+- Supabase `INITIAL_SESSION`, token-refresh, and duplicate same-session sign-in callbacks no longer repeat the already completed startup refresh/library load.
+- Traditional mode now renders 18 artwork tiles initially and expands in 12-image session batches; its hidden Multigrid branch no longer constructs image cards.
+- Homepage hero, chapter, and gallery images use width-limited Supabase Storage render URLs with original-URL fallback; the duplicated blurred gallery backdrop was removed.
+- Mobile and reduced-motion rendering disables the fixed noise layer, viewport background blur, and fixed navigation backdrop blur.
+
+Remaining work:
+- Capture production guest and signed-in traces to quantify the improvement.
+- A later optimization can eliminate or batch `sizeHomeGalleryTiles()` layout measurements and consolidate older duplicate homepage CSS generations; these were outside the requested items 1–6.
+
+Risks / notes:
+- Supabase image transformations depend on project/format support; each transformed homepage image falls back to its original public object URL if the render endpoint fails.
+- External HTTP(S) artwork cannot be resized by Supabase and continues to use its original URL.
+
+Verification needed:
+- Capture a production Performance/Network trace for guest and signed-in sessions in both Multigrid and Traditional modes.
+- Compare request waterfall, transferred image bytes, decoded image memory, LCP, long tasks, layout shifts, and scroll-frame stability before and after optimization.
+
 ## 2026-07-26 15:42 Asia/Kolkata — Writer Context formatting and clipboard fix
 
 Status: NEEDS REVIEW
@@ -743,7 +864,7 @@ Summary:
 Remaining work:
 - Review whether Patreon-native webhook payloads should be parsed directly instead of requiring the current normalized `provider`, `provider_user_id`, `provider_tier_id`, and `status` payload shape.
 - If needed, update `provider-webhook` to verify Patreon signatures and map Patreon webhook events to entitlement grants/revokes.
-- Replace the temporary title-based Patreon mappings for `Resident Tyrant` and `Resident Evil` with numeric Patreon tier IDs once those IDs are known.
+- Completed 2026-07-29: all four Patreon mappings now use verified numeric tier IDs and campaign `16299373` is enforced during identity sync.
 
 Risks / notes:
 - OAuth + manual resync should use deployed `patreon-oauth-*` and `sync-provider-entitlements`.

@@ -2,6 +2,14 @@
 
 Generated from the current codebase. One-line descriptions are intentionally concise so agents can quickly locate ownership before editing.
 
+Recent Patreon callback reliability changes:
+
+| File | Function | Purpose |
+|---|---|---|
+| `js/subscription/auth.js` | `refreshProviderConnections()` / `providerConnection()` / `providerIsConnected()` | Loads the signed-in reader's own provider connection rows and keeps connection state independent from paid entitlements. |
+| `js/subscription/auth.js` | `readPatreonCallbackResult()` / `cleanPatreonCallbackUrl()` / `showPatreonCallbackResult()` | Consumes safe Patreon callback status codes, clears pending state, removes callback parameters, and displays a clear outcome. |
+| `js/subscription/views/account-access.js` | `VIEWS.vault()` | Shows an active Patreon connection as connected even if it has no active site entitlement. |
+
 Recent CMS rebuild reader changes:
 
 | File | Function | Purpose |
@@ -77,13 +85,16 @@ Recent reader notification/profile changes:
 | 32 | `refreshProfile()` | Loads fresh data/state from Supabase or local runtime state. |
 | 45 | `persona()` | Helper used by this module. |
 | 53 | `refreshEntitlements()` | Loads fresh data/state from Supabase or local runtime state. |
+| n/a | `refreshProviderConnections()` / `providerConnection()` / `providerIsConnected()` | Loads and resolves the reader's own provider connection status. |
+| n/a | `readPatreonCallbackResult()` / `cleanPatreonCallbackUrl()` / `showPatreonCallbackResult()` | Handles safe Patreon callback status feedback and cleanup. |
 | 76 | `authRedirectUrl()` | Coordinates authentication/session behavior. |
 | 82 | `mergeOAuthParams(target, raw)` | Coordinates authentication/session behavior. |
 | 91 | `oauthCallbackParams()` | Coordinates authentication/session behavior. |
 | 102 | `cleanHashRoute(hash, fallbackRoute = "vault")` | Coordinates navigation or route rendering. |
 | 113 | `cleanOAuthCallbackUrl()` | Coordinates authentication/session behavior. |
 | 120 | `consumeOAuthCallback(client)` | Coordinates authentication/session behavior. |
-| 144 | `initAuth()` | Coordinates authentication/session behavior. |
+| n/a | `refreshReaderAccountState()` | Refreshes profile, entitlements, notification preferences, and notifications concurrently for the current session. |
+| 144 | `initAuth()` | Coordinates authentication/session behavior while ignoring duplicate `INITIAL_SESSION`, token-refresh, and same-session sign-in callbacks. |
 | 185 | `signInWithPassword(email, password)` | Coordinates authentication/session behavior. |
 | 200 | `signUpWithPassword(email, password)` | Coordinates authentication/session behavior. |
 | 213 | `sendPasswordReset(email)` | Coordinates authentication/session behavior. |
@@ -204,7 +215,8 @@ Recent reader notification/profile changes:
 | 456 | `refreshReaderNotifications(options = {})` | Reloads signed-in reader alerts and updates the notification view or top-bar bell when changed. |
 | 467 | `startReaderNotificationPolling()` | Refreshes alerts every minute while visible and whenever the tab becomes visible again. |
 | 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
-| 119 | `loadBackendLibrary(options = {})` | Loads fresh data/state from Supabase or local runtime state. |
+| n/a | `loadOptionalBackendRows(label, request)` | Resolves an optional Supabase reader query to rows while preserving the existing soft-failure behavior. |
+| 119 | `loadBackendLibrary(options = {})` | Loads independent reader datasets and per-story chapter catalogs concurrently, then normalizes them into runtime state. |
 | 168 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
 | 520 | `incrementChapterViews(chapterId)` | Increments the views count of a chapter in the database using a SECURITY DEFINER RPC. |
 
@@ -277,9 +289,12 @@ Recent reader notification/profile changes:
 | Line | Function | Purpose |
 |---:|---|---|
 | n/a | `homeSafeMediaUrl(value)` | Allows only HTTP(S) gallery media URLs before rendering them in the home feed or image sheet. |
-| n/a | `homeIsMatureGalleryImage(image)` | Detects explicitly mature gallery tags so those images stay out of the general home feed. |
+| n/a | `homeThumbnailUrl(value, width)` | Converts public Supabase Storage object URLs to width-limited image-render URLs while leaving other HTTP(S) sources unchanged. |
+| n/a | `homeThumbnailFailed(image)` | Falls back from a failed transformed thumbnail to its original media URL, then hides an unavailable image. |
+| n/a | `homeCanViewMatureGallery()` | Checks whether the current reader is an admin or has an active entitlement that permits mature gallery artwork on the home feed. |
+| n/a | `homeIsMatureGalleryImage(image)` | Detects explicitly mature gallery tags so those images stay out of the home feed for guests and readers without active access. |
 | n/a | `homeFeedDate(value)` | Normalizes feed timestamps for newest-first sorting. |
-| n/a | `homeGalleryItems(story)` | Builds the complete newest-first, non-mature gallery collection used by the traditional masonry panel and capped mixed feed. |
+| n/a | `homeGalleryItems(story)` | Builds the complete newest-first gallery collection used by the traditional masonry panel and capped mixed feed, including mature artwork for admins/active-entitlement readers. |
 | n/a | `homeFeedItems(story)` | Merges real chapter catalog rows and published gallery rows into the primary story home feed. |
 | n/a | `homeFeedFilterLabel(value)` | Resolves human-readable labels for home feed filters. |
 | n/a | `homeFeedLayoutClass(index, type, hasArtwork)` | Assigns compact text or media-led span patterns for the mixed feed. |
@@ -287,7 +302,7 @@ Recent reader notification/profile changes:
 | n/a | `homeFeedImageFailed(image)` | Converts an unavailable chapter-art tile back into a compact text tile. |
 | n/a | `homeFeedGalleryCard(item, index)` | Renders an image-led gallery tile for the mixed archive feed. |
 | n/a | `homeTraditionalChapterRow(item)` | Renders a newest-first chapter index row with tier, availability, date, word-count, read-time, and read-state metadata. |
-| n/a | `homeTraditionalGalleryCard(item)` | Renders an uncropped masonry artwork tile for the traditional split view. |
+| n/a | `homeTraditionalGalleryCard(item)` | Renders an uncropped thumbnail-backed masonry artwork tile for the traditional split view, whose DOM is expanded in batches. |
 | n/a | `sizeHomeGalleryTiles()` | Measures loaded gallery artwork and expands its grid-row span so the complete image remains visible. |
 | n/a | `homeGalleryImageSheet(url, caption, character)` | Builds the focused image sheet opened from a home gallery tile. |
 | 86 | `accessBanner(kind,title,sub,link,label)` | Helper used by this module. |

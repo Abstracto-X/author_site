@@ -375,17 +375,47 @@ function homeSafeMediaUrl(value){
     return "";
   }
 }
+function homeThumbnailUrl(value, width = 720){
+  const fullUrl = homeSafeMediaUrl(value);
+  if (!fullUrl) return "";
+  try {
+    const url = new URL(fullUrl);
+    const objectPath = "/storage/v1/object/public/";
+    if (!url.pathname.includes(objectPath)) return fullUrl;
+    url.pathname = url.pathname.replace(objectPath, "/storage/v1/render/image/public/");
+    url.searchParams.set("width", String(Math.max(240, Math.min(1200, Number(width) || 720))));
+    url.searchParams.set("quality", "72");
+    url.searchParams.set("resize", "contain");
+    return url.href;
+  } catch (_) {
+    return fullUrl;
+  }
+}
+function homeThumbnailFailed(image){
+  const fallback = homeSafeMediaUrl(image?.dataset?.fullSrc);
+  if (fallback && image.src !== fallback) {
+    image.dataset.fullSrc = "";
+    image.src = fallback;
+    return true;
+  }
+  if (image) image.hidden = true;
+  return false;
+}
+function homeCanViewMatureGallery(){
+  return isAdmin() || activeEntitlements().length > 0;
+}
 function homeIsMatureGalleryImage(image){
-  const mature = new Set(["r18", "mature", "nsfw"]);
-  return (image.image_tags || []).some(tag => mature.has(String(tag || "").toLowerCase()));
+  const mature = new Set(["r18", "mature", "nsfw", "18+"]);
+  return (image.image_tags || []).some(tag => mature.has(String(tag || "").toLowerCase().trim()));
 }
 function homeFeedDate(value){
   const stamp = new Date(value || 0).getTime();
   return Number.isFinite(stamp) ? stamp : 0;
 }
 function homeGalleryItems(story){
+  const canViewMature = homeCanViewMatureGallery();
   const galleryItems = (D.GALLERY_IMAGES || [])
-    .filter(image => image.story_id === story.id && !homeIsMatureGalleryImage(image))
+    .filter(image => image.story_id === story.id && (canViewMature || !homeIsMatureGalleryImage(image)))
     .map(image => ({
       id:`gallery-${image.id}`,
       type:"gallery",
@@ -482,6 +512,7 @@ function homeFeedChapterCard(item, index){
   const feedImage = (ch.feed_images || []).find(image => homeSafeMediaUrl(image.image_url));
   // Chapter media is intentionally public in this feed: it is a visual index, not gated prose.
   const artUrl = homeSafeMediaUrl(feedImage?.image_url);
+  const artThumbnailUrl = homeThumbnailUrl(artUrl, 960);
   const progress = Number(store.progress[ch.id]?.pct || 0);
   const isRead = store.readMarked[ch.id] || progress >= 100;
   const unread = !isRead && progress <= 0;
@@ -489,7 +520,7 @@ function homeFeedChapterCard(item, index){
   const leadClass = artUrl && index === 0 ? "is-featured" : "";
   const layoutClass = `${homeFeedLayoutClass(index, "chapter", !!artUrl)} ${leadClass} ${artUrl?"has-art":""} ${readClass}`;
   return `<button class="archive-feed-card archive-chapter-card ${layoutClass} chapter-access-coded" style="${chapterTierStyle(ch)}--unread-delay:-${(index%5)*1.1}s" ${action} data-feed-image-count="${(ch.feed_images || []).length}" aria-label="${esc(accessLabel)}: ${esc(displayTitle)}">
-    ${artUrl?`<img class="archive-chapter-art" src="${esc(artUrl)}" alt="" loading="${index===0?"eager":"lazy"}" decoding="async" onerror="homeFeedImageFailed(this)"><div class="archive-chapter-shade"></div>`:""}
+    ${artUrl?`<img class="archive-chapter-art" src="${esc(artThumbnailUrl)}" data-full-src="${artThumbnailUrl!==artUrl?esc(artUrl):""}" alt="" loading="${index===0?"eager":"lazy"}" decoding="async" onerror="homeFeedImageFailed(this)"><div class="archive-chapter-shade"></div>`:""}
     <div class="archive-card-glow"></div>
     <div class="archive-card-body">
       <div class="archive-chapter-copy">
@@ -507,6 +538,7 @@ function homeFeedChapterCard(item, index){
   </button>`;
 }
 function homeFeedImageFailed(image){
+  if (homeThumbnailFailed(image)) return;
   const card = image.closest(".archive-chapter-card");
   if (!card) return;
   const mediaClass = [...card.classList].find(name => name.startsWith("feed-media-"));
@@ -524,11 +556,11 @@ function homeFeedGalleryCard(item, index){
   if (!url) return "";
   const character = image.character?.name || "Gallery";
   const caption = image.caption || `${character} artwork`;
+  const thumbnailUrl = homeThumbnailUrl(url, 800);
   const tagLine = image.image_tags?.length ? image.image_tags.slice(0,2).join(" · ") : "New artwork";
   return `<article class="archive-feed-card archive-gallery-card ${homeFeedLayoutClass(index, "gallery", true)}">
     <button class="archive-gallery-open" data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
-      <span class="archive-gallery-backdrop" style="background-image:url('${esc(url).replace(/'/g,"%27")}')"></span>
-      <img class="archive-gallery-image" src="${esc(url)}" alt="${esc(caption)}" loading="lazy" decoding="async">
+      <img class="archive-gallery-image" src="${esc(thumbnailUrl)}" data-full-src="${thumbnailUrl!==url?esc(url):""}" alt="${esc(caption)}" loading="lazy" decoding="async" onerror="homeThumbnailFailed(this)">
       <span class="archive-image-shade"></span>
       <span class="archive-card-badge">${I.spark} Gallery</span>
       <span class="archive-gallery-copy"><small>${esc(tagLine)}</small><strong>${esc(caption)}</strong><span>${esc(character)}</span></span>
@@ -573,9 +605,10 @@ function homeTraditionalGalleryCard(item){
   if (!url) return "";
   const character = image.character?.name || image.character_name || "Gallery";
   const caption = image.caption || `${character} artwork`;
+  const thumbnailUrl = homeThumbnailUrl(url, 560);
   return `<article class="traditional-gallery-card">
     <button data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
-      <img src="${esc(url)}" alt="${esc(caption)}" loading="lazy" decoding="async">
+      <img src="${esc(thumbnailUrl)}" data-full-src="${thumbnailUrl!==url?esc(url):""}" alt="${esc(caption)}" loading="lazy" decoding="async" onerror="homeThumbnailFailed(this)">
       <span class="traditional-gallery-overlay"><small>${esc(character)}</small><strong>${esc(caption)}</strong></span>
     </button>
   </article>`;
@@ -628,6 +661,7 @@ VIEWS.home = function(){
   const readPercent = primary.chapters.length ? Math.round(readCount / primary.chapters.length * 100) : 0;
   const primaryCharacter = (D.CHARACTERS || []).find(character => character.story_id === primary.id && character.profile_image_url);
   const heroArtUrl = homeSafeMediaUrl(primaryCharacter?.profile_image_url || primary.background_image_url);
+  const heroThumbnailUrl = homeThumbnailUrl(heroArtUrl, 960);
   const heroSummary = String(primary.premise || primary.tagline || "A premium serial fiction archive.")
     .replace(/<[^>]*>/g," ")
     .replace(/\s+/g," ")
@@ -660,6 +694,9 @@ VIEWS.home = function(){
   const visibleItems = filteredItems.slice(0, feedLimit);
   const hasMoreFeed = filteredItems.length > feedLimit;
   const homeLayout = store.homeLayout === "traditional" ? "traditional" : "multigrid";
+  const traditionalGalleryLimit = Math.max(18, Number(State.homeGalleryLimit || 18));
+  const visibleTraditionalGallery = traditionalGallery.slice(0, traditionalGalleryLimit);
+  const hasMoreTraditionalGallery = traditionalGallery.length > traditionalGalleryLimit;
   const traditionalContent = `<div class="traditional-home-split">
     <section class="traditional-chapters-panel">
       <div class="traditional-panel-head"><div><span class="eyebrow">Story index</span><h2>Latest Chapters</h2></div><span>${traditionalChapters.length} total</span></div>
@@ -671,7 +708,8 @@ VIEWS.home = function(){
     <section class="traditional-gallery-panel">
       <div class="traditional-panel-head"><div><span class="eyebrow">Visual archive</span><h2>Artwork</h2></div><span>${traditionalGallery.length} images</span></div>
       ${traditionalGallery.length
-        ? `<div class="traditional-masonry">${traditionalGallery.map(homeTraditionalGalleryCard).join("")}</div>`
+        ? `<div class="traditional-masonry">${visibleTraditionalGallery.map(homeTraditionalGalleryCard).join("")}</div>
+           ${hasMoreTraditionalGallery ? `<button class="traditional-panel-link" data-act="home-gallery-load-more">Load more artwork (${traditionalGallery.length - traditionalGalleryLimit} remaining) ${I.chevR}</button>` : ""}`
         : `<div class="archive-feed-empty">${I.spark}<h3>No artwork yet</h3><p>Published gallery images will appear here automatically.</p></div>`}
     </section>
   </div>`;
@@ -697,7 +735,7 @@ VIEWS.home = function(){
           </div>
         </div>
         <div class="archive-hero-art ${heroArtUrl?"has-image":""}">
-          ${heroArtUrl?`<img src="${esc(heroArtUrl)}" alt="" loading="eager" decoding="async">`:""}
+          ${heroArtUrl?`<img src="${esc(heroThumbnailUrl)}" data-full-src="${heroThumbnailUrl!==heroArtUrl?esc(heroArtUrl):""}" alt="" loading="eager" decoding="async" onerror="homeThumbnailFailed(this)">`:""}
         </div>
         <div class="archive-hero-details">
           <p>${esc(heroSummary)}${heroSummary.length>=230?"…":""}</p>
@@ -726,7 +764,7 @@ VIEWS.home = function(){
         ${selectedFilter!=="all"?`<span>${esc(homeFeedFilterLabel(selectedFilter))} · ${filteredItems.length}</span>`:""}
       </div>
 
-      ${visibleItems.length
+      ${homeLayout==="multigrid" && visibleItems.length
         ? `<div class="archive-feed-grid">${visibleItems.map((item,index) => item.type === "gallery" ? homeFeedGalleryCard(item,index) : homeFeedChapterCard(item,index)).join("")}</div>
            ${hasMoreFeed ? `
              <div class="archive-feed-loadmore">

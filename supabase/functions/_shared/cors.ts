@@ -39,7 +39,11 @@ export const signState = async (payload: Record<string, unknown>, secret: string
   return `${body}.${toBase64Url(signature)}`;
 };
 
-export const verifyState = async (state: string, secret: string) => {
+export const verifyState = async (
+  state: string,
+  secret: string,
+  options: { allowExpired?: boolean } = {},
+) => {
   const [body, signature] = state.split('.');
   if (!body || !signature) throw new Error('Invalid OAuth state.');
   const encoder = new TextEncoder();
@@ -47,7 +51,7 @@ export const verifyState = async (state: string, secret: string) => {
   const expected = toBase64Url(new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(body))));
   if (expected !== signature) throw new Error('OAuth state signature mismatch.');
   const decoded = JSON.parse(new TextDecoder().decode(fromBase64Url(body)));
-  if (typeof decoded?.issuedAt === 'number' && Date.now() - decoded.issuedAt > 15 * 60 * 1000) {
+  if (!options.allowExpired && typeof decoded?.issuedAt === 'number' && Date.now() - decoded.issuedAt > 15 * 60 * 1000) {
     throw new Error('OAuth state expired. Please start Patreon connect again.');
   }
   return decoded;

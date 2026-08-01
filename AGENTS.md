@@ -128,6 +128,13 @@ Verification needed:
    - Plain browser JavaScript, HTML, CSS, Supabase JS via CDN.
    - Do not add React/Vue/Angular, bundlers, npm runtime dependencies, or new CDN scripts without explicit approval.
 
+7. **Use the restricted production database role for AI work.**
+   - Direct AI database queries must use `scripts/database/query-ai-db.ps1`, which loads `SUPABASE_AI_DB_URL`.
+   - The `ai_editor` role permits `SELECT`, `INSERT`, `UPDATE`, and creation in `public`, but blocks `DELETE`, `TRUNCATE`, and destructive `DROP` operations.
+   - Do not log in to the Supabase CLI, restore owner/service-role credentials, or run `supabase db query --linked` as part of ordinary AI work.
+   - For destructive or existing-schema work, create a timestamped migration, explain its impact, and stop for the site owner to review and run it manually.
+   - See `docs/DATABASE_SAFETY.md` for the backup and credential boundary.
+
 ---
 
 ## Current architecture notes
@@ -185,12 +192,12 @@ node --check js/subscription/views/account-access.js
 node --check js/subscription/views/help-support.js
 node --check js/subscription/views/studio-preview.js
 
-# Supabase linked project sanity checks
-supabase db query --linked "select id, slug, title, is_published from public.stories order by created_at desc limit 5;" -o table
-supabase db query --linked "select * from public.get_chapter_catalog('<story_uuid>'::uuid);" -o table
+# Restricted production database sanity checks
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/database/query-ai-db.ps1 -Query "select id, slug, title, is_published from public.stories order by created_at desc limit 5;"
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/database/query-ai-db.ps1 -Query "select * from public.get_chapter_catalog('<story_uuid>'::uuid);"
 
 # Schema inventory if schema-cache errors appear
-supabase db query --linked "select table_name, column_name from information_schema.columns where table_schema='public' order by table_name, ordinal_position;" -o json
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/database/query-ai-db.ps1 -Query "select table_name, column_name from information_schema.columns where table_schema='public' order by table_name, ordinal_position;"
 ```
 
 Manual browser verification is preferred over automated browser sessions unless the user explicitly asks for browser testing.

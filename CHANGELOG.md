@@ -1,5 +1,109 @@
 # Changelog
 
+## 2026-08-01 06:36 Asia/Kolkata - Entitled R18 artwork in home feeds
+
+Area: reader / home
+
+Summary:
+- Updated the shared home gallery collection so mature-tagged artwork is included for admins and readers with an active entitlement, while guests and readers without active access continue to receive only non-mature artwork.
+- The access-aware collection feeds both the Multigrid and Traditional home layouts, and recognizes `r18`, `mature`, `nsfw`, and `18+` tags consistently.
+
+Files changed:
+- `js/subscription/views/home-library.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-07-30 16:40 Asia/Kolkata - Restricted AI database access and dual local backups
+
+Area: database / operations / safeguards
+
+Summary:
+- Added and applied the restricted `ai_editor` PostgreSQL login for direct AI work. It can read, insert, update, use sequences, and create in `public`, while existing-table `DELETE`/`TRUNCATE` privileges and destructive `DROP` commands are blocked.
+- Added database event/statement guards so tables created by `ai_editor` automatically reject that role's `DELETE` and `TRUNCATE` attempts.
+- Rotated the production database password, DPAPI-encrypted the owner/access/service credentials outside the repository, removed them from `.env`, logged the Supabase CLI out, and left only the restricted `SUPABASE_AI_DB_URL` for ordinary agent access.
+- Installed PostgreSQL 18 client tools and added validated custom-format backups for public schema/data, Auth data, and Storage metadata.
+- Created and verified identical backup sets on `A:\Author Site Backups` and `G:\My Drive\Author Site Backups`, with SHA-256 manifests and 30-day retention.
+- Registered `Author Site Supabase Backup` in Windows Task Scheduler for 03:00 daily with start-when-available behavior.
+- Verified the first automatic run at 03:00 on 2026-07-31 completed with task result `0`; all three archives, the manifest, and finalized log matched byte-for-byte between A: and G:.
+- Added a restricted query helper and documented the database safety boundary and manual destructive-migration workflow.
+
+Files changed:
+- `AGENTS.md`
+- `ENV.example`
+- `database/sql/2026-07-30_add_ai_database_safeguards.sql`
+- `supabase/migrations/20260730103000_add_ai_database_safeguards.sql`
+- `scripts/database/backup-supabase.ps1`
+- `scripts/database/query-ai-db.ps1`
+- `docs/DATABASE_SAFETY.md`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+
+## 2026-07-30 01:58 Asia/Kolkata - Patreon OAuth callback recovery and Vault connection status
+
+Area: reader / Edge Functions / Patreon
+
+Summary:
+- Locked OAuth return destinations to the deployed HTTPS reader origin and made Patreon callback outcomes redirect to `#/vault` with safe status codes instead of exposing raw Edge Function errors.
+- Added explicit reader handling for linked, no-tier, cancelled, expired, invalid-state, token-exchange, sync, provider, and generic callback failures; pending Syncing state is cleared, account data refreshes, feedback is shown, and callback parameters are removed from the URL.
+- Loaded `provider_connections` for the signed-in reader and changed Vault to show active Patreon connections independently of active paid entitlements.
+
+Files changed:
+- `supabase/functions/_shared/cors.ts`
+- `supabase/functions/patreon-oauth-start/index.ts`
+- `supabase/functions/patreon-oauth-callback/index.ts`
+- `js/subscription/auth.js`
+- `js/subscription/views/account-access.js`
+- `ENV.example`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-29 23:49 Asia/Kolkata — Patreon campaign scoping and entitlement reconciliation
+
+Area: database / Edge Functions / Patreon
+
+Summary:
+- Scoped Patreon identity sync to creator campaign `16299373` through the deployed `PATREON_CAMPAIGN_ID` secret.
+- Replaced all Patreon tier mappings with creator-API-verified numeric IDs for Resident Licker, Tyrant, Nemesis, and Evil.
+- Added a service-role-only `user_id` path to `sync-provider-entitlements` for controlled bulk reconciliation while preserving the normal signed-in reader path.
+- Resynced all 233 active Patreon connections successfully. Final reconciliation found 211 current mapped paid memberships, 6 free memberships, 16 connections with no current tier, 212 active Patreon entitlements, and zero current mapped paid members missing entitlement.
+
+Files changed:
+- `database/sql/2026-07-29_patreon_campaign_tier_ids.sql`
+- `supabase/migrations/20260729233500_patreon_campaign_tier_ids.sql`
+- `supabase/functions/sync-provider-entitlements/index.ts`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-07-29 03:32 Asia/Kolkata — Homepage startup and rendering performance
+
+Area: reader / home / auth / styles
+
+Summary:
+- Parallelized the independent site-settings, story, character, gallery, chapter-image, lore, and wallpaper requests, plus per-story chapter-catalog RPCs.
+- Parallelized signed-in account-state requests and prevented Supabase initial-session, token-refresh, and duplicate same-session sign-in callbacks from repeating the startup library refresh.
+- Limited the Traditional artwork DOM to 18 initial images with 12-image session batches and stopped constructing hidden Multigrid image cards while Traditional mode is active.
+- Added width-limited Supabase Storage render URLs for homepage hero, chapter, and gallery artwork with automatic original-image fallback.
+- Removed the second blurred copy from Multigrid gallery cards.
+- Disabled fixed noise, viewport background blur, and fixed navigation backdrop blur on mobile and for reduced-motion users.
+
+Files changed:
+- `js/subscription/auth.js`
+- `js/subscription/backend.js`
+- `js/subscription/state.js`
+- `js/subscription/events.js`
+- `js/subscription/views/home-library.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-07-26 15:42 Asia/Kolkata — Writer Context formatting and clipboard fix
 
 Area: writer / context workspace

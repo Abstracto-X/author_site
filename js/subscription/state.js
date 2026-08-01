@@ -68,6 +68,7 @@ const State = window.State || {
   currentGalleryImages: [],
   latestGalleryImages: [],
   imageVotes: {},
-  lightboxIndex: -1
+  lightboxIndex: -1,
+  homeGalleryLimit: 18
 };
 window.State = State;

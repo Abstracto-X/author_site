@@ -5,7 +5,7 @@
 const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || "";
 const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || "";
 let sbClient = null;
-const authState = { user:null, session:null, profile:null, entitlements:[], ready:false, error:null, passwordRecovery:false };
+const authState = { user:null, session:null, profile:null, entitlements:[], providerConnections:[], ready:false, error:null, passwordRecovery:false };
 function getSupabase(){
   if (sbClient) return sbClient;
   if (!configuredSupabase()) return null;
@@ -112,6 +112,63 @@ async function refreshEntitlements(){
   }
   return authState.entitlements;
 }
+async function refreshProviderConnections(){
+  const client = getSupabase();
+  if (!client || !authState.user) { authState.providerConnections = []; return []; }
+  try {
+    const { data, error } = await client
+      .from("provider_connections")
+      .select("provider, provider_account_label, status, last_synced_at, created_at, updated_at")
+      .eq("user_id", authState.user.id);
+    if (error) throw error;
+    authState.providerConnections = Array.isArray(data) ? data : [];
+  } catch (err) {
+    authState.providerConnections = [];
+    authState.error = err;
+  }
+  return authState.providerConnections;
+}
+function providerConnection(provider){
+  const key = String(provider || "").toLowerCase();
+  return (authState.providerConnections || []).find(connection => String(connection?.provider || "").toLowerCase() === key) || null;
+}
+function providerIsConnected(provider){
+  return String(providerConnection(provider)?.status || "").toLowerCase() === "active";
+}
+const PATREON_CALLBACK_STATUSES = new Set([
+  "linked", "no_matching_tier", "cancelled", "expired_state", "invalid_state",
+  "missing_parameters", "token_exchange_failed", "sync_failed", "provider_error", "callback_failed"
+]);
+function readPatreonCallbackResult(){
+  const params = oauthCallbackParams();
+  const status = String(params.get("patreon") || "").trim();
+  if (!PATREON_CALLBACK_STATUSES.has(status)) return null;
+  const grants = Math.max(0, Number.parseInt(params.get("grants") || "0", 10) || 0);
+  return { status, grants };
+}
+function cleanPatreonCallbackUrl(){
+  const url = new URL(window.location.href);
+  url.searchParams.delete("patreon");
+  url.searchParams.delete("grants");
+  url.hash = cleanHashRoute(url.hash, "vault");
+  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+}
+function showPatreonCallbackResult(result){
+  const messages = {
+    linked: ["Patreon connected", result.grants ? "Your access was updated." : "Your Patreon account was linked."],
+    no_matching_tier: ["Patreon connected", "No active paid site tier was found for this Patreon account."],
+    cancelled: ["Patreon connection cancelled", "No changes were made. You can try again whenever you are ready."],
+    expired_state: ["Patreon session expired", "Please start the connection again from the Vault."],
+    invalid_state: ["Patreon connection could not be verified", "Please start the connection again from the Vault."],
+    missing_parameters: ["Patreon connection incomplete", "Please start the connection again from the Vault."],
+    token_exchange_failed: ["Patreon connection failed", "Patreon did not complete the handoff. Please try again."],
+    sync_failed: ["Patreon connected, but sync failed", "Please try syncing again from the Vault."],
+    provider_error: ["Patreon connection failed", "Patreon returned an error. Please try again."],
+    callback_failed: ["Patreon connection failed", "Please try again from the Vault."],
+  };
+  const [title, detail] = messages[result.status] || messages.callback_failed;
+  toast(title, detail, { icon: result.status === "linked" || result.status === "no_matching_tier" ? "checkCirc" : "alert", kind: result.status === "linked" || result.status === "no_matching_tier" ? "good" : "bad", ms:7000 });
+}
 async function uploadReaderAvatar(file){
   const client = getSupabase();
   if (!client || !authState.user) throw new Error("Sign in before changing your avatar.");
@@ -216,10 +273,20 @@ async function consumeOAuthCallback(client){
   cleanOAuthCallbackUrl();
   return data?.session || null;
 }
+async function refreshReaderAccountState(){
+  await Promise.all([
+    refreshProfile(),
+    refreshEntitlements(),
+    refreshProviderConnections(),
+    authState.user && typeof loadNotificationPreferences === "function" ? loadNotificationPreferences() : Promise.resolve(),
+    authState.user && typeof loadReaderNotifications === "function" ? loadReaderNotifications() : Promise.resolve()
+  ]);
+}
 async function initAuth(){
   const client = getSupabase();
   if (!client) { authState.ready = true; authState.error = new Error("Supabase setup required: set supabase.url and supabase.anonKey in js/subscription/site-config.js."); return; }
   try {
+    const patreonCallback = readPatreonCallbackResult();
     const callbackSession = await consumeOAuthCallback(client);
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -227,24 +294,33 @@ async function initAuth(){
     authState.user = authState.session?.user || null;
     if (!authState.user) authState.passwordRecovery = false;
     store.email = authState.user?.email || "";
-    await refreshProfile();
-    await refreshEntitlements();
-    if (authState.user && typeof loadNotificationPreferences === "function") await loadNotificationPreferences();
-    if (authState.user && typeof loadReaderNotifications === "function") await loadReaderNotifications();
+    await refreshReaderAccountState();
+    if (patreonCallback) {
+      store.providerPending = false;
+      saveStore();
+      if (authState.user && typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
+      cleanPatreonCallbackUrl();
+      setTimeout(() => showPatreonCallbackResult(patreonCallback), 0);
+    }
     if (authState.user && store.pendingAuthAction === "connect-patreon") {
       store.pendingAuthAction = "";
       saveStore();
       setTimeout(() => connectPatreonGo(), 450);
     }
-    client.auth.onAuthStateChange(async (_event, session) => {
+    client.auth.onAuthStateChange(async (event, session) => {
+      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+        authState.session = session || authState.session;
+        authState.user = authState.session?.user || null;
+        store.email = authState.user?.email || "";
+        return;
+      }
+      const sameSession = authState.session?.access_token && authState.session.access_token === session?.access_token;
+      if (event === "SIGNED_IN" && sameSession) return;
       authState.session = session || null;
       authState.user = session?.user || null;
       if (!authState.user) authState.passwordRecovery = false;
       store.email = authState.user?.email || "";
-      await refreshProfile();
-      await refreshEntitlements();
-      if (authState.user && typeof loadNotificationPreferences === "function") await loadNotificationPreferences();
-      if (authState.user && typeof loadReaderNotifications === "function") await loadReaderNotifications();
+      await refreshReaderAccountState();
       if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
       const pendingAction = authState.user ? store.pendingAuthAction : "";
       if (pendingAction === "connect-patreon") store.pendingAuthAction = "";
@@ -272,8 +348,7 @@ async function signInWithPassword(email, password){
   authState.user = data?.user || authState.session?.user || null;
   authState.passwordRecovery = false;
   store.email = authState.user?.email || email;
-  await refreshProfile();
-  await refreshEntitlements();
+  await refreshReaderAccountState();
   if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
   saveStore();
   return authState.user;
@@ -358,6 +433,7 @@ async function signOutReader(){
   authState.user = null;
   authState.session = null;
   authState.entitlements = [];
+  authState.providerConnections = [];
   authState.profile = null;
   authState.passwordRecovery = false;
   store.email = "";
@@ -375,7 +451,7 @@ async function syncProviderEntitlements(){
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
   store.providerPending = false;
-  await refreshEntitlements();
+  await Promise.all([refreshEntitlements(), refreshProviderConnections()]);
   await loadBackendLibrary({ force:true });
   saveStore();
   return data;
@@ -384,8 +460,7 @@ async function requestPatreonOAuth(){
   if (!patreonEnabled()) throw new Error("Provider connection is disabled for this site.");
   const client = getSupabase();
   if (!client) throw new Error("Supabase client unavailable.");
-  const returnTo = `${window.location.origin}${window.location.pathname}#/vault`;
-  const { data, error } = await client.functions.invoke("patreon-oauth-start", { body:{ returnTo } });
+  const { data, error } = await client.functions.invoke("patreon-oauth-start", { body:{} });
   if (error) throw error;
   const url = data?.url || data?.authorization_url || data?.redirect_url;
   if (!url) throw new Error(data?.message || "Provider connection is not configured yet.");

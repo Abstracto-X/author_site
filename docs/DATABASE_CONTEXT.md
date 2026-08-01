@@ -9,7 +9,7 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Browser clients use the anon key only. Admin writes are protected by RLS policies and `public.is_admin()`.
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
 - Reader notification flows use `reader_notifications`, `reader_notification_preferences`, and `reader_email_queue`. Publishing a chapter fans out in-app notifications and queued email rows to readers whose active entitlement/admin role covers the chapter's required tier.
-- Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates or refreshes `user_entitlements` from active `provider_tier_mappings`.
+- Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates or refreshes `user_entitlements` from active `provider_tier_mappings`. `PATREON_PUBLIC_RETURN_URL` is the HTTPS allowlisted reader origin used for every OAuth callback result; the callback returns only safe status codes to `#/vault`, never a raw provider error page. Normal manual sync authenticates the signed-in reader; trusted service-role calls may supply a reader `user_id` for controlled bulk reconciliation.
 - Reader email notification delivery uses `supabase/functions/send-reader-email-queue`, which processes queued `reader_email_queue` rows through Resend when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured. The Edge Function is deployed, but as of 2026-07-16 the linked database has no `cron.job` relation/scheduled drain; queued email rows therefore require a separately configured trusted scheduler/invocation. In-app `reader_notifications` are generated independently by the chapter trigger.
 - Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
 - Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider grants are idempotent: the highest matched internal tier is kept as the single active provider entitlement for a reader/provider, existing rows are refreshed instead of duplicated, and a partial unique index prevents concurrent duplicate active provider rows. Patreon free/zero-dollar tiers are treated as connected accounts without paid access and are not written as noisy `*_no_matching_tier` audit failures. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
@@ -17,16 +17,18 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 
 ## Configured access/provider tiers
 
-As of 2026-07-07 16:53 Asia/Kolkata, the linked project has these active Patreon-facing access tiers. Patreon mappings for Licker and Nemesis use actual Patreon tier IDs; Tyrant and Evil temporarily match by exact Patreon tier title until their numeric Patreon tier IDs are known. Rank controls cumulative access through `held.tier_rank >= required.tier_rank`, so Resident Evil is highest because it includes all Resident Nemesis benefits.
+As of 2026-07-29 23:35 Asia/Kolkata, the linked project has these active Patreon-facing access tiers. All four mappings use exact Patreon tier IDs verified through the creator API. Patreon campaign `16299373` scopes identity membership matching to this creator page. Rank controls cumulative access through `held.tier_rank >= required.tier_rank`, so Resident Evil is highest because it includes all Resident Nemesis benefits.
 
 | Internal slug | Internal name | Rank | Provider | Provider tier ID | Provider tier label |
 |---|---|---:|---|---|---|
 | `resident-licker` | Resident Licker | 10 | `patreon` | `28946758` | `Resident Licker` |
-| `resident-tyrant` | Resident Tyrant | 20 | `patreon` | `Resident Tyrant` | `Resident Tyrant` |
+| `resident-tyrant` | Resident Tyrant | 20 | `patreon` | `29035365` | `Resident Tyrant` |
 | `resident-nemesis` | Resident Nemesis | 30 | `patreon` | `28946791` | `Resident Nemesis` |
-| `resident-evil` | Resident Evil | 40 | `patreon` | `Resident Evil` | `Resident Evil` |
+| `resident-evil` | Resident Evil | 40 | `patreon` | `29035411` | `Resident Evil` |
 
 The previous `resident-tyrant`/Resident Nemesis row was converted in place to `resident-nemesis`, preserving its UUID for existing entitlements and references. Current active entitlement counts immediately after the change were: Licker 14, Tyrant 0, Nemesis 10, Evil 0. Existing chapter gates were not rewritten during the migration; 7 chapters still required `resident-licker` immediately after the change.
+
+On 2026-07-29, `PATREON_CAMPAIGN_ID=16299373` was deployed and all 233 active Patreon connections were resynced against that campaign. The reconciliation produced 211 current mapped paid memberships, 6 current free memberships, 16 connections with no current tier, and 212 active Patreon entitlements (29 Licker, 11 Tyrant, 168 Nemesis, 4 Evil). The one-entitlement difference is bounded paid-through access for a non-current member. Zero readers with a current mapped paid Patreon tier lacked an active entitlement.
 
 ## Configured site settings
 
@@ -1179,3 +1181,16 @@ The Resident Evil story (`a-zombie-tale`) has a seeded Version 1 structure and a
 - RLS is enabled with admin-only `ALL` access through `public.is_admin()`. Legacy summary blocks without a details row remain accepted for backward compatibility.
 - Migration `20260725101500_add_writer_summary_details.sql` was applied and recorded in linked migration history on 2026-07-25. Matching reference SQL is `database/sql/2026-07-25_add_writer_summary_details.sql`.
 - `writer-generate-summary` requires a valid Supabase JWT, confirms admin status, reloads every factual source from Supabase, and accepts only `gemma-4-26b-a4b-it` or `gemma-4-31b-it`. It reads `GEMINI_API_KEY` only from Edge Function secrets and returns generated text plus provenance without writing summaries or chapters.
+
+## 2026-07-30 - Restricted AI database role and destructive-operation guards
+
+- Migration `20260730103000_add_ai_database_safeguards.sql` was applied and recorded in linked migration history. Its readable reference copy is `database/sql/2026-07-30_add_ai_database_safeguards.sql`.
+- `ai_editor` is the only direct production database login intended for ordinary AI-agent work. It has `BYPASSRLS` so granted read/write operations work consistently, but its object privileges are limited to `SELECT`, `INSERT`, `UPDATE`, sequence use, and `CREATE` within `public`.
+- `ai_editor` has no `DELETE` or `TRUNCATE` privilege on existing `public` tables. All current persistent public tables remain owned by `postgres`.
+- Event trigger `block_ai_destructive_ddl` rejects destructive `DROP` command tags when the session login is `ai_editor`.
+- Event trigger `guard_ai_created_public_tables` adds a statement trigger named `block_ai_destructive_dml` to every persistent public table created through `ai_editor`; that trigger rejects `DELETE` and `TRUNCATE` from the same login.
+- `ai_editor` is intentionally not a superuser and cannot create databases, create roles, replicate, inherit privileged roles, or disable the event-trigger guards.
+- `postgres` is a member of `ai_editor` so a manually controlled owner session can `SET ROLE ai_editor` to maintain an AI-owned table. Membership is one-way; `ai_editor` cannot assume `postgres`.
+- The role password is not present in migrations. Ordinary agents receive only `SUPABASE_AI_DB_URL`; owner, Supabase access-token, and service-role credentials are DPAPI-encrypted outside the repository.
+- Destructive or existing-schema changes must be written as timestamped migrations for manual owner review/execution.
+- Operational backup details and restore boundaries are documented in `docs/DATABASE_SAFETY.md`.

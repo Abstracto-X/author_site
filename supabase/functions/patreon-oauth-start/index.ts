@@ -1,6 +1,14 @@
 ﻿import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, json, requireEnv, signState } from '../_shared/cors.ts';
 
+const vaultReturnUrl = () => {
+  const url = new URL(requireEnv('PATREON_PUBLIC_RETURN_URL'));
+  if (url.protocol !== 'https:') throw new Error('PATREON_PUBLIC_RETURN_URL must use HTTPS.');
+  url.search = '';
+  url.hash = '#/vault';
+  return url.toString();
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -14,13 +22,9 @@ Deno.serve(async (req) => {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) throw new Error('Unable to verify the signed-in reader.');
 
-    const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
-    const rawReturnTo = typeof body.returnTo === 'string'
-      ? body.returnTo
-      : typeof body.return_to === 'string'
-        ? body.return_to
-        : '';
-    const returnTo = rawReturnTo || `${new URL(req.url).origin}/subscription.html#/vault`;
+    // Always return to the configured reader origin. Do not sign a browser-
+    // supplied destination, which would turn the OAuth callback into an open redirect.
+    const returnTo = vaultReturnUrl();
     const state = await signState({ userId: user.id, returnTo, issuedAt: Date.now() }, requireEnv('PATREON_STATE_SECRET'));
 
     const authUrl = new URL('https://www.patreon.com/oauth2/authorize');

@@ -28,7 +28,14 @@ VIEWS.vault = function(){
   const locked=D.STORIES.reduce((n,s)=>n+s.chapters.filter(c=>!isReadable(chapterResolved(c))&&c.state!=="unavailable").length,0);
   const state = P.admin?"admin":P.expired?"expired":P.pending?"pending":P.noTier?"none":P.level>0?"active":"none";
   const stateLabel={admin:"Admin access",active:"Active",expired:"Expired",pending:"Syncing",none:"No access"}[state];
-  const providerConnected = P.provider && !P.admin && !P.expired && !P.pending && !P.noTier;
+  const patreonConnection = providerConnection("patreon");
+  const providerConnected = providerIsConnected("patreon");
+  const patreonHasEntitlement = /^patreon$/i.test(String(P.provider || "")) && !!P.tier;
+  const providerTier = patreonHasEntitlement ? P.tier : providerConnected ? "Connected - no active site tier" : null;
+  const providerSince = patreonConnection?.created_at || null;
+  const providerNote = patreonConnection && !providerConnected
+    ? `Connection status: ${String(patreonConnection.status || "unknown")}`
+    : "Not connected";
   const statusIcon = state==="active" || state==="admin" ? I.checkCirc : state==="expired" ? I.lock : state==="pending" ? I.sync : I.lock;
   return `
   <h1 class="page-title">The Vault</h1>
@@ -45,7 +52,7 @@ VIEWS.vault = function(){
   <div class="section"><div class="section-head"><h2>Providers</h2></div>
     <div class="col-flex">
       ${P.admin?`<div class="card" style="display:flex;gap:13px;align-items:center"><span style="width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent)">${I.shield}</span><div style="flex:1;min-width:0"><div style="font-weight:600">Admin override</div><div class="faint" style="font-size:.76rem">This profile can read every published subscription chapter without a member entitlement.</div></div><span class="badge free">${I.check}Active</span></div>`:""}
-      ${patreonEnabled()?providerCard("Patreon","patreon",providerConnected,P.tier||null,P.since):`<div class="empty"><div class="em">${I.vault}</div><h3>No providers enabled</h3><p>Use an access key or contact support if you expected member access.</p></div>`}
+      ${patreonEnabled()?providerCard("Patreon","patreon",providerConnected,providerTier,providerSince,providerNote):`<div class="empty"><div class="em">${I.vault}</div><h3>No providers enabled</h3><p>Use an access key or contact support if you expected member access.</p></div>`}
     </div>
   </div>
 

@@ -295,6 +295,16 @@ async function loadSiteSettings(){
     return [];
   }
 }
+async function loadOptionalBackendRows(label, request){
+  try {
+    const { data, error } = await request;
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn(`Could not load ${label}:`, err);
+    return [];
+  }
+}
 async function loadBackendLibrary(options = {}){
   const client = getSupabase();
   if (!client || backendState.loading) {
@@ -305,87 +315,61 @@ async function loadBackendLibrary(options = {}){
   backendState.loading = true;
   backendState.error = null;
   try {
-    await loadSiteSettings();
-    const { data: storyRows, error: storyError } = await client
-      .from("stories")
-      .select("*")
-      .eq("is_published", true)
-      .order("created_at", { ascending:false });
-    if (storyError) throw storyError;
-
-    // Load characters (cast)
-    let castRows = [];
-    try {
-      const { data, error } = await client
+    const [
+      _siteSettings,
+      storyResult,
+      castRows,
+      galleryRows,
+      chapterFeedImageRows,
+      loreRows,
+      wallpaperRows
+    ] = await Promise.all([
+      loadSiteSettings(),
+      client
+        .from("stories")
+        .select("*")
+        .eq("is_published", true)
+        .order("created_at", { ascending:false }),
+      loadOptionalBackendRows("characters", client
         .from("characters")
         .select("id, story_id, name, role_title, profile_image_url")
-        .order("sort_order", { ascending: true });
-      if (!error) castRows = data || [];
-    } catch (e) {
-      console.warn("Could not load characters:", e);
-    }
-
-    // Load published character gallery images for the mixed home feed.
-    let galleryRows = [];
-    try {
-      const { data, error } = await client
+        .order("sort_order", { ascending: true })),
+      loadOptionalBackendRows("gallery images", client
         .from("character_gallery_images")
         .select("id, character_id, image_url, caption, image_tags, sort_order, created_at, characters!inner(id, story_id, name, role_title, profile_image_url)")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
-        .limit(60);
-      if (!error) galleryRows = data || [];
-      else console.warn("Could not load gallery images:", error);
-    } catch (e) {
-      console.warn("Could not load gallery images:", e);
-    }
-
-    // Load the public teaser index of images already embedded in published chapters.
-    let chapterFeedImageRows = [];
-    try {
-      const { data, error } = await client
+        .limit(60)),
+      loadOptionalBackendRows("chapter feed images", client
         .from("chapter_feed_images")
         .select("id, story_id, chapter_id, image_url, source_kind, caption, sort_order, blur_for_guests")
         .eq("is_published", true)
-        .order("sort_order", { ascending: true });
-      if (!error) chapterFeedImageRows = data || [];
-      else console.warn("Could not load chapter feed images:", error.message || error.code || error);
-    } catch (e) {
-      console.warn("Could not load chapter feed images:", e);
-    }
-
-    // Load glossary (lore entries)
-    let loreRows = [];
-    try {
-      const { data, error } = await client
+        .order("sort_order", { ascending: true })),
+      loadOptionalBackendRows("lore entries", client
         .from("lore_entries")
         .select("id, story_id, title, description, slug")
-        .order("title", { ascending: true });
-      if (!error) loreRows = data || [];
-    } catch (e) {
-      console.warn("Could not load lore entries:", e);
-    }
-
-    // Load wallpapers
-    let wallpaperRows = [];
-    try {
-      const { data, error } = await client
+        .order("title", { ascending: true })),
+      loadOptionalBackendRows("wallpapers", client
         .from("story_wallpapers")
         .select("id, story_id, image_url, label")
-        .order("sort_order", { ascending: true });
-      if (!error) wallpaperRows = data || [];
-    } catch (e) {
-      console.warn("Could not load wallpapers:", e);
-    }
+        .order("sort_order", { ascending: true }))
+    ]);
+    const { data: storyRows, error: storyError } = storyResult;
+    if (storyError) throw storyError;
 
     const stories = (storyRows || []).map(normalizeBackendStory);
-    for (const story of stories) {
+    const feedImagesByChapter = new Map();
+    chapterFeedImageRows.forEach(image => {
+      const rows = feedImagesByChapter.get(image.chapter_id) || [];
+      rows.push(image);
+      feedImagesByChapter.set(image.chapter_id, rows);
+    });
+    await Promise.all(stories.map(async story => {
       const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
       if (error) throw error;
       story.chapters = (data || []).map(row => normalizeBackendChapter(row, story));
       story.chapters.forEach(chapter => {
-        chapter.feed_images = chapterFeedImageRows
-          .filter(image => image.chapter_id === chapter.id)
+        chapter.feed_images = (feedImagesByChapter.get(chapter.id) || [])
           .map(image => ({
             id: image.id,
             image_url: image.image_url || "",
@@ -408,7 +392,7 @@ async function loadBackendLibrary(options = {}){
       story.wallpapers = wallpaperRows
         .filter(w => w.story_id === story.id)
         .map(w => ({ id: w.id, image_url: w.image_url, name: w.label || "" }));
-    }
+    }));
     if (stories.length) {
       D.STORIES = stories;
       D.UPDATES = buildBackendUpdates(stories);
@@ -420,7 +404,8 @@ async function loadBackendLibrary(options = {}){
         profile_image_url: c.profile_image_url || ""
       }));
       D.GALLERY_IMAGES = galleryRows.map(row => {
-        const character = castRows.find(c => c.id === row.character_id) || {};
+        const joinedCharacter = Array.isArray(row.characters) ? row.characters[0] : row.characters;
+        const character = castRows.find(c => c.id === row.character_id) || joinedCharacter || {};
         return {
           id: row.id,
           character_id: row.character_id,
@@ -775,4 +760,3 @@ async function loadCharacterGalleryImages(charId) {
   }
   return D.GALLERY_IMAGES.filter(img => img.character_id === charId);
 }
-
