@@ -16,6 +16,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
 
   providers: {
     patreon: false,
+    boosty: false,
     kofi: false,
     paypal: false,
     discord: false
@@ -24,7 +25,8 @@ window.SUBSCRIPTION_SITE_CONFIG = {
   links: {
     mainArchiveUrl: null,
     supportUrl: null,
-    discordUrl: null
+    discordUrl: null,
+    boostyUrl: null
   },
 
   features: {
@@ -33,6 +35,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     enableFixtureFallbackInProduction: false,
     enableLocalDemoReaderFeatures: false,
     enablePatreonConnect: false,
+    enableBoostyDiscordConnect: false,
     enableAccessKeys: true,
     enableGoogleOAuth: false,
     enableReaderGuides: true

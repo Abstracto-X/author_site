@@ -3,7 +3,7 @@
 
 /* ============ HELP ============ */
 VIEWS.help = function(){
-  const q=[["Why are chapters locked?","Some chapters are member-only, early-access, or key-locked. Free chapters are always open."],["How does Provider sync work?","When you connect Patreon, we verify your membership. This usually takes a moment; the app checks automatically."],["Why might a key fail?","Keys can be expired, already redeemed, at max use, or mistyped. Each has a clear message."],["What does expired access mean?","Your membership or key is no longer active. Renew to restore the chapters it unlocked."],["Wrong account?","If you signed in differently before, access may be on another account. Use the Wrong Account assistant."]];
+  const q=[["Why are chapters locked?","Some chapters are member-only, early-access, or key-locked. Free chapters are always open."],["How does provider sync work?","Patreon verifies membership directly. Boosty access is verified through the subscriber role that Boosty assigns to your connected Discord account."],["Why might a key fail?","Keys can be expired, already redeemed, at max use, or mistyped. Each has a clear message."],["What does expired access mean?","Your membership, verified role, or key is no longer active. Renew or sync to restore the chapters it unlocked."],["Wrong account?","If you signed in differently before, access may be on another reader or provider account. Use the Wrong Account assistant."]];
   return `<h1 class="page-title">Help Center</h1><p class="page-sub">Self-service recovery & explanations.</p>
   <div class="quicklinks" style="margin:14px 0">
     <a data-nav="/support/check-access">${I.shield}<span>Access Check</span><small>Diagnose now</small></a>
@@ -23,6 +23,8 @@ VIEWS.help = function(){
 /* ============ SUPPORT ============ */
 VIEWS.checkAccess = function(){
   const P=persona();
+  const patreonConnected=providerIsConnected("patreon");
+  const boostyConnected=providerIsConnected("boosty_discord");
   return `<a class="section-link" data-nav="/help" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}Help</a>
   <h1 class="page-title">Access Health Check</h1><p class="page-sub">A guided check of your access — no jargon.</p>
   <div class="card tinted" style="margin:14px 0"><div class="between"><div><div class="eyebrow">Signed-in account</div><div style="font-family:var(--serif);font-weight:600">${P.signedIn?store.email:"Not signed in"}</div></div>${P.signedIn?badge("free",I.check+"Verified"):badge("","Guest")}</div></div>
@@ -33,17 +35,19 @@ VIEWS.checkAccess = function(){
     <div class="tl-item ${P.level>0||store.grantedKey?'':'bad'}"><div class="when">Step 4</div><div class="what">${P.tier||"Tier"} ${P.noTier?"(not qualifying)":""}</div><div class="faint" style="font-size:.78rem">${P.level>0?"Qualifies for this library.":P.noTier?"This tier doesn't include access.":"No active tier."}</div></div>
   </div>
   <div class="col-flex" style="margin-top:14px">
-    ${P.provider?`<button class="btn ghost" data-act="resync">${I.sync}Re-run sync</button>`:`<button class="btn story" data-sheet="connect-patreon">${I.vault}Connect provider</button>`}
+    ${patreonConnected?`<button class="btn ghost" data-act="resync">${I.sync}Sync Patreon</button>`:""}
+    ${boostyConnected?`<button class="btn ghost" data-act="resync-boosty">${I.sync}Sync Boosty role</button>`:""}
+    ${!patreonConnected&&!boostyConnected?`<button class="btn story" data-sheet="connect-provider">${I.vault}Connect provider</button>`:""}
     <button class="btn ghost" data-sheet="redeem">${I.key}Try a key instead</button>
     <button class="btn ghost" data-nav="/support/wrong-account">${I.user}Not seeing your access?</button>
   </div>`;
 };
 VIEWS.wrongAccount = function(){
-  const steps=["Are you signed into the same reader account you used before? Check your email in the Vault.","Is your connected Patreon the right one? Patreon links via the Patreon API, not by matching emails.","Try reconnecting Patreon from the Vault.","Or redeem your access key again — it binds to this account.","Still stuck? Send a support packet with one tap."];
+  const steps=["Are you signed into the same reader account you used before? Check your email in the Vault.","For Patreon, connect the Patreon account that owns the membership.","For Boosty, connect the same Discord account in both Boosty and EvilArchives, and confirm Boosty assigned its subscriber role.","Or redeem your access key again — it binds to this account.","Still stuck? Send a support packet with one tap."];
   return `<a class="section-link" data-nav="/help" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}Help</a>
   <h1 class="page-title">Wrong Account Assistant</h1><p class="page-sub">Access on a different account? Let's recover it.</p>
   <div class="timeline">${steps.map((s,i)=>`<div class="tl-item"><div class="when">Step ${i+1}</div><div class="what">${s}</div></div>`).join("")}</div>
-  <div class="col-flex" style="margin-top:14px"><button class="btn story" data-sheet="connect-patreon">${I.vault}Reconnect Patreon</button><button class="btn ghost" data-sheet="redeem">${I.key}Redeem key</button><button class="btn ghost" data-nav="/support/contact">${I.mail}Send support packet</button></div>`;
+  <div class="col-flex" style="margin-top:14px">${patreonEnabled()?`<button class="btn story" data-sheet="connect-patreon">${I.vault}Reconnect Patreon</button>`:""}${boostyDiscordEnabled()?`<button class="btn story" data-sheet="connect-boosty">${I.msg}Reconnect Boosty through Discord</button>`:""}<button class="btn ghost" data-sheet="redeem">${I.key}Redeem key</button><button class="btn ghost" data-nav="/support/contact">${I.mail}Send support packet</button></div>`;
 };
 VIEWS.contact = function(){
   const P=persona();

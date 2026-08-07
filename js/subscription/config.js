@@ -62,6 +62,7 @@ let SITE_NAME = CONFIG.siteName || "EvilArchives";
 let SITE_TAGLINE = CONFIG.siteTagline || "Premium serial fiction member library";
 let SITE_META_DESCRIPTION = CONFIG.metaDescription || "Premium member fiction reader. Read serial fiction, manage access, and continue across the member library.";
 const MAIN_ARCHIVE_URL = LINKS.mainArchiveUrl || "";
+const BOOSTY_URL = LINKS.boostyUrl || "";
 function settingText(value, fallback){
   if (typeof value === "string" && value.trim()) return value.trim();
   if (value && typeof value === "object") {
@@ -106,6 +107,7 @@ function providerEnabled(name){ return !!PROVIDERS[name]; }
 function googleEnabled(){ return !!AUTH_CONFIG.googleEnabled && feature("enableGoogleOAuth", false); }
 function emailPasswordEnabled(){ return AUTH_CONFIG.emailPasswordEnabled !== false; }
 function patreonEnabled(){ return providerEnabled("patreon") && feature("enablePatreonConnect", false); }
+function boostyDiscordEnabled(){ return providerEnabled("boosty") && feature("enableBoostyDiscordConnect", false); }
 function accessKeysEnabled(){ return feature("enableAccessKeys", true); }
 function mainArchiveEnabled(){ return feature("enableMainArchiveLinks", false) && !!MAIN_ARCHIVE_URL; }
 function configuredSupabase(){ const cfg=CONFIG.supabase||{}; const joined=`${cfg.url||""} ${cfg.anonKey||""}`; return !!cfg.url && !!cfg.anonKey && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME|YOUR_DOMAIN/i.test(joined); }

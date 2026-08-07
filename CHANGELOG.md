@@ -1,5 +1,63 @@
 # Changelog
 
+## 2026-08-07 05:30 Asia/Kolkata - Bracketed Writer system dialogue in Rich Text exports
+
+Area: Writer / export
+
+Summary:
+- Updated Copy as Rich Text so every line inside a Writer system-message block is exported with its own square brackets, including multiline system dialogue separated by soft breaks.
+- Preserved inline rich formatting and links inside system messages, kept the saved chapter/editor HTML unchanged, and generated a matching bracketed `text/plain` clipboard flavor for applications that ignore rich HTML.
+- Left Copy as Plain Text unchanged, so that explicitly bracket-free export remains available.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-08-07 05:03 Asia/Kolkata - Boosty subscriber access through Discord roles
+
+Area: reader / admin / Edge Functions / database / provider access
+
+Summary:
+- Added a server-side Discord OAuth bridge for Boosty subscribers. The flow requests only identity and current-guild-member access, verifies the reader's exact role IDs in the configured Discord server, and maps the highest paid role to the existing cumulative reader tier model.
+- Extended the shared provider sync function to support `boosty_discord`, refresh Discord tokens, expire access when a qualifying role/server membership disappears, and issue bounded 72-hour grants that renew on reader startup or manual sync.
+- Added Boosty provider selection, connection, callback feedback, Vault status/sync controls, troubleshooting copy, and config feature gates across the subscription reader; added Boosty visibility to the Admin provider mapping/settings surfaces.
+- Added and applied four idempotent production role mappings for Resident Licker, Tyrant, Nemesis, and Evil. Restricted database verification confirmed every Discord role ID points to the matching internal tier/rank.
+- Added a deployment/setup guide covering the exact Discord redirect, least-privilege scopes, private Supabase secrets, Boosty bot role hierarchy, deployment commands, tests, and the bounded revocation model.
+- Deployed `discord-oauth-start`, public `discord-oauth-callback`, and the updated `sync-provider-entitlements` function to Supabase project `cqgrulawpwkrdvxagzez` on 2026-08-07, then securely uploaded and name-verified the eight required Discord/Boosty Edge Function secrets. A public callback smoke test returned the expected safe `302` to the reader Vault.
+- Preserved stored OAuth expiry timestamps when a manual Patreon or Discord sync uses a still-current access token.
+
+Files changed:
+- `ENV.example`
+- `admin.html`
+- `js/subscription/auth.js`
+- `js/subscription/config.js`
+- `js/subscription/events.js`
+- `js/subscription/onboarding.js`
+- `js/subscription/sheets.js`
+- `js/subscription/site-config.js`
+- `js/subscription/site-config.template.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/views/home-library.js`
+- `supabase/config.toml`
+- `supabase/functions/_shared/discord.ts`
+- `supabase/functions/_shared/patreon.ts`
+- `supabase/functions/discord-oauth-start/index.ts`
+- `supabase/functions/discord-oauth-callback/index.ts`
+- `supabase/functions/sync-provider-entitlements/index.ts`
+- `database/sql/2026-08-07_seed_boosty_discord_role_mappings.sql`
+- `supabase/migrations/20260807130000_seed_boosty_discord_role_mappings.sql`
+- `docs/BOOSTY_DISCORD_SETUP.md`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-08-01 06:36 Asia/Kolkata - Entitled R18 artwork in home feeds
 
 Area: reader / home

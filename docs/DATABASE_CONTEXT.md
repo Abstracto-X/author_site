@@ -10,6 +10,7 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Reader access flows rely on `get_chapter_catalog`, `get_reader_chapter`, `get_my_entitlements`, and `redeem_access_key`.
 - Reader notification flows use `reader_notifications`, `reader_notification_preferences`, and `reader_email_queue`. Publishing a chapter fans out in-app notifications and queued email rows to readers whose active entitlement/admin role covers the chapter's required tier.
 - Patreon access flows use Edge Functions under `supabase/functions/`: `patreon-oauth-start`, `patreon-oauth-callback`, and `sync-provider-entitlements`. Patreon OAuth stores provider connections/tokens server-side, then creates or refreshes `user_entitlements` from active `provider_tier_mappings`. `PATREON_PUBLIC_RETURN_URL` is the HTTPS allowlisted reader origin used for every OAuth callback result; the callback returns only safe status codes to `#/vault`, never a raw provider error page. Normal manual sync authenticates the signed-in reader; trusted service-role calls may supply a reader `user_id` for controlled bulk reconciliation.
+- Boosty access is verified indirectly through subscriber roles assigned by Boosty's Discord bot. `discord-oauth-start` requests only `identify` and `guilds.members.read`; public `discord-oauth-callback` verifies signed state, exchanges the code server-side, reads the current user's membership/role IDs in the configured guild, and syncs provider `boosty_discord`. `sync-provider-entitlements` supports both Patreon and Boosty/Discord. The website does not receive Boosty credentials and its Discord application does not require a bot or server permissions.
 - Reader email notification delivery uses `supabase/functions/send-reader-email-queue`, which processes queued `reader_email_queue` rows through Resend when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured. The Edge Function is deployed, but as of 2026-07-16 the linked database has no `cron.job` relation/scheduled drain; queued email rows therefore require a separately configured trusted scheduler/invocation. In-app `reader_notifications` are generated independently by the chapter trigger.
 - Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
 - Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider grants are idempotent: the highest matched internal tier is kept as the single active provider entitlement for a reader/provider, existing rows are refreshed instead of duplicated, and a partial unique index prevents concurrent duplicate active provider rows. Patreon free/zero-dollar tiers are treated as connected accounts without paid access and are not written as noisy `*_no_matching_tier` audit failures. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
@@ -17,7 +18,7 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 
 ## Configured access/provider tiers
 
-As of 2026-07-29 23:35 Asia/Kolkata, the linked project has these active Patreon-facing access tiers. All four mappings use exact Patreon tier IDs verified through the creator API. Patreon campaign `16299373` scopes identity membership matching to this creator page. Rank controls cumulative access through `held.tier_rank >= required.tier_rank`, so Resident Evil is highest because it includes all Resident Nemesis benefits.
+As of 2026-08-07 Asia/Kolkata, the linked project maps the same four cumulative internal tiers to Patreon and to the Discord roles assigned by Boosty. Patreon mappings use exact Patreon tier IDs verified through the creator API, and campaign `16299373` scopes membership matching to this creator page. Boosty/Discord mappings use exact Discord role IDs in guild `1530723815414300702`. Rank controls cumulative access through `held.tier_rank >= required.tier_rank`, so Resident Evil is highest because it includes all Resident Nemesis benefits.
 
 | Internal slug | Internal name | Rank | Provider | Provider tier ID | Provider tier label |
 |---|---|---:|---|---|---|
@@ -25,6 +26,12 @@ As of 2026-07-29 23:35 Asia/Kolkata, the linked project has these active Patreon
 | `resident-tyrant` | Resident Tyrant | 20 | `patreon` | `29035365` | `Resident Tyrant` |
 | `resident-nemesis` | Resident Nemesis | 30 | `patreon` | `28946791` | `Resident Nemesis` |
 | `resident-evil` | Resident Evil | 40 | `patreon` | `29035411` | `Resident Evil` |
+| `resident-licker` | Resident Licker | 10 | `boosty_discord` | `1535052798805147739` | `Resident Licker` |
+| `resident-tyrant` | Resident Tyrant | 20 | `boosty_discord` | `1535053372955304057` | `Resident Tyrant` |
+| `resident-nemesis` | Resident Nemesis | 30 | `boosty_discord` | `1535053381104836708` | `Resident Nemesis` |
+| `resident-evil` | Resident Evil | 40 | `boosty_discord` | `1535053896597119077` | `Resident Evil` |
+
+The Boosty/Discord mappings were seeded directly through the restricted `ai_editor` role on 2026-08-07 using `database/sql/2026-08-07_seed_boosty_discord_role_mappings.sql`; the matching migration is `supabase/migrations/20260807130000_seed_boosty_discord_role_mappings.sql`. The operation is idempotent and updates these four mapping rows without changing schema.
 
 The previous `resident-tyrant`/Resident Nemesis row was converted in place to `resident-nemesis`, preserving its UUID for existing entitlements and references. Current active entitlement counts immediately after the change were: Licker 14, Tyrant 0, Nemesis 10, Evil 0. Existing chapter gates were not rewritten during the migration; 7 chapters still required `resident-licker` immediately after the change.
 
@@ -374,6 +381,8 @@ Only admins can read/manage email queue rows.
 
 ### `public.provider_connections`
 
+Provider `boosty_discord` stores the Discord user ID and display label plus guild membership, observed role IDs, Boosty page URL, and the latest verification expiry in metadata. Reader RLS exposes only the connection summary selected by the reader UI; OAuth tokens remain server-side.
+
 | Column | Type | Nullable | Default |
 |---|---|---:|---|
 | `id` | uuid | NO | gen_random_uuid() |
@@ -388,6 +397,8 @@ Only admins can read/manage email queue rows.
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
 ### `public.provider_oauth_tokens`
+
+Discord OAuth tokens are stored under provider `boosty_discord` with scopes `identify` and `guilds.members.read`. Client secrets and refresh tokens are Edge Function secrets/data and must never be written to `site-config.js` or browser code.
 
 | Column | Type | Nullable | Default |
 |---|---|---:|---|
@@ -405,6 +416,8 @@ Only admins can read/manage email queue rows.
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
 ### `public.provider_tier_mappings`
+
+For provider `boosty_discord`, `provider_tier_id` is the exact Discord role ID. When several mapped subscriber roles are present, the highest `reader_access_tiers.tier_rank` wins.
 
 | Column | Type | Nullable | Default |
 |---|---|---:|---|
@@ -533,6 +546,8 @@ Policies: `story_access_policies_admin_all` permits admin write/manage access th
 | `updated_at` | timestamp with time zone / `timestamptz` | NO | now() |
 
 Provider-backed active rows are constrained by `user_entitlements_one_active_provider_per_user_idx`, a partial unique index on `(user_id, provider)` where `provider IS NOT NULL AND status = 'active'`. Historical expired/revoked rows are retained for audit context.
+
+Boosty/Discord grants use provider/source `boosty_discord` and a bounded `valid_until` (72 hours by default, configurable from 6 to 168 hours). Successful reader startup or manual sync renews the grant after Discord role verification; a missing mapped role or missing guild membership expires the active grant immediately. Because Discord supplies the role rather than Boosty subscription timestamps, a future trusted scheduled sync is still recommended if revocation must occur sooner than the TTL for readers who do not revisit the site.
 
 ### `public.writer_node_links`
 

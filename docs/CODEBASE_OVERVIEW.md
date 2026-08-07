@@ -75,7 +75,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 | `site-config.template.js` | Copyable config template. | Keep keys blank/safe. |
 | `config.js` | Safe storage wrapper, runtime site identity, reader behavior settings, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks and applies `site_settings.site_identity` plus `site_settings.reader_behavior` when loaded. |
 | `state.js` | Shared reader state objects. | Owns `store`, `authState`, `backendState`, and derived access/persona defaults. |
-| `auth.js` | Supabase auth/session/profile/entitlement bridge. | Handles sign in/up/out, password recovery/update, provider flow helpers, profile/entitlement refresh. |
+| `auth.js` | Supabase auth/session/profile/entitlement bridge. | Handles sign in/up/out, password recovery/update, Patreon and Boosty-through-Discord provider flows, callback feedback, and profile/entitlement refresh. |
 | `backend.js` | Supabase site settings, story/chapter/catalog data loading. | Owns reader identity loading from `site_settings`, published story loading, and RPC calls like `get_chapter_catalog` and `get_reader_chapter`. |
 | `utils.js` | Pure-ish UI/data helpers. | Escaping, formatting, icons, cards, access labels, generated cover art, text parsing. |
 | `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
@@ -96,7 +96,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 
 1. Browser loads `site-config.js`, Supabase CDN, and the reader modules. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
 2. `aether-app.js` bootstraps the app after all module globals exist.
-3. `auth.js` initializes the Supabase client/session and refreshes profile, entitlements, provider connections, notification preferences, and notifications concurrently when configured. The initial Supabase `INITIAL_SESSION` callback and token-only refresh events do not repeat the already completed startup refresh/library load. Patreon OAuth callback status is consumed on startup, clears pending sync state, refreshes access, presents a safe reader message, and removes callback parameters from the URL. If the loaded profile has `role = 'admin'`, the subscription reader exposes an admin reader override for published chapters without creating fake `user_entitlements`.
+3. `auth.js` initializes the Supabase client/session and refreshes profile, entitlements, provider connections, notification preferences, and notifications concurrently when configured. The initial Supabase `INITIAL_SESSION` callback and token-only refresh events do not repeat the already completed startup refresh/library load. Patreon and Boosty-through-Discord OAuth callback statuses are consumed on startup, clear pending sync state, refresh access, present safe reader messages, and remove callback parameters from the URL. A connected Boosty/Discord account is reverified on startup so its bounded role grant stays current. If the loaded profile has `role = 'admin'`, the subscription reader exposes an admin reader override for published chapters without creating fake `user_entitlements`.
 4. `backend.js` loads `site_settings.site_identity` and `site_settings.reader_behavior`, then published stories, chapter catalogs, characters, and gallery artwork from Supabase.
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
@@ -144,7 +144,7 @@ Admin responsibilities include:
 
 - Keeping an embedded Writer / Chapters workspace inside Admin CMS while also offering the standalone `writer.html` workspace.
 - Story metadata: title, slug, world title, descriptions, publication state, theme/loader values, covers/backgrounds.
-- Chapter content through embedded Admin CMS Writer / Chapters and `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, rich/Markdown editor, autosave/drafts, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, system-message blocks saved in chapter HTML, editor cleanup for extra blank lines, and scene breaks from toolbar commands or standalone `--`. The standalone Writer also keeps a scrollable chapter list in its left rail, opens chapters as closable tabs, supports access-tier changes and deletion from the chapter index, and exports LLM-friendly Markdown using asterisk emphasis, fenced code, standard list markers, blockquoted system messages, and `---` scene breaks.
+- Chapter content through embedded Admin CMS Writer / Chapters and `writer.html`: admin-authenticated story selector, Supabase-backed chapter index, rich/Markdown editor, autosave/drafts, Save Draft preserving publish state, explicit Publish/Unpublish, tier access controls, NSFW/external-only fields, cover URL, system-message blocks saved in chapter HTML, editor cleanup for extra blank lines, and scene breaks from toolbar commands or standalone `--`. The standalone Writer also keeps a scrollable chapter list in its left rail, opens chapters as closable tabs, supports access-tier changes and deletion from the chapter index, exports LLM-friendly Markdown using asterisk emphasis, fenced code, standard list markers, bracketed system messages, and `---` scene breaks, and wraps every system-dialogue line in its own square brackets when copying Rich Text.
 - Rolling Access policies per story, stored in `story_access_policies`, that apply tier windows to newest published chapters and make older non-NSFW chapters free.
 - Reader CRM, provider connection visibility, access key redemption visibility, entitlement audit review, comments, and chapter reaction totals.
 - Character, gallery, lore, maps, wallpapers, timeline, map requests, and author profile content as secondary Story Extras.
@@ -166,7 +166,8 @@ Primary references:
 - `docs/DATABASE_CONTEXT.md` — current schema/policy/storage/RPC context snapshot.
 - `database/sql/` — setup and migration SQL kept for reset/rebuild/documentation.
 - `supabase/migrations/` — Supabase CLI migration files.
-- `supabase/functions/` — Edge Functions for provider/Patreon-related flows.
+- `supabase/functions/` — Edge Functions for provider flows, including Patreon and Boosty subscriber-role verification through Discord OAuth.
+- Boosty access uses `discord-oauth-start`, public callback `discord-oauth-callback`, shared Discord helpers, and the provider-aware `sync-provider-entitlements` function. The website never receives Boosty credentials and does not need a Discord bot; Boosty's own bot assigns the paid role, while Discord OAuth exposes only the signed-in member's identity and roles.
 - `send-reader-email-queue` processes queued reader chapter email notifications when `RESEND_API_KEY` and `READER_EMAIL_FROM` are configured.
 - `writer-openrouter-chat` is the authenticated admin-only OpenRouter streaming proxy; its provider key stays in Edge Function secrets.
 
@@ -204,6 +205,7 @@ Schema-change rule: if frontend code reads/writes a new table, column, RPC, or b
 | `docs/ADMIN_FUNCTION_INDEX.md` | Function list for `admin.html`. | Read before admin code changes; update when admin functions are added/removed/renamed/repurposed. |
 | `docs/DATABASE_CONTEXT.md` | Supabase tables, policies, functions, storage. | Read before DB/storage/auth/RLS/query work; update after durable schema/policy/storage/RPC changes. |
 | `docs/DATABASE_SAFETY.md` | Restricted AI database role, backup destinations, retention, and restore boundary. | Read before direct production DB access, destructive migrations, backup changes, or recovery work. |
+| `docs/BOOSTY_DISCORD_SETUP.md` | Discord application, Supabase secret/deploy, role mapping, test, and bounded-revocation setup for Boosty access. | Read before deploying or troubleshooting the Boosty-through-Discord provider bridge. |
 | `CHANGELOG.md` | Durable completed implementation history. | Add entries only for durable completed changes. |
 | `PROJECT_STATE.md` | Active memory for unfinished/deferred/risky work. | Update for partial work, follow-ups, deferred decisions, known risks, or manual verification still needed. |
 

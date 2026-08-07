@@ -2,6 +2,99 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-08-07 05:30 Asia/Kolkata — Writer Rich Text system brackets
+
+Status: NEEDS REVIEW
+
+Area:
+- Writer
+- export
+
+Files touched:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Copy as Rich Text now wraps each individual line of a system-message block in square brackets in both the HTML and plain-text clipboard flavors.
+- The export transformation works on a detached HTML template and does not rewrite the live Quill editor or stored chapter content.
+- Copy as Plain Text intentionally remains bracket-free.
+- A headless Edge DOM test confirmed two system lines export as separate bracketed lines while preserving nested bold/link markup; both Writer inline scripts also passed `node --check`.
+
+Remaining work:
+- Publish the frontend changes and paste a multiline system message into at least one rich-text destination.
+
+Risks / notes:
+- Clipboard destinations can choose either the HTML or plain-text flavor; both Rich Text flavors now contain the same per-line brackets.
+
+Verification needed:
+- Export a two-line system message such as `First line` / `Second line` and confirm the destination receives `[First line]` and `[Second line]` on separate lines while retaining inline emphasis/links.
+
+## 2026-08-07 05:03 Asia/Kolkata — Boosty access through Discord roles
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- admin
+- database
+- Edge Functions
+- provider access
+
+Files touched:
+- `ENV.example`
+- `admin.html`
+- `js/subscription/auth.js`
+- `js/subscription/config.js`
+- `js/subscription/events.js`
+- `js/subscription/onboarding.js`
+- `js/subscription/sheets.js`
+- `js/subscription/site-config.js`
+- `js/subscription/site-config.template.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/views/home-library.js`
+- `supabase/config.toml`
+- `supabase/functions/_shared/discord.ts`
+- `supabase/functions/_shared/patreon.ts`
+- `supabase/functions/discord-oauth-start/index.ts`
+- `supabase/functions/discord-oauth-callback/index.ts`
+- `supabase/functions/sync-provider-entitlements/index.ts`
+- `database/sql/2026-08-07_seed_boosty_discord_role_mappings.sql`
+- `supabase/migrations/20260807130000_seed_boosty_discord_role_mappings.sql`
+- `docs/BOOSTY_DISCORD_SETUP.md`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Implemented the local reader, Admin, database mapping, and Supabase Edge Function code for Boosty access verified through Discord subscriber roles.
+- Applied and verified all four `boosty_discord` role mappings in production through the restricted database role.
+- Deployed `discord-oauth-start`, public `discord-oauth-callback`, and the updated `sync-provider-entitlements` function to Supabase project `cqgrulawpwkrdvxagzez`.
+- Securely uploaded only the eight required Discord/Boosty values from local `.env` to Supabase Edge Function secrets and verified all eight names remotely without displaying their values.
+- Smoke-tested the public callback; it returned HTTP `302` to `https://cornyshitler.pages.dev/?boosty=missing_parameters#/vault` as designed.
+- Reader access grants are bounded to 72 hours by default, renew on startup/manual sync, and expire immediately on a sync that finds no mapped role or server membership.
+
+Remaining work:
+- In Discord OAuth2 General, keep the saved callback URI, enable only `identify` and `guilds.members.read` for this flow, and do not use the currently selected `guilds` scope.
+- Run the signed-in browser test matrix in `docs/BOOSTY_DISCORD_SETUP.md`.
+
+Risks / notes:
+- Never paste the Discord client secret into chat, browser config, or Git.
+- Boosty's bot role must sit above the four subscriber roles in Discord or it may fail to assign/remove them.
+- There is no scheduled server-side Discord reconciliation yet. A reader who does not return can retain access until the bounded grant expires; a future trusted scheduler can shorten that delay.
+- The Discord OAuth application itself needs no bot, no administrator permission, and no message access.
+
+Verification needed:
+- Confirm a mapped-role member receives the matching tier, a higher-role member receives the highest mapped tier, a no-role member receives no tier, and a non-member receives the `not_in_server` outcome.
+- Remove a test role and manually sync to confirm the active `boosty_discord` entitlement expires.
+- Verify the Vault, locked chapter provider chooser, help flows, and Admin mapping/settings surfaces on desktop and mobile.
+
 ## 2026-08-01 06:36 Asia/Kolkata — Entitled R18 artwork in home feeds
 
 Status: NEEDS REVIEW

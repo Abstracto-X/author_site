@@ -169,6 +169,43 @@ function showPatreonCallbackResult(result){
   const [title, detail] = messages[result.status] || messages.callback_failed;
   toast(title, detail, { icon: result.status === "linked" || result.status === "no_matching_tier" ? "checkCirc" : "alert", kind: result.status === "linked" || result.status === "no_matching_tier" ? "good" : "bad", ms:7000 });
 }
+const BOOSTY_CALLBACK_STATUSES = new Set([
+  "linked", "no_matching_role", "not_in_server", "cancelled", "expired_state", "invalid_state",
+  "missing_parameters", "token_exchange_failed", "sync_failed", "provider_error", "callback_failed"
+]);
+function readBoostyCallbackResult(){
+  const params = oauthCallbackParams();
+  const status = String(params.get("boosty") || "").trim();
+  if (!BOOSTY_CALLBACK_STATUSES.has(status)) return null;
+  const grants = Math.max(0, Number.parseInt(params.get("grants") || "0", 10) || 0);
+  return { status, grants };
+}
+function cleanBoostyCallbackUrl(){
+  const url = new URL(window.location.href);
+  url.searchParams.delete("boosty");
+  url.searchParams.delete("grants");
+  url.hash = cleanHashRoute(url.hash, "vault");
+  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+}
+function showBoostyCallbackResult(result){
+  const messages = {
+    linked: ["Boosty access connected", "Your Discord subscription role was verified and your reader access was updated."],
+    no_matching_role: ["Discord connected", "No mapped Boosty subscriber role was found. Confirm that Boosty assigned your Discord role, then sync again."],
+    not_in_server: ["Discord connected", "Join the EvilArchives Discord server and let Boosty assign your subscriber role, then sync again."],
+    cancelled: ["Boosty connection cancelled", "No changes were made. You can try again whenever you are ready."],
+    expired_state: ["Discord session expired", "Please start the Boosty connection again from the Vault."],
+    invalid_state: ["Discord connection could not be verified", "Please start the Boosty connection again from the Vault."],
+    missing_parameters: ["Discord connection incomplete", "Please start the Boosty connection again from the Vault."],
+    token_exchange_failed: ["Discord connection failed", "Discord did not complete the handoff. Please try again."],
+    sync_failed: ["Discord connected, but Boosty sync failed", "Please try syncing again from the Vault."],
+    provider_error: ["Discord connection failed", "Discord returned an error. Please try again."],
+    callback_failed: ["Boosty connection failed", "Please try again from the Vault."],
+  };
+  const [title, detail] = messages[result.status] || messages.callback_failed;
+  const good = result.status === "linked";
+  const neutral = result.status === "no_matching_role" || result.status === "not_in_server";
+  toast(title, detail, { icon: good ? "checkCirc" : neutral ? "info" : "alert", kind: good ? "good" : neutral ? "warn" : "bad", ms:8000 });
+}
 async function uploadReaderAvatar(file){
   const client = getSupabase();
   if (!client || !authState.user) throw new Error("Sign in before changing your avatar.");
@@ -273,7 +310,7 @@ async function consumeOAuthCallback(client){
   cleanOAuthCallbackUrl();
   return data?.session || null;
 }
-async function refreshReaderAccountState(){
+async function refreshReaderAccountState(options = {}){
   await Promise.all([
     refreshProfile(),
     refreshEntitlements(),
@@ -281,12 +318,20 @@ async function refreshReaderAccountState(){
     authState.user && typeof loadNotificationPreferences === "function" ? loadNotificationPreferences() : Promise.resolve(),
     authState.user && typeof loadReaderNotifications === "function" ? loadReaderNotifications() : Promise.resolve()
   ]);
+  if (options.syncBoosty !== false && authState.user && boostyDiscordEnabled() && providerIsConnected("boosty_discord")) {
+    try {
+      await syncProviderEntitlements("boosty_discord", { refreshLibrary:false });
+    } catch (err) {
+      console.warn("Unable to refresh Boosty Discord access during startup", err);
+    }
+  }
 }
 async function initAuth(){
   const client = getSupabase();
   if (!client) { authState.ready = true; authState.error = new Error("Supabase setup required: set supabase.url and supabase.anonKey in js/subscription/site-config.js."); return; }
   try {
     const patreonCallback = readPatreonCallbackResult();
+    const boostyCallback = readBoostyCallbackResult();
     const callbackSession = await consumeOAuthCallback(client);
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -302,10 +347,18 @@ async function initAuth(){
       cleanPatreonCallbackUrl();
       setTimeout(() => showPatreonCallbackResult(patreonCallback), 0);
     }
-    if (authState.user && store.pendingAuthAction === "connect-patreon") {
+    if (boostyCallback) {
+      store.providerPending = false;
+      saveStore();
+      if (authState.user && typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
+      cleanBoostyCallbackUrl();
+      setTimeout(() => showBoostyCallbackResult(boostyCallback), 0);
+    }
+    if (authState.user && ["connect-patreon", "connect-boosty-discord"].includes(store.pendingAuthAction)) {
+      const pendingAction = store.pendingAuthAction;
       store.pendingAuthAction = "";
       saveStore();
-      setTimeout(() => connectPatreonGo(), 450);
+      setTimeout(() => pendingAction === "connect-patreon" ? connectPatreonGo() : connectBoostyDiscordGo(), 450);
     }
     client.auth.onAuthStateChange(async (event, session) => {
       if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
@@ -323,10 +376,11 @@ async function initAuth(){
       await refreshReaderAccountState();
       if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
       const pendingAction = authState.user ? store.pendingAuthAction : "";
-      if (pendingAction === "connect-patreon") store.pendingAuthAction = "";
+      if (["connect-patreon", "connect-boosty-discord"].includes(pendingAction)) store.pendingAuthAction = "";
       saveStore();
       render();
       if (pendingAction === "connect-patreon") setTimeout(() => connectPatreonGo(), 450);
+      if (pendingAction === "connect-boosty-discord") setTimeout(() => connectBoostyDiscordGo(), 450);
     });
   } catch (err) {
     authState.error = err;
@@ -442,17 +496,19 @@ async function signOutReader(){
   store.pendingAuthReturn = "";
   saveStore();
 }
-async function syncProviderEntitlements(){
-  if (!patreonEnabled()) throw new Error("Provider sync is disabled for this site.");
+async function syncProviderEntitlements(provider = "patreon", options = {}){
+  const providerKey = String(provider || "patreon").toLowerCase();
+  if (providerKey === "patreon" && !patreonEnabled()) throw new Error("Patreon sync is disabled for this site.");
+  if (providerKey === "boosty_discord" && !boostyDiscordEnabled()) throw new Error("Boosty Discord sync is disabled for this site.");
   const client = getSupabase();
   if (!client) throw new Error("Supabase client unavailable.");
   if (!authState.user) throw new Error("Sign in before syncing access.");
-  const { data, error } = await client.functions.invoke("sync-provider-entitlements", { body:{ provider:"patreon" } });
+  const { data, error } = await client.functions.invoke("sync-provider-entitlements", { body:{ provider:providerKey } });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
   store.providerPending = false;
   await Promise.all([refreshEntitlements(), refreshProviderConnections()]);
-  await loadBackendLibrary({ force:true });
+  if (options.refreshLibrary !== false && typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
   saveStore();
   return data;
 }
@@ -464,5 +520,15 @@ async function requestPatreonOAuth(){
   if (error) throw error;
   const url = data?.url || data?.authorization_url || data?.redirect_url;
   if (!url) throw new Error(data?.message || "Provider connection is not configured yet.");
+  window.location.href = url;
+}
+async function requestBoostyDiscordOAuth(){
+  if (!boostyDiscordEnabled()) throw new Error("Boosty Discord connection is disabled for this site.");
+  const client = getSupabase();
+  if (!client) throw new Error("Supabase client unavailable.");
+  const { data, error } = await client.functions.invoke("discord-oauth-start", { body:{} });
+  if (error) throw error;
+  const url = data?.url || data?.authorization_url || data?.redirect_url;
+  if (!url) throw new Error(data?.message || "Discord OAuth is not configured yet.");
   window.location.href = url;
 }

@@ -4450,12 +4450,53 @@
                 }
             },
 
+            formatSystemMessagesForRichExport(value) {
+                const template = document.createElement('template');
+                template.innerHTML = String(value || '');
+
+                template.content.querySelectorAll('.sys-msg-box').forEach(box => {
+                    box.prepend(document.createTextNode('['));
+                    box.querySelectorAll('br').forEach(br => {
+                        br.before(document.createTextNode(']'));
+                        br.after(document.createTextNode('['));
+                    });
+                    box.append(document.createTextNode(']'));
+                });
+
+                return template.innerHTML.trim();
+            },
+
+            richExportPlainText(value) {
+                const template = document.createElement('template');
+                template.innerHTML = String(value || '');
+                const blockTags = new Set([
+                    'ADDRESS', 'ARTICLE', 'ASIDE', 'BLOCKQUOTE', 'DIV', 'DL',
+                    'FIELDSET', 'FIGCAPTION', 'FIGURE', 'FOOTER', 'FORM',
+                    'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEADER', 'LI',
+                    'MAIN', 'NAV', 'OL', 'P', 'PRE', 'SECTION', 'TABLE', 'TR', 'UL'
+                ]);
+                const readNode = node => {
+                    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || '';
+                    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+                    if (node.nodeName === 'BR') return '\n';
+                    const content = [...node.childNodes].map(readNode).join('');
+                    return blockTags.has(node.nodeName) ? `${content}\n` : content;
+                };
+
+                return [...template.content.childNodes]
+                    .map(readNode)
+                    .join('')
+                    .replace(/\u00a0/g, ' ')
+                    .replace(/[ \t]+\n/g, '\n')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+            },
+
             copyAsRichText() {
                 let html = Editor.normalizeForSave();
-                let plainText = State.quillInstance.getText().trim();
-
                 html = this.applyCensorship(html, true);
-                plainText = this.applyCensorship(plainText, false);
+                html = this.formatSystemMessagesForRichExport(html);
+                const plainText = this.richExportPlainText(html);
 
                 if (navigator.clipboard?.write && window.ClipboardItem) {
                     const htmlBlob = new Blob([html], { type: 'text/html' });

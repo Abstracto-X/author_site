@@ -105,7 +105,7 @@ function sheetPersona(){
   <div class="card tinted" style="margin-bottom:14px;display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(accountLabel())}</div><div class="faint" style="font-size:.76rem">${esc(P.tier || status)}</div></div>${signedIn?`<button class="btn sm ghost" data-sheet="profile">Edit</button><button class="btn sm ghost" data-act="reader-signout">Sign out</button>`:""}</div>
   <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/notifications">${I.bell}<span>Notifications</span><small>Chapter alerts</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.aa}<span>Preferences</span><small>Reader</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
   ${signedIn?`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:7px">Entitlements</div>${P.admin?`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">Admin reader override</span><span class="badge free">active</span></div><p class="faint" style="font-size:.78rem;margin:4px 0 0">This is not a paid/member entitlement; it is attached to your admin profile role.</p>`:active.length?active.map(e=>`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">${esc(e.tier_name || e.name || e.tier || "Reader access")}</span><span class="badge free">active</span></div>`).join(""):`<p class="faint" style="font-size:.8rem;margin:0">No active entitlement returned yet. Connect provider or redeem an access key.</p>`}</div>`:`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">Continue</div><div class="col-flex"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button><div class="faint" style="font-size:.74rem;text-align:center">or use email</div><form data-auth-form="signin"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="current-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Sign in with email</button><button class="btn ghost block" type="button" data-act="show-signup">Create email account</button><button class="btn ghost block" type="button" data-act="show-forgot-password">Forgot password?</button></div></form></div></div>`}
-  <div class="card" style="margin-top:8px"><div style="font-weight:600;font-size:.86rem">Need help?</div><div class="faint" style="font-size:.74rem;margin-top:4px">Open the Vault to manage access, reconnect Patreon, or redeem an access key.</div></div>`;
+  <div class="card" style="margin-top:8px"><div style="font-weight:600;font-size:.86rem">Need help?</div><div class="faint" style="font-size:.74rem;margin-top:4px">Open the Vault to manage access, reconnect a membership provider, or redeem an access key.</div></div>`;
 }
 function sheetProfile(){
   if (!authState.user) return sheetPersona();
@@ -131,7 +131,7 @@ function sheetWhatsNew(){
   <button class="btn story block" data-act="dismiss-whats-new">${I.check}Got it</button>`;
 }
 function sheetSignup(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Save your library</h2><p class="sheet-sub">Use Google for the fastest setup, or create an email login for key redemption, Patreon linking, and future cross-device shelf sync.</p>
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Save your library</h2><p class="sheet-sub">Use Google for the fastest setup, or create an email login for key redemption, membership linking, and future cross-device shelf sync.</p>
   <div class="card" style="margin-bottom:12px"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button></div>
   <form data-auth-form="signup" class="card"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="new-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Create email login</button><button class="btn ghost block" type="button" data-sheet="persona">Back to sign in</button></div></form>`;
 }
@@ -150,7 +150,7 @@ function sheetLock(chId){
   <div class="card" style="margin-bottom:14px"><p class="muted" style="font-size:.86rem;margin:0">${reasonFor(ch,r)}</p></div>
   <div class="col-flex" style="gap:9px">
     ${ch.state==='preview'?`<button class="btn story block" data-preview="${ch.id}" data-act="close-sheet">${I.eye}Read the preview</button>`:""}
-    ${r.state==='expired'?`<button class="btn story block" data-sheet="connect-patreon">${I.sync}Renew via Patreon</button>`:`<button class="btn ${ch.state==='preview'?'ghost':'story'} block" data-sheet="connect-patreon">${I.vault}Connect provider</button>`}
+    ${r.state==='expired'?`<button class="btn story block" data-sheet="connect-provider">${I.sync}Renew membership access</button>`:`<button class="btn ${ch.state==='preview'?'ghost':'story'} block" data-sheet="connect-provider">${I.vault}Connect provider</button>`}
     <button class="btn ghost block" data-sheet="redeem">${I.key}Redeem an access key</button>
     <a class="btn ghost block" data-nav="/benefits">${I.spark}See what access unlocks</a>
     <a class="btn ghost block" data-nav="/support/check-access">${I.shield}Why is this locked?</a>
@@ -164,6 +164,24 @@ function sheetConnectPatreon(){
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Activate with Patreon</h2><p class="sheet-sub">Patreon verifies membership; your reader account keeps access, keys, progress, and provider links together.</p>
   <div class="card" style="margin-bottom:14px"><div class="between"><div><div style="font-weight:600">One smooth flow</div><div class="faint" style="font-size:.78rem">${authState.user?"We will send you to Patreon, then sync your tier back here.":"Continue with Google first, then we will automatically send you to Patreon to activate access."}</div></div>${I.vault}</div></div>
   <div class="col-flex" style="gap:9px">${authState.user?`<button class="btn story block" data-act="connect-patreon-go">${I.vault}Continue with Patreon</button>`:`<button class="btn story block" data-act="google-then-patreon">${I.external}Continue with Google, then Patreon</button><button class="btn ghost block" data-sheet="persona">${I.user}Use email instead</button>`}<button class="btn ghost block" data-sheet="redeem">${I.key}I have a key instead</button><a class="btn ghost block" data-nav="/support/wrong-account">${I.user}Wrong account?</a></div>`;
+}
+function sheetConnectProvider(){
+  const choices = [
+    patreonEnabled()?`<button class="btn story block" data-sheet="connect-patreon">${I.vault}Patreon membership</button>`:"",
+    boostyDiscordEnabled()?`<button class="btn story block" data-sheet="connect-boosty">${I.msg}Boosty through Discord</button>`:""
+  ].filter(Boolean).join("");
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Choose your membership provider</h2><p class="sheet-sub">Connect the service where your active subscription lives. Provider access stays attached to this reader account.</p>
+  <div class="col-flex" style="gap:9px">${choices||`<div class="card"><p class="faint" style="margin:0">No membership providers are enabled.</p></div>`}<button class="btn ghost block" data-sheet="redeem">${I.key}I have an access key</button></div>`;
+}
+function sheetConnectBoosty(){
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Activate with Boosty</h2><p class="sheet-sub">Boosty assigns your subscriber role in Discord; EvilArchives verifies that role without reading your messages.</p>
+  <div class="card" style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:6px">Before connecting</div><ol class="faint" style="font-size:.78rem;line-height:1.65;margin:0;padding-left:20px"><li>Subscribe to the matching tier on Boosty.</li><li>Connect the same Discord account in Boosty Connected Apps.</li><li>Join the EvilArchives Discord server and wait for the subscriber role.</li></ol></div>
+  <div class="col-flex" style="gap:9px">
+    ${BOOSTY_URL?`<button class="btn ghost block" data-act="open-boosty">${I.external}Open the Boosty page</button>`:""}
+    ${authState.user?`<button class="btn story block" data-act="connect-boosty-go">${I.msg}Verify my Discord role</button>`:`<button class="btn story block" data-act="google-then-boosty">${I.external}Continue with Google, then Discord</button><button class="btn ghost block" data-sheet="persona">${I.user}Use email instead</button>`}
+    <button class="btn ghost block" data-sheet="redeem">${I.key}I have a key instead</button>
+    <a class="btn ghost block" data-nav="/support/wrong-account">${I.user}Wrong Discord account?</a>
+  </div>`;
 }
 function sheetContext(){
   const f=currentChapter; if(!f) return "<p>Open a chapter first.</p>"; const {ch,story,index}=f;

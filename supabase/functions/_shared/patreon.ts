@@ -11,6 +11,7 @@ type TokenPayload = {
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
+  expires_at?: string | null;
   scope?: string;
   token_type?: string;
 };
@@ -221,7 +222,7 @@ export const fetchPatreonIdentity = async (accessToken: string) => {
 
 export const expiresAtFromToken = (token: TokenPayload) => {
   const expiresIn = Number(token.expires_in || 0);
-  if (!expiresIn) return null;
+  if (!expiresIn) return token.expires_at || null;
   return new Date(Date.now() + Math.max(0, expiresIn - 60) * 1000).toISOString();
 };
 

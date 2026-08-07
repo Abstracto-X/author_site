@@ -154,7 +154,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 2756 | `manualGrantForm()` | Admin CMS helper used by the single-file admin app. |
 | 2771 | `saveManualGrant()` | Persists changes to Supabase or updates local state. |
 | 2792 | `revokeEntitlement(id)` | Admin CMS helper used by the single-file admin app. |
-| 2799 | `providerMappingForm(id = null)` | Admin CMS helper used by the single-file admin app. |
+| 2799 | `providerMappingForm(id = null)` | Creates or edits provider tier mappings, including `boosty_discord` role IDs. |
 | 2817 | `saveProviderMapping(id)` | Persists changes to Supabase or updates local state. |
 | 2838 | `characterForm(id = null)` | Admin CMS helper used by the single-file admin app. |
 | 2870 | `saveCharacter(id)` | Persists changes to Supabase or updates local state. |
@@ -195,7 +195,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | 4284 | `maps(container)` | Admin CMS helper used by the single-file admin app. |
 | 4346 | `mapRequests(container)` | Admin CMS helper used by the single-file admin app. |
 | 4396 | `access(container)` | Admin CMS helper used by the single-file admin app. |
-| 4509 | `settings(container)` | Admin CMS helper used by the single-file admin app. |
+| 4509 | `settings(container)` | Renders Site Settings and exposes Patreon plus Boosty/Discord provider feature status. |
 | 4549 | `profile(container)` | Admin CMS helper used by the single-file admin app. |
 | 4622 | `editProfile(id)` | Admin CMS helper used by the single-file admin app. |
 | 4646 | `saveProfile(id)` | Persists changes to Supabase or updates local state. |
@@ -248,7 +248,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `DB.loadScratchpads(storyId)`, `DB.saveScratchpad(id, record)`, and `DB.deleteScratchpad(id)` manage unlisted reference notes attached to chapters in `public.scratchpads`.
 - `App.createScratchpadForChapter(chapterId)` attaches a new scratchpad note directly to a chapter, opening it as a dashed tab in the editor tab strip and rendering it under its parent chapter in the index table and left sidebar.
 - `App.openEditorForScratchpad(id)` switches the editor view to a scratchpad note, adjusting header badge (`SP`), hiding publish/live controls, and displaying scratchpad settings. `App.closeScratchpadTab(id)` and `App.deleteScratchpad(id)` handle tab closure and permanent deletion.
-- Export menu in `writer.html` provides Copy as Markdown, Copy as Plain Text (without system brackets), Copy as Rich Text, and preset-based text censorship filters.
+- Export menu in `writer.html` provides Copy as Markdown, Copy as Plain Text (without system brackets), Copy as Rich Text, and preset-based text censorship filters. `App.formatSystemMessagesForRichExport()` adds square brackets around every individual system-dialogue line without mutating the editor/saved HTML, while `App.richExportPlainText()` produces the matching bracketed plain-text clipboard flavor.
 
 ## 2026-07-23 09:20 Asia/Kolkata - Writer responsive workspace controls
 

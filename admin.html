@@ -3239,7 +3239,7 @@
                 const mapping = id ? mappings.find(m => m.id === id) : { provider: 'patreon', provider_tier_id: '', provider_tier_label: '', tier_id: tiers[0].id, is_active: true };
                 const html = `
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label">Provider</label><select class="form-select" id="f-map-provider">${['patreon','kofi','paypal','discord','manual'].map(p => `<option value="${p}" ${mapping?.provider === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+                        <div class="form-group"><label class="form-label">Provider</label><select class="form-select" id="f-map-provider">${['patreon','boosty_discord','kofi','paypal','discord','manual'].map(p => `<option value="${p}" ${mapping?.provider === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
                         <div class="form-group"><label class="form-label">Provider Tier/Product/Role ID</label><input class="form-input" id="f-map-provider-tier-id" value="${Utils.escapeAttr(mapping?.provider_tier_id || '')}"></div>
                     </div>
                     <div class="form-row">
@@ -5086,6 +5086,8 @@
                         <div class="stats-grid">
                             <div class="stat-card"><i class="fab fa-patreon stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.providers?.patreon ? 'On' : 'Off'}</div><div class="stat-label">Patreon Provider</div></div>
                             <div class="stat-card"><i class="fas fa-plug stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.features?.enablePatreonConnect ? 'On' : 'Off'}</div><div class="stat-label">Patreon Connect</div></div>
+                            <div class="stat-card"><i class="fab fa-discord stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.providers?.boosty ? 'On' : 'Off'}</div><div class="stat-label">Boosty Provider</div></div>
+                            <div class="stat-card"><i class="fas fa-link stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.features?.enableBoostyDiscordConnect ? 'On' : 'Off'}</div><div class="stat-label">Boosty Discord</div></div>
                             <div class="stat-card"><i class="fab fa-google stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.auth?.googleEnabled ? 'On' : 'Off'}</div><div class="stat-label">Google Sign-in</div></div>
                             <div class="stat-card"><i class="fas fa-key stat-icon"></i><div class="stat-value">${ADMIN_SITE_CONFIG.features?.enableAccessKeys !== false ? 'On' : 'Off'}</div><div class="stat-label">Access Keys</div></div>
                         </div>

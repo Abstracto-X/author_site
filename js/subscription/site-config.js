@@ -16,6 +16,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
 
   providers: {
     patreon: true,
+    boosty: true,
     kofi: false,
     paypal: false,
     discord: false
@@ -24,7 +25,8 @@ window.SUBSCRIPTION_SITE_CONFIG = {
   links: {
     mainArchiveUrl: null,
     supportUrl: null,
-    discordUrl: null
+    discordUrl: null,
+    boostyUrl: "https://boosty.to/hornyshitler"
   },
 
   features: {
@@ -33,6 +35,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     enableFixtureFallbackInProduction: false,
     enableLocalDemoReaderFeatures: false,
     enablePatreonConnect: true,
+    enableBoostyDiscordConnect: true,
     enableAccessKeys: true,
     enableGoogleOAuth: true,
     enableReaderGuides: true

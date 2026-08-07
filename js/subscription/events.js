@@ -31,6 +31,20 @@ async function connectPatreonGo(){
     render();
   }
 }
+async function connectBoostyDiscordGo(){
+  if (!authState.user){ if (googleEnabled()) await signInWithGoogle("connect-boosty-discord"); else openSheet(sheetPersona); return; }
+  try {
+    toast("Starting Boosty verification", "Discord will confirm the subscriber role assigned by Boosty.", {icon:"sync", ms:3500});
+    store.providerPending = true;
+    saveStore();
+    await requestBoostyDiscordOAuth();
+  } catch (err) {
+    store.providerPending = false;
+    saveStore();
+    toast("Boosty connection not ready", err.message || "The Discord OAuth Edge Functions need configuration.", {icon:"alert", kind:"bad", ms:7000});
+    render();
+  }
+}
 async function redeemKey(code){
   if (!accessKeysEnabled()) return false;
   code=(code||"").trim().toUpperCase();
@@ -177,7 +191,7 @@ function delegate(){
     if (t.dataset.read!=null){ e.preventDefault(); nav("/read/"+t.dataset.read); return; }
     if (t.dataset.preview!=null){ e.preventDefault(); nav("/read/"+t.dataset.preview); return; }
     if (t.dataset.lock!=null){ e.preventDefault(); rememberReturn(); openSheet(()=>sheetLock(t.dataset.lock)); return; }
-    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-patreon":sheetConnectPatreon,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
+    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
     if (t.dataset.follow!=null){ toggleFollow(t.dataset.follow); return; }
     if (t.dataset.react!=null){ if(currentChapter) setReaction(currentChapter.ch.id, t.dataset.react); return; }
     if (t.dataset.persona!=null){ store.personaId=t.dataset.persona; saveStore(); closeSheet(); toast("Viewing as "+(D.PERSONAS.find(p=>p.id===t.dataset.persona)?.label),null,{icon:"user"}); render(); return; }
@@ -354,13 +368,16 @@ function handleAct(act, el){
     case "clear-filters": store.filters={q:"",chips:[]}; saveStore(); render(); break;
     case "toggle": { /* handled by data-toggle */ break; }
     case "connect-patreon-go": connectPatreonGo(); break;
+    case "connect-boosty-go": connectBoostyDiscordGo(); break;
     case "google-signin": signInWithGoogle().catch(err=>toast("Google sign-in failed", err.message || "Unable to start Google OAuth.", {icon:"alert", kind:"bad"})); break;
     case "google-then-patreon": signInWithGoogle("connect-patreon").catch(err=>toast("Google sign-in failed", err.message || "Unable to start Google OAuth.", {icon:"alert", kind:"bad"})); break;
+    case "google-then-boosty": signInWithGoogle("connect-boosty-discord").catch(err=>toast("Google sign-in failed", err.message || "Unable to start Google OAuth.", {icon:"alert", kind:"bad"})); break;
     case "show-signup": openSheet(sheetSignup); break;
     case "show-forgot-password": openSheet(sheetForgotPassword); break;
     case "reader-signout": signOutReader().then(()=>{ closeSheet(); toast("Signed out", null, {icon:"user"}); render(); }).catch(err=>toast("Sign out failed", err.message, {icon:"alert", kind:"bad"})); break;
     case "request-browser-notifications": requestBrowserNotifications().then(()=>saveNotificationPreferences({ browser_enabled:true, email_enabled:store.settings.emailNotifications !== false, new_chapters_enabled:store.settings.chapterNotifications !== false, minimum_tier_rank:0 }).catch(()=>null)).then(()=>{ toast("Browser notifications enabled", "We can show chapter alerts while the site is open.", {icon:"bell"}); openSheet(sheetSettings); }).catch(err=>toast("Notifications blocked", err.message || "Permission was not granted.", {icon:"alert", kind:"bad"})); break;
     case "resync": syncProviderEntitlements().then((data)=>{ const grants = Number(data?.grants || 0); toast("Sync complete", grants ? `${grants} Patreon entitlement${grants===1?"":"s"} active.` : "Patreon linked, but no mapped tier was found.", {icon:"checkCirc", ms:4000}); render(); }).catch(err=>toast("Sync failed", err.message || "Unable to refresh provider entitlements.", {icon:"alert", kind:"bad"})); break;
+    case "resync-boosty": syncProviderEntitlements("boosty_discord").then((data)=>{ const grants = Number(data?.grants || 0); const detail = data?.status === "not_in_server" ? "Join the Discord server, then try again." : grants ? "Your Boosty Discord role is active." : "No mapped Boosty subscriber role was found."; toast("Boosty sync complete", detail, {icon:grants?"checkCirc":"info", ms:5000}); render(); }).catch(err=>toast("Boosty sync failed", err.message || "Unable to verify Discord roles.", {icon:"alert", kind:"bad"})); break;
     case "expected-access": rememberReturn(); openSheet(sheetContext?sheetContext:()=>sheetLock(currentChapter?.ch.id)); break;
     case "reader-prev": goReaderChapter(-1); break;
     case "reader-next": goReaderChapter(1); break;
@@ -399,6 +416,7 @@ function handleAct(act, el){
     case "offline-queue": toast("Offline reading unavailable","This site currently streams chapters after access is verified.",{icon:"download",ms:4000}); break;
     case "extra-open": toast("Opening bonus material","Author note · reader format.",{icon:"spark"}); break;
     case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); break;
+    case "open-boosty": if (BOOSTY_URL) window.open(BOOSTY_URL, "_blank", "noopener"); else toast("Boosty link unavailable", "No Boosty page is configured for this site.", {icon:"alert", kind:"bad"}); break;
     case "external-discord": toast("Community link unavailable","No community link is configured for this site.",{icon:"msg"}); break;
     case "mark-all-read": { const ids=store.notifs.filter(n=>!n.read).map(n=>n.id).filter(Boolean); store.notifs.forEach(n=>n.read=true); saveStore(); markReaderNotificationsRead(ids).catch(()=>{}); render(); break; }
     case "notif-prefs": openSheet(sheetSettings); break;

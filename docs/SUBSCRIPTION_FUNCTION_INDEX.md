@@ -87,13 +87,14 @@ Recent reader notification/profile changes:
 | 53 | `refreshEntitlements()` | Loads fresh data/state from Supabase or local runtime state. |
 | n/a | `refreshProviderConnections()` / `providerConnection()` / `providerIsConnected()` | Loads and resolves the reader's own provider connection status. |
 | n/a | `readPatreonCallbackResult()` / `cleanPatreonCallbackUrl()` / `showPatreonCallbackResult()` | Handles safe Patreon callback status feedback and cleanup. |
+| n/a | `readBoostyCallbackResult()` / `cleanBoostyCallbackUrl()` / `showBoostyCallbackResult()` | Handles safe Boosty-through-Discord callback feedback, missing-role/server outcomes, and URL cleanup. |
 | 76 | `authRedirectUrl()` | Coordinates authentication/session behavior. |
 | 82 | `mergeOAuthParams(target, raw)` | Coordinates authentication/session behavior. |
 | 91 | `oauthCallbackParams()` | Coordinates authentication/session behavior. |
 | 102 | `cleanHashRoute(hash, fallbackRoute = "vault")` | Coordinates navigation or route rendering. |
 | 113 | `cleanOAuthCallbackUrl()` | Coordinates authentication/session behavior. |
 | 120 | `consumeOAuthCallback(client)` | Coordinates authentication/session behavior. |
-| n/a | `refreshReaderAccountState()` | Refreshes profile, entitlements, notification preferences, and notifications concurrently for the current session. |
+| n/a | `refreshReaderAccountState(options = {})` | Refreshes profile, entitlements, provider connections, notification preferences, and notifications; also renews a connected bounded Boosty/Discord role grant unless explicitly suppressed. |
 | 144 | `initAuth()` | Coordinates authentication/session behavior while ignoring duplicate `INITIAL_SESSION`, token-refresh, and same-session sign-in callbacks. |
 | 185 | `signInWithPassword(email, password)` | Coordinates authentication/session behavior. |
 | 200 | `signUpWithPassword(email, password)` | Coordinates authentication/session behavior. |
@@ -102,8 +103,9 @@ Recent reader notification/profile changes:
 | 233 | `subscriptionRedirectTo()` | Helper used by this module. |
 | 248 | `signInWithGoogle(nextAction = "")` | Coordinates authentication/session behavior. |
 | 272 | `signOutReader()` | Helper used by this module. |
-| 288 | `syncProviderEntitlements()` | Helper used by this module. |
+| 288 | `syncProviderEntitlements(provider = "patreon", options = {})` | Invokes the shared provider sync function for Patreon or `boosty_discord`, then refreshes reader access and connection state. |
 | 302 | `requestPatreonOAuth()` | Coordinates authentication/session behavior. |
+| n/a | `requestBoostyDiscordOAuth()` | Starts the authenticated Discord OAuth flow used to verify Boosty-assigned subscriber roles. |
 
 ## `js/subscription/author-studio.js`
 
@@ -338,7 +340,8 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
-| 79 | `providerCard(name, key, connected, tier, since, note)` | Helper used by this module. |
+| n/a | `activeProviderTier(provider)` | Resolves the highest active internal tier for one provider. |
+| 79 | `providerCard(name, key, connected, tier, since, note)` | Renders a provider-specific connect or sync card for Patreon and Boosty through Discord. |
 | 86 | `maskKey(c)` | Helper used by this module. |
 
 ## `js/subscription/views/help-support.js`
@@ -364,6 +367,8 @@ Recent reader notification/profile changes:
 | 69 | `sheetLock(chId)` | Builds or controls bottom-sheet/modal content. |
 | 82 | `sheetRedeem()` | Builds or controls bottom-sheet/modal content. |
 | 86 | `sheetConnectPatreon()` | Builds or controls bottom-sheet/modal content. |
+| n/a | `sheetConnectProvider()` | Lets readers choose between enabled membership providers before connecting access. |
+| n/a | `sheetConnectBoosty()` | Explains the Boosty-to-Discord role prerequisites and starts role verification. |
 | 92 | `sheetContext()` | Builds or controls bottom-sheet/modal content. |
 | 108 | `sheetParaComments(chId, p)` | Builds or controls bottom-sheet/modal content. |
 | 114 | `sheetImage(fig, cap)` | Handles image preview/upload/storage URL behavior. |
@@ -379,6 +384,7 @@ Recent reader notification/profile changes:
 | 9 | `saveQuote()` | Persists changes to Supabase or updates local state. |
 | 10 | `rememberReturn()` | Helper used by this module. |
 | 11 | `connectPatreonGo()` | Helper used by this module. |
+| n/a | `connectBoostyDiscordGo()` | Signs the reader in when necessary, then starts Boosty subscriber-role verification through Discord OAuth. |
 | 26 | `redeemKey(code)` | Helper used by this module. |
 | 52 | `copyText(t)` | Helper used by this module. |
 | n/a | `chapterDirectUrl(chapterId)` | Builds the canonical hash-route URL for a published chapter. |

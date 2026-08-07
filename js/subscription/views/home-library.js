@@ -267,7 +267,7 @@ VIEWS.home = function(){
       <div class="card tier-status-card">
         <div class="between" style="align-items: center; margin-bottom: 8px;">
           <div class="eyebrow" style="margin:0">Current Tier</div>
-          <button class="btn sm ghost" data-sheet="connect-patreon" style="padding: 0 10px; height: 26px; font-size: 0.72rem;">
+          <button class="btn sm ghost" data-sheet="connect-provider" style="padding: 0 10px; height: 26px; font-size: 0.72rem;">
             ${P.admin ? "Admin" : P.level > 0 ? "Upgrade" : "Get Access"}
           </button>
         </div>
@@ -351,7 +351,8 @@ VIEWS.home = function(){
       </div>
       <div class="quicklinks" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <a data-sheet="redeem" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.key}<span style="margin-top:4px">Redeem Key</span></a>
-        <a data-act="resync" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.sync}<span style="margin-top:4px">Sync Patreon</span></a>
+        ${patreonEnabled()?`<a data-act="resync" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.sync}<span style="margin-top:4px">Sync Patreon</span></a>`:""}
+        ${boostyDiscordEnabled()?`<a data-act="resync-boosty" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.sync}<span style="margin-top:4px">Sync Boosty</span></a>`:""}
         <a data-sheet="settings" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.aa}<span style="margin-top:4px">Preferences</span></a>
         ${P.signedIn
           ? `<a data-act="reader-signout" style="padding:10px;font-size:0.8rem;cursor:pointer;color:var(--bad)">${I.x}<span style="margin-top:4px">Sign Out</span></a>`
