@@ -898,7 +898,7 @@
             content: "";
         }
 
-        .ql-editor .sys-msg-box .sys-soft-break {
+        .ql-editor .sys-soft-break {
             display: block;
             height: 0;
             line-height: inherit;
@@ -944,6 +944,26 @@
             color: #38bdf8;
             font: inherit;
             font-weight: 700;
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-group-start,
+        .ql-editor .sys-msg-box.sys-msg-group-middle {
+            margin-bottom: 0;
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-group-middle,
+        .ql-editor .sys-msg-box.sys-msg-group-end {
+            margin-top: 0;
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-editing:is(.sys-msg-group-middle, .sys-msg-group-end)::before,
+        .ql-editor.system-box-rendering-off .sys-msg-box:is(.sys-msg-group-middle, .sys-msg-group-end)::before {
+            content: "" !important;
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-editing:is(.sys-msg-group-start, .sys-msg-group-middle)::after,
+        .ql-editor.system-box-rendering-off .sys-msg-box:is(.sys-msg-group-start, .sys-msg-group-middle)::after {
+            content: "" !important;
         }
 
         /* Responsive Pass */
@@ -2376,7 +2396,13 @@
                 const isSystem = node.classList.contains('sys-msg-box');
 
                 if (isSystem) {
-                    node.classList.remove('sys-msg-editing');
+                    node.classList.remove(
+                        'sys-msg-editing',
+                        'sys-msg-group-single',
+                        'sys-msg-group-start',
+                        'sys-msg-group-middle',
+                        'sys-msg-group-end'
+                    );
                     node.classList.toggle('sys-msg-caption', Boolean(node.querySelector('a[href]')));
                 }
 
@@ -3263,8 +3289,28 @@
         function updateSystemMessageVariants(root = State.quillInstance?.root) {
             if (!root) return;
 
-            root.querySelectorAll('.sys-msg-box').forEach(box => {
+            const boxes = [...root.querySelectorAll('.sys-msg-box')];
+            boxes.forEach(box => {
                 box.classList.toggle('sys-msg-caption', Boolean(box.querySelector('a[href]')));
+                box.classList.remove(
+                    'sys-msg-group-single',
+                    'sys-msg-group-start',
+                    'sys-msg-group-middle',
+                    'sys-msg-group-end'
+                );
+            });
+
+            boxes.forEach(box => {
+                const hasPrevious = box.previousElementSibling?.classList.contains('sys-msg-box');
+                const hasNext = box.nextElementSibling?.classList.contains('sys-msg-box');
+                const groupClass = !hasPrevious && !hasNext
+                    ? 'sys-msg-group-single'
+                    : !hasPrevious
+                        ? 'sys-msg-group-start'
+                        : !hasNext
+                            ? 'sys-msg-group-end'
+                            : 'sys-msg-group-middle';
+                box.classList.add(groupClass);
             });
         }
 
@@ -3591,7 +3637,20 @@
                     const [line] = quill.getLine(range.index);
                     if (line?.domNode?.classList?.contains('sys-msg-box')) {
                         activeSystemLine = line;
-                        line.domNode.classList.add('sys-msg-editing');
+                        const activeBox = line.domNode;
+                        const group = [activeBox];
+                        let previous = activeBox.previousElementSibling;
+                        let next = activeBox.nextElementSibling;
+
+                        while (previous?.classList.contains('sys-msg-box')) {
+                            group.unshift(previous);
+                            previous = previous.previousElementSibling;
+                        }
+                        while (next?.classList.contains('sys-msg-box')) {
+                            group.push(next);
+                            next = next.nextElementSibling;
+                        }
+                        group.forEach(box => box.classList.add('sys-msg-editing'));
                     }
                 }
 
@@ -3602,73 +3661,20 @@
                 }
             },
 
-            inlineAttributes(attributes = {}) {
-                const blockAttributes = new Set([
-                    'align', 'blockquote', 'code-block', 'direction', 'header',
-                    'indent', 'list', 'system-message'
-                ]);
-
-                return Object.fromEntries(
-                    Object.entries(attributes).filter(([name]) => !blockAttributes.has(name))
-                );
-            },
-
-            selectedDeltaAsSystemContent(delta) {
-                const Delta = Quill.import('delta');
-                const output = new Delta();
-
-                (delta?.ops || []).forEach(op => {
-                    const attributes = this.inlineAttributes(op.attributes);
-
-                    if (typeof op.insert !== 'string') {
-                        output.insert(op.insert, attributes);
-                        return;
-                    }
-
-                    const pieces = op.insert.split('\n');
-                    pieces.forEach((piece, index) => {
-                        if (piece) output.insert(piece, attributes);
-                        if (index < pieces.length - 1) output.insert({ 'soft-break': true });
-                    });
-                });
-
-                while (output.ops.length && output.ops.at(-1)?.insert?.['soft-break']) {
-                    output.ops.pop();
-                }
-
-                return output;
-            },
-
             wrapSelectionAsSingleSystemMessage(range) {
                 const quill = State.quillInstance;
                 if (!quill || !range?.length) return;
 
-                const selected = this.selectedDeltaAsSystemContent(
-                    quill.getContents(range.index, range.length)
-                );
-                const [, startOffset] = quill.getLine(range.index);
-                let insertAt = range.index;
-
                 State.commandRunning = true;
                 try {
-                    quill.deleteText(range.index, range.length, 'user');
-
-                    if (startOffset > 0) {
-                        quill.insertText(insertAt, '\n', 'user');
-                        insertAt += 1;
-                    }
-
-                    quill.insertContents(insertAt, selected, 'user');
-                    const contentLength = selected.length();
-                    quill.insertText(insertAt + contentLength, '\n', 'user');
                     quill.formatLine(
-                        insertAt,
-                        Math.max(contentLength, 1),
+                        range.index,
+                        range.length,
                         'system-message',
                         true,
                         'user'
                     );
-                    quill.setSelection(insertAt + contentLength, 0, 'silent');
+                    quill.setSelection(range.index, range.length, 'silent');
                 } finally {
                     State.commandRunning = false;
                 }
@@ -3683,41 +3689,43 @@
                 const quill = State.quillInstance;
                 if (!quill) return;
 
-                const Delta = Quill.import('delta');
                 const records = [...new Set(lines)]
                     .filter(line => line?.domNode?.classList?.contains('sys-msg-box'))
-                    .map(line => {
-                        const index = quill.getIndex(line);
-                        const length = line.length();
-                        const source = quill.getContents(index, Math.max(length - 1, 0));
-                        const replacement = new Delta();
-
-                        (source.ops || []).forEach(op => {
-                            if (op.insert?.['soft-break']) {
-                                replacement.insert('\n');
-                            } else {
-                                replacement.insert(op.insert, this.inlineAttributes(op.attributes));
-                            }
-                        });
-
-                        return { index, length, replacement };
-                    })
-                    .sort((a, b) => b.index - a.index);
+                    .map(line => ({
+                        line,
+                        index: quill.getIndex(line),
+                        length: line.length()
+                    }));
 
                 if (!records.length) return;
+
+                const selection = quill.getSelection();
 
                 State.commandRunning = true;
                 try {
                     records.forEach(record => {
-                        quill.deleteText(record.index, record.length, 'user');
-                        quill.insertContents(record.index, record.replacement, 'user');
-                        quill.insertText(record.index + record.replacement.length(), '\n', 'user');
+                        quill.formatLine(
+                            record.index,
+                            Math.max(record.length, 1),
+                            'system-message',
+                            false,
+                            'user'
+                        );
+                        record.line.domNode.classList.remove(
+                            'sys-msg-caption',
+                            'sys-msg-editing',
+                            'sys-msg-group-single',
+                            'sys-msg-group-start',
+                            'sys-msg-group-middle',
+                            'sys-msg-group-end'
+                        );
                     });
-                    quill.setSelection(records.at(-1).index, 0, 'silent');
+                    if (selection) quill.setSelection(selection.index, selection.length, 'silent');
                 } finally {
                     State.commandRunning = false;
                 }
 
+                updateSystemMessageVariants();
                 this.markUnsaved();
                 this.updateMeta();
                 this.refreshSystemMessageEditingState(quill.getSelection());

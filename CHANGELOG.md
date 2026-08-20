@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-20 13:27 Asia/Kolkata - Preserve dialogue text during system-format changes
+
+Area: Writer / chapter editor
+
+Summary:
+- Corrected system-dialogue addition and removal so both operations use Quill block formatting only and never delete, split, or reconstruct selected manuscript text.
+- Backspace at the beginning of a system dialogue and bulk toolbar removal now remove only the system-box formatting and transient bracket/frame classes.
+- Multi-paragraph additions preserve the original Quill contents in place, display adjacent formatted paragraphs as one dialogue group, and rely on the established save serializer to merge that group into one portable system block.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-08-20 12:57 Asia/Kolkata - Editable Writer system-dialogue source mode
 
 Area: Writer / chapter editor

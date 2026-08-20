@@ -20,8 +20,9 @@ Files touched:
 Summary:
 - The active system dialogue now appears as editable bracket-source text and returns to its rendered box after the caret leaves.
 - A persisted eye control switches all dialogue rendering on/off.
-- The `[ ]` toolbar control combines a dragged multi-paragraph selection into one soft-break-backed system dialogue or unwraps all selected system dialogues without deleting their text.
-- Backspace at the beginning of a system dialogue unwraps it while preserving its content.
+- The `[ ]` toolbar control applies/removes only Quill block formatting. It never deletes or reinserts the selected text; adjacent formatted paragraphs appear as one group and serialize as one portable system block.
+- Backspace at the beginning of a system dialogue removes only the box formatting while preserving its content in place.
+- The initial delete/reinsert transformation was removed after it proved capable of losing selected text.
 - Both inline Writer scripts pass `node --check`; `git diff --check` reports no whitespace errors.
 
 Remaining work:
@@ -30,6 +31,7 @@ Remaining work:
 Risks / notes:
 - The bracket characters in source view are visual delimiters; use Backspace at the beginning of the block or the `[ ]` toolbar control to remove the system format.
 - Saved chapter HTML remains `div.sys-msg-box`; the temporary source-editing class is removed during serialization.
+- Formatting operations now deliberately avoid all `deleteText()` calls. Manual browser verification is still required for Quill selection behavior.
 
 Verification needed:
 - Select partial text spanning at least three paragraphs, click `[ ]`, and confirm it becomes one dialogue with three lines while bold/italic/link formatting survives.

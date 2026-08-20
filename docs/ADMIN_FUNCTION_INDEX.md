@@ -220,8 +220,8 @@ Generated from the current codebase. One-line descriptions are intentionally con
 
 - `Editor.refreshSystemMessageEditingState(range)` gives the system-message block containing the caret a temporary bracket-source appearance. Moving the caret away restores the rendered blue/red box; the temporary class is stripped during save serialization.
 - `Editor.toggleSystemMessageRendering()` and `Editor.applySystemMessageRenderingPreference()` switch every system dialogue between rendered boxes and bracket-source text, persisted in `ea-writer-system-message-rendering`.
-- `Editor.toggleSelectedSystemMessage()` adds or removes the toolbar format. `Editor.wrapSelectionAsSingleSystemMessage(range)` preserves inline formats and combines every selected paragraph into one system-message block using soft breaks rather than producing several boxes.
-- `Editor.unwrapSystemMessageLines(lines)` removes system formatting while preserving text and inline formatting. The toolbar supports bulk removal, and Backspace at the beginning of a system dialogue unwraps that dialogue without deleting its content.
+- `Editor.toggleSelectedSystemMessage()` adds or removes the toolbar format. `Editor.wrapSelectionAsSingleSystemMessage(range)` applies Quill's block format directly across the selected paragraphs without deleting or reinserting their contents; adjacent formatted lines are styled as one group and the existing serializer merges them into one portable system block.
+- `Editor.unwrapSystemMessageLines(lines)` removes only the Quill system format and its transient visual classes. It never calls `deleteText()` or reconstructs dialogue contents. The toolbar supports bulk removal, and Backspace at the beginning of a system dialogue performs the same content-preserving format removal.
 
 ## 2026-07-07 00:00 Asia/Kolkata - Writer mock removal and Supabase binding
 
