@@ -20,9 +20,10 @@ Files touched:
 Summary:
 - The active system dialogue now appears as editable bracket-source text and returns to its rendered box after the caret leaves.
 - A persisted eye control switches all dialogue rendering on/off.
-- The `[ ]` toolbar control applies/removes only Quill block formatting. It never deletes or reinserts the selected text; adjacent formatted paragraphs appear as one group and serialize as one portable system block.
+- The `[ ]` toolbar control applies/removes only Quill block formatting. It never deletes or reinserts authored text; structural paragraph separators between adjacent formatted lines are replaced with soft breaks so the selection becomes one actual system block immediately.
 - Backspace at the beginning of a system dialogue removes only the box formatting while preserving its content in place.
 - The initial delete/reinsert transformation was removed after it proved capable of losing selected text.
+- Existing adjacent system blocks are normalized on hydration/editing, preventing the repeated frames visible in Chapter 60 while retaining blank lines inside the single dialogue.
 - Both inline Writer scripts pass `node --check`; `git diff --check` reports no whitespace errors.
 
 Remaining work:
@@ -31,7 +32,7 @@ Remaining work:
 Risks / notes:
 - The bracket characters in source view are visual delimiters; use Backspace at the beginning of the block or the `[ ]` toolbar control to remove the system format.
 - Saved chapter HTML remains `div.sys-msg-box`; the temporary source-editing class is removed during serialization.
-- Formatting operations now deliberately avoid all `deleteText()` calls. Manual browser verification is still required for Quill selection behavior.
+- Formatting operations deliberately avoid `deleteText()` on authored content. Joining paragraphs replaces only Quill's structural newline records with equal-length soft-break embeds. Manual browser verification is still required for Quill selection behavior.
 
 Verification needed:
 - Select partial text spanning at least three paragraphs, click `[ ]`, and confirm it becomes one dialogue with three lines while bold/italic/link formatting survives.

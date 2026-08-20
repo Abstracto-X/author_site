@@ -7,7 +7,8 @@ Area: Writer / chapter editor
 Summary:
 - Corrected system-dialogue addition and removal so both operations use Quill block formatting only and never delete, split, or reconstruct selected manuscript text.
 - Backspace at the beginning of a system dialogue and bulk toolbar removal now remove only the system-box formatting and transient bracket/frame classes.
-- Multi-paragraph additions preserve the original Quill contents in place, display adjacent formatted paragraphs as one dialogue group, and rely on the established save serializer to merge that group into one portable system block.
+- Multi-paragraph additions preserve authored contents in place and replace only the structural Quill paragraph separators between adjacent formatted lines with soft-break embeds, producing one actual system block in the live editor instead of repeated frames.
+- Existing adjacent system blocks are normalized during hydration and editing, so previously authored multiline dialogue also renders as one box without waiting for a save/reload cycle.
 
 Files changed:
 - `writer.html`

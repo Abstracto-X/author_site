@@ -2573,6 +2573,7 @@
             autosaveTimer: null,
             commandRunning: false,
             isHydratingEditor: false,
+            isNormalizingSystemMessages: false,
             openChapterIds: [],
             openScratchpadIds: [],
             dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
@@ -3286,8 +3287,53 @@
             quill.setSelection(range.index + 1, 0, 'silent');
         }
 
+        function mergeAdjacentSystemMessageBlocks(quill = State.quillInstance) {
+            if (!quill || State.isNormalizingSystemMessages) return false;
+
+            const lines = quill.getLines();
+            const newlineIndexes = [];
+
+            for (let index = 0; index < lines.length - 1; index += 1) {
+                const line = lines[index];
+                const nextLine = lines[index + 1];
+                const isSystem = line?.domNode?.classList?.contains('sys-msg-box');
+                const nextIsSystem = nextLine?.domNode?.classList?.contains('sys-msg-box');
+
+                if (isSystem && nextIsSystem) {
+                    newlineIndexes.push(quill.getIndex(line) + line.length() - 1);
+                }
+            }
+
+            if (!newlineIndexes.length) return false;
+
+            const Delta = Quill.import('delta');
+            const change = new Delta();
+            let sourceCursor = 0;
+
+            newlineIndexes.forEach(newlineIndex => {
+                change
+                    .retain(newlineIndex - sourceCursor)
+                    .delete(1)
+                    .insert({ 'soft-break': true });
+                sourceCursor = newlineIndex + 1;
+            });
+
+            State.isNormalizingSystemMessages = true;
+            try {
+                // Replace only Quill's structural paragraph separators. All
+                // authored characters and inline formats remain untouched.
+                quill.updateContents(change, 'silent');
+            } finally {
+                State.isNormalizingSystemMessages = false;
+            }
+
+            return true;
+        }
+
         function updateSystemMessageVariants(root = State.quillInstance?.root) {
             if (!root) return;
+
+            mergeAdjacentSystemMessageBlocks();
 
             const boxes = [...root.querySelectorAll('.sys-msg-box')];
             boxes.forEach(box => {
