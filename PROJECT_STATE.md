@@ -2,6 +2,40 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-08-20 12:57 Asia/Kolkata — Writer system-dialogue editing upgrade
+
+Status: NEEDS REVIEW
+
+Area:
+- Writer
+- chapter editor
+
+Files touched:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- The active system dialogue now appears as editable bracket-source text and returns to its rendered box after the caret leaves.
+- A persisted eye control switches all dialogue rendering on/off.
+- The `[ ]` toolbar control combines a dragged multi-paragraph selection into one soft-break-backed system dialogue or unwraps all selected system dialogues without deleting their text.
+- Backspace at the beginning of a system dialogue unwraps it while preserving its content.
+- Both inline Writer scripts pass `node --check`; `git diff --check` reports no whitespace errors.
+
+Remaining work:
+- Publish the Writer frontend and manually verify the Quill selection/caret interactions in a signed-in admin browser.
+
+Risks / notes:
+- The bracket characters in source view are visual delimiters; use Backspace at the beginning of the block or the `[ ]` toolbar control to remove the system format.
+- Saved chapter HTML remains `div.sys-msg-box`; the temporary source-editing class is removed during serialization.
+
+Verification needed:
+- Select partial text spanning at least three paragraphs, click `[ ]`, and confirm it becomes one dialogue with three lines while bold/italic/link formatting survives.
+- Select a mixture of system dialogues, click `[ ]`, and confirm every selected dialogue becomes normal text without content loss.
+- Move the caret into and out of a dialogue, toggle the eye control, use Backspace at the dialogue start, save/reload, and confirm the reader-facing rendering is unchanged.
+
 ## 2026-08-07 05:30 Asia/Kolkata — Writer Rich Text system brackets
 
 Status: NEEDS REVIEW

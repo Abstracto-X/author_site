@@ -781,6 +781,35 @@
             position: relative;
         }
 
+        .ql-toolbar button.ql-system-message,
+        .ql-toolbar button.ql-system-preview {
+            width: 34px;
+        }
+
+        .ql-toolbar button.ql-system-message::after {
+            content: "[ ]";
+            display: block;
+            color: #a1a1aa;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 18px;
+        }
+
+        .ql-toolbar button.ql-system-message:hover::after,
+        .ql-toolbar button.ql-system-message.ql-active::after {
+            color: #38bdf8;
+        }
+
+        .ql-toolbar button.ql-system-preview {
+            color: #a1a1aa;
+        }
+
+        .ql-toolbar button.ql-system-preview:hover,
+        .ql-toolbar button.ql-system-preview.ql-active {
+            color: #38bdf8;
+        }
+
         /* Dark Theme Quill UI */
         .ql-snow .ql-stroke {
             stroke: #a1a1aa;
@@ -877,6 +906,44 @@
 
         .ql-editor .sys-msg-box .sys-soft-break + .sys-soft-break {
             height: 1.6em;
+        }
+
+        /* Keep the stored Quill block intact while showing bracket source text. */
+        .ql-editor .sys-msg-box.sys-msg-editing,
+        .ql-editor.system-box-rendering-off .sys-msg-box {
+            min-height: 0 !important;
+            margin: 0.35rem 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            border-image-source: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            filter: none !important;
+            color: #d4d4d8 !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.98rem !important;
+            line-height: 1.8 !important;
+            text-shadow: none !important;
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-editing::before,
+        .ql-editor.system-box-rendering-off .sys-msg-box::before {
+            content: "[" !important;
+            position: static !important;
+            color: #38bdf8 !important;
+            font: inherit !important;
+            font-weight: 700 !important;
+            letter-spacing: 0 !important;
+            text-shadow: none !important;
+        }
+
+        .ql-editor .sys-msg-box.sys-msg-editing::after,
+        .ql-editor.system-box-rendering-off .sys-msg-box::after {
+            content: "]";
+            color: #38bdf8;
+            font: inherit;
+            font-weight: 700;
         }
 
         /* Responsive Pass */
@@ -2309,6 +2376,7 @@
                 const isSystem = node.classList.contains('sys-msg-box');
 
                 if (isSystem) {
+                    node.classList.remove('sys-msg-editing');
                     node.classList.toggle('sys-msg-caption', Boolean(node.querySelector('a[href]')));
                 }
 
@@ -2483,7 +2551,8 @@
             openScratchpadIds: [],
             dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
             primarySidebarCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true',
-            editorSettingsCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-editor-settings-collapsed') === 'true'
+            editorSettingsCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-editor-settings-collapsed') === 'true',
+            systemMessageRenderingEnabled: localStorage.getItem('ea-writer-system-message-rendering') !== 'false'
         };
 
         // ==========================================
@@ -3323,6 +3392,22 @@
 
                                         return true;
                                     }
+                                },
+
+                                systemBackspace: {
+                                    key: 8,
+                                    collapsed: true,
+                                    handler: function(range) {
+                                        const quill = this.quill;
+                                        const [line, offset] = quill.getLine(range.index);
+
+                                        if (offset === 0 && line?.domNode?.classList?.contains('sys-msg-box')) {
+                                            Editor.unwrapSystemMessageLines([line]);
+                                            return false;
+                                        }
+
+                                        return true;
+                                    }
                                 }
                             }
                         },
@@ -3335,11 +3420,18 @@
                                 [{ list: 'ordered' }, { list: 'bullet' }],
                                 [{ align: [] }],
                                 ['link', 'image'],
+                                ['system-message', 'system-preview'],
                                 ['clean']
                             ],
                             handlers: {
                                 image: function() {
                                     Editor.pickInlineImage();
+                                },
+                                'system-message': function() {
+                                    Editor.toggleSelectedSystemMessage();
+                                },
+                                'system-preview': function() {
+                                    Editor.toggleSystemMessageRendering();
                                 }
                             }
                         }
@@ -3361,6 +3453,10 @@
                     }
 
                     this.updateSlashMenu();
+                });
+
+                State.quillInstance.on('selection-change', range => {
+                    this.refreshSystemMessageEditingState(range);
                 });
 
                 // Quill treats clipboard newlines as separate block records.
@@ -3398,6 +3494,7 @@
                 });
 
                 this.addToolbarTooltips();
+                this.applySystemMessageRenderingPreference();
                 this.updateMeta();
             },
 
@@ -3416,6 +3513,8 @@
                     '.ql-list[value="bullet"]': 'Bulleted list',
                     '.ql-link': 'Insert link',
                     '.ql-image': 'Insert image',
+                    '.ql-system-message': 'Add or remove one system dialogue for the selection',
+                    '.ql-system-preview': 'Show or hide rendered system dialogue boxes',
                     '.ql-clean': 'Clear formatting'
                 };
 
@@ -3435,6 +3534,224 @@
                     el.setAttribute('title', 'Text alignment: left, center, right, or justified');
                     el.setAttribute('aria-label', 'Text alignment');
                 });
+
+                const previewButton = toolbar.querySelector('.ql-system-preview');
+                if (previewButton) previewButton.innerHTML = '<i class="fa-regular fa-eye"></i>';
+            },
+
+            applySystemMessageRenderingPreference() {
+                const quill = State.quillInstance;
+                if (!quill) return;
+
+                quill.root.classList.toggle('system-box-rendering-off', !State.systemMessageRenderingEnabled);
+
+                const button = document.querySelector('.ql-toolbar .ql-system-preview');
+                if (button) {
+                    button.classList.toggle('ql-active', State.systemMessageRenderingEnabled);
+                    button.setAttribute('aria-pressed', String(State.systemMessageRenderingEnabled));
+                    button.setAttribute(
+                        'title',
+                        State.systemMessageRenderingEnabled
+                            ? 'Rendered system boxes on (click for bracket source view)'
+                            : 'Bracket source view on (click to render system boxes)'
+                    );
+                    button.innerHTML = State.systemMessageRenderingEnabled
+                        ? '<i class="fa-regular fa-eye"></i>'
+                        : '<i class="fa-regular fa-eye-slash"></i>';
+                }
+
+                this.refreshSystemMessageEditingState(quill.getSelection());
+            },
+
+            toggleSystemMessageRendering() {
+                State.systemMessageRenderingEnabled = !State.systemMessageRenderingEnabled;
+                localStorage.setItem(
+                    'ea-writer-system-message-rendering',
+                    String(State.systemMessageRenderingEnabled)
+                );
+                this.applySystemMessageRenderingPreference();
+                UI.showToast(
+                    State.systemMessageRenderingEnabled
+                        ? 'System box rendering enabled.'
+                        : 'System boxes shown as bracket text.',
+                    'info'
+                );
+            },
+
+            refreshSystemMessageEditingState(range = State.quillInstance?.getSelection()) {
+                const quill = State.quillInstance;
+                if (!quill) return;
+
+                quill.root.querySelectorAll('.sys-msg-editing').forEach(box => {
+                    box.classList.remove('sys-msg-editing');
+                });
+
+                let activeSystemLine = null;
+                if (range && State.systemMessageRenderingEnabled) {
+                    const [line] = quill.getLine(range.index);
+                    if (line?.domNode?.classList?.contains('sys-msg-box')) {
+                        activeSystemLine = line;
+                        line.domNode.classList.add('sys-msg-editing');
+                    }
+                }
+
+                const formatButton = document.querySelector('.ql-toolbar .ql-system-message');
+                if (formatButton) {
+                    formatButton.classList.toggle('ql-active', Boolean(activeSystemLine));
+                    formatButton.setAttribute('aria-pressed', String(Boolean(activeSystemLine)));
+                }
+            },
+
+            inlineAttributes(attributes = {}) {
+                const blockAttributes = new Set([
+                    'align', 'blockquote', 'code-block', 'direction', 'header',
+                    'indent', 'list', 'system-message'
+                ]);
+
+                return Object.fromEntries(
+                    Object.entries(attributes).filter(([name]) => !blockAttributes.has(name))
+                );
+            },
+
+            selectedDeltaAsSystemContent(delta) {
+                const Delta = Quill.import('delta');
+                const output = new Delta();
+
+                (delta?.ops || []).forEach(op => {
+                    const attributes = this.inlineAttributes(op.attributes);
+
+                    if (typeof op.insert !== 'string') {
+                        output.insert(op.insert, attributes);
+                        return;
+                    }
+
+                    const pieces = op.insert.split('\n');
+                    pieces.forEach((piece, index) => {
+                        if (piece) output.insert(piece, attributes);
+                        if (index < pieces.length - 1) output.insert({ 'soft-break': true });
+                    });
+                });
+
+                while (output.ops.length && output.ops.at(-1)?.insert?.['soft-break']) {
+                    output.ops.pop();
+                }
+
+                return output;
+            },
+
+            wrapSelectionAsSingleSystemMessage(range) {
+                const quill = State.quillInstance;
+                if (!quill || !range?.length) return;
+
+                const selected = this.selectedDeltaAsSystemContent(
+                    quill.getContents(range.index, range.length)
+                );
+                const [, startOffset] = quill.getLine(range.index);
+                let insertAt = range.index;
+
+                State.commandRunning = true;
+                try {
+                    quill.deleteText(range.index, range.length, 'user');
+
+                    if (startOffset > 0) {
+                        quill.insertText(insertAt, '\n', 'user');
+                        insertAt += 1;
+                    }
+
+                    quill.insertContents(insertAt, selected, 'user');
+                    const contentLength = selected.length();
+                    quill.insertText(insertAt + contentLength, '\n', 'user');
+                    quill.formatLine(
+                        insertAt,
+                        Math.max(contentLength, 1),
+                        'system-message',
+                        true,
+                        'user'
+                    );
+                    quill.setSelection(insertAt + contentLength, 0, 'silent');
+                } finally {
+                    State.commandRunning = false;
+                }
+
+                updateSystemMessageVariants();
+                this.markUnsaved();
+                this.updateMeta();
+                this.refreshSystemMessageEditingState(quill.getSelection());
+            },
+
+            unwrapSystemMessageLines(lines) {
+                const quill = State.quillInstance;
+                if (!quill) return;
+
+                const Delta = Quill.import('delta');
+                const records = [...new Set(lines)]
+                    .filter(line => line?.domNode?.classList?.contains('sys-msg-box'))
+                    .map(line => {
+                        const index = quill.getIndex(line);
+                        const length = line.length();
+                        const source = quill.getContents(index, Math.max(length - 1, 0));
+                        const replacement = new Delta();
+
+                        (source.ops || []).forEach(op => {
+                            if (op.insert?.['soft-break']) {
+                                replacement.insert('\n');
+                            } else {
+                                replacement.insert(op.insert, this.inlineAttributes(op.attributes));
+                            }
+                        });
+
+                        return { index, length, replacement };
+                    })
+                    .sort((a, b) => b.index - a.index);
+
+                if (!records.length) return;
+
+                State.commandRunning = true;
+                try {
+                    records.forEach(record => {
+                        quill.deleteText(record.index, record.length, 'user');
+                        quill.insertContents(record.index, record.replacement, 'user');
+                        quill.insertText(record.index + record.replacement.length(), '\n', 'user');
+                    });
+                    quill.setSelection(records.at(-1).index, 0, 'silent');
+                } finally {
+                    State.commandRunning = false;
+                }
+
+                this.markUnsaved();
+                this.updateMeta();
+                this.refreshSystemMessageEditingState(quill.getSelection());
+            },
+
+            toggleSelectedSystemMessage() {
+                const quill = State.quillInstance;
+                const range = quill?.getSelection(true);
+                if (!quill || !range) return;
+
+                const lines = quill.getLines(range.index, Math.max(range.length, 1));
+                const systemLines = lines.filter(line => line.domNode?.classList?.contains('sys-msg-box'));
+
+                if (systemLines.length) {
+                    this.unwrapSystemMessageLines(systemLines);
+                    UI.showToast(
+                        systemLines.length === 1 ? 'System dialogue removed.' : 'System dialogues removed.',
+                        'success'
+                    );
+                    return;
+                }
+
+                if (range.length) {
+                    this.wrapSelectionAsSingleSystemMessage(range);
+                    UI.showToast('Selection combined into one system dialogue.', 'success');
+                    return;
+                }
+
+                const [line] = quill.getLine(range.index);
+                if (!line) return;
+                quill.formatLine(range.index, 1, 'system-message', true, 'user');
+                this.markUnsaved();
+                this.refreshSystemMessageEditingState(quill.getSelection());
+                UI.showToast('Paragraph changed to a system dialogue.', 'success');
             },
 
             isSystemLineAt(index) {
@@ -3567,6 +3884,7 @@
                             'user'
                         );
                         info.quill.setSelection(info.lineIndex + innerText.length, 0, 'silent');
+                        this.refreshSystemMessageEditingState(info.quill.getSelection());
                     } finally {
                         State.commandRunning = false;
                     }

@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-20 12:57 Asia/Kolkata - Editable Writer system-dialogue source mode
+
+Area: Writer / chapter editor
+
+Summary:
+- Added a system-dialogue toolbar format that combines an arbitrary dragged text selection into one multiline system box, preserves inline formatting, and removes formatting in bulk when selected dialogue blocks are toggled again.
+- Changed rendered system boxes to lightweight bracket-source text while the caret is inside them; moving the caret away restores the reader-like box automatically.
+- Added a persisted eye toggle for showing every system dialogue as bracket text, plus start-of-block Backspace unwrapping that keeps the dialogue text instead of requiring the destructive delete action.
+- Kept source-view classes out of serialized chapter HTML so the reader and saved content contract remain unchanged.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-08-07 05:30 Asia/Kolkata - Bracketed Writer system dialogue in Rich Text exports
 
 Area: Writer / export

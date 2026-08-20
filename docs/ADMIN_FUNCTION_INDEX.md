@@ -216,6 +216,13 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `Views.chapters` in `admin.html` renders the embedded Writer / Chapters workspace instead of redirecting, so stale `ea-admin-last-view = chapters` localStorage does not bounce `admin.html` into `writer.html`.
 - `writer.html` is now the active Supabase-backed Writer surface; its current Quill/editor logic is inline in that file, while `js/admin-writer.js` remains an alternate/legacy helper unless the page explicitly loads it.
 
+## 2026-08-20 12:57 Asia/Kolkata - Writer system-dialogue source editing and bulk formatting
+
+- `Editor.refreshSystemMessageEditingState(range)` gives the system-message block containing the caret a temporary bracket-source appearance. Moving the caret away restores the rendered blue/red box; the temporary class is stripped during save serialization.
+- `Editor.toggleSystemMessageRendering()` and `Editor.applySystemMessageRenderingPreference()` switch every system dialogue between rendered boxes and bracket-source text, persisted in `ea-writer-system-message-rendering`.
+- `Editor.toggleSelectedSystemMessage()` adds or removes the toolbar format. `Editor.wrapSelectionAsSingleSystemMessage(range)` preserves inline formats and combines every selected paragraph into one system-message block using soft breaks rather than producing several boxes.
+- `Editor.unwrapSystemMessageLines(lines)` removes system formatting while preserving text and inline formatting. The toolbar supports bulk removal, and Backspace at the beginning of a system dialogue unwraps that dialogue without deleting its content.
+
 ## 2026-07-07 00:00 Asia/Kolkata - Writer mock removal and Supabase binding
 
 - `writer.html` now loads `js/subscription/site-config.js` plus Supabase JS, requires a signed-in admin profile, loads real `stories`, `chapters`, and `reader_access_tiers`, and writes chapter drafts/published updates to `public.chapters`.
