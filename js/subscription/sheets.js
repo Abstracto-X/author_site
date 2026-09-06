@@ -5,6 +5,7 @@
 let currentSheet = null;
 function openSheet(builder, opts){
   opts = opts||{};
+  if (readerPreferencesOpen) closeReaderPreferences();
   closeSheet(true);
   const scrim = document.querySelector(".scrim") || (()=>{const d=document.createElement("div");d.className="scrim";document.body.appendChild(d);return d;})();
   const sheet = document.querySelector(".sheet") || (()=>{const d=document.createElement("div");d.className="sheet";document.body.appendChild(d);return d;})();
@@ -21,6 +22,43 @@ function closeSheet(silent){
   document.body.classList.remove("has-sheet");
   currentSheet = null;
 }
+
+let readerPreferencesOpen = false;
+function readerPreferencesPanel(){
+  const st=store.settings;
+  const themes=[["dark","Dark"],["light","Light"],["parchment","Parchment"],["custom","Custom"]];
+  return `<div class="reader-preferences-head"><div><div class="sheet-kicker">Chapter reader</div><h2>Reader preferences</h2><p>Adjust the open page and watch it change.</p></div><button class="close-x" data-act="close-reader-preferences" aria-label="Close reader preferences">${I.x}</button></div>
+  <div class="set-group"><label>Page color</label><div class="reader-theme-choices">${themes.map(([k,l])=>`<button class="reader-theme-choice ${normalizeReaderTheme(st.readerTheme)===k?'active':''}" data-set-reader-theme="${k}" aria-pressed="${normalizeReaderTheme(st.readerTheme)===k}"><span class="reader-theme-dot theme-${k}" ${k==='custom'?`style="background:${esc(st.readerCustomBg)}"`:''}></span>${l}</button>`).join("")}</div></div>
+  ${normalizeReaderTheme(st.readerTheme)==="custom"?`<div class="set-group reader-color-field"><label for="reader-custom-color">Custom background</label><div><input id="reader-custom-color" type="color" value="${esc(st.readerCustomBg)}" data-reader-custom-color><output>${esc(st.readerCustomBg.toUpperCase())}</output></div></div>`:""}
+  <div class="set-group"><label>Page brightness <span class="setting-value">${Math.round(st.readerBrightness)}%</span></label><input type="range" class="range" min="50" max="125" step="5" value="${st.readerBrightness}" data-reader-brightness></div>
+  <div class="reader-range-grid">
+    <div class="set-group"><label>Text size <span class="setting-value">${Math.round(st.fontScale*100)}%</span></label><input type="range" class="range" min="0.8" max="1.4" step="0.05" value="${st.fontScale}" data-set-range="fontScale"></div>
+    <div class="set-group"><label>Line spacing <span class="setting-value">${st.lineHeight.toFixed(2)}</span></label><input type="range" class="range" min="1.5" max="2.1" step="0.02" value="${st.lineHeight}" data-set-range="lineHeight"></div>
+  </div>
+  <div class="set-group"><label>Text width</label><div class="seg">${[[38,"Compact"],[46,"Medium"],[54,"Wide"],[62,"X-Wide"]].map(([k,l])=>`<button class="${st.readerWidth===k?'active':''}" data-set-width="${k}">${l}</button>`).join("")}</div></div>
+  <div class="set-group"><label>Accessibility</label>${toggleRow("dyslexiaMode","Dyslexia mode","Use a clearer sans-serif face with roomier spacing",st.dyslexiaMode)}</div>`;
+}
+function openReaderPreferences(){
+  if(route?.name!=="read") return;
+  closeSheet(true);
+  const panel=document.querySelector(".reader-preferences")||(()=>{const d=document.createElement("aside");d.className="reader-preferences";d.setAttribute("aria-label","Reader preferences");document.body.appendChild(d);return d;})();
+  panel.innerHTML=readerPreferencesPanel();
+  panel.style.cssText=readerThemeStyle(store.settings);
+  readerPreferencesOpen=true;
+  document.body.classList.add("has-reader-preferences");
+  requestAnimationFrame(()=>panel.classList.add("open"));
+}
+function refreshReaderPreferences(){
+  const panel=document.querySelector(".reader-preferences");
+  if(panel&&readerPreferencesOpen) panel.innerHTML=readerPreferencesPanel();
+}
+function closeReaderPreferences(){
+  const panel=document.querySelector(".reader-preferences");
+  if(panel) panel.classList.remove("open");
+  readerPreferencesOpen=false;
+  document.body.classList.remove("has-reader-preferences");
+}
+function toggleReaderPreferences(){ readerPreferencesOpen?closeReaderPreferences():openReaderPreferences(); }
 
 /* ============ SHEETS (builders) ============ */
 function wallpaperSwatches(story) {
@@ -53,45 +91,44 @@ function wallpaperSwatches(story) {
   return html;
 }
 
-function sheetSettings(){
+function sheetReaderSettings(){
+  return readerPreferencesPanel();
+}
+
+function sheetNotificationSettings(){
   const st=store.settings;
-  const prefs = store.notificationPrefs || {};
   const browserState = ("Notification" in window) ? Notification.permission : "unsupported";
-  const story = getActiveStory();
-
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Settings</h2><p class="sheet-sub">Theme &amp; reading comfort. Saved to this device.</p>
-  <div class="set-group"><label>Site theme</label>${themeSwatches()}</div>
-  <div class="set-group"><label>Reader lighting</label><div class="seg">${[["dark","Dark"],["light","Light"],["parchment","Parchment"]].map(([t,l])=>`<button class="${(st.readerTheme===t || (!st.readerTheme && t==='dark') || (st.readerTheme==='aether' && t==='dark') || (st.readerTheme==='twilight' && t==='dark'))?'active':''}" data-set-theme="${t}">${l}</button>`).join("")}</div></div>
-  <div class="set-group"><label>Reading preset</label><div class="seg">${[["none","Default"],["focus","Focus"],["bedtime","Bedtime"],["dyslexia","Dyslexia"],["compact","Compact"]].map(([k,l])=>`<button class="${st.preset===k?'active':''}" data-set-preset="${k}">${l}</button>`).join("")}</div></div>
-  
-  <div class="set-group"><label>Background mode</label>
-    <div class="seg">${[["story","Artwork"],["gradient","Ambient"],["solid","Solid"]].map(([k,l])=>`<button class="${st.bgMode===k?'active':''}" data-set-bg-mode="${k}">${l}</button>`).join("")}</div>
-    ${st.bgMode === "story" && story ? wallpaperSwatches(story) : ""}
-  </div>
-
-  <div class="set-group"><label>Reader width</label>
-    <div class="seg">${[[38,"Compact"],[46,"Medium"],[54,"Wide"],[62,"X-Wide"]].map(([k,l])=>`<button class="${st.readerWidth===k?'active':''}" data-set-width="${k}">${l}</button>`).join("")}</div>
-  </div>
-
-  <div class="set-group"><label>Font size <span class="faint" style="float:right">${Math.round(st.fontScale*100)}%</span></label><input type="range" class="range" min="0.8" max="1.4" step="0.05" value="${st.fontScale}" data-set-range="fontScale"></div>
-  <div class="set-group"><label>Line height <span class="faint" style="float:right">${st.lineHeight.toFixed(2)}</span></label><input type="range" class="range" min="1.5" max="2.1" step="0.02" value="${st.lineHeight}" data-set-range="lineHeight"></div>
-  <div class="set-group"><label>Comfort</label>
-    ${toggleRow("showImages","Reader images","Inline figures in chapters",st.showImages)}
-    ${toggleRow("showParaComments","Paragraph comments","Show comment chips on paragraphs",st.showParaComments)}
-    ${toggleRow("showProgress","Progress bar","Show reading progress",st.showProgress)}
-    ${toggleRow("showReactions","Chapter reactions","Show reaction buttons at chapter end",st.showReactions)}
-    ${toggleRow("spoilerSafe","Spoiler safety","Hide titles/descriptions of unread chapters",st.spoilerSafe)}
-    ${toggleRow("focusMode","Focus mode","Hide UI until you tap the page",st.focusMode)}
-    ${toggleRow("bgBlur","Blur artwork background","Apply blur to background cover/wallpapers",st.bgBlur)}
-    ${toggleRow("readerBg","Background image in reader","Keep background image visible in reading mode",st.readerBg)}
-    ${toggleRow("appBackground","App background art","Use the site background image behind the shell",st.appBackground)}
-  </div>
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="sheet-kicker">Account</div><h2>Notification settings</h2><p class="sheet-sub">Choose how new chapter alerts reach you.</p>
   <form data-notification-form class="set-group"><label>Chapter notifications</label>
     ${toggleRow("chapterNotifications","New chapter alerts","Create in-app notifications for chapters you can access",st.chapterNotifications)}
     ${toggleRow("emailNotifications","Email updates","Queue email updates for new chapters in your tiers",st.emailNotifications)}
     ${toggleRow("browserNotifications","Browser popups","Show browser notifications when this site is open",st.browserNotifications)}
-    <div class="card" style="margin-top:10px"><div class="faint" style="font-size:.76rem;margin-bottom:8px">Browser permission: <b>${browserState}</b>. Email uses your account email and server-side queue.</div><button class="btn sm story" type="button" data-act="request-browser-notifications">${I.bell}Enable browser permission</button><button class="btn sm ghost" type="submit">${I.check}Save notification prefs</button></div>
+    <div class="settings-actions"><div class="settings-status">Browser permission: <b>${browserState}</b>. Email uses your account email.</div><button class="btn sm story" type="button" data-act="request-browser-notifications">${I.bell}Enable browser permission</button><button class="btn sm ghost" type="submit">${I.check}Save preferences</button></div>
   </form>`;
+}
+
+function sheetSiteSettings(){
+  const st=store.settings;
+  const story = getActiveStory();
+  const storySurface = ["story","chapters","recap","extras","storyUpdates"].includes(route?.name);
+  const browserState = ("Notification" in window) ? Notification.permission : "unsupported";
+  return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="sheet-kicker">Site</div><h2>Settings</h2><p class="sheet-sub">Site appearance and notification delivery. Chapter typography lives under Aa.</p>
+  <div class="set-group"><label>Site chrome</label>${toggleRow("appBackground","Background artwork","Use the configured site art behind library pages",st.appBackground)}</div>
+  ${storySurface && story ? `<div class="set-group"><label>Story backdrop</label>
+    <div class="seg">${[["story","Artwork"],["gradient","Ambient"],["solid","Solid"]].map(([k,l])=>`<button class="${st.bgMode===k?'active':''}" data-set-bg-mode="${k}">${l}</button>`).join("")}</div>
+    ${st.bgMode === "story" ? wallpaperSwatches(story) : ""}
+    ${st.bgMode === "story" ? toggleRow("bgBlur","Soften artwork","Blur the story backdrop behind the page",st.bgBlur) : ""}
+  </div>` : ""}
+  <form data-notification-form class="set-group"><label>Notifications</label>
+    ${toggleRow("chapterNotifications","New chapter alerts","Create in-app alerts for accessible chapters",st.chapterNotifications)}
+    ${toggleRow("emailNotifications","Email updates","Send chapter updates to your account email",st.emailNotifications)}
+    ${toggleRow("browserNotifications","Browser popups","Show alerts while this site is open",st.browserNotifications)}
+    <div class="settings-actions"><div class="settings-status">Browser permission: <b>${browserState}</b></div><button class="btn sm story" type="button" data-act="request-browser-notifications">${I.bell}Enable browser</button><button class="btn sm ghost" type="submit">${I.check}Save preferences</button></div>
+  </form>`;
+}
+
+function sheetSettings(){
+  return sheetSiteSettings();
 }
 function toggleRow(key,title,sub,on){ return `<div class="toggle-row"><div class="lbl">${title}<small>${sub}</small></div><button class="switch ${on?'on':''}" data-toggle="${key}" aria-label="${title}"></button></div>`; }
 
@@ -103,7 +140,7 @@ function sheetPersona(){
   const status = P.admin ? "Admin reader override active" : signedIn ? (active.length ? `${active.length} active entitlement${active.length===1?"":"s"}` : "Signed in, no active member entitlement") : "Guest reader";
   return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Account</h2>
   <div class="card tinted" style="margin-bottom:14px;display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(accountLabel())}</div><div class="faint" style="font-size:.76rem">${esc(P.tier || status)}</div></div>${signedIn?`<button class="btn sm ghost" data-sheet="profile">Edit</button><button class="btn sm ghost" data-act="reader-signout">Sign out</button>`:""}</div>
-  <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/notifications">${I.bell}<span>Notifications</span><small>Chapter alerts</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.aa}<span>Preferences</span><small>Reader</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
+  <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/notifications">${I.bell}<span>Notifications</span><small>Chapter alerts</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
   ${signedIn?`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:7px">Entitlements</div>${P.admin?`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">Admin reader override</span><span class="badge free">active</span></div><p class="faint" style="font-size:.78rem;margin:4px 0 0">This is not a paid/member entitlement; it is attached to your admin profile role.</p>`:active.length?active.map(e=>`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">${esc(e.tier_name || e.name || e.tier || "Reader access")}</span><span class="badge free">active</span></div>`).join(""):`<p class="faint" style="font-size:.8rem;margin:0">No active entitlement returned yet. Connect provider or redeem an access key.</p>`}</div>`:`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">Continue</div><div class="col-flex"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button><div class="faint" style="font-size:.74rem;text-align:center">or use email</div><form data-auth-form="signin"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="current-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Sign in with email</button><button class="btn ghost block" type="button" data-act="show-signup">Create email account</button><button class="btn ghost block" type="button" data-act="show-forgot-password">Forgot password?</button></div></form></div></div>`}
   <div class="card" style="margin-top:8px"><div style="font-weight:600;font-size:.86rem">Need help?</div><div class="faint" style="font-size:.74rem;margin-top:4px">Open the Vault to manage access, reconnect a membership provider, or redeem an access key.</div></div>`;
 }
@@ -124,7 +161,7 @@ function sheetProfile(){
 function sheetWhatsNew(){
   return `<span class="close-x" data-act="dismiss-whats-new">${I.x}</span><h2>What's new</h2><p class="sheet-sub">Reader upgrades are live on your account.</p>
   <div class="whats-new-list">
-    <div class="whats-new-item"><span class="icn">${I.bell}</span><div><b>Chapter notifications</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">New chapters now create relevant in-app alerts, browser popups when enabled, and email queue entries for your access tier.</p><button class="btn sm ghost" data-sheet="settings">Open notification settings</button></div></div>
+    <div class="whats-new-item"><span class="icn">${I.bell}</span><div><b>Chapter notifications</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">New chapters now create relevant in-app alerts, browser popups when enabled, and email queue entries for your access tier.</p><button class="btn sm ghost" data-sheet="notification-settings">Open notification settings</button></div></div>
     <div class="whats-new-item"><span class="icn">${I.user}</span><div><b>Profile customization</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">Add an avatar, display name, and username for comments and account surfaces.</p><button class="btn sm ghost" data-sheet="profile">Edit profile</button></div></div>
     <div class="whats-new-item"><span class="icn">${I.spark}</span><div><b>Site background art</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">The app shell can now use the configured reader background image.</p><button class="btn sm ghost" data-sheet="settings">Background toggle</button></div></div>
   </div>

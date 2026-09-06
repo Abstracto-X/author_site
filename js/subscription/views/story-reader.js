@@ -351,7 +351,7 @@ VIEWS.read = function(){
   if (ch.backend && !ch.content) {
     if (!ch.contentLoading) loadReaderChapterFromBackend(ch.id).then(() => render());
     const message = ch.contentError || "Loading secure chapter text from Supabase...";
-    return readerShell(`theme-${store.settings.readerTheme} preset-${store.settings.preset}`, `
+    return readerShell(`theme-${normalizeReaderTheme(store.settings.readerTheme)}`, `
       <div class="reader-loading" style="padding-top:120px">
         ${ch.contentError 
           ? `<div class="em" style="font-size:2.5rem; color:var(--bad); margin-bottom:12px;">${I.alert}</div>` 
@@ -373,12 +373,14 @@ VIEWS.read = function(){
 function readerShell(themeClass, inner, settings){
   const st = store.settings;
   const fs = (1.12*st.fontScale).toFixed(3)+"rem";
-  return `<div class="reader ${themeClass}" id="reader" style="--fs:${fs};--lh:${st.lineHeight}">
+  return `<div class="reader ${themeClass} ${st.dyslexiaMode?'dyslexia-mode':''}" id="reader" style="--fs:${fs};--lh:${st.lineHeight};${readerThemeStyle(st)}">
     <div class="reader-progress"><i id="rprog" style="width:0%"></i></div>
     <header class="reader-top" id="rtop">
       <button class="rback" data-nav="/story/${currentChapter.story.slug}" aria-label="Back">${I.chevL}</button>
       <div class="ctx"><div class="s">${currentChapter.story.title}</div><div class="c">${currentChapter.ch.title}</div></div>
-      <button class="rset" data-sheet="settings" aria-label="Reader settings">${I.aa}</button>
+      <button class="rset" data-act="toggle-site-theme" aria-label="Switch site to ${store.theme==='light'?'dark':'light'} theme" title="Switch site theme">${store.theme==='light'?I.moon:I.sun}</button>
+      <button class="rset" data-sheet="settings" aria-label="Site settings" title="Site settings">${I.cog}</button>
+      <button class="rset" data-reader-preferences aria-label="Reader preferences" title="Reader preferences">${I.aa}</button>
     </header>
     <div class="reader-stage" id="rstage">${inner}</div>
     ${readerBar()}
@@ -389,7 +391,8 @@ function readerBar(){
   const bk = store.bookmarks.find(b=>b.chapterId===id);
   const cmt = commentCount(id);
   return `<div class="reader-bar" id="rbar">
-    <button data-sheet="settings" aria-label="Settings">${I.aa}</button>
+    <button data-sheet="settings" aria-label="Site settings">${I.cog}</button>
+    <button data-reader-preferences aria-label="Reader preferences">${I.aa}</button>
     <button data-act="reader-prev" aria-label="Previous">${I.chevL}</button>
     <button data-act="reader-next" aria-label="Next">${I.chevR}</button>
     <button data-act="reader-bookmark" class="${bk?'active':''}" aria-label="Bookmark">${bk?I.bookmarkFill:I.bookmark}</button>
@@ -442,7 +445,7 @@ function readerNavButtons(ch, story, index) {
 }
 function readerFull(ch, story, index, r){
   const st=store.settings;
-  const themeClass=`theme-${st.readerTheme} preset-${st.preset} ${st.showImages?'':'no-img'} ${st.showParaComments?'':'no-pchip'} ${st.focusMode?'focus':''}`;
+  const themeClass=`theme-${normalizeReaderTheme(st.readerTheme)}`;
   if (ch.is_nsfw) return readerExternalChapter(ch, story, index, r);
   if (typeof loadChapterCommunity === "function" && !(communityState.commentsLoaded[ch.id] && communityState.reactionsLoaded[ch.id])) {
     loadChapterCommunity(ch.id).then(ok => { if (ok && currentChapter?.ch?.id === ch.id) renderReaderOnly(); });
@@ -468,7 +471,7 @@ function readerFull(ch, story, index, r){
 }
 function readerExternalChapter(ch, story, index, r){
   const st=store.settings;
-  const themeClass=`theme-${st.readerTheme} preset-${st.preset}`;
+  const themeClass=`theme-${normalizeReaderTheme(st.readerTheme)}`;
   const url = ch.external_url || (typeof readerExternalUrl === "function" ? readerExternalUrl("") : "");
   return readerShell(themeClass, `
     <div class="locked-fallback" style="${storyAccentVars(story)};min-height:auto;padding:70px 18px 90px">
@@ -490,7 +493,7 @@ function readerExternalChapter(ch, story, index, r){
 }
 function readerPreview(ch, story, index, r){
   const st=store.settings;
-  const themeClass=`theme-${st.readerTheme} preset-${st.preset}`;
+  const themeClass=`theme-${normalizeReaderTheme(st.readerTheme)}`;
   return readerShell(themeClass, `
     <div class="badge preview" style="margin-bottom:14px">${I.eye}Preview</div>
     <h1 class="ch-title">${ch.title}</h1>

@@ -2,6 +2,50 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-08-31 12:06 Asia/Kolkata — Separate site settings and reader preferences
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- chapter display
+- settings
+
+Files touched:
+- `styles.css`
+- `js/subscription/state.js`
+- `js/subscription/utils.js`
+- `js/subscription/chrome.js`
+- `js/subscription/router.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/sheets.js`
+- `js/subscription/events.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Site chrome now has an independent dark/light toggle in every top bar; the chapter canvas separately supports dark, light, parchment, and custom colors.
+- Overall Settings contains site artwork, contextual story backdrops, and notification delivery. Aa opens only Reader Preferences.
+- Reader Preferences is a live, non-modal desktop rail/mobile drawer containing color, brightness, text size, line spacing, width, and Dyslexia mode.
+- Custom reader colors derive contrasting text, surface, border, and system/caption tokens automatically. Prose remains Georgia-first with native italics outside Dyslexia mode.
+- Static syntax and whitespace validation completed; runtime responsive verification is still required.
+
+Remaining work:
+- Verify the desktop rail and mobile drawer against a real chapter, then publish the frontend.
+
+Risks / notes:
+- The existing localStorage key remains intact. Legacy unified themes, Dyslexia preset/sans values, and hidden-content toggles are migrated to the new independent preference model.
+- No database, RLS, storage, or chapter-content contracts changed.
+
+Verification needed:
+- At 900px, 1280px, and ultrawide widths, open Aa and confirm the rail reflows the chapter/header/bar without covering prose.
+- Around 360×800 and 390×844, confirm the drawer stays near 48dvh, the upper chapter remains crisp, and controls do not collide.
+- Check all reader colors, custom light/dark colors, brightness extremes, live typography changes, theme-scope independence, Escape/repeated-Aa close behavior, and system/caption contrast.
+
 ## 2026-08-20 12:57 Asia/Kolkata — Writer system-dialogue editing upgrade
 
 Status: NEEDS REVIEW
@@ -21,6 +65,7 @@ Summary:
 - The active system dialogue now appears as editable bracket-source text and returns to its rendered box after the caret leaves.
 - A persisted eye control switches all dialogue rendering on/off.
 - The `[ ]` toolbar control applies/removes only Quill block formatting. It never deletes or reinserts authored text; structural paragraph separators between adjacent formatted lines are replaced with soft breaks so the selection becomes one actual system block immediately.
+- Copy as Markdown now wraps each system box once, keeps its internal line breaks inside that pair, and omits empty bracket pairs.
 - Backspace at the beginning of a system dialogue removes only the box formatting while preserving its content in place.
 - The initial delete/reinsert transformation was removed after it proved capable of losing selected text.
 - Existing adjacent system blocks are normalized on hydration/editing, preventing the repeated frames visible in Chapter 60 while retaining blank lines inside the single dialogue.
@@ -269,6 +314,7 @@ Files touched:
 
 Summary:
 - Context formatting commands now retain the contenteditable selection, and stored HTML is converted to Markdown for prompt preview/export instead of being flattened to plain text.
+- Prompt preview/export omits embedded images so image URLs do not inflate character or token counts.
 - Plain-text extraction now inserts line boundaries for paragraphs, headings, lists, `<br>` elements, rules, and other block-level content instead of concatenating them.
 - Reusable context-block Duplicate controls were replaced with rich clipboard Copy controls in both the library card and block editor.
 

@@ -4916,7 +4916,16 @@
                 turndownService.addRule('systemMessage', {
                     filter: node => node.nodeName === 'DIV' && node.classList.contains('sys-msg-box'),
                     replacement: (content, node) => {
-                        return `\n\n[${content.trim()}]\n\n`;
+                        // A system box gets one pair of delimiters around its
+                        // complete content. Keep internal line breaks inside
+                        // that pair, but do not emit brackets for empty boxes
+                        // or whitespace-only lines.
+                        const body = String(content || '')
+                            .replace(/\r\n?/g, '\n')
+                            .replace(/[ \t]+\n/g, '\n')
+                            .replace(/\n{3,}/g, '\n\n')
+                            .trim();
+                        return body ? `\n\n[${body}]\n\n` : '';
                     }
                 });
 
@@ -5608,6 +5617,10 @@
                     bulletListMarker: '-',
                     codeBlockStyle: 'fenced',
                     fence: '```'
+                });
+                service.addRule('contextImage', {
+                    filter: 'img',
+                    replacement: () => ''
                 });
                 service.addRule('contextUnderline', {
                     filter: 'u',

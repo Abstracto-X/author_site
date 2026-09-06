@@ -116,7 +116,7 @@ VIEWS.shelf = function(){
     <a data-nav="/bookmarks">${I.bookmark}<span>Bookmarks</span><small>${store.bookmarks.length} saved</small></a>
     <a data-nav="/quotes">${I.quote}<span>Saved quotes</span><small>${store.quotes.length} lines</small></a>
     <a data-nav="/history">${I.clock}<span>History</span><small>Recently read</small></a>
-    <a data-sheet="settings">${I.aa}<span>Preferences</span><small>Reader settings</small></a>
+    <a data-sheet="settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>
   </div>
   <div class="section"><div class="section-head"><h2>Preview trail</h2></div>
     <div class="card"><p class="muted" style="font-size:.84rem;margin:0 0 10px">Chapters you've previewed but not yet unlocked.</p>${store.history.filter(h=>h.kind==="preview").map(h=>{const f=byId(h.chapterId);return f?`<div class="between" style="padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.86rem;font-weight:600">${h.title}</div><div class="faint" style="font-size:.72rem">${f.story.title}</div></div><button class="btn sm" data-lock="${h.chapterId}">${I.lockOpen}Unlock</button></div>`:"";}).join("")||`<p class="faint" style="font-size:.8rem">No active previews.</p>`}</div>

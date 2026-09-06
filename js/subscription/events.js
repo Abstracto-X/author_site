@@ -127,7 +127,24 @@ function renderReaderOnly(){ if(route.name!=="read"||!currentChapter) return;
   const prog=document.getElementById("rprog"); if(prog) prog.style.display=store.settings.showProgress?"":"none";
   updateReaderBar();
 }
-function updateReaderBar(){ const bar=document.getElementById("rbar"); if(!bar) return; const f=currentChapter; const bk=store.bookmarks.find(b=>b.chapterId===f.ch.id); const btns=bar.querySelectorAll("button"); if(btns[3]) btns[3].innerHTML=bk?I.bookmarkFill:I.bookmark, btns[3].classList.toggle("active",!!bk); }
+function applyReaderPreferences(){
+  const reader=document.getElementById("reader");
+  if(!reader) return;
+  ["theme-dark","theme-light","theme-parchment","theme-custom"].forEach(c=>reader.classList.remove(c));
+  reader.classList.add("theme-"+normalizeReaderTheme(store.settings.readerTheme));
+  reader.classList.toggle("dyslexia-mode",!!store.settings.dyslexiaMode);
+  reader.style.cssText=`--fs:${(1.12*store.settings.fontScale).toFixed(3)}rem;--lh:${store.settings.lineHeight};${readerThemeStyle(store.settings)}`;
+  const panel=document.querySelector(".reader-preferences");
+  if(panel) panel.style.cssText=readerThemeStyle(store.settings);
+  document.documentElement.style.setProperty("--reader-w",(store.settings.readerWidth||46)+"rem");
+}
+function updateSiteThemeControls(){
+  document.querySelectorAll('[data-act="toggle-site-theme"]').forEach(btn=>{
+    btn.innerHTML=store.theme==="light"?I.moon:I.sun;
+    btn.setAttribute("aria-label",`Switch site to ${store.theme==="light"?"dark":"light"} theme`);
+  });
+}
+function updateReaderBar(){ const bar=document.getElementById("rbar"); if(!bar) return; const f=currentChapter; const bk=store.bookmarks.find(b=>b.chapterId===f.ch.id); const btn=bar.querySelector('[data-act="reader-bookmark"]'); if(btn){ btn.innerHTML=bk?I.bookmarkFill:I.bookmark; btn.classList.toggle("active",!!bk); } }
 
 /* ============ after-render hooks ============ */
 let lastScroll=0;
@@ -182,7 +199,7 @@ function handleAttr(el, name, val){
 }
 function delegate(){
   document.addEventListener("click",(e)=>{
-    const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-shelf-view],[data-quote-card],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
+    const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-reader-preferences],[data-set-reader-theme],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-set-reader-font],[data-shelf-view],[data-quote-card],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
     if(!t) return;
     if (t.dataset.siteTheme!=null){ setTheme(t.dataset.siteTheme); openSheet(currentSheet?currentSheet.builder:sheetSettings, currentSheet?currentSheet.opts:null); toast("Theme: "+(THEMES.find(x=>x.id===t.dataset.siteTheme)?.name), null, {icon:"palette"}); render(); return; }
 
@@ -191,19 +208,22 @@ function delegate(){
     if (t.dataset.read!=null){ e.preventDefault(); nav("/read/"+t.dataset.read); return; }
     if (t.dataset.preview!=null){ e.preventDefault(); nav("/read/"+t.dataset.preview); return; }
     if (t.dataset.lock!=null){ e.preventDefault(); rememberReturn(); openSheet(()=>sheetLock(t.dataset.lock)); return; }
-    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
+    if (t.dataset.readerPreferences!=null){ e.preventDefault(); toggleReaderPreferences(); return; }
+    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,"notification-settings":sheetNotificationSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
     if (t.dataset.follow!=null){ toggleFollow(t.dataset.follow); return; }
     if (t.dataset.react!=null){ if(currentChapter) setReaction(currentChapter.ch.id, t.dataset.react); return; }
     if (t.dataset.persona!=null){ store.personaId=t.dataset.persona; saveStore(); closeSheet(); toast("Viewing as "+(D.PERSONAS.find(p=>p.id===t.dataset.persona)?.label),null,{icon:"user"}); render(); return; }
     if (t.dataset.filter!=null){ const k=t.dataset.filter; const i=store.filters.chips.indexOf(k); if(i>=0) store.filters.chips.splice(i,1); else store.filters.chips.push(k); saveStore(); renderHeaderless(); return; }
-    if (t.dataset.toggle!=null){ store.settings[t.dataset.toggle]=!store.settings[t.dataset.toggle]; saveStore(); if(t.dataset.toggle==="appBackground" && typeof applyAppBackground==="function") applyAppBackground(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(route.name==="read") renderReaderOnly(); return; }
+    if (t.dataset.toggle!=null){ store.settings[t.dataset.toggle]=!store.settings[t.dataset.toggle]; saveStore(); if(t.dataset.toggle==="appBackground" && typeof applyAppBackground==="function") applyAppBackground(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(t.dataset.toggle==="dyslexiaMode"){ applyReaderPreferences(); refreshReaderPreferences(); } return; }
     if (t.dataset.shelfView!=null){ store.filters.shelfView=t.dataset.shelfView; saveStore(); render(); return; }
     if (t.dataset.chapterSort!=null){ store.filters.chapterSort=t.dataset.chapterSort; saveStore(); render(); return; }
-    if (t.dataset.setTheme!=null){ store.settings.readerTheme=t.dataset.setTheme; saveStore(); openSheet(currentSheet.builder,currentSheet.opts); renderReaderOnly(); return; }
+    if (t.dataset.setTheme!=null){ setTheme(t.dataset.setTheme); if(currentSheet) openSheet(currentSheet.builder,currentSheet.opts); if(route.name==="read") renderReaderOnly(); return; }
     if (t.dataset.setPreset!=null){ store.settings.preset=t.dataset.setPreset; if(t.dataset.setPreset==="dyslexia"){/*keep*/} saveStore(); openSheet(currentSheet.builder,currentSheet.opts); renderReaderOnly(); return; }
+    if (t.dataset.setReaderFont!=null){ store.settings.readerFont=t.dataset.setReaderFont === "sans" ? "sans" : "serif"; saveStore(); if(currentSheet) openSheet(currentSheet.builder,currentSheet.opts); renderReaderOnly(); return; }
     if (t.dataset.setBgMode!=null){ store.settings.bgMode=t.dataset.setBgMode; saveStore(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(route.name==="read") renderReaderOnly(); return; }
     if (t.dataset.setBgUrl!=null){ store.settings.bgImageUrl=t.dataset.setBgUrl; saveStore(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(route.name==="read") renderReaderOnly(); return; }
-    if (t.dataset.setWidth!=null){ store.settings.readerWidth=parseInt(t.dataset.setWidth); saveStore(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(route.name==="read") renderReaderOnly(); return; }
+    if (t.dataset.setReaderTheme!=null){ store.settings.readerTheme=normalizeReaderTheme(t.dataset.setReaderTheme); saveStore(); applyReaderPreferences(); refreshReaderPreferences(); return; }
+    if (t.dataset.setWidth!=null){ store.settings.readerWidth=parseInt(t.dataset.setWidth); saveStore(); applyReaderPreferences(); refreshReaderPreferences(); return; }
     if (t.dataset.fig!=null){ openSheet(()=>sheetImage(t.dataset.fig, t.closest("figure")?.querySelector("figcaption")?.textContent)); return; }
     if (t.dataset.para!=null && currentChapter){ openSheet(()=>sheetParaComments(currentChapter.ch.id, parseInt(t.dataset.para))); return; }
     if (t.dataset.copy!=null){ copyText(t.dataset.copy); return; }
@@ -216,13 +236,17 @@ function delegate(){
     const t=e.target;
     if(t.id==="lib-search"){ store.filters.q=t.value; renderHeaderless(); return; }
     if(t.id==="gallery-search-input"){ State.gallerySearch=t.value; const grid=document.getElementById("gallery-grid"); if(grid && typeof filterGalleryImages==="function"){ const filtered=sortGalleryImages(filterGalleryImages(State.currentGalleryImages||[])); grid.innerHTML=filtered.map((img,idx)=>renderGalleryCard(img,idx,State.galleryViewMode)).join(''); const lbl=document.querySelector(".gallery-count-label"); if(lbl) lbl.textContent=`${filtered.length} artworks`; } return; }
-    if(t.dataset && t.dataset.setRange){ store.settings[t.dataset.setRange]=parseFloat(t.value); saveStore(); const lbl=t.closest(".set-group")?.querySelector("label .faint"); if(lbl){ lbl.textContent = t.dataset.setRange==="fontScale"? Math.round(t.value*100)+"%" : parseFloat(t.value).toFixed(2); } renderReaderOnly(); }
+    if(t.dataset && t.dataset.setRange){ store.settings[t.dataset.setRange]=parseFloat(t.value); saveStore(); const lbl=t.closest(".set-group")?.querySelector("label .setting-value, label .faint"); if(lbl){ lbl.textContent = t.dataset.setRange==="fontScale"? Math.round(t.value*100)+"%" : parseFloat(t.value).toFixed(2); } applyReaderPreferences(); return; }
+    if(t.dataset && t.dataset.readerBrightness!=null){ store.settings.readerBrightness=Math.min(125,Math.max(50,parseFloat(t.value)||100)); saveStore(); const lbl=t.closest(".set-group")?.querySelector(".setting-value"); if(lbl) lbl.textContent=Math.round(store.settings.readerBrightness)+"%"; applyReaderPreferences(); return; }
+    if(t.dataset && t.dataset.readerCustomColor!=null){ if(/^#[0-9a-f]{6}$/i.test(t.value)){ store.settings.readerCustomBg=t.value; saveStore(); const out=t.parentElement?.querySelector("output"); if(out) out.textContent=t.value.toUpperCase(); applyReaderPreferences(); } return; }
   });
   document.addEventListener("change",(e)=>{
     const t=e.target;
     if(t.id==="gallery-sort-select"){ State.gallerySort=t.value; render(); return; }
+    if(t.dataset && t.dataset.readerCustomColor!=null){ refreshReaderPreferences(); return; }
   });
   document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape" && readerPreferencesOpen){ closeReaderPreferences(); return; }
     if(State.lightboxIndex >= 0){
       if(e.key==="Escape"){ closeGalleryLightbox(); }
       else if(e.key==="ArrowLeft"){ openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); }
@@ -285,7 +309,7 @@ function delegate(){
           minimum_tier_rank: 0
         });
         toast("Notification preferences saved", "New chapter alerts now follow these settings.", {icon:"bell"});
-        openSheet(sheetSettings);
+        openSheet(currentSheet?.builder || sheetNotificationSettings);
       } catch (err) {
         toast("Preferences not saved", err.message || "Try again.", {icon:"alert", kind:"bad"});
       }
@@ -340,6 +364,8 @@ function ensureQuoteFab(show){ if(show){ if(quoteFab) return; quoteFab=document.
 function handleAct(act, el){
   switch(act){
     case "close-sheet": closeSheet(); break;
+    case "close-reader-preferences": closeReaderPreferences(); break;
+    case "toggle-site-theme": toggleSiteTheme(); updateSiteThemeControls(); break;
     case "home-feed-filter":
       store.filters.homeFeed = el.dataset.feedFilter || "all";
       store.homeFeedLimit = 10;
@@ -375,7 +401,7 @@ function handleAct(act, el){
     case "show-signup": openSheet(sheetSignup); break;
     case "show-forgot-password": openSheet(sheetForgotPassword); break;
     case "reader-signout": signOutReader().then(()=>{ closeSheet(); toast("Signed out", null, {icon:"user"}); render(); }).catch(err=>toast("Sign out failed", err.message, {icon:"alert", kind:"bad"})); break;
-    case "request-browser-notifications": requestBrowserNotifications().then(()=>saveNotificationPreferences({ browser_enabled:true, email_enabled:store.settings.emailNotifications !== false, new_chapters_enabled:store.settings.chapterNotifications !== false, minimum_tier_rank:0 }).catch(()=>null)).then(()=>{ toast("Browser notifications enabled", "We can show chapter alerts while the site is open.", {icon:"bell"}); openSheet(sheetSettings); }).catch(err=>toast("Notifications blocked", err.message || "Permission was not granted.", {icon:"alert", kind:"bad"})); break;
+    case "request-browser-notifications": requestBrowserNotifications().then(()=>saveNotificationPreferences({ browser_enabled:true, email_enabled:store.settings.emailNotifications !== false, new_chapters_enabled:store.settings.chapterNotifications !== false, minimum_tier_rank:0 }).catch(()=>null)).then(()=>{ toast("Browser notifications enabled", "We can show chapter alerts while the site is open.", {icon:"bell"}); openSheet(currentSheet?.builder || sheetNotificationSettings); }).catch(err=>toast("Notifications blocked", err.message || "Permission was not granted.", {icon:"alert", kind:"bad"})); break;
     case "resync": syncProviderEntitlements().then((data)=>{ const grants = Number(data?.grants || 0); toast("Sync complete", grants ? `${grants} Patreon entitlement${grants===1?"":"s"} active.` : "Patreon linked, but no mapped tier was found.", {icon:"checkCirc", ms:4000}); render(); }).catch(err=>toast("Sync failed", err.message || "Unable to refresh provider entitlements.", {icon:"alert", kind:"bad"})); break;
     case "resync-boosty": syncProviderEntitlements("boosty_discord").then((data)=>{ const grants = Number(data?.grants || 0); const detail = data?.status === "not_in_server" ? "Join the Discord server, then try again." : grants ? "Your Boosty Discord role is active." : "No mapped Boosty subscriber role was found."; toast("Boosty sync complete", detail, {icon:grants?"checkCirc":"info", ms:5000}); render(); }).catch(err=>toast("Boosty sync failed", err.message || "Unable to verify Discord roles.", {icon:"alert", kind:"bad"})); break;
     case "expected-access": rememberReturn(); openSheet(sheetContext?sheetContext:()=>sheetLock(currentChapter?.ch.id)); break;
@@ -419,7 +445,7 @@ function handleAct(act, el){
     case "open-boosty": if (BOOSTY_URL) window.open(BOOSTY_URL, "_blank", "noopener"); else toast("Boosty link unavailable", "No Boosty page is configured for this site.", {icon:"alert", kind:"bad"}); break;
     case "external-discord": toast("Community link unavailable","No community link is configured for this site.",{icon:"msg"}); break;
     case "mark-all-read": { const ids=store.notifs.filter(n=>!n.read).map(n=>n.id).filter(Boolean); store.notifs.forEach(n=>n.read=true); saveStore(); markReaderNotificationsRead(ids).catch(()=>{}); render(); break; }
-    case "notif-prefs": openSheet(sheetSettings); break;
+    case "notif-prefs": openSheet(sheetNotificationSettings); break;
     case "dismiss-whats-new": dismissWhatsNew(); closeSheet(); break;
     case "studio-publish": toast("Published","Chapter is live for readers with access.",{icon:"checkCirc",ms:4000}); break;
     case "studio-save-draft": toast("Draft saved","Auto-saved to your drafts.",{icon:"book"}); break;

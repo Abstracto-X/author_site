@@ -4,19 +4,60 @@
 /* ============ site themes ============ */
 const THEMES = [
   { id:"dark", name:"Dark Mode", dot:"linear-gradient(135deg,#14161f,#d4b06a)" },
-  { id:"light", name:"Light Mode", dot:"linear-gradient(135deg,#ffffff,#2563eb)" },
-  { id:"parchment", name:"Parchment", dot:"linear-gradient(135deg,#efe7d5,#8c5a2b)" }
+  { id:"light", name:"Light Mode", dot:"linear-gradient(135deg,#ffffff,#2563eb)" }
 ];
 function normalizeTheme(id) {
-  if (!id) return "dark";
-  if (id === "light" || id === "parchment") return id;
-  return "dark"; // maps aether, ember, frost, midnight, sage, etc. to dark
+  return id === "light" ? "light" : "dark";
 }
 function applyTheme(){
   const theme = normalizeTheme(store.theme);
   document.documentElement.setAttribute("data-theme", theme);
 }
-function setTheme(id){ store.theme = normalizeTheme(id); saveStore(); applyTheme(); }
+function setTheme(id){
+  const theme = normalizeTheme(id);
+  store.theme = theme;
+  saveStore();
+  applyTheme();
+}
+function toggleSiteTheme(){
+  setTheme(store.theme === "light" ? "dark" : "light");
+}
+function normalizeReaderTheme(id){
+  return ["dark","light","parchment","custom"].includes(id) ? id : "dark";
+}
+function hexToRgb(hex){
+  const match=/^#([0-9a-f]{6})$/i.exec(hex||"");
+  if(!match) return null;
+  const n=parseInt(match[1],16);
+  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+}
+function readerRgb(rgb, brightness){
+  const factor=Math.min(1.25,Math.max(.5,Number(brightness)/100||1));
+  return {r:Math.round(Math.min(255,rgb.r*factor)),g:Math.round(Math.min(255,rgb.g*factor)),b:Math.round(Math.min(255,rgb.b*factor))};
+}
+function rgbCss(rgb, alpha){ return alpha==null?`rgb(${rgb.r} ${rgb.g} ${rgb.b})`:`rgb(${rgb.r} ${rgb.g} ${rgb.b} / ${alpha})`; }
+function readerLuminance(rgb){
+  const values=[rgb.r,rgb.g,rgb.b].map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);});
+  return values[0]*.2126+values[1]*.7152+values[2]*.0722;
+}
+function readerContrast(a,b){ const hi=Math.max(readerLuminance(a),readerLuminance(b)); const lo=Math.min(readerLuminance(a),readerLuminance(b)); return (hi+.05)/(lo+.05); }
+function mixReaderRgb(a,b,amount){ return {r:Math.round(a.r+(b.r-a.r)*amount),g:Math.round(a.g+(b.g-a.g)*amount),b:Math.round(a.b+(b.b-a.b)*amount)}; }
+function readerThemeStyle(settings){
+  const theme=normalizeReaderTheme(settings.readerTheme);
+  const bases={dark:"#0d0f14",light:"#fffefb",parchment:"#f7edd9"};
+  const source=hexToRgb(theme==="custom"?settings.readerCustomBg:bases[theme])||hexToRgb("#1c2330");
+  const bg=readerRgb(source,settings.readerBrightness);
+  const darkFg=hexToRgb("#20231e"), lightFg=hexToRgb("#f4f1ea");
+  const light=readerContrast(bg,darkFg)>=readerContrast(bg,lightFg);
+  const fg=light?darkFg:lightFg;
+  const dim=mixReaderRgb(fg,bg,.48);
+  const card=mixReaderRgb(bg,light?hexToRgb("#000000"):hexToRgb("#ffffff"),light?.055:.075);
+  const border=mixReaderRgb(bg,fg,.18);
+  const top=mixReaderRgb(bg,card,.35);
+  const infoText=light?"#164f63":"#d5f3ff", infoAccent=light?"#0f688d":"#55c5f3";
+  const captionText=light?"#7e2933":"#ffe0e2", captionAccent=light?"#a3313d":"#ff939b";
+  return `--read-bg:${rgbCss(bg)};--read-fg:${rgbCss(fg)};--read-dim:${rgbCss(dim)};--read-card:${rgbCss(card)};--read-border:${rgbCss(border,.72)};--read-top:${rgbCss(top,.96)};--system-info-text:${infoText};--system-info-accent:${infoAccent};--system-caption-text:${captionText};--system-caption-link:${captionAccent}`;
+}
 applyTheme();
 
 /* ============ access-state resolver ============ */

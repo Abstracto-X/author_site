@@ -1,5 +1,59 @@
 # Changelog
 
+## 2026-09-07 00:00 Asia/Kolkata - Keep Markdown brackets at system-box boundaries
+
+Area: Writer / export
+
+Summary:
+- Fixed Copy as Markdown so each system dialogue box receives exactly one opening and closing square bracket around all of its lines.
+- Removed empty bracket pairs caused by blank system lines while preserving separate bracket pairs for separate system boxes.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-09-06 00:00 Asia/Kolkata - Exclude images from Context Workspace prompts
+
+Area: writer / context workspace
+
+Summary:
+- Removed embedded images from the Markdown used by Context Workspace prompt preview and exports, preventing image URLs from inflating character and token counts.
+
+Files changed:
+- `writer.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+## 2026-08-31 12:06 Asia/Kolkata - Separate site settings and reader preferences
+
+Area: reader / chapter display / settings
+
+Summary:
+- Separated dark/light site chrome from independent dark/light/parchment/custom chapter colors and added persistent top-bar theme and Settings controls.
+- Replaced the reader's modal catch-all sheet with a non-modal right rail on desktop and bottom drawer on smaller screens, keeping chapter text visible and applying changes without rebuilding content or moving scroll position.
+- Reduced Reader Preferences to page color, automatic custom-color contrast, brightness, text size, line spacing, width, and one Dyslexia mode; migrated obsolete presets and restored any legacy-hidden reader content.
+- Moved site artwork, contextual story backdrops, and notification delivery into overall Settings, with distinct gear and Aa actions in the chapter header and reader bar.
+- Kept the Georgia-first prose/italic improvements and compact theme-aware system/caption dialogue treatment across built-in and custom reader backgrounds.
+
+Files changed:
+- `styles.css`
+- `js/subscription/state.js`
+- `js/subscription/utils.js`
+- `js/subscription/chrome.js`
+- `js/subscription/router.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/sheets.js`
+- `js/subscription/events.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-08-20 13:27 Asia/Kolkata - Preserve dialogue text during system-format changes
 
 Area: Writer / chapter editor

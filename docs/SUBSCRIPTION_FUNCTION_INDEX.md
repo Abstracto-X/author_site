@@ -69,9 +69,9 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
-| 17 | `defaultStore()` | Helper used by this module. |
-| 41 | `loadStore()` | Loads fresh data/state from Supabase or local runtime state. |
-| 42 | `saveStore()` | Persists changes to Supabase or updates local state. |
+| 17 | `defaultStore()` | Defines persisted defaults for independent site theme and reader color/brightness/typography preferences. |
+| 47 | `loadStore()` | Loads saved state and migrates legacy unified themes, presets, sans mode, and hidden reader controls onto the independent preference model. |
+| 64 | `saveStore()` | Persists changes to Supabase or updates local state. |
 
 ## `js/subscription/auth.js`
 
@@ -226,8 +226,11 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
-| 13 | `applyTheme()` | Helper used by this module. |
-| 14 | `setTheme(id)` | Helper used by this module. |
+| 15 | `applyTheme()` | Applies the normalized dark/light site-chrome mode. |
+| 19 | `setTheme(id)` | Saves and applies the independent dark/light site-chrome mode. |
+| n/a | `toggleSiteTheme()` | Switches site chrome between light and dark without changing reader colors. |
+| n/a | `normalizeReaderTheme(id)` | Normalizes the reader-only dark/light/parchment/custom color selection. |
+| n/a | `readerThemeStyle(settings)` | Derives brightness-adjusted reader surfaces and accessible foreground/dialogue tokens, including custom colors. |
 | 18 | `chapterResolved(ch)` | Handles chapter catalog, reader, or chapter form behavior. |
 | 43 | `gateDisplay(ch)` | Helper used by this module. |
 | 50 | `reasonFor(ch, r)` | Helper used by this module. |
@@ -325,9 +328,9 @@ Recent reader notification/profile changes:
 | 225 | `chapterGridCard(ch, story)` | Renders a premium card for the chapter catalog grid. |
 | 264 | `chapterRow(ch, story)` | Renders a table row in the story hub chapter list. |
 | n/a | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Maps Free Access and named/fallback member tiers to reusable reader accent variables. |
-| 321 | `readerShell(themeClass, inner, settings)` | Renders the global layout/shell for the reader stage. |
-| 335 | `readerBar()` | Renders the bottom navigation bar for settings/reactions/comments. |
-| 348 | `renderBlocks(blocks, chId)` | Builds and returns or injects the HTML for the chapter blocks. |
+| 373 | `readerShell(themeClass, inner, settings)` | Renders the chapter layout with independent reader color, brightness, typography, top controls, and optional Dyslexia mode. |
+| 387 | `readerBar()` | Renders the bottom navigation bar for settings/reactions/comments. |
+| 400 | `renderBlocks(blocks, chId)` | Builds and returns or injects the HTML for the chapter blocks. |
 | 359 | `readerNavButtons(ch, story, index)` | Renders standard next/previous/book navigation buttons at start/end of chapter. |
 | 380 | `readerFull(ch, story, index, r)` | Renders full unlocked chapter contents and comments. |
 | 401 | `readerPreview(ch, story, index, r)` | Renders chapter preview mode with preview-wall. |
@@ -358,9 +361,17 @@ Recent reader notification/profile changes:
 | 6 | `openSheet(builder, opts)` | Opens the related modal, sheet, route, or external flow. |
 | 17 | `closeSheet(silent)` | Closes the related modal, sheet, or transient UI. |
 | 26 | `wallpaperSwatches(story)` | Builds thumbnail swatches for selecting wallpapers. |
-| 38 | `sheetSettings()` | Builds or controls bottom-sheet/modal content. |
-| 43 | `toggleRow(key,title,sub,on)` | Helper used by this module. |
-| 45 | `sheetPersona()` | Builds or controls bottom-sheet/modal content. |
+| n/a | `readerPreferencesPanel()` | Builds the chapter-only page color, brightness, typography, width, and Dyslexia controls. |
+| n/a | `openReaderPreferences()` | Opens the non-modal desktop rail or mobile bottom drawer without a scrim. |
+| n/a | `refreshReaderPreferences()` | Refreshes control states while preserving the open preference surface. |
+| n/a | `closeReaderPreferences()` | Closes Reader Preferences and restores the normal chapter layout. |
+| n/a | `toggleReaderPreferences()` | Toggles the dedicated Reader Preferences surface from Aa controls. |
+| 56 | `sheetReaderSettings()` | Compatibility builder that returns the dedicated Reader Preferences controls. |
+| 78 | `sheetNotificationSettings()` | Builds the independent in-app, email, and browser chapter-alert preferences. |
+| 90 | `sheetSiteSettings()` | Builds site appearance controls and exposes story backdrops only on relevant story surfaces. |
+| 104 | `sheetSettings()` | Builds overall site appearance/backdrop and notification settings; it never dispatches reader controls. |
+| 108 | `toggleRow(key,title,sub,on)` | Helper used by this module. |
+| 110 | `sheetPersona()` | Builds or controls bottom-sheet/modal content. |
 | 56 | `sheetSignup()` | Coordinates authentication/session behavior. |
 | 61 | `sheetForgotPassword()` | Coordinates authentication/session behavior. |
 | 65 | `sheetUpdatePassword()` | Persists changes to Supabase or updates local state. |
@@ -391,6 +402,8 @@ Recent reader notification/profile changes:
 | n/a | `shareChapterLink(chapterId)` | Uses the native share sheet when available and otherwise copies the direct chapter URL. |
 | 67 | `openReaderNotification(id, chapterId, notificationUrl)` | Marks an alert read before opening its chapter or internal route. |
 | 55 | `renderReaderOnly()` | Builds and returns or injects the HTML for this UI section. |
+| n/a | `applyReaderPreferences()` | Applies reader color/brightness/typography variables and classes live without rebuilding chapter HTML. |
+| n/a | `updateSiteThemeControls()` | Refreshes top-bar site-theme toggle icons and labels in place. |
 | 64 | `updateReaderBar()` | Persists changes to Supabase or updates local state. |
 | 68 | `afterRender()` | Builds and returns or injects the HTML for this UI section. |
 | 75 | `setupReader()` | Helper used by this module. |

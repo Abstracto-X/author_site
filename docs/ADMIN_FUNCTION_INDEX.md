@@ -249,7 +249,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `App.createNewChapter()` saves a dirty active tab first, creates the next `chapter_order` draft, and opens it from the editor tab-strip plus control.
 - `App.quickSetChapterTier(id, tierId)` changes access directly from the chapter index; `tierRowVisual(tierId)` gives each tier a stable row tint/accent while Free Access stays green; `App.deleteChapter(id)` confirms and deletes from either the index or editor settings.
 - `Editor.deleteCurrentSystemMessage()` deletes the system-message block containing the current cursor.
-- `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, bracketed system messages, and `---` scene dividers.
+- `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, one bracket pair around each system box, and `---` scene dividers; internal system-box line breaks stay inside the same pair and empty boxes are omitted.
 
 ## 2026-07-20 17:00 Asia/Kolkata - Chapter Scratchpads & Export menu options
 
@@ -274,7 +274,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 ## 2026-07-23 19:20 Asia/Kolkata - Writer Context Workspace phases 1-2
 
 - `ContextWorkspace.load(storyId)` loads story context blocks and saved presets/items from Supabase while reusing the active story's chapter and scratchpad caches.
-- `ContextWorkspace.render()`, `renderLibrary()`, `renderSectionTabs()`, `renderSectionOrder()`, `renderItemOrder()`, and `renderPreview()` build browser-style section tabs, whole-card selection states, ordering controls, prompt preview, and live word/token budget status.
+- `ContextWorkspace.render()`, `renderLibrary()`, `renderSectionTabs()`, `renderSectionOrder()`, `renderItemOrder()`, and `renderPreview()` build browser-style section tabs, whole-card selection states, ordering controls, prompt preview, and live word/token budget status; prompt Markdown conversion omits embedded images and their URLs.
 - `ContextWorkspace.setActiveSection(section)` switches the persisted active library tab. `startLibraryDrag()` / `dropLibraryItem()` persist reusable-block sorting inside a tab; `startAdvancedDrag()` / `dropAdvancedItem()` provide drag sorting across the advanced selected-item order.
 - `ContextWorkspace.stateKey(storyId)`, `restoreState(storyId)`, and `persistState()` maintain a per-story local session snapshot; `setSearch(value)` persists and reapplies the current filter. The snapshot covers transient selection/order, mode, active tab/preset, token budget, and library/preview scroll positions.
 - `ContextWorkspace.setShowChapterNotes(show)` persists whether chapter-linked notes appear beside independent scratchpad blocks. `createChapterNoteFromContext()` opens a new note for the chapter selected inside the Scratchpads dock.

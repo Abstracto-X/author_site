@@ -55,6 +55,7 @@ function render(){
   const main = document.getElementById("main");
   const inReader = route.name === "read";
   const inStudio = /^studio/.test(route.name);
+  if (typeof closeReaderPreferences === "function") closeReaderPreferences();
   document.body.classList.toggle("in-reader", inReader);
   document.body.classList.toggle("in-studio", inStudio);
   const view = VIEWS[route.name] || VIEWS.home;

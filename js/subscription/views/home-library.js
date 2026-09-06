@@ -353,7 +353,7 @@ VIEWS.home = function(){
         <a data-sheet="redeem" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.key}<span style="margin-top:4px">Redeem Key</span></a>
         ${patreonEnabled()?`<a data-act="resync" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.sync}<span style="margin-top:4px">Sync Patreon</span></a>`:""}
         ${boostyDiscordEnabled()?`<a data-act="resync-boosty" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.sync}<span style="margin-top:4px">Sync Boosty</span></a>`:""}
-        <a data-sheet="settings" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.aa}<span style="margin-top:4px">Preferences</span></a>
+        <a data-sheet="settings" style="padding:10px;font-size:0.8rem;cursor:pointer">${I.cog}<span style="margin-top:4px">Settings</span></a>
         ${P.signedIn
           ? `<a data-act="reader-signout" style="padding:10px;font-size:0.8rem;cursor:pointer;color:var(--bad)">${I.x}<span style="margin-top:4px">Sign Out</span></a>`
           : `<a data-sheet="persona" style="padding:10px;font-size:0.8rem;cursor:pointer;color:var(--accent)">${I.user}<span style="margin-top:4px">Sign In</span></a>`

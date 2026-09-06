@@ -14,6 +14,8 @@ function topbar(){
     <span class="spacer"></span>
     <button class="access-chip" data-state="${state}" data-nav="/vault"><span class="pulse"></span>${label}</button>
     ${isAdmin()?`<a class="tb-btn admin-shortcut" href="writer.html" aria-label="Writer">${I.book}</a><a class="tb-btn admin-shortcut" href="admin.html" aria-label="Admin CMS">${I.shield}</a>`:""}
+    <button class="tb-btn site-theme-toggle" data-act="toggle-site-theme" aria-label="Switch to ${store.theme==='light'?'dark':'light'} theme" title="Switch site theme">${store.theme==='light'?I.moon:I.sun}</button>
+    <button class="tb-btn" data-sheet="settings" aria-label="Site settings" title="Site settings">${I.cog}</button>
     <button class="tb-btn" data-nav="/notifications" aria-label="Notifications">${I.bell}${unread?`<span class="dot"></span>`:""}</button>
     <button class="tb-btn" data-sheet="persona" aria-label="Account and access">${I.user}</button>
   </header>`;
