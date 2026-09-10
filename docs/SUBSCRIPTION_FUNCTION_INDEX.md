@@ -330,7 +330,8 @@ Recent reader notification/profile changes:
 | n/a | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Maps Free Access and named/fallback member tiers to reusable reader accent variables. |
 | 373 | `readerShell(themeClass, inner, settings)` | Renders the chapter layout with independent reader color, brightness, typography, top controls, and optional Dyslexia mode. |
 | 387 | `readerBar()` | Renders the bottom navigation bar for settings/reactions/comments. |
-| 400 | `renderBlocks(blocks, chId)` | Builds and returns or injects the HTML for the chapter blocks. |
+| 403 | `systemDialogChapterNumber(chapter)` | Resolves the displayed chapter number from a title such as `Chapter 72`, falling back to the stored chapter order. |
+| 408 | `renderBlocks(blocks, chId, chapter)` | Renders chapter blocks and selects the legacy or ornate system-dialogue treatment from the configured displayed-chapter cutoff. |
 | 359 | `readerNavButtons(ch, story, index)` | Renders standard next/previous/book navigation buttons at start/end of chapter. |
 | 380 | `readerFull(ch, story, index, r)` | Renders full unlocked chapter contents and comments. |
 | 401 | `readerPreview(ch, story, index, r)` | Renders chapter preview mode with preview-wall. |

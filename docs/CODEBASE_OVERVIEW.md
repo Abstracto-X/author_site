@@ -81,7 +81,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 | `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
 | `router.js` | Hash route parsing and render dispatch. | Preserves route names and view registry behavior. |
 | `views/home-library.js` | Home/library routes. | Published story discovery, mobile-safe home layout, tier-colored chapter availability overview, fixed-position access pills, and empty setup state. |
-| `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering, including tier-color-coded chapter cards/rows and direct chapter-share controls. |
+| `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering, including tier-color-coded chapter cards/rows, direct chapter-share controls, and the admin-configurable displayed-chapter cutoff that switches system messages from the legacy treatment to the ornate three-slice frame. Displayed numbers are parsed from titles such as `Chapter 72`, falling back to `chapter_order`. |
 | `views/account-access.js` | Updates, calendar, collections, vault, shelf, notifications, benefits, onboarding. | Must not render hardcoded fake backend content. |
 | `views/help-support.js` | Help/support routes. | Mostly static support copy/forms. |
 | `views/gallery.js` | Visual Archive and character gallery routes. | Visual Archive landing page, featured character hero, roster collection decks, "Fresh Transmissions", per-character gallery, tag filters, grid/deck mode toggles, interactive lightbox modal, image upvoting, and subscriber-only opt-in access for mature-tagged artwork. |
@@ -149,7 +149,7 @@ Admin responsibilities include:
 - Reader CRM, provider connection visibility, access key redemption visibility, entitlement audit review, comments, and chapter reaction totals.
 - Character, gallery, lore, maps, wallpapers, timeline, map requests, and author profile content as secondary Story Extras.
 - Reader tiers/access keys/manual grants/provider mappings in Access Tools.
-- Site Settings for reader identity, provider flag visibility, guide toggles, and subscription behavior defaults.
+- Site Settings for reader identity, provider flag visibility, guide toggles, subscription behavior defaults, and the chapter-number cutoff for the ornate reader system-dialogue frame.
 - Site Settings can also configure the subscription reader background image URL used by the app shell.
 - Uploads to configured Supabase storage buckets.
 

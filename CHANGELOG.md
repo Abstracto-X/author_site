@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-10 00:00 Asia/Kolkata - Chapter-gated ornate system dialogue
+
+Area: reader / admin settings
+
+Summary:
+- Added the ornate three-slice system-dialogue artwork to the chapter reader while preserving the existing system-message treatment for earlier chapters.
+- Added Admin Site Settings controls for enabling the ornate treatment and choosing the exclusive chapter cutoff; the default of 70 means Chapter 71 onward uses the new frame.
+- The cutoff follows the displayed number in chapter titles, falling back to `chapter_order`, so numbered chapters remain correct when prologues or inserts offset their stored order.
+- Replaced the initial artwork exports with three slices derived directly from the supplied transparent 1942×810 PNG; its exterior stays transparent while the enclosed black grid remains intact and opaque.
+- Kept authored system-message HTML, links, caption detection, and chapter access behavior unchanged.
+
+Files changed:
+- `assets/system-dialog/system-dialog-top.png`
+- `assets/system-dialog/system-dialog-middle.png`
+- `assets/system-dialog/system-dialog-bottom.png`
+- `styles.css`
+- `js/subscription/config.js`
+- `js/subscription/views/story-reader.js`
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-09-07 00:00 Asia/Kolkata - Keep Markdown brackets at system-box boundaries
 
 Area: Writer / export

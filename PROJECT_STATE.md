@@ -2,6 +2,41 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-09-10 00:00 Asia/Kolkata — Chapter-gated ornate system dialogue
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+- admin settings
+
+Files touched:
+- `assets/system-dialog/*`
+- `styles.css`
+- `js/subscription/config.js`
+- `js/subscription/views/story-reader.js`
+- `admin.html`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `CHANGELOG.md`
+
+Summary:
+- The reader keeps the legacy system-message treatment through the configured cutoff and uses the ornate three-slice frame only for later chapter numbers.
+- Admin Site Settings controls the feature and cutoff through the existing `site_settings.reader_behavior` JSON; the default cutoff is 70.
+- Displayed chapter numbers are parsed from titles such as `Chapter 72`, with `chapter_order` used only as fallback; production currently stores the row titled `Chapter 72` at `chapter_order = 70`.
+- The ornate slices are derived directly from the supplied transparent 1942×810 PNG. Exterior transparency and the enclosed dark grid are preserved without chroma-keying or alpha manipulation.
+
+Remaining work:
+- Save the setting in production Admin and visually verify Chapters 70 and 71 on desktop and mobile.
+
+Risks / notes:
+- The comparison is exclusive: a cutoff of 70 switches at Chapter 71.
+- No schema migration is required because the existing JSONB settings record stores the new keys.
+
+Verification needed:
+- Confirm Chapter 70 retains the current treatment, Chapter 71 uses the ornate frame, linked system messages remain usable, and disabling the setting restores the current treatment everywhere.
+
 ## 2026-08-31 12:06 Asia/Kolkata — Separate site settings and reader preferences
 
 Status: NEEDS REVIEW

@@ -44,7 +44,7 @@ The reader now consumes `public.site_settings` for production site identity:
 | Setting key | Shape | Purpose |
 |---|---|---|
 | `site_identity` | JSON object with `siteName`, `siteTagline`, `pageTitle`, and `metaDescription` | Controls the reader/admin-facing site name and browser metadata. Current site name: `EvilArchives`. |
-| `reader_behavior` | JSON object with `enableReaderGuides`, `globalExternalUrl`, and `providerNote` | Admin-authored defaults/notes for onboarding, provider display, and optional global external fallback. The reader loads this setting at startup; per-chapter `chapters.external_url` remains source of truth for NSFW/external chapters, with `globalExternalUrl` used only as a fallback link. |
+| `reader_behavior` | JSON object with `enableReaderGuides`, `globalExternalUrl`, `providerNote`, `enableOrnateSystemDialog`, and `ornateSystemDialogAfterChapter` | Admin-authored defaults/notes for onboarding, provider display, optional global external fallback, and system-dialogue presentation. With the default cutoff of `70`, displayed Chapters 1–70 retain the legacy reader treatment and displayed Chapter 71 onward uses the ornate three-slice frame. The displayed number is parsed from titles such as `Chapter 72`, with `chapters.chapter_order` as fallback. The reader loads this setting at startup; per-chapter `chapters.external_url` remains source of truth for NSFW/external chapters, with `globalExternalUrl` used only as a fallback link. |
 
 `site_settings.setting_key` is protected by the unique index `site_settings_setting_key_key` so Admin CMS saves update the existing setting instead of creating duplicates.
 

@@ -400,11 +400,26 @@ function readerBar(){
     <button data-sheet="context" aria-label="More">${I.list}</button>
   </div>`;
 }
-function renderBlocks(blocks, chId){
+function systemDialogChapterNumber(chapter){
+  const titleMatch = String(chapter?.title || "").match(/\bchapter\s*#?\s*(\d+(?:\.\d+)?)\b/i);
+  if (titleMatch) return Number(titleMatch[1]);
+  return Number(chapter?.n ?? chapter?.chapter_order ?? 0);
+}
+function renderBlocks(blocks, chId, chapter){
+  const behavior = typeof readerBehavior === "function" ? readerBehavior() : {};
+  const ornateAfter = Number(behavior.ornateSystemDialogAfterChapter ?? 70);
+  const useOrnateSystemDialog = behavior.enableOrnateSystemDialog !== false && systemDialogChapterNumber(chapter) > ornateAfter;
   return blocks.map((b,i)=>{
     if(b.t==="scene") return `<div class="scene">✦ ✦ ✦</div>`;
     if(b.t==="system"){
       const caption = b.variant === "caption" || /<a\b/i.test(String(b.v || ""));
+      if (useOrnateSystemDialog) {
+        return `<div class="reader-system-dialog-v2${caption ? " reader-system-caption" : ""}">
+          <img class="reader-system-dialog-v2__top" src="assets/system-dialog/system-dialog-top.png" alt="" aria-hidden="true">
+          <div class="reader-system-dialog-v2__middle"><div class="reader-system-dialog-v2__content">${b.v}</div></div>
+          <img class="reader-system-dialog-v2__bottom" src="assets/system-dialog/system-dialog-bottom.png" alt="" aria-hidden="true">
+        </div>`;
+      }
       return `<div class="reader-system-message${caption ? " reader-system-caption" : ""}">${b.v}</div>`;
     }
     if(b.t==="html"){
@@ -461,7 +476,7 @@ function readerFull(ch, story, index, r){
     
     ${readerNavButtons(ch, story, index)}
     
-    <div class="prose" id="prose">${renderBlocks(blocks, ch.id)}</div>
+    <div class="prose" id="prose">${renderBlocks(blocks, ch.id, ch)}</div>
     
     ${readerNavButtons(ch, story, index)}
     
@@ -501,7 +516,7 @@ function readerPreview(ch, story, index, r){
     
     ${readerNavButtons(ch, story, index)}
     
-    <div class="prose" id="prose">${renderBlocks(ch.preview||[], ch.id)}</div>
+    <div class="prose" id="prose">${renderBlocks(ch.preview||[], ch.id, ch)}</div>
     
     <div class="preview-wall" style="${storyAccentVars(story)}">
       <div class="top"></div>

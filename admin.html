@@ -3949,6 +3949,8 @@
                     UI.showLoading();
                     const behavior = {
                         enableReaderGuides: document.getElementById('f-enable-reader-guides').checked,
+                        enableOrnateSystemDialog: document.getElementById('f-enable-ornate-system-dialog').checked,
+                        ornateSystemDialogAfterChapter: Math.max(0, parseInt(document.getElementById('f-ornate-system-dialog-after').value, 10) || 0),
                         globalExternalUrl: document.getElementById('f-global-external-url').value.trim(),
                         providerNote: document.getElementById('f-provider-note').value.trim(),
                         enableAppBackground: document.getElementById('f-enable-app-background').checked,
@@ -5007,6 +5009,9 @@
                 const pageTitle = identity.pageTitle || identity.page_title || siteName;
                 const metaDescription = identity.metaDescription || identity.meta_description || 'EvilArchives premium fiction reader.';
                 const behavior = settings.find(s => s.setting_key === 'reader_behavior')?.setting_value || {};
+                const ornateDialogAfter = Number.isFinite(Number(behavior.ornateSystemDialogAfterChapter))
+                    ? Math.max(0, Math.floor(Number(behavior.ornateSystemDialogAfterChapter)))
+                    : 70;
 
                 container.innerHTML = `
                     <div class="page-header">
@@ -5075,6 +5080,20 @@
                         <div class="form-group">
                             <label class="form-label">Provider/settings display note</label>
                             <textarea class="form-textarea" id="f-provider-note" style="min-height:90px;">${Utils.escapeHtml(behavior.providerNote || 'Provider entitlements are managed by Edge Functions and provider tier mappings.')}</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="f-enable-ornate-system-dialog" ${behavior.enableOrnateSystemDialog !== false ? 'checked' : ''}>
+                                    Enable ornate system dialogue after the cutoff
+                                </label>
+                                <small style="color:#777">Earlier chapters keep the current system-message artwork.</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Use ornate dialogue after chapter</label>
+                                <input class="form-input" id="f-ornate-system-dialog-after" type="number" min="0" step="1" value="${ornateDialogAfter}">
+                                <small style="color:#777">With 70, Chapters 1–70 use the current design; Chapter 71 onward uses the ornate frame.</small>
+                            </div>
                         </div>
                         <button class="btn btn-primary" onclick="Forms.saveReaderBehavior()"><i class="fas fa-save"></i> Save Behavior Defaults</button>
                     </div>
