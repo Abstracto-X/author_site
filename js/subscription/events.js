@@ -16,6 +16,39 @@ function toggleBookmark(){ const f=currentChapter; if(!f) return; const id=f.ch.
 function toggleMarkRead(){ const f=currentChapter; if(!f) return; const id=f.ch.id; store.readMarked[id]=!store.readMarked[id]; saveStore(); if(store.readMarked[id]){ const exists=store.history.find(h=>h.chapterId===id&&h.kind==='completed'); if(!exists) store.history.unshift({chapterId:id, storyId:f.story.id, title:f.ch.title, when:"just now", kind:"completed"}); saveStore(); toast("Marked as read"); } updateReaderBar(); }
 function saveQuote(){ const sel=window.getSelection(); const text=sel?sel.toString().trim():""; if(text.length<4){ toast("Select some text first","Highlight a line in the chapter, then save.",{kind:"bad",icon:"quote",ms:3000}); return; } const f=currentChapter; store.quotes.unshift({id:"q"+now(), chapterId:f.ch.id, story:f.story.id, text, when:"just now"}); saveStore(); sel.removeAllRanges(); toast("Quote saved", text.slice(0,50)+(text.length>50?"…":""), {icon:"quoteFill" in I?"quote":"quote"}); }
 function rememberReturn(){ if(currentChapter) store.pendingReturn=currentChapter.ch.id; saveStore(); }
+async function repairReaderAssets(){
+  toast("Repairing reader", "Clearing site asset caches and loading a fresh copy. Your sign-in and preferences are preserved.", {icon:"sync", ms:5000});
+  try {
+    const appBase = new URL(".", window.location.href);
+    if ("caches" in window) {
+      const names = await window.caches.keys();
+      await Promise.all(names.map(async name => {
+        const cache = await window.caches.open(name);
+        const requests = await cache.keys();
+        await Promise.all(requests.map(request => {
+          const requestUrl = new URL(request.url);
+          return requestUrl.origin === appBase.origin && requestUrl.pathname.startsWith(appBase.pathname)
+            ? cache.delete(request)
+            : Promise.resolve(false);
+        }));
+      }));
+    }
+    if (navigator.serviceWorker?.getRegistrations) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(registration => {
+        const scope = new URL(registration.scope);
+        return scope.origin === appBase.origin && scope.pathname.startsWith(appBase.pathname)
+          ? registration.unregister()
+          : Promise.resolve(false);
+      }));
+    }
+  } catch (error) {
+    console.warn("Reader asset cache cleanup was only partially available.", error);
+  }
+  const url = new URL(window.location.href);
+  url.searchParams.set("reader_refresh", String(Date.now()));
+  window.location.replace(url.toString());
+}
 async function connectPatreonGo(){
   if (!authState.user){ if (googleEnabled()) await signInWithGoogle("connect-patreon"); else openSheet(sheetPersona); return; }
   try {
@@ -198,6 +231,20 @@ function handleAttr(el, name, val){
   // returns true if handled
 }
 function delegate(){
+  window.addEventListener("offline",()=>toast("Connection lost", "Reconnect to continue loading library and chapter data.", {icon:"alert", kind:"bad", ms:5000}));
+  window.addEventListener("online",()=>{
+    toast("Back online", "Retrying reader data now.", {icon:"sync", ms:3000});
+    if (!backendState.loaded || (backendState.error && !(D.STORIES || []).length)) {
+      backendState.loaded = false;
+      loadBackendLibrary({ force:true }).then(()=>render());
+      return;
+    }
+    if (route.name === "read" && currentChapter?.ch?.contentErrorCode === "reader_offline") {
+      currentChapter.ch.contentError = null;
+      currentChapter.ch.contentErrorCode = null;
+      renderReaderOnly();
+    }
+  });
   document.addEventListener("click",(e)=>{
     const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-reader-preferences],[data-set-reader-theme],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-set-reader-font],[data-shelf-view],[data-quote-card],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
     if(!t) return;
@@ -366,6 +413,22 @@ function handleAct(act, el){
     case "close-sheet": closeSheet(); break;
     case "close-reader-preferences": closeReaderPreferences(); break;
     case "toggle-site-theme": toggleSiteTheme(); updateSiteThemeControls(); break;
+    case "retry-library":
+      if (backendState.loading) break;
+      backendState.loaded = false;
+      backendState.error = null;
+      render();
+      loadBackendLibrary({ force:true }).then(()=>render());
+      break;
+    case "reload-reader": window.location.reload(); break;
+    case "repair-reader": repairReaderAssets(); break;
+    case "retry-chapter":
+      if (!currentChapter || currentChapter.ch.contentLoading) break;
+      currentChapter.ch.contentError = null;
+      currentChapter.ch.contentErrorCode = null;
+      renderReaderOnly();
+      loadReaderChapterFromBackend(currentChapter.ch.id).then(()=>renderReaderOnly());
+      break;
     case "home-feed-filter":
       store.filters.homeFeed = el.dataset.feedFilter || "all";
       store.homeFeedLimit = 10;

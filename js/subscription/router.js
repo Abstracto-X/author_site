@@ -43,12 +43,13 @@ function parseHash(){
 function nav(path){ if(path===location.hash||( "#"+path)===location.hash){ render(); } else { location.hash = path; } }
 
 
-function backendSetupRequired(){ return !backendState.loaded; }
+function backendSetupRequired(){ return !backendState.loaded || (!!backendState.error && !(D.STORIES || []).length); }
 function backendSetupView(){
   const msg = backendState.error?.message || authState.error?.message || "Loading the subscription catalog from Supabase.";
   const configured = configuredSupabase();
   if ((backendState.loading || !authState.ready) && configured) return `<div class="reader-loading"><div class="reader-spinner"></div><h3>Loading member library</h3><p>Fetching stories, chapter catalog, and access state from Supabase.</p></div>`;
-  return `<div class="empty" style="padding-top:90px"><div class="em">${I.alert}</div><h3>Library temporarily unavailable</h3><p>The reader could not load published stories right now. Please check back soon.</p>${isAdmin()?`<div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">Admin diagnostic</div><p class="faint" style="font-size:.78rem;margin:0">${esc(msg)}</p></div>`:""}</div>`;
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  return `<div class="empty reader-recovery" style="padding-top:90px"><div class="em">${I.alert}</div><h3>${offline ? "You're offline" : "Library temporarily unavailable"}</h3><p>${offline ? "Reconnect to the internet and the reader will try again automatically." : "The library did not load this time. Retry first, or use Repair & reload to bypass stale site files without deleting your sign-in or reader preferences."}</p><div class="reader-recovery-actions"><button class="btn story" data-act="retry-library">${I.sync}Try again</button><button class="btn ghost" data-act="repair-reader">Repair &amp; reload</button><button class="btn ghost" data-nav="/help">${I.help}Reader help</button></div>${isAdmin()?`<div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">Admin diagnostic</div><p class="faint" style="font-size:.78rem;margin:0">${esc(msg)}</p></div>`:""}</div>`;
 }
 function render(){
   route = parseHash();

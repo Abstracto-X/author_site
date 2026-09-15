@@ -713,7 +713,29 @@ body.has-sheet #main, body.locked-scroll { overflow: hidden; }
 .prose .ql-align-right { text-align: right; }
 .prose .ql-align-justify { text-align: justify; }
 .prose p:first-of-type::first-letter { font-size: 3.1em; float:left; line-height:.8; padding: 6px 10px 0 0; font-weight:700; color: var(--s); }
-.prose .scene { text-align:center; margin: 2.1em 0; color: var(--read-dim); letter-spacing:.4em; font-size:.7rem; }
+.prose .scene {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.8rem;
+  width:min(12rem, 58%);
+  margin:2.65em auto;
+  color:var(--s, #d4b06a);
+  font-size:.9rem;
+  line-height:1;
+  text-align:center;
+  filter:drop-shadow(0 0 8px color-mix(in srgb, var(--s, #d4b06a) 42%, transparent));
+}
+.prose .scene::before,
+.prose .scene::after {
+  content:"";
+  flex:1;
+  height:1px;
+  background:linear-gradient(90deg, transparent, currentColor);
+  opacity:.72;
+}
+.prose .scene::after { transform:scaleX(-1); }
+.prose .scene span { flex:0 0 auto; }
 .prose .reader-system-message {
   position: relative;
   margin: 1.85rem 0;
@@ -1548,6 +1570,8 @@ body.in-studio #main { padding-bottom: 28px; }
 .reader-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px 20px; gap: 16px; text-align: center; }
 .reader-loading h3 { font-family: var(--serif); font-size: 1.25rem; margin: 0; }
 .reader-loading p { font-size: .88rem; color: var(--read-dim); margin: 0; max-width: 320px; line-height: 1.5; }
+.reader-recovery-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; margin-top:18px; }
+.reader-recovery-actions .btn { min-width:120px; }
 .reader-spinner {
   width: 36px; height: 36px; border-radius: 50%;
   border: 3px solid var(--read-border, var(--border));

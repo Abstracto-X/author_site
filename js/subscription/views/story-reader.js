@@ -349,7 +349,7 @@ VIEWS.read = function(){
   if (r.state === "preview") return readerPreview(ch, story, index, r);
   if (!isReadable(r)) return readerLocked(ch, story, index, r);
   if (ch.backend && !ch.content) {
-    if (!ch.contentLoading) loadReaderChapterFromBackend(ch.id).then(() => render());
+    if (!ch.contentLoading && !ch.contentError) loadReaderChapterFromBackend(ch.id).then(() => render());
     const message = ch.contentError || "Loading secure chapter text from Supabase...";
     return readerShell(`theme-${normalizeReaderTheme(store.settings.readerTheme)}`, `
       <div class="reader-loading" style="padding-top:120px">
@@ -359,7 +359,7 @@ VIEWS.read = function(){
         }
         <h3>${ch.contentError ? "Chapter unavailable" : "Opening secure chapter"}</h3>
         <p>${esc(message)}</p>
-        ${ch.contentError ? `<button class="btn story" style="margin-top:16px;" data-lock="${ch.id}">${I.lockOpen}Check access</button>` : ""}
+        ${ch.contentError ? `<div class="reader-recovery-actions"><button class="btn story" data-act="retry-chapter">${I.sync}Try again</button><button class="btn ghost" data-nav="/story/${story.slug}">${I.book}Back to book</button><button class="btn ghost" data-act="expected-access">${I.help}Check access</button></div>` : ""}
       </div>
     `);
   }
@@ -410,7 +410,7 @@ function renderBlocks(blocks, chId, chapter){
   const ornateAfter = Number(behavior.ornateSystemDialogAfterChapter ?? 70);
   const useOrnateSystemDialog = behavior.enableOrnateSystemDialog !== false && systemDialogChapterNumber(chapter) > ornateAfter;
   return blocks.map((b,i)=>{
-    if(b.t==="scene") return `<div class="scene">✦ ✦ ✦</div>`;
+    if(b.t==="scene") return `<div class="scene" role="separator" aria-label="Scene break"><span aria-hidden="true">✦</span></div>`;
     if(b.t==="system"){
       const caption = b.variant === "caption" || /<a\b/i.test(String(b.v || ""));
       if (useOrnateSystemDialog) {

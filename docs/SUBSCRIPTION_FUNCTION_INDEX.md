@@ -19,7 +19,7 @@ Recent CMS rebuild reader changes:
 | `js/subscription/views/home-library.js` | `VIEWS.home()` | Uses resolved reader access for start buttons/counts/tier display so admin accounts do not appear subscription-locked on the home page. |
 | `js/subscription/views/account-access.js` | `VIEWS.vault()` | Displays the admin reader override in the Vault separately from Patreon/member entitlements. |
 | `js/subscription/sheets.js` | `sheetPersona()` | Shows the admin reader override in the account sheet while keeping it distinct from paid/direct entitlements. |
-| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags; converts `<hr>` and standalone `--` into scene breaks; merges consecutive system message blocks into unified multi-line system cards. |
+| `js/subscription/backend.js` | `textToBlocks(value)` | Preserves safe basic rich chapter HTML from Supabase while stripping scripts/styles/iframes and unsupported tags; converts `<hr>`, standalone `--`, and Markdown `---` into scene breaks; merges consecutive system message blocks into unified multi-line system cards. |
 | `js/subscription/config.js` | `applySiteSettings(rows)` | Applies Admin-authored `reader_behavior` so guide toggles and external fallback settings affect the reader runtime. |
 | `js/subscription/views/story-reader.js` | `readerExternalChapter(ch, story, index, r)` | Renders NSFW/external-only chapters as an external-link prompt instead of local content. |
 | `js/subscription/views/story-reader.js` | `chapterTierVisual(ch)` / `chapterTierStyle(ch)` | Assigns Free Access and each configured tier a consistent accent used by chapter catalog cards, story rows, badges, and share controls. |
@@ -200,11 +200,15 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
+| n/a | `backendWait(ms)` | Delays a bounded transient-request retry. |
+| n/a | `backendFriendlyError(error, label)` | Converts offline, timeout, and backend failures into safe reader-facing recovery messages and codes. |
+| n/a | `backendErrorIsTransient(error)` | Limits automatic retries to timeout, network, rate-limit, and server failures. |
+| n/a | `runBackendRequest(label, requestFactory, options = {})` | Applies a request deadline and one bounded retry to core Supabase reads/RPCs. |
 | 6 | `estimateReadTime(row)` | Helper used by this module. |
 | 10 | `colorPair(row, index)` | Helper used by this module. |
 | 15 | `normalizeBackendStory(row, index)` | Handles story data or story-facing UI behavior. |
 | 40 | `backendStateToAether(row)` | Helper used by this module. |
-| 48 | `textToBlocks(value)` | Normalizes Supabase chapter/preview text or safe HTML into reader blocks, including system messages and scene breaks from `<hr>` or standalone `--`. |
+| 48 | `textToBlocks(value)` | Normalizes Supabase chapter/preview text or safe HTML into reader blocks, including system messages and scene breaks from `<hr>`, standalone `--`, or Markdown `---`. |
 | 63 | `normalizeBackendChapter(row, story)` | Handles chapter catalog, reader, or chapter form behavior. |
 | 88 | `buildBackendUpdates(stories)` | Persists changes to Supabase or updates local state. |
 | 110 | `relativeTime(iso)` | Formats comment timestamps for reader display. |
@@ -217,9 +221,9 @@ Recent reader notification/profile changes:
 | 456 | `refreshReaderNotifications(options = {})` | Reloads signed-in reader alerts and updates the notification view or top-bar bell when changed. |
 | 467 | `startReaderNotificationPolling()` | Refreshes alerts every minute while visible and whenever the tab becomes visible again. |
 | 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
-| n/a | `loadOptionalBackendRows(label, request)` | Resolves an optional Supabase reader query to rows while preserving the existing soft-failure behavior. |
-| 119 | `loadBackendLibrary(options = {})` | Loads independent reader datasets and per-story chapter catalogs concurrently, then normalizes them into runtime state. |
-| 168 | `loadReaderChapterFromBackend(chapterId)` | Loads fresh data/state from Supabase or local runtime state. |
+| n/a | `loadOptionalBackendRows(label, requestFactory)` | Resolves an optional Supabase reader query with a deadline while preserving soft-failure behavior. |
+| 119 | `loadBackendLibrary(options = {})` | Loads independent reader datasets and per-story chapter catalogs with bounded core retries, then normalizes them into runtime state. |
+| 168 | `loadReaderChapterFromBackend(chapterId)` | Loads secure chapter text with a deadline and bounded retry, retaining a recoverable error code for the UI. |
 | 520 | `incrementChapterViews(chapterId)` | Increments the views count of a chapter in the database using a SECURITY DEFINER RPC. |
 
 ## `js/subscription/utils.js`
@@ -395,6 +399,7 @@ Recent reader notification/profile changes:
 | 8 | `toggleMarkRead()` | Helper used by this module. |
 | 9 | `saveQuote()` | Persists changes to Supabase or updates local state. |
 | 10 | `rememberReturn()` | Helper used by this module. |
+| n/a | `repairReaderAssets()` | Removes only Cache Storage entries/service workers scoped to this reader and reloads through a unique URL without clearing auth or preferences. |
 | 11 | `connectPatreonGo()` | Helper used by this module. |
 | n/a | `connectBoostyDiscordGo()` | Signs the reader in when necessary, then starts Boosty subscriber-role verification through Discord OAuth. |
 | 26 | `redeemKey(code)` | Helper used by this module. |
@@ -441,6 +446,7 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
+| n/a | `bootstrapReaderData()` | Bounds the startup auth wait, loads the library, and refreshes catalog access if delayed authentication recovers. |
 | 5 | `init()` | Initializes this module or application surface. |
 
 

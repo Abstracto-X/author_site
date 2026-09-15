@@ -1189,3 +1189,76 @@ Risks / notes:
 Verification needed:
 - Completed locally: anonymous desktop/mobile-layout browser checks confirmed no guest blur, no oversized text-only cards, visible valid chapter artwork, and fallback for failed media.
 - Recheck the mosaic after additional chapters receive embedded images; the automatic trigger will index them on the next chapter save.
+## 2026-09-12 10:07 Asia/Kolkata — Reader scene-break rendering fix
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- `js/subscription/backend.js`
+- `js/subscription/views/story-reader.js`
+- `styles.css`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- The subscription reader now renders normalized scene blocks as a prominent accent divider with a central star.
+- Normalization accepts Writer `<hr class="scene-break">` HTML, plain `--`, and exported Markdown `---` scene markers.
+- A restricted production read confirmed current chapter scene breaks are stored as `<hr class="scene-break">`; production data was not modified.
+
+Remaining work:
+- None in code.
+
+Risks / notes:
+- The separate Writer/system-dialogue work now lives on `codex/writer-system-dialogue` and is not part of this main-branch working tree.
+
+Verification needed:
+- Open a published chapter containing a scene break in the subscription reader and confirm the accented divider is visible in dark, light, parchment, and custom reader themes and at phone width.
+
+## 2026-09-15 01:12 Asia/Kolkata — Reader loading resilience and recovery
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- `index.html`
+- `vendor/supabase/`
+- `js/subscription/aether-app.js`
+- `js/subscription/backend.js`
+- `js/subscription/router.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/events.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Diagnosed three client-side failure traps: an unpinned third-party CDN was the only Supabase SDK source, Supabase reads/RPCs had no deadlines, and a failed secure-chapter read was immediately relaunched on every render so readers could see an endless spinner.
+- The SDK is now pinned and served locally. Core library/catalog/chapter calls time out and retry transient failures once; optional datasets time out and soft-fail.
+- Library and chapter failures now show recovery controls, offline state is explained, reconnect retries automatically, and startup stops waiting indefinitely for auth initialization.
+- Reader asset URLs carry a deployment version. Repair & reload removes only cached requests and service-worker registrations scoped to this app, then requests a unique page URL while deliberately preserving cookies, Supabase localStorage authentication, and reader preferences.
+- Restricted production checks found one published story and 62 published chapters. Public REST verification returned one story, a 62-row catalog, and readable chapter text successfully (observed around 2.6s, 1.0s, and 1.6s respectively), so no active database outage or missing RPC was found.
+
+Remaining work:
+- Deploy the changed static assets together; `index.html` now requires the new `vendor/supabase/supabase-2.111.0.min.js` path.
+
+Risks / notes:
+- No database/schema changes were required.
+- Reader content still streams only after server-side access verification; this change does not add an insecure offline content cache.
+- Do not replace the scoped repair with automatic cookie/localStorage clearing: that would sign readers out and erase preferences while doing nothing for most network or stale-asset failures.
+
+Verification needed:
+- Completed locally: the anonymous reader loaded the live one-story/62-chapter catalog through the vendored SDK, and a free secure chapter opened with no console warnings or errors.
+- Completed locally: focused browser harnesses confirmed hung requests produce the expected `reader_timeout` recovery error and `<hr>`, `--`, and `---` all normalize to retained scene blocks. The cross-check caught and fixed a filter that had discarded the two plain-text scene-marker forms.
+- Still confirm normal signed-in library/chapter loading.
+- In DevTools, block the Supabase REST host or switch offline, confirm the spinner becomes a recovery state within the deadline, then restore connectivity and confirm automatic/manual retry succeeds.
+- Seed a Cache Storage entry under the reader path (or test with an older deployed build), use Repair & reload, and confirm the page receives a `reader_refresh` query while sign-in and preferences remain intact.
+- Confirm Google/Patreon/Boosty sign-in callbacks still refresh catalog access after the pinned SDK change.

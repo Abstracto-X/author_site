@@ -7,8 +7,7 @@
   <meta name="description" content="EvilArchives premium fiction reader. Read serial fiction, manage access, and continue across the member library.">
   <title>EvilArchives</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 9v8c0 6 5 10 12 13 7-3 12-7 12-13V9z' fill='%23d4b06a' opacity='.25' stroke='%23d4b06a' stroke-width='1.4'/%3E%3Cpath d='M16 11v10M12 16h8' stroke='%23e7cd97' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260915.2">
 </head>
 <body>
   <div class="background-layer" id="global-bg"></div>
@@ -24,23 +23,24 @@
   </noscript>
 
   <!-- Configure this independent site before loading the app. -->
-  <script src="js/subscription/site-config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/subscription/config.js"></script>
-  <script src="js/subscription/state.js"></script>
-  <script src="js/subscription/auth.js"></script>
-  <script src="js/subscription/backend.js"></script>
-  <script src="js/subscription/utils.js"></script>
-  <script src="js/subscription/chrome.js"></script>
-  <script src="js/subscription/router.js"></script>
-  <script src="js/subscription/views/home-library.js"></script>
-  <script src="js/subscription/views/story-reader.js"></script>
-  <script src="js/subscription/views/account-access.js"></script>
-  <script src="js/subscription/views/help-support.js"></script>
-  <script src="js/subscription/views/gallery.js"></script>
-  <script src="js/subscription/sheets.js"></script>
-  <script src="js/subscription/events.js"></script>
-  <script src="js/subscription/onboarding.js"></script>
-  <script src="js/subscription/aether-app.js"></script>
+  <script src="js/subscription/site-config.js?v=20260915.2"></script>
+  <!-- Self-hosted and version-pinned so reader startup does not depend on a third-party CDN. -->
+  <script src="vendor/supabase/supabase-2.111.0.min.js?v=20260915.2"></script>
+  <script src="js/subscription/config.js?v=20260915.2"></script>
+  <script src="js/subscription/state.js?v=20260915.2"></script>
+  <script src="js/subscription/auth.js?v=20260915.2"></script>
+  <script src="js/subscription/backend.js?v=20260915.2"></script>
+  <script src="js/subscription/utils.js?v=20260915.2"></script>
+  <script src="js/subscription/chrome.js?v=20260915.2"></script>
+  <script src="js/subscription/router.js?v=20260915.2"></script>
+  <script src="js/subscription/views/home-library.js?v=20260915.2"></script>
+  <script src="js/subscription/views/story-reader.js?v=20260915.2"></script>
+  <script src="js/subscription/views/account-access.js?v=20260915.2"></script>
+  <script src="js/subscription/views/help-support.js?v=20260915.2"></script>
+  <script src="js/subscription/views/gallery.js?v=20260915.2"></script>
+  <script src="js/subscription/sheets.js?v=20260915.2"></script>
+  <script src="js/subscription/events.js?v=20260915.2"></script>
+  <script src="js/subscription/onboarding.js?v=20260915.2"></script>
+  <script src="js/subscription/aether-app.js?v=20260915.2"></script>
 </body>
 </html>

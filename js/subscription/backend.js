@@ -4,6 +4,59 @@
 /* ============ Supabase story/catalog bridge ============ */
 const backendState = { loaded:false, loading:false, error:null, usingFixtures:false };
 const communityState = { commentsLoaded:{}, reactionsLoaded:{} };
+const BACKEND_REQUEST_TIMEOUT_MS = 12000;
+const BACKEND_REQUEST_RETRIES = 1;
+function backendWait(ms){ return new Promise(resolve => window.setTimeout(resolve, ms)); }
+function backendFriendlyError(error, label){
+  if (error?.readerMessage) return error;
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  const timedOut = error?.code === "reader_timeout" || error?.name === "AbortError";
+  const message = offline
+    ? "You appear to be offline. Reconnect, then try again."
+    : timedOut
+      ? `${label} took too long to respond. Please try again.`
+      : (error?.message || `Unable to load ${label}. Please try again.`);
+  const wrapped = new Error(message);
+  wrapped.code = offline ? "reader_offline" : timedOut ? "reader_timeout" : (error?.code || "reader_request_failed");
+  wrapped.status = error?.status;
+  wrapped.readerMessage = true;
+  wrapped.cause = error;
+  return wrapped;
+}
+function backendErrorIsTransient(error){
+  const status = Number(error?.status || error?.cause?.status || 0);
+  const code = String(error?.code || error?.cause?.code || "").toLowerCase();
+  const message = String(error?.message || "").toLowerCase();
+  return code === "reader_timeout" || code === "reader_offline" || status === 408 || status === 429 || status >= 500 || /failed to fetch|network|timeout|load failed/.test(message);
+}
+async function runBackendRequest(label, requestFactory, options = {}){
+  const timeoutMs = Number(options.timeoutMs || BACKEND_REQUEST_TIMEOUT_MS);
+  const retries = Number.isFinite(Number(options.retries)) ? Number(options.retries) : BACKEND_REQUEST_RETRIES;
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) throw backendFriendlyError(null, label);
+    let timer = null;
+    try {
+      const timeout = new Promise((_, reject) => {
+        timer = window.setTimeout(() => {
+          const error = new Error(`${label} timed out.`);
+          error.code = "reader_timeout";
+          reject(error);
+        }, timeoutMs);
+      });
+      const result = await Promise.race([Promise.resolve().then(requestFactory), timeout]);
+      if (result?.error) throw result.error;
+      return result?.data ?? result;
+    } catch (error) {
+      lastError = backendFriendlyError(error, label);
+      if (attempt >= retries || !backendErrorIsTransient(lastError) || lastError.code === "reader_offline") throw lastError;
+      await backendWait(500 * (attempt + 1));
+    } finally {
+      if (timer) window.clearTimeout(timer);
+    }
+  }
+  throw lastError || backendFriendlyError(null, label);
+}
 function estimateReadTime(row){
   const words = Number(row.word_count || row.words || 0);
   return Math.max(1, Math.round(words / 220)) || 6;
@@ -64,7 +117,7 @@ function textToBlocks(value){
   const raw = String(value || "").trim();
   if (!raw) return [];
   const withoutImports = raw.replace(/<!--([\s\S]*?)-->/g, "");
-  if (/<\/?(p|div|br|h[1-6]|li|blockquote|a|img)\b/i.test(withoutImports)) {
+  if (/<\/?(p|div|br|hr|h[1-6]|li|blockquote|a|img)\b/i.test(withoutImports)) {
     const container = document.createElement("div");
     container.innerHTML = withoutImports;
     container.querySelectorAll("script,style,iframe,object,embed,link,meta").forEach(node => node.remove());
@@ -89,7 +142,7 @@ function textToBlocks(value){
     const nodes = Array.from(container.children);
     const rawBlocks = nodes.map(node => {
       if (node.tagName === "HR") return { t:"scene" };
-      if (["P","DIV"].includes(node.tagName) && (node.textContent || "").replace(/\u00a0/g, " ").trim() === "--") return { t:"scene" };
+      if (["P","DIV"].includes(node.tagName) && /^-{2,3}$/.test((node.textContent || "").replace(/\u00a0/g, " ").trim())) return { t:"scene" };
       if (node.dataset.systemMessage === "true") {
         const text = (node.textContent || "").trim();
         const bracket = text.match(/^\[([\s\S]+)\]$/);
@@ -107,16 +160,16 @@ function textToBlocks(value){
     return text ? mergeConsecutiveSystemBlocks(text.split(/\n{2,}/).map(part => {
       const trimmed = part.trim();
       const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
-      if (trimmed === "--") return { t:"scene" };
+      if (/^-{2,3}$/.test(trimmed)) return { t:"scene" };
       return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
-    }).filter(b=>b.v)) : [];
+    }).filter(b => b.t === "scene" || String(b.v || "").trim())) : [];
   }
   return mergeConsecutiveSystemBlocks(withoutImports.split(/\n{2,}|\r?\n/).map(part => {
     const trimmed = part.trim();
     const bracket = trimmed.match(/^\[([\s\S]+)\]$/);
-    if (trimmed === "--") return { t:"scene" };
+    if (/^-{2,3}$/.test(trimmed)) return { t:"scene" };
     return bracket ? { t:"system", v: esc(bracket[1].trim()).replace(/\n/g, "<br>") } : { t:"p", v: esc(trimmed) };
-  }).filter(b => b.v));
+  }).filter(b => b.t === "scene" || String(b.v || "").trim()));
 }
 function normalizeBackendChapter(row, story){
   const state = backendStateToAether(row);
@@ -283,11 +336,10 @@ async function loadSiteSettings(){
   const client = getSupabase();
   if (!client) return [];
   try {
-    const { data, error } = await client
+    const data = await runBackendRequest("site settings", () => client
       .from("site_settings")
       .select("setting_key, setting_value")
-      .in("setting_key", ["site_identity", "reader_behavior", "site_name", "site_tagline", "meta_description"]);
-    if (error) throw error;
+      .in("setting_key", ["site_identity", "reader_behavior", "site_name", "site_tagline", "meta_description"]), { retries:0 });
     applySiteSettings(data || []);
     return data || [];
   } catch (err) {
@@ -295,11 +347,9 @@ async function loadSiteSettings(){
     return [];
   }
 }
-async function loadOptionalBackendRows(label, request){
+async function loadOptionalBackendRows(label, requestFactory){
   try {
-    const { data, error } = await request;
-    if (error) throw error;
-    return data || [];
+    return (await runBackendRequest(label, requestFactory, { retries:0 })) || [];
   } catch (err) {
     console.warn(`Could not load ${label}:`, err);
     return [];
@@ -308,7 +358,12 @@ async function loadOptionalBackendRows(label, request){
 async function loadBackendLibrary(options = {}){
   const client = getSupabase();
   if (!client || backendState.loading) {
-    if (!client) { backendState.error = new Error("Supabase is not configured. Add your project URL and anon/publishable key to js/subscription/site-config.js."); backendState.usingFixtures = false; }
+    if (!client) {
+      backendState.error = new Error(configuredSupabase() && (!window.supabase || !window.supabase.createClient)
+        ? "The local Supabase reader dependency did not load. Reload the page or verify vendor/supabase on the deployed site."
+        : "Supabase is not configured. Add your project URL and anon/publishable key to js/subscription/site-config.js.");
+      backendState.usingFixtures = false;
+    }
     return false;
   }
   if (options.force) backendState.loaded = false;
@@ -325,37 +380,36 @@ async function loadBackendLibrary(options = {}){
       wallpaperRows
     ] = await Promise.all([
       loadSiteSettings(),
-      client
+      runBackendRequest("published stories", () => client
         .from("stories")
         .select("*")
         .eq("is_published", true)
-        .order("created_at", { ascending:false }),
-      loadOptionalBackendRows("characters", client
+        .order("created_at", { ascending:false })),
+      loadOptionalBackendRows("characters", () => client
         .from("characters")
         .select("id, story_id, name, role_title, profile_image_url")
         .order("sort_order", { ascending: true })),
-      loadOptionalBackendRows("gallery images", client
+      loadOptionalBackendRows("gallery images", () => client
         .from("character_gallery_images")
         .select("id, character_id, image_url, caption, image_tags, sort_order, created_at, characters!inner(id, story_id, name, role_title, profile_image_url)")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(60)),
-      loadOptionalBackendRows("chapter feed images", client
+      loadOptionalBackendRows("chapter feed images", () => client
         .from("chapter_feed_images")
         .select("id, story_id, chapter_id, image_url, source_kind, caption, sort_order, blur_for_guests")
         .eq("is_published", true)
         .order("sort_order", { ascending: true })),
-      loadOptionalBackendRows("lore entries", client
+      loadOptionalBackendRows("lore entries", () => client
         .from("lore_entries")
         .select("id, story_id, title, description, slug")
         .order("title", { ascending: true })),
-      loadOptionalBackendRows("wallpapers", client
+      loadOptionalBackendRows("wallpapers", () => client
         .from("story_wallpapers")
         .select("id, story_id, image_url, label")
         .order("sort_order", { ascending: true }))
     ]);
-    const { data: storyRows, error: storyError } = storyResult;
-    if (storyError) throw storyError;
+    const storyRows = storyResult;
 
     const stories = (storyRows || []).map(normalizeBackendStory);
     const feedImagesByChapter = new Map();
@@ -365,8 +419,7 @@ async function loadBackendLibrary(options = {}){
       feedImagesByChapter.set(image.chapter_id, rows);
     });
     await Promise.all(stories.map(async story => {
-      const { data, error } = await client.rpc("get_chapter_catalog", { target_story_id: story.id });
-      if (error) throw error;
+      const data = await runBackendRequest("chapter catalog", () => client.rpc("get_chapter_catalog", { target_story_id: story.id }));
       story.chapters = (data || []).map(row => normalizeBackendChapter(row, story));
       story.chapters.forEach(chapter => {
         chapter.feed_images = (feedImagesByChapter.get(chapter.id) || [])
@@ -627,9 +680,9 @@ async function loadReaderChapterFromBackend(chapterId){
   if (found.ch.content || found.ch.contentLoading) return !!found.ch.content;
   found.ch.contentLoading = true;
   found.ch.contentError = null;
+  found.ch.contentErrorCode = null;
   try {
-    const { data, error } = await client.rpc("get_reader_chapter", { target_chapter_id: chapterId });
-    if (error) throw error;
+    const data = await runBackendRequest("secure chapter text", () => client.rpc("get_reader_chapter", { target_chapter_id: chapterId }), { timeoutMs:15000 });
     const row = Array.isArray(data) ? data[0] : data;
     if (!row || !row.can_read) throw new Error("This chapter is still locked for this account.");
     found.ch.is_nsfw = !!row.is_nsfw;
@@ -647,8 +700,10 @@ async function loadReaderChapterFromBackend(chapterId){
     found.ch.can_read_backend = true;
     return true;
   } catch (err) {
-    const message = err?.message || "Unable to load chapter content.";
+    const friendly = backendFriendlyError(err, "secure chapter text");
+    const message = friendly.message || "Unable to load chapter content.";
     found.ch.contentError = message;
+    found.ch.contentErrorCode = friendly.code || "reader_request_failed";
     return false;
   } finally {
     found.ch.contentLoading = false;

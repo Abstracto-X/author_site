@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-09-15 01:12 Asia/Kolkata — Harden reader library and chapter loading recovery
+
+Area: reader
+
+Summary:
+- Replaced the floating third-party Supabase CDN dependency with a pinned, self-hosted Supabase JS 2.111.0 browser bundle and retained its MIT license/source metadata.
+- Added deadlines and one bounded transient retry to the core published-story, chapter-catalog, and secure-chapter requests; optional reader datasets now also have deadlines and remain soft-fail.
+- Stopped failed chapter requests from immediately restarting forever behind the loading screen; readers now receive Try again, Back to book, and Check access actions.
+- Added actionable library recovery controls, explicit offline messaging, automatic recovery on reconnect, and a 12-second startup auth gate so a stalled account check cannot hold the public library indefinitely.
+- Versioned reader CSS/script URLs so new deployments bypass stale browser assets, and added a scoped Repair & reload action that clears this reader's Cache Storage/service-worker artifacts without deleting Supabase authentication or reader preferences.
+- Verified the production database currently has one published story with 62 published chapters, and verified the public story, catalog, and readable-chapter endpoints return successfully.
+
+Files changed:
+- `index.html`
+- `vendor/supabase/supabase-2.111.0.min.js`
+- `vendor/supabase/LICENSE`
+- `vendor/supabase/README.md`
+- `js/subscription/aether-app.js`
+- `js/subscription/backend.js`
+- `js/subscription/router.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/help-support.js`
+- `js/subscription/events.js`
+- `styles.css`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+## 2026-09-12 10:07 Asia/Kolkata — Restore visible reader scene breaks
+
+Area: reader
+
+Summary:
+- Made subscription-reader scene breaks render as a clearly visible, theme-accented divider with a central star instead of faint miniature text.
+- Extended chapter normalization to recognize stored `<hr>` breaks even when they are the only HTML element, plus both Writer `--` and exported Markdown `---` forms.
+- Verified the production chapters store Writer scene breaks as `<hr class="scene-break">`; no database change was required.
+
+Files changed:
+- `js/subscription/backend.js`
+- `js/subscription/views/story-reader.js`
+- `styles.css`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
 ## 2026-09-10 00:00 Asia/Kolkata - Chapter-gated ornate system dialogue
 
 Area: reader / admin settings

@@ -27,6 +27,7 @@ js/admin-writer.js         # legacy/alternate standalone writer helper; current 
 js/writer-ai-chat.js       # active Writer AI drawer, Supabase history, streaming, and Scratchpad export
 styles/writer-ai-chat.css  # isolated responsive Writer AI drawer styling
 vendor/deep-chat/          # pinned Deep Chat 2.5.0 browser bundle and MIT license
+vendor/supabase/           # pinned self-hosted Supabase browser SDK and MIT license
 js/subscription/           # subscription reader modules and config
 database/sql/              # human-readable setup/migration SQL
 supabase/                  # Supabase CLI config, Edge Functions, migrations
@@ -48,7 +49,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 `index.html` currently loads the reader in this order:
 
 1. `js/subscription/site-config.js`
-2. Supabase JS CDN
+2. Pinned local Supabase JS bundle (`vendor/supabase/supabase-2.111.0.min.js`)
 3. `js/subscription/config.js`
 4. `js/subscription/state.js`
 5. `js/subscription/auth.js`
@@ -65,7 +66,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 16. `js/subscription/onboarding.js`
 17. `js/subscription/aether-app.js`
 
-`aether-app.js` is now only the small bootstrap/init file and must stay last.
+`aether-app.js` is now only the small bootstrap/init file and must stay last. Its startup gate stops waiting after 12 seconds for auth initialization, loads the public library with recovery messaging, and refreshes the library if delayed authentication later succeeds.
 
 ### Module ownership map
 
@@ -76,7 +77,7 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 | `config.js` | Safe storage wrapper, runtime site identity, reader behavior settings, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks and applies `site_settings.site_identity` plus `site_settings.reader_behavior` when loaded. |
 | `state.js` | Shared reader state objects. | Owns `store`, `authState`, `backendState`, derived access/persona defaults, and compatibility migration for independent site and chapter-reader appearance preferences. |
 | `auth.js` | Supabase auth/session/profile/entitlement bridge. | Handles sign in/up/out, password recovery/update, Patreon and Boosty-through-Discord provider flows, callback feedback, and profile/entitlement refresh. |
-| `backend.js` | Supabase site settings, story/chapter/catalog data loading. | Owns reader identity loading from `site_settings`, published story loading, and RPC calls like `get_chapter_catalog` and `get_reader_chapter`. |
+| `backend.js` | Supabase site settings, story/chapter/catalog data loading. | Owns reader identity loading from `site_settings`, published story loading, RPC calls like `get_chapter_catalog` and `get_reader_chapter`, bounded request timeouts, and one retry for transient core failures. |
 | `utils.js` | Pure-ish UI/data helpers. | Escaping, formatting, icons, cards, access labels, generated cover art, text parsing. |
 | `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
 | `router.js` | Hash route parsing and render dispatch. | Preserves route names and view registry behavior. |
@@ -94,10 +95,10 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 
 ### Reader data flow
 
-1. Browser loads `site-config.js`, Supabase CDN, and the reader modules. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
+1. Browser loads `site-config.js`, the pinned self-hosted Supabase browser SDK, and the reader modules. Reader CSS/scripts use a deployment-version query so a release receives fresh assets without deleting authentication or preference storage. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
 2. `aether-app.js` bootstraps the app after all module globals exist.
 3. `auth.js` initializes the Supabase client/session and refreshes profile, entitlements, provider connections, notification preferences, and notifications concurrently when configured. The initial Supabase `INITIAL_SESSION` callback and token-only refresh events do not repeat the already completed startup refresh/library load. Patreon and Boosty-through-Discord OAuth callback statuses are consumed on startup, clear pending sync state, refresh access, present safe reader messages, and remove callback parameters from the URL. A connected Boosty/Discord account is reverified on startup so its bounded role grant stays current. If the loaded profile has `role = 'admin'`, the subscription reader exposes an admin reader override for published chapters without creating fake `user_entitlements`.
-4. `backend.js` loads `site_settings.site_identity` and `site_settings.reader_behavior`, then published stories, chapter catalogs, characters, and gallery artwork from Supabase.
+4. `backend.js` loads `site_settings.site_identity` and `site_settings.reader_behavior`, then published stories, chapter catalogs, characters, and gallery artwork from Supabase. Core library/chapter requests time out instead of spinning forever, retry transient failures once, and expose manual retry controls; reconnecting after an offline failure retries automatically. The library recovery view can also remove Cache Storage entries and service-worker registrations scoped to this reader, then reload through a unique URL; it deliberately preserves Supabase auth and reader preferences.
 5. `router.js` reads the hash route and calls the registered view renderer.
 6. `views/*.js` render HTML using state from `state.js`, data from `backend.js`, and helpers from `utils.js`/`chrome.js`.
 7. `backend.js` loads reader community state for open chapters: public comments from `comments` and reaction totals from `chapter_reactions`.
