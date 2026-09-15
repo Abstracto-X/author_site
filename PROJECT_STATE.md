@@ -1257,8 +1257,9 @@ Risks / notes:
 
 Verification needed:
 - Completed locally: the anonymous reader loaded the live one-story/62-chapter catalog through the vendored SDK, and a free secure chapter opened with no console warnings or errors.
+- Completed locally: controlled browser failures reached the library and chapter recovery screens instead of looping, and both Try again actions successfully restored the live catalog/chapter. Network failures now display reader-friendly copy rather than the raw browser `TypeError` discovered during this verification.
+- Completed locally: Repair & reload added a unique `reader_refresh` query, deleted a seeded reader-scoped Cache Storage entry, restored the live library, and preserved a changed site-theme preference.
 - Completed locally: focused browser harnesses confirmed hung requests produce the expected `reader_timeout` recovery error and `<hr>`, `--`, and `---` all normalize to retained scene blocks. The cross-check caught and fixed a filter that had discarded the two plain-text scene-marker forms.
 - Still confirm normal signed-in library/chapter loading.
-- In DevTools, block the Supabase REST host or switch offline, confirm the spinner becomes a recovery state within the deadline, then restore connectivity and confirm automatic/manual retry succeeds.
-- Seed a Cache Storage entry under the reader path (or test with an older deployed build), use Repair & reload, and confirm the page receives a `reader_refresh` query while sign-in and preferences remain intact.
+- Still confirm a real browser offline-to-online transition triggers the automatic reconnect path; controlled request failure and manual retry are verified.
 - Confirm Google/Patreon/Boosty sign-in callbacks still refresh catalog access after the pinned SDK change.

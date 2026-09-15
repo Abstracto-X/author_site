@@ -11,13 +11,16 @@ function backendFriendlyError(error, label){
   if (error?.readerMessage) return error;
   const offline = typeof navigator !== "undefined" && navigator.onLine === false;
   const timedOut = error?.code === "reader_timeout" || error?.name === "AbortError";
+  const networkFailed = /failed to fetch|networkerror|network request failed|load failed/i.test(String(error?.message || ""));
   const message = offline
     ? "You appear to be offline. Reconnect, then try again."
     : timedOut
       ? `${label} took too long to respond. Please try again.`
+      : networkFailed
+        ? "Unable to reach the reader service. Check your connection and try again."
       : (error?.message || `Unable to load ${label}. Please try again.`);
   const wrapped = new Error(message);
-  wrapped.code = offline ? "reader_offline" : timedOut ? "reader_timeout" : (error?.code || "reader_request_failed");
+  wrapped.code = offline ? "reader_offline" : timedOut ? "reader_timeout" : networkFailed ? "reader_network" : (error?.code || "reader_request_failed");
   wrapped.status = error?.status;
   wrapped.readerMessage = true;
   wrapped.cause = error;
@@ -27,7 +30,7 @@ function backendErrorIsTransient(error){
   const status = Number(error?.status || error?.cause?.status || 0);
   const code = String(error?.code || error?.cause?.code || "").toLowerCase();
   const message = String(error?.message || "").toLowerCase();
-  return code === "reader_timeout" || code === "reader_offline" || status === 408 || status === 429 || status >= 500 || /failed to fetch|network|timeout|load failed/.test(message);
+  return code === "reader_timeout" || code === "reader_offline" || code === "reader_network" || status === 408 || status === 429 || status >= 500 || /failed to fetch|network|timeout|load failed/.test(message);
 }
 async function runBackendRequest(label, requestFactory, options = {}){
   const timeoutMs = Number(options.timeoutMs || BACKEND_REQUEST_TIMEOUT_MS);

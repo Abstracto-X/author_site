@@ -9,6 +9,7 @@ Summary:
 - Added deadlines and one bounded transient retry to the core published-story, chapter-catalog, and secure-chapter requests; optional reader datasets now also have deadlines and remain soft-fail.
 - Stopped failed chapter requests from immediately restarting forever behind the loading screen; readers now receive Try again, Back to book, and Check access actions.
 - Added actionable library recovery controls, explicit offline messaging, automatic recovery on reconnect, and a 12-second startup auth gate so a stalled account check cannot hold the public library indefinitely.
+- Normalized browser-level network failures into reader-friendly recovery copy while retaining their transient retry classification.
 - Versioned reader CSS/script URLs so new deployments bypass stale browser assets, and added a scoped Repair & reload action that clears this reader's Cache Storage/service-worker artifacts without deleting Supabase authentication or reader preferences.
 - Verified the production database currently has one published story with 62 published chapters, and verified the public story, catalog, and readable-chapter endpoints return successfully.
 
