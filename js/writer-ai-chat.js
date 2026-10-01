@@ -59,7 +59,12 @@ const AIChat = {
         });
 
         document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && this.isOpen()) this.close();
+            const blockingModal = ['modal-context-block', 'modal-media', 'modal-censor', 'chapter-note-drawer']
+                .some(id => {
+                    const modal = document.getElementById(id);
+                    return modal && !modal.classList.contains('hidden');
+                });
+            if (event.key === 'Escape' && this.isOpen() && !blockingModal && !SummaryManager.isOpen()) this.close();
         });
     },
 
@@ -132,6 +137,8 @@ const AIChat = {
     },
 
     async loadStory(storyId) {
+        const loadRevision = this.loadRevision = (this.loadRevision || 0) + 1;
+        this.threadLoadRevision = (this.threadLoadRevision || 0) + 1;
         this.stopStream();
         this.storyId = storyId || '';
         this.threads = [];
@@ -148,11 +155,12 @@ const AIChat = {
         }
 
         try {
-            const { data, error } = await supabaseClient
+            const { data, error } = await withWriterDeadline(supabaseClient
                 .from('writer_ai_chat_threads')
                 .select('*')
                 .eq('story_id', this.storyId)
-                .order('updated_at', { ascending: false });
+                .order('updated_at', { ascending: false }), 'Writer AI chats');
+            if (loadRevision !== this.loadRevision) return;
             if (error) throw error;
             this.threads = data || [];
             this.renderThreads();
@@ -164,8 +172,10 @@ const AIChat = {
             } else {
                 this.renderEmpty('No chats for this story yet.', 'Create a chat to start a manual conversation.');
             }
+            if (loadRevision !== this.loadRevision) return;
             this.setStatus('Chat history is private, story-scoped, and stored in Supabase.');
         } catch (error) {
+            if (loadRevision !== this.loadRevision) return;
             this.setStatus(error.message || 'Writer AI chat schema is unavailable.', true);
             this.renderEmpty('Writer AI is unavailable.', 'Apply the Writer AI chat migration and reload.');
         }
@@ -199,6 +209,8 @@ const AIChat = {
         if (this.isStreaming) this.stopStream();
         const thread = this.threads.find(item => item.id === id);
         if (!thread) return;
+        const storyId = this.storyId;
+        const loadRevision = this.threadLoadRevision = (this.threadLoadRevision || 0) + 1;
 
         this.activeThreadId = id;
         localStorage.setItem(this.activeThreadKey(), id);
@@ -207,18 +219,21 @@ const AIChat = {
         this.setStatus('Loading conversation…');
 
         try {
-            const { data, error } = await supabaseClient
+            const { data, error } = await withWriterDeadline(supabaseClient
                 .from('writer_ai_chat_messages')
                 .select('*')
                 .eq('thread_id', id)
-                .order('sequence', { ascending: true });
+                .order('sequence', { ascending: true }), 'Writer AI messages');
+            if (loadRevision !== this.threadLoadRevision || storyId !== this.storyId || id !== this.activeThreadId) return;
             if (error) throw error;
             this.messages = data || [];
             this.nextSequence = this.messages.reduce((max, message) => Math.max(max, Number(message.sequence) + 1), 0);
-            await this.mountChat(thread, this.messages);
+            await this.mountChat(thread, this.messages, () => loadRevision === this.threadLoadRevision && storyId === this.storyId && id === this.activeThreadId);
+            if (loadRevision !== this.threadLoadRevision || storyId !== this.storyId || id !== this.activeThreadId) return;
             this.setStatus(`${this.messages.length} saved message${this.messages.length === 1 ? '' : 's'} · Context is never inserted automatically.`);
             this.syncActionState();
         } catch (error) {
+            if (loadRevision !== this.threadLoadRevision || storyId !== this.storyId) return;
             this.setStatus(error.message || 'Could not load conversation.', true);
             this.renderEmpty('Could not load this chat.');
         }
@@ -347,7 +362,7 @@ const AIChat = {
             if (cached?.savedAt > Date.now() - 24 * 60 * 60 * 1000 && Array.isArray(cached.models)) {
                 models = cached.models;
             } else {
-                const response = await fetch('https://openrouter.ai/api/v1/models?output_modalities=text');
+                const response = await withWriterDeadline(fetch('https://openrouter.ai/api/v1/models?output_modalities=text'), 'Model catalog', 8000);
                 if (!response.ok) throw new Error('Model catalog unavailable.');
                 const payload = await response.json();
                 models = (payload.data || [])
@@ -366,7 +381,7 @@ const AIChat = {
         if (list) list.innerHTML = models.map(model => `<option value="${UI.escapeHtml(model.id)}">${UI.escapeHtml(model.name)}</option>`).join('');
     },
 
-    async mountChat(thread, messages) {
+    async mountChat(thread, messages, stillCurrent = () => true) {
         this.destroyChat();
         const host = document.getElementById('writer-ai-chat-host');
         if (!host) return;
@@ -376,9 +391,11 @@ const AIChat = {
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Deep Chat did not load.')), 8000))
             ]);
         } catch (error) {
+            if (!stillCurrent()) return;
             this.setStatus(error.message, true);
             return this.renderEmpty('Chat component failed to load.');
         }
+        if (!stillCurrent()) return;
 
         const chat = document.createElement('deep-chat');
         const threadId = thread.id;

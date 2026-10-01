@@ -2,6 +2,174 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-01 18:45 Asia/Kolkata — Atomic Writer preset rollout: browser QA pending
+
+Status: NEEDS REVIEW
+
+Area:
+- writer / database
+
+Files touched:
+- `writer.html`
+- `tests/writer-safety.test.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/DATABASE_CONTEXT.md`
+- `docs/WRITER_MANUAL_QA.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- The owner-installed `save_writer_context_preset` RPC was confirmed by restricted read-only queries, including its item-ordering fix and authenticated grant. Writer Save/Save As and Duplicate now each make one atomic RPC request. Chapter Note deletion is blocked during an in-flight note save. The earlier preset-duplication and note save/delete review findings are resolved in code.
+- All 25 isolated Writer tests pass, including inline-script parsing and new RPC/order/empty-selection/single-flight/failure/refresh/note-deletion checks. Companion Writer scripts pass `node --check`.
+
+Remaining work:
+- Perform the signed-in admin browser checks in `docs/WRITER_MANUAL_QA.md` on disposable data before publishing, especially preset save/reload, empty selection, duplication, failed/unconfirmed writes, and Save-then-Delete on a Chapter Note.
+- No signed-in admin browser was available to this task, so those live UI/RLS behaviors were not verified here. Do not treat contract tests as production-browser proof.
+
+Risks / notes:
+- No production rows were changed by the AI. No commit or push was made. Unrelated working-tree edits were preserved.
+
+Verification needed:
+- Confirm the three Writer flows above in a signed-in admin session and inspect any failed network response before deployment.
+
+## 2026-10-01 18:15 Asia/Kolkata — Preset RPC ordering fix and adversarial review
+
+Status: DONE
+
+Area:
+- writer / database
+
+Files touched:
+- `supabase/migrations/20260930220000_atomic_writer_context_preset_save.sql`
+- `PROJECT_STATE.md`
+
+Summary:
+- The pending, unapplied preset-save RPC now explicitly preserves the input item order when assigning saved positions.
+- Adversarial review found a save/delete race in `ChapterNotes.delete`: it does not block deletion while that note's save is in flight, unlike note closing/switching. The save acknowledgement can re-add a deleted note to the client cache or fail after deletion.
+- Existing preset duplication still uses separate browser writes and can leave an empty duplicate if item insertion fails; the new RPC will not fix duplication until that path is switched too.
+
+Remaining work:
+- Resolved in the 18:45 entry above: the owner applied the migration, Writer was switched to the RPC, and both review findings were fixed in code. Signed-in browser verification remains tracked there.
+
+Risks / notes:
+- This was a read-only code review apart from the migration-file ordering fix and this state note. No database query or production mutation was run.
+
+Verification needed:
+- On disposable data, verify ordered preset items survive save/reload, invalid items roll back without changing the old preset, and a non-admin cannot call the RPC.
+- Test Save then immediately Delete on a disposable Chapter Note, and simulate a failed item insert during preset duplication.
+
+## 2026-09-30 21:00 Asia/Kolkata — Writer repair verification and remaining work
+
+Status: NEEDS REVIEW
+
+Area:
+- writer / admin
+
+Files touched:
+- `writer.html`
+- `js/writer-ai-chat.js`
+- `js/writer-summary-manager.js`
+- `tests/writer-safety.test.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `docs/WRITER_MANUAL_QA.md`
+- `supabase/migrations/20260930220000_atomic_writer_context_preset_save.sql`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Implemented the code-side reliability/UX fixes from the 20:34 audit: revision-aware serialized saves, transition flushing, explicit live-save policy for published chapters, upload/story guards, scoped shortcuts, title validation, hash navigation, dialog focus, Context scroll/layout/label improvements, bounded read/write operations and startup retry, removal of base64 upload fallback and duplicate note load, pinned local Supabase SDK loading, and a dependency-failure recovery notice for Writer.
+- Eighteen isolated Node safety tests pass, including stale Summary-story responses, rapid tab switching, publish-after-save ordering, Summary generation cancellation, uncertain write timeouts, monotonic unconfirmed-write warnings, Chapter Note and Context-block edits during saves, single-flight chapter creation, quick-tier serialization, failed preset replacement, and pinned-SDK cancellation support. All three inline Writer scripts and both companion scripts parse; `git diff --check` found no whitespace errors in the touched Writer files.
+- No database schema or production rows were changed. Existing reader/other working-tree edits were preserved.
+
+Remaining work:
+- Perform the owner-led signed-in browser pass in `docs/WRITER_MANUAL_QA.md` before deployment. The site owner chose manual testing rather than an automated admin browser session. Static tests cannot prove Quill caret behavior, Supabase auth/storage/RLS responses, mobile panel fit, or keyboard focus with real Deep Chat and Summary Manager content.
+- Writer still loads all chapter bodies for the active story because Context and Summary use that cache. A restricted production read on 2026-09-30 found 65 chapter rows totaling 1,544,255 UTF-8 content bytes, with a 232,875-byte largest chapter. This is a plausible cold-start cost, not proof of unacceptable latency. If real-world startup remains slow, redesign Context/Summary around on-demand content loading and measure before/after; do not remove source content without adapting them.
+- The backend has no private revision for a published chapter. Current UI explicitly saves live changes, but a true review/publish staging workflow would require a reviewed schema migration and owner-applied database change.
+- Context preset saves still update the preset and replace its item rows through separate browser requests (`writer.html` `ContextWorkspace.savePreset`). New rows are staged before old-row cleanup, preventing the former empty-selection failure when insertion fails, but cleanup failure can leave duplicate items and the operation remains non-atomic. `supabase/migrations/20260930220000_atomic_writer_context_preset_save.sql` now proposes a transaction-backed, admin-only RPC; it has **not** been applied or runtime-tested. The site owner must review and run it manually, verify the function and rollback behavior on disposable data, then switch the Writer frontend to the RPC. Until then, keep an exported copy of critical preset selections.
+
+Risks / notes:
+- The preceding 20:34 audit entry describes the pre-fix state and remains as evidence of why these changes were made; use this newer entry and the current code for present behavior.
+- No automatic browser session or production publishing test was run, per the repository's manual-browser preference. Avoid testing shortcuts on real published chapters.
+- The prepared preset RPC is unapplied; do not call it from `writer.html` until the owner has reviewed/applied the migration and verified it on disposable data. Restricted read-only production queries confirmed the referenced table/column names and types and existing `is_admin()`-guarded ALL policies, but did not compile or execute the new function. No direct production database mutation was run by the AI.
+
+Verification needed:
+- On disposable drafts, type during a throttled save, switch chapters/stories immediately, and verify the latest revision persists or the switch is blocked with a visible error.
+- Edit a published chapter and confirm no background write occurs; Save Live Changes updates it once, with no false private-draft expectation.
+- Test image-upload failure and rapid tab/story switching; no base64 content or wrong-chapter insertion should occur.
+- Check 390px, 800px, 1024px, and desktop widths; Back/Forward, Context scroll restore, dialog Tab/Escape/focus return, reduced motion, and save-failure recovery.
+- Confirm auth, Context, AI, Summary, Chapter Notes, and retry flows in a signed-in admin browser.
+- In Context and Chapter Notes, edit text while a save is in flight; the newer text should stay open and visibly unsaved for a second explicit save. Double-click New Chapter on a disposable story; only one draft should be created.
+- Rapidly change a disposable chapter's access tier while typing in its draft; confirm the final tier and latest manuscript edits both persist after the operations settle.
+
+## 2026-09-30 20:34 Asia/Kolkata — Standalone Writer reliability and UX audit
+
+Status: NEEDS REVIEW
+
+Area:
+- writer / admin
+
+Files touched:
+- `PROJECT_STATE.md` only; existing unrelated working-tree changes preserved.
+
+Summary:
+- Audited `writer.html`, `js/writer-ai-chat.js`, `js/writer-summary-manager.js`, and relevant styling without browser automation or production writes. No runtime fixes were made.
+- P1: The story-selector handler (writer.html:2822) clears dirty state and the autosave timer without saving or confirming. SummaryManager.loadStory also resets unsaved summary state. Story loads have no generation guard to reject stale responses.
+- P1: saveDraft and markSaved (4688 / 4220) acknowledge the current editor rather than the saved revision. An isolated Node harness using the actual extracted methods confirmed that typing during an in-flight save has its new timer canceled and dirty flag cleared by the older response, despite the stored content still being the old snapshot.
+- P1: Autosave/Save Draft writes chapter content while preserving is_published (4733), so published edits are live without Update Live. This is existing intended persistence behavior but a misleading UI contract, not a separate draft workflow.
+- P1: Global Ctrl/Cmd+Enter publishes the active chapter even outside the Editor; it only excludes the context-block and chapter-note dialogs (2904). Summary Manager and AI are not excluded.
+- P1: Image upload captures the shared Quill instance/caret before awaiting storage, then inserts into that same instance without checking the active chapter (4079). Switching chapters during upload can insert into the wrong chapter.
+- P2: getEditorData replaces an empty title with Untitled before publishChapter checks for an empty title (4675 / 4762), making that validation unreachable.
+- P2: Router.navigate only toggles visibility/localStorage (2697), with no browser history or view-focus management. Chapter hydration replaces the editor body without per-chapter caret/scroll restoration (4318).
+- P2: Context preview persistence reads/writes the pre element's scrollTop (6175), although its parent .context-preview-scroll is the actual scroll container (1292 / 1792).
+- P2: At 721–1050px, the always-rendered Context presets panel becomes an absolute 310px overlay with no dismiss/toggle control (1315 / 1794). Visual overlap needs browser verification.
+- P2: Generic dialogs only toggle hidden/flex (2968); they lack shared focus trapping/restoration. Escape closes the Context block and AI independently, while Media/Dictionary lack equivalent handling.
+- P2: Startup awaits workspace, Context, AI and Summary initialization before initializing the editor (2729); chapter reads select full bodies for the entire story and scratchpads load twice at startup (2483–2505). No explicit request deadline/retry UI exists on this path.
+- P2: markSaved stamps the current time even when merely opening a chapter (4410), making Last saved at a misleading persistence timestamp. Save errors are temporary three-second toasts, not durable save-failed status.
+- P2: Failed storage uploads silently fall back to base64 chapter content while reporting Image inserted (3402 / 4097), concealing a storage failure and potentially inflating all-chapter loads.
+- UX review candidates: very small Context labels (.65rem / .6rem), competing nested scroll areas, animated rail-width changes, and no Writer reduced-motion override. These are source-based concerns, not measured visual/performance findings.
+
+Remaining work:
+- Fix save revision tracking/serialization and story-switch protection before cosmetic redesign.
+- Decide whether published editing is explicitly live or requires separate draft/revision storage; do not silently change the persistence contract.
+- Scope shortcuts to the active surface, bind async uploads/loads to stable chapter/story identities, then address panel/navigation/focus behavior.
+
+Risks / notes:
+- Audit scope was the standalone Writer, not a full reader or Admin CMS audit.
+- No live database changes, publishing, uploads, browser tests, or schema verification were performed.
+- Both inline Writer scripts and both companion JS files parsed successfully; syntax success does not establish correct runtime behavior.
+- No CHANGELOG entry or formal architecture-doc update: investigation only, fixes remain outstanding.
+
+Verification needed:
+- With disposable drafts and a controlled slow-save stub, reproduce typing during save, rapid story switches, and switching chapters during upload. Do not test publishing shortcuts against real published content.
+- Verify Context at 800px/1024px and mobile 390px; inspect panel overlap, scroll restoration, keyboard focus, Escape, and reduced-motion behavior.
+- Confirm errors remain visible until resolved and Saved corresponds to the latest successfully persisted revision after fixes.
+
+## 2026-09-15 08:32 Asia/Kolkata — Header-only reader polish
+
+Status: NEEDS REVIEW
+
+Area:
+- reader chrome
+
+Files touched:
+- `index.html`
+- `styles.css`
+- `js/subscription/utils.js`
+
+Summary:
+- Restored the pre-existing homepage layout and retained only smaller top-bar utilities plus a distinct sliders icon for Settings.
+
+Remaining work:
+- Visually confirm the header at desktop and mobile widths before publishing.
+
+Risks / notes:
+- No homepage layout, access, Supabase, or stored-preference behavior changed.
+
+Verification needed:
+- Confirm the theme, settings, notifications, and account controls remain clear, aligned, and clickable.
+
 ## 2026-09-10 00:00 Asia/Kolkata — Chapter-gated ornate system dialogue
 
 Status: NEEDS REVIEW

@@ -49,7 +49,7 @@
 
     <!-- Site Config + Supabase -->
     <script src="js/subscription/site-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="vendor/supabase/supabase-2.111.0.min.js"></script>
     <link rel="stylesheet" href="styles/writer-ai-chat.css">
     <link rel="stylesheet" href="styles/writer-summary-manager.css">
     <script type="module" src="vendor/deep-chat/deepChat.bundle.js"></script>
@@ -59,6 +59,36 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const missing = [
+                ['Quill editor', window.Quill],
+                ['Supabase SDK', window.supabase],
+                ['Markdown parser', window.marked],
+                ['Markdown exporter', window.TurndownService],
+                ['Tailwind styles', window.tailwind]
+            ].filter(([, available]) => !available).map(([label]) => label);
+            if (!missing.length) return;
+            const notice = document.createElement('div');
+            notice.setAttribute('role', 'alert');
+            notice.style.cssText = 'position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:#09090b;color:#fafafa;font:16px/1.5 system-ui,sans-serif';
+            const card = document.createElement('div');
+            card.style.cssText = 'max-width:560px;padding:28px;border:1px solid #52525b;border-radius:16px;background:#18181b';
+            const title = document.createElement('h1');
+            title.textContent = 'Writer could not start';
+            title.style.cssText = 'font-size:24px;font-weight:700;margin:0 0 12px';
+            const message = document.createElement('p');
+            message.textContent = `Missing resources: ${missing.join(', ')}. Check your connection and reload. No chapter changes were made by this failed startup.`;
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.textContent = 'Reload Writer';
+            retry.style.cssText = 'margin-top:18px;padding:10px 16px;border:0;border-radius:8px;background:#4f46e5;color:white;cursor:pointer';
+            retry.addEventListener('click', () => location.reload());
+            card.append(title, message, retry);
+            notice.appendChild(card);
+            document.body.appendChild(notice);
+        });
+    </script>
 
     <style>
         :root {
@@ -1267,11 +1297,11 @@
         .context-dock-head { padding:.7rem .8rem; display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--border-soft); background:rgba(9,9,11,.92); cursor:default; }
         .context-dock-body { min-height:0; overflow:auto; padding:.55rem; display:flex; flex-direction:column; gap:.45rem; }
         #context-dock-toggles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,2.45rem); gap:2px; padding:.5rem .5rem 0; overflow:visible; }
-        .context-dock-toggle { min-width:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; gap:.3rem; padding:.35rem .4rem; border:1px solid #27272a; border-radius:.55rem .55rem 0 0; color:#71717a; background:#18181b; font-size:.65rem; font-weight:650; border-bottom-color:rgba(255,255,255,.08); white-space:nowrap; }
+        .context-dock-toggle { min-width:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; gap:.3rem; padding:.35rem .4rem; border:1px solid #27272a; border-radius:.55rem .55rem 0 0; color:#a1a1aa; background:#18181b; font-size:.75rem; font-weight:650; border-bottom-color:rgba(255,255,255,.08); white-space:nowrap; }
         .context-dock-toggle > i { flex:0 0 auto; }
         .context-dock-toggle-label { min-width:0; overflow:hidden; text-overflow:ellipsis; }
         .context-dock-toggle.is-visible { color:#fff; border-color:rgba(129,140,248,.5); border-bottom-color:#18181b; background:linear-gradient(180deg,rgba(99,102,241,.22),#18181b); box-shadow:inset 0 2px 0 #818cf8; }
-        .context-tab-count { min-width:1.2rem; padding:.05rem .3rem; border-radius:999px; background:#27272a; color:#a1a1aa; text-align:center; font-size:.6rem; }
+        .context-tab-count { min-width:1.2rem; padding:.05rem .3rem; border-radius:999px; background:#27272a; color:#d4d4d8; text-align:center; font-size:.7rem; }
         .context-dock-toggle.is-visible .context-tab-count { background:rgba(99,102,241,.3); color:#c7d2fe; }
         .context-panel { min-height:0; overflow:auto; border:1px solid var(--border-soft); border-radius:1rem; background:rgba(24,24,27,.58); }
         .context-preview-panel { display:flex; flex-direction:column; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.24); }
@@ -1312,8 +1342,9 @@
         .chapter-note-chip { display:flex; align-items:center; gap:.45rem; width:100%; padding:.5rem .6rem; border:1px solid rgba(245,158,11,.16); border-radius:.55rem; background:rgba(245,158,11,.06); color:#d4d4d8; text-align:left; }
         .chapter-note-chip:hover { border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.1); color:#fde68a; }
         @media (max-width:1280px) { .context-shell { grid-template-columns:270px minmax(0,1fr) 260px; } }
-        @media (max-width:1050px) { .context-shell { grid-template-columns:290px minmax(0,1fr); } .context-presets-panel { position:absolute; right:1rem; top:1rem; bottom:1rem; width:310px; z-index:12; box-shadow:0 20px 60px rgba(0,0,0,.55); } }
-        @media (max-width:720px) { .context-shell { display:flex; flex-direction:column; overflow:auto; } .context-docks-area,.context-panel { overflow:visible; flex:none; } .context-dock { height:420px; } .context-preview-panel { min-height:560px; } #view-context { overflow:auto; } #context-dock-toggles { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,2.65rem); } .context-dock-toggle { font-size:.6rem; padding:.3rem .25rem; } .context-presets-panel { position:static; width:auto; } .context-modal-card { width:100vw; border-radius:0; } }
+        @media (max-width:1050px) { .context-shell { display:flex; flex-direction:column; overflow:auto; } .context-docks-area,.context-panel { overflow:visible; flex:none; } .context-dock { height:420px; } .context-preview-panel { min-height:560px; } .context-presets-panel { position:static; width:auto; box-shadow:none; } }
+        @media (max-width:720px) { .context-shell { display:flex; flex-direction:column; overflow:auto; } .context-docks-area,.context-panel { overflow:visible; flex:none; } .context-dock { height:420px; } .context-preview-panel { min-height:560px; } #view-context { overflow:auto; } #context-dock-toggles { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,2.65rem); } .context-dock-toggle { font-size:.7rem; padding:.3rem .25rem; } .context-presets-panel { position:static; width:auto; } .context-modal-card { width:100vw; border-radius:0; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
     </style>
 </head>
 
@@ -1789,7 +1820,7 @@
                             </div>
                         </div>
                         <div id="context-section-stats" class="context-section-stats"></div>
-                        <div class="context-preview-scroll"><pre id="context-preview" class="context-preview"></pre></div>
+                        <div id="context-preview-scroll" class="context-preview-scroll"><pre id="context-preview" class="context-preview"></pre></div>
                     </section>
                     <section class="context-panel context-presets-panel">
                         <div class="context-panel-head">
@@ -2285,6 +2316,7 @@
                         </div>
                         <div class="summary-manager-actions">
                             <button id="summary-generate" type="button" class="summary-action primary" onclick="SummaryManager.generate()"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Generate / Regenerate</button>
+                            <button id="summary-cancel-generation" type="button" class="summary-action hidden" onclick="SummaryManager.cancelGeneration()">Stop generation</button>
                             <button id="summary-save-draft" type="button" class="summary-action" onclick="SummaryManager.saveDraft()"><i class="fa-solid fa-floppy-disk mr-1"></i>Save Draft</button>
                             <button id="summary-accept" type="button" class="summary-action accept" onclick="SummaryManager.accept()"><i class="fa-solid fa-check mr-1"></i>Accept</button>
                             <button id="summary-archive" type="button" class="summary-action danger" onclick="SummaryManager.archive()" disabled><i class="fa-solid fa-box-archive mr-1"></i>Archive</button>
@@ -2469,22 +2501,51 @@
             return index >= 0 ? palette[index % palette.length] : { rgb: '113, 113, 122', accent: '#a1a1aa' };
         }
 
+        function withWriterDeadline(promise, label, milliseconds = 20000) {
+            let timer;
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error(`${label} timed out. Check your connection and retry.`)), milliseconds);
+                })
+            ]).finally(() => clearTimeout(timer));
+        }
+
+        async function runWriterMutation(query, label, milliseconds = 30000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), milliseconds);
+            try {
+                const result = await withWriterDeadline(query.abortSignal(controller.signal), label, milliseconds + 1000);
+                if (controller.signal.aborted) throw new Error('Mutation deadline reached.');
+                return result;
+            } catch (error) {
+                if (controller.signal.aborted || /timed out/i.test(error?.message || '')) {
+                    const uncertain = new Error(`${label} was not confirmed. The server may have completed it; copy your work and verify the row before retrying.`);
+                    uncertain.code = 'writer_save_uncertain';
+                    throw uncertain;
+                }
+                throw error;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         const DB = {
             async requireAdmin() {
                 if (!supabaseClient) throw new Error('Supabase is not configured. Update js/subscription/site-config.js first.');
-                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                const { data: { session }, error: sessionError } = await withWriterDeadline(supabaseClient.auth.getSession(), 'Admin session');
                 if (sessionError) throw sessionError;
                 if (!session) throw new Error('Admin sign-in required. Open admin.html, sign in, then return to writer.html.');
-                const { data, error } = await supabaseClient.from('profiles').select('id, role, display_name, username').eq('id', session.user.id).single();
+                const { data, error } = await withWriterDeadline(supabaseClient.from('profiles').select('id, role, display_name, username').eq('id', session.user.id).single(), 'Admin profile');
                 if (error) throw error;
                 if (data.role !== 'admin') throw new Error('Access denied. Admin privileges required.');
                 return data;
             },
             async loadWorkspace(storyId = null) {
-                const [{ data: stories, error: storiesError }, { data: tiers, error: tiersError }] = await Promise.all([
+                const [{ data: stories, error: storiesError }, { data: tiers, error: tiersError }] = await withWriterDeadline(Promise.all([
                     supabaseClient.from('stories').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
                     supabaseClient.from('reader_access_tiers').select('*').order('tier_rank', { ascending: true })
-                ]);
+                ]), 'Writer workspace');
                 if (storiesError) throw storiesError;
                 if (tiersError) throw tiersError;
                 MockDB.stories = stories || [];
@@ -2493,11 +2554,10 @@
                 if (!MockDB.stories.some(story => story.id === State.activeStoryId)) State.activeStoryId = MockDB.stories[0]?.id || '';
                 if (State.activeStoryId) localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                 await this.loadChapters(State.activeStoryId);
-                await this.loadScratchpads(State.activeStoryId);
             },
             async loadChapters(storyId) {
                 if (!storyId) { MockDB.chapters = []; MockDB.scratchpads = []; return; }
-                const { data, error } = await supabaseClient.from('chapters').select('*').eq('story_id', storyId).order('chapter_order', { ascending: true });
+                const { data, error } = await withWriterDeadline(supabaseClient.from('chapters').select('*').eq('story_id', storyId).order('chapter_order', { ascending: true }), 'Chapter index');
                 if (error) throw error;
                 MockDB.chapters = (data || []).map(normalizeChapterRow);
                 await this.loadScratchpads(storyId);
@@ -2505,11 +2565,11 @@
             async loadScratchpads(storyId) {
                 if (!storyId || !MockDB.chapters.length) { MockDB.scratchpads = []; return; }
                 const chapterIds = MockDB.chapters.map(c => c.id);
-                const { data, error } = await supabaseClient
+                const { data, error } = await withWriterDeadline(supabaseClient
                     .from('scratchpads')
                     .select('*')
                     .in('chapter_id', chapterIds)
-                    .order('created_at', { ascending: true });
+                    .order('created_at', { ascending: true }), 'Chapter notes');
                 if (error) {
                     console.warn('Scratchpads table error:', error);
                     MockDB.scratchpads = [];
@@ -2520,41 +2580,41 @@
             async saveChapter(id, record) {
                 record.word_count = wordCountFromHtml(record.content || '');
                 if (id) {
-                    const { data, error } = await supabaseClient.from('chapters').update(record).eq('id', id).select().single();
+                    const { data, error } = await runWriterMutation(supabaseClient.from('chapters').update(record).eq('id', id).select().single(), 'Chapter save');
                     if (error) throw error;
                     return normalizeChapterRow(data);
                 }
-                const { data, error } = await supabaseClient.from('chapters').insert(record).select().single();
+                const { data, error } = await runWriterMutation(supabaseClient.from('chapters').insert(record).select().single(), 'Chapter creation');
                 if (error) throw error;
                 return normalizeChapterRow(data);
             },
             async saveScratchpad(id, record) {
                 record.updated_at = new Date().toISOString();
                 if (id) {
-                    const { data, error } = await supabaseClient.from('scratchpads').update(record).eq('id', id).select().single();
+                    const { data, error } = await runWriterMutation(supabaseClient.from('scratchpads').update(record).eq('id', id).select().single(), 'Chapter-note save');
                     if (error) throw error;
                     return data;
                 }
-                const { data, error } = await supabaseClient.from('scratchpads').insert(record).select().single();
+                const { data, error } = await runWriterMutation(supabaseClient.from('scratchpads').insert(record).select().single(), 'Chapter-note creation');
                 if (error) throw error;
                 return data;
             },
             async updateChapterFields(id, fields) {
-                const { data, error } = await supabaseClient
+                const { data, error } = await runWriterMutation(supabaseClient
                     .from('chapters')
                     .update({ ...fields, updated_at: new Date().toISOString() })
                     .eq('id', id)
                     .select()
-                    .single();
+                    .single(), 'Chapter access update');
                 if (error) throw error;
                 return normalizeChapterRow(data);
             },
             async deleteChapter(id) {
-                const { error } = await supabaseClient.from('chapters').delete().eq('id', id);
+                const { error } = await runWriterMutation(supabaseClient.from('chapters').delete().eq('id', id), 'Chapter deletion');
                 if (error) throw error;
             },
             async deleteScratchpad(id) {
-                const { error } = await supabaseClient.from('scratchpads').delete().eq('id', id);
+                const { error } = await runWriterMutation(supabaseClient.from('scratchpads').delete().eq('id', id), 'Chapter-note deletion');
                 if (error) throw error;
             }
         };
@@ -2569,6 +2629,15 @@
             activeScratchpadId: null,
             activeTabType: 'chapter', // 'chapter' | 'scratchpad'
             unsavedChanges: false,
+            editRevision: 0,
+            saveInFlight: null,
+            saveOutcomeUncertain: false,
+            editorTransitionInFlight: null,
+            imageUploadInFlight: false,
+            chapterCreateInFlight: false,
+            chapterCreateTargetId: null,
+            tierUpdateInFlight: false,
+            storyLoadRevision: 0,
             quillInstance: null,
             autosaveTimer: null,
             commandRunning: false,
@@ -2576,6 +2645,7 @@
             isNormalizingSystemMessages: false,
             openChapterIds: [],
             openScratchpadIds: [],
+            editorPositions: {},
             dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
             primarySidebarCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true',
             editorSettingsCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-editor-settings-collapsed') === 'true',
@@ -2695,8 +2765,9 @@
         }
 
         const Router = {
-            navigate(view) {
+            navigate(view, options = {}) {
                 if (!['dashboard', 'editor', 'context'].includes(view)) view = 'dashboard';
+                if (!options.fromHistory && location.hash !== `#${view}`) history.pushState({ writerView: view }, '', `#${view}`);
                 State.currentView = view;
                 localStorage.setItem('ea-writer-current-view', view);
                 document.querySelectorAll('.active-nav').forEach(el => {
@@ -2715,7 +2786,10 @@
                 document.getElementById('view-editor').classList.add('hidden');
                 document.getElementById('view-context').classList.add('hidden');
 
-                document.getElementById(`view-${view}`).classList.remove('hidden');
+                const activeView = document.getElementById(`view-${view}`);
+                activeView.classList.remove('hidden');
+                activeView.setAttribute('tabindex', '-1');
+                if (options.focus !== false) activeView.focus({ preventScroll: true });
 
                 if (view === 'dashboard') {
                     Dashboard.render();
@@ -2726,24 +2800,39 @@
         };
 
         const UI = {
+            modalReturnFocus: new Map(),
             async init() {
                 try {
+                    document.getElementById('writer-init-retry')?.remove();
                     await DB.requireAdmin();
                     await DB.loadWorkspace(State.activeStoryId);
-                    await ContextWorkspace.load(State.activeStoryId);
-                    await AIChat.init();
-                    await SummaryManager.init();
                     App.initCensorship();
                     this.populateDropdowns();
-                    Editor.initQuill();
+                    if (!State.quillInstance) Editor.initQuill();
                     this.syncPanelState();
-                    this.bindEvents();
+                    if (!this.eventsBound) {
+                        this.bindEvents();
+                        this.eventsBound = true;
+                    }
                     const requestedView = State.currentView;
                     await restoreEditorSession();
-                    Router.navigate(requestedView);
+                    Router.navigate(['dashboard', 'editor', 'context'].includes(location.hash.slice(1)) ? location.hash.slice(1) : requestedView, { focus: false });
+                    await Promise.all([
+                        ContextWorkspace.load(State.activeStoryId),
+                        AIChat.init(),
+                        SummaryManager.init()
+                    ]);
                 } catch (error) {
                     this.showToast(error.message || 'Writer failed to initialize.', 'error');
-                    document.getElementById('dash-story-title').innerText = error.message || 'Writer unavailable';
+                    const title = document.getElementById('dash-story-title');
+                    title.innerText = error.message || 'Writer unavailable';
+                    const retry = document.createElement('button');
+                    retry.id = 'writer-init-retry';
+                    retry.type = 'button';
+                    retry.className = 'ml-3 rounded-lg border border-indigo-400 px-3 py-1 text-sm text-indigo-200';
+                    retry.textContent = 'Retry Writer';
+                    retry.addEventListener('click', () => this.init());
+                    title.after(retry);
                 }
             },
 
@@ -2819,26 +2908,72 @@
             },
 
             bindEvents() {
+                window.addEventListener('popstate', () => Router.navigate(location.hash.slice(1), { fromHistory: true }));
                 document.getElementById('story-selector').addEventListener('change', async event => {
                     const requestedView = State.currentView;
-                    State.activeStoryId = event.target.value;
+                    const previousStoryId = State.activeStoryId;
+                    const nextStoryId = event.target.value;
+                    if (nextStoryId === previousStoryId) return;
+                    event.target.disabled = true;
+                    if (State.editorTransitionInFlight) {
+                        try { await State.editorTransitionInFlight; }
+                        catch (error) {
+                            event.target.value = previousStoryId;
+                            event.target.disabled = false;
+                            UI.showToast(error.message || 'Finish the chapter switch before changing stories.', 'error');
+                            return;
+                        }
+                    }
+                    if (ContextWorkspace.blockEditorDirty || ContextWorkspace.blockSaveInFlight || ContextWorkspace.duplicateInFlight || ContextWorkspace.presetSaveInFlight || ChapterNotes.dirty || ChapterNotes.saveInFlight || SummaryManager.dirty || SummaryManager.generating || AIChat.isStreaming || State.imageUploadInFlight || State.chapterCreateInFlight || State.tierUpdateInFlight) {
+                        event.target.value = previousStoryId;
+                        event.target.disabled = false;
+                        UI.showToast('Finish the open editor, summary, AI response, or image upload before switching stories.', 'error');
+                        return;
+                    }
+                    if (State.unsavedChanges || State.saveInFlight) {
+                        const saved = await App.flushPendingEdits();
+                        if (!saved) {
+                            event.target.value = previousStoryId;
+                            event.target.disabled = false;
+                            return;
+                        }
+                    }
+                    const loadRevision = ++State.storyLoadRevision;
+                    State.activeStoryId = nextStoryId;
                     localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                     State.activeChapterId = null;
                     State.openChapterIds = [];
-                    State.unsavedChanges = false;
                     clearTimeout(State.autosaveTimer);
                     document.getElementById('editor-workspace').classList.add('hidden');
                     document.getElementById('editor-empty').classList.remove('hidden');
                     try {
                         await DB.loadChapters(State.activeStoryId);
+                        if (loadRevision !== State.storyLoadRevision) return;
                         await ContextWorkspace.load(State.activeStoryId);
+                        if (loadRevision !== State.storyLoadRevision) return;
                         await AIChat.loadStory(State.activeStoryId);
+                        if (loadRevision !== State.storyLoadRevision) return;
                         await SummaryManager.loadStory(State.activeStoryId);
+                        if (loadRevision !== State.storyLoadRevision) return;
                         await restoreEditorSession();
                         Dashboard.render();
                         Router.navigate(requestedView);
                     }
-                    catch (error) { UI.showToast(error.message || 'Could not load chapters.', 'error'); }
+                    catch (error) {
+                        State.activeStoryId = previousStoryId;
+                        event.target.value = previousStoryId;
+                        localStorage.setItem('ea-admin-last-story-id', previousStoryId);
+                        try {
+                            await DB.loadWorkspace(previousStoryId);
+                            await Promise.all([ContextWorkspace.load(previousStoryId), AIChat.loadStory(previousStoryId), SummaryManager.loadStory(previousStoryId)]);
+                            await restoreEditorSession();
+                            Router.navigate(requestedView);
+                        } catch (restoreError) {
+                            console.error('Could not restore previous Writer story:', restoreError);
+                        }
+                        UI.showToast(error.message || 'Could not load chapters.', 'error');
+                    }
+                    finally { event.target.disabled = false; }
                 });
 
                 document.getElementById('dash-search').addEventListener('input', () => {
@@ -2875,23 +3010,42 @@
                 });
 
                 document.addEventListener('keydown', event => {
+                    const activeModal = ['modal-context-block', 'modal-media', 'modal-censor', 'chapter-note-drawer']
+                        .map(id => document.getElementById(id))
+                        .find(modal => modal && !modal.classList.contains('hidden'))
+                        || (SummaryManager.isOpen() ? document.getElementById('summary-manager') : null);
+                    if (activeModal && event.key === 'Tab') {
+                        const focusables = [...activeModal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])')]
+                            .filter(el => el.getClientRects().length);
+                        if (focusables.length) {
+                            const first = focusables[0];
+                            const last = focusables.at(-1);
+                            if (event.shiftKey && (document.activeElement === first || !activeModal.contains(document.activeElement))) {
+                                event.preventDefault(); last.focus();
+                            } else if (!event.shiftKey && (document.activeElement === last || !activeModal.contains(document.activeElement))) {
+                                event.preventDefault(); first.focus();
+                            }
+                        }
+                    }
                     const isMac = navigator.platform.toUpperCase().includes('MAC');
                     const mod = isMac ? event.metaKey : event.ctrlKey;
 
                     if (mod && event.key.toLowerCase() === 's') {
-                        event.preventDefault();
                         const contextModal = document.getElementById('modal-context-block');
                         const noteDrawer = document.getElementById('chapter-note-drawer');
                         if (noteDrawer && !noteDrawer.classList.contains('hidden')) {
+                            event.preventDefault();
                             noteDrawer.querySelector('form')?.requestSubmit();
                         } else if (contextModal && !contextModal.classList.contains('hidden')) {
+                            event.preventDefault();
                             contextModal.querySelector('form')?.requestSubmit();
-                        } else {
+                        } else if (State.currentView === 'editor' && !activeModal && !AIChat.isOpen()) {
+                            event.preventDefault();
                             App.saveDraft();
                         }
                     }
 
-                    if (mod && event.key.toLowerCase() === 'k') {
+                    if (mod && event.key.toLowerCase() === 'k' && !activeModal && !AIChat.isOpen()) {
                         event.preventDefault();
                         const contextVisible = !document.getElementById('view-context')?.classList.contains('hidden');
                         if (contextVisible) document.getElementById('context-search')?.focus();
@@ -2901,13 +3055,17 @@
                         }
                     }
 
-                    if (mod && event.key === 'Enter') {
+                    if (mod && event.key === 'Enter' && State.currentView === 'editor' && !activeModal && !AIChat.isOpen()) {
                         event.preventDefault();
-                        if (document.getElementById('modal-context-block')?.classList.contains('hidden') && document.getElementById('chapter-note-drawer')?.classList.contains('hidden')) App.publishChapter();
+                        App.publishChapter();
                     }
 
-                    if (event.key === 'Escape' && !document.getElementById('modal-context-block')?.classList.contains('hidden')) {
-                        ContextWorkspace.closeBlockEditor();
+                    if (event.key === 'Escape') {
+                        if (!document.getElementById('modal-context-block')?.classList.contains('hidden')) ContextWorkspace.closeBlockEditor();
+                        else if (!document.getElementById('modal-media')?.classList.contains('hidden')) UI.closeModal('modal-media');
+                        else if (!document.getElementById('modal-censor')?.classList.contains('hidden')) UI.closeModal('modal-censor');
+                        else if (!document.getElementById('chapter-note-drawer')?.classList.contains('hidden')) ChapterNotes.close();
+                        else if (SummaryManager.isOpen()) SummaryManager.close();
                     }
                 });
 
@@ -2968,14 +3126,22 @@
 
             openModal(id) {
                 const modal = document.getElementById(id);
+                this.modalReturnFocus.set(id, document.activeElement);
+                modal.setAttribute('role', 'dialog');
+                modal.setAttribute('aria-modal', 'true');
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
+                queueMicrotask(() => {
+                    if (!modal.classList.contains('hidden')) modal.querySelector('input:not([type="hidden"]), textarea, button')?.focus();
+                });
             },
 
             closeModal(id) {
                 const modal = document.getElementById(id);
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
+                this.modalReturnFocus.get(id)?.focus?.();
+                this.modalReturnFocus.delete(id);
             }
         };
 
@@ -3375,16 +3541,6 @@
             );
         }
 
-        function fileToDataUrl(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject(new Error('Could not read image file.'));
-                reader.readAsDataURL(file);
-            });
-        }
-
         function makeStorageSafeFilename(file) {
             const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
             const safeBase = file.name
@@ -3417,7 +3573,7 @@
                 });
 
             if (error) {
-                console.warn('Supabase image upload failed. Falling back to inline data URL.', error);
+                console.warn('Supabase image upload failed; no image will be inserted.', error);
                 return null;
             }
 
@@ -4077,6 +4233,7 @@
             },
 
             async insertInlineImageFile(file) {
+                if (State.imageUploadInFlight) return UI.showToast('An image is already uploading.', 'info');
                 if (!isAllowedInlineImage(file)) {
                     UI.showToast(
                         `Use PNG, JPG, WebP, or GIF under ${Math.round(IMAGE_UPLOAD_CONFIG.maxBytes / 1024 / 1024)} MB.`,
@@ -4087,22 +4244,22 @@
 
                 const quill = State.quillInstance;
                 if (!quill) return;
+                const uploadStoryId = State.activeStoryId;
+                const uploadChapterId = State.activeChapterId;
+                const uploadTabType = State.activeTabType;
 
                 const range = quill.getSelection(true);
                 const insertAt = range ? range.index : quill.getLength();
 
+                State.imageUploadInFlight = true;
                 UI.showToast('Uploading image...', 'info');
 
                 try {
                     let imageUrl = await uploadImageToSupabaseStorage(file);
 
-                    /*
-                     * Fallback:
-                     * If Supabase Storage is not configured, the bucket does not exist,
-                     * or permissions block upload, embed a data URL so inline image still works.
-                     */
-                    if (!imageUrl) {
-                        imageUrl = await fileToDataUrl(file);
+                    if (!imageUrl) throw new Error('Image was not uploaded. Check Storage permissions and retry; nothing was inserted.');
+                    if (State.activeStoryId !== uploadStoryId || State.activeChapterId !== uploadChapterId || State.activeTabType !== uploadTabType) {
+                        throw new Error('Chapter changed during upload. Image was not inserted; reopen the original chapter and retry.');
                     }
 
                     quill.insertEmbed(insertAt, 'image', imageUrl, 'user');
@@ -4116,6 +4273,8 @@
                 } catch (error) {
                     console.error(error);
                     UI.showToast(error.message || 'Image upload failed.', 'error');
+                } finally {
+                    State.imageUploadInFlight = false;
                 }
             },
 
@@ -4199,26 +4358,44 @@
                 if (State.isHydratingEditor) return;
 
                 State.unsavedChanges = true;
+                State.editRevision += 1;
+                if (State.saveOutcomeUncertain) return;
 
                 const el = document.getElementById('ed-save-status');
 
                 if (el) {
                     el.innerHTML = `<i class="fa-solid fa-circle text-amber-500 text-[8px] mr-1 mb-0.5"></i> Unsaved`;
-                    el.classList.remove('text-zinc-500');
+                    el.removeAttribute('title');
+                    el.classList.remove('text-zinc-500', 'text-rose-400');
                     el.classList.add('text-amber-500');
                 }
 
-                clearTimeout(State.autosaveTimer);
+                this.scheduleAutosave();
+            },
 
+            scheduleAutosave() {
+                clearTimeout(State.autosaveTimer);
+                if (State.saveOutcomeUncertain) return;
+                const chapter = MockDB.chapters.find(item => item.id === State.activeChapterId);
+                if (State.activeTabType === 'chapter' && chapter?.is_published) return;
                 if (State.activeTabType === 'scratchpad' ? State.activeScratchpadId : State.activeChapterId) {
-                    State.autosaveTimer = setTimeout(() => {
-                        App.saveDraft({ silent: true });
-                    }, 1500);
+                    State.autosaveTimer = setTimeout(() => App.saveDraft({ silent: true }), 1500);
                 }
             },
 
-            markSaved() {
+            markSaved(persistedAt = null) {
                 clearTimeout(State.autosaveTimer);
+
+                if (State.saveOutcomeUncertain) {
+                    State.unsavedChanges = true;
+                    const status = document.getElementById('ed-save-status');
+                    if (status) {
+                        status.textContent = 'Save unconfirmed — verify first';
+                        status.classList.remove('text-zinc-500', 'text-amber-500');
+                        status.classList.add('text-rose-400');
+                    }
+                    return;
+                }
 
                 State.unsavedChanges = false;
 
@@ -4226,12 +4403,33 @@
 
                 if (el) {
                     el.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> Saved`;
-                    el.classList.remove('text-amber-500');
+                    el.removeAttribute('title');
+                    el.classList.remove('text-amber-500', 'text-rose-400');
                     el.classList.add('text-zinc-500');
                 }
 
-                this.setLastSavedNow();
+                const savedLabel = document.getElementById('ed-last-saved');
+                if (persistedAt && savedLabel) {
+                    const time = new Date(persistedAt);
+                    savedLabel.textContent = Number.isNaN(time.getTime())
+                        ? 'Saved'
+                        : `Last saved at ${time.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+                } else if (persistedAt === null) {
+                    this.setLastSavedNow();
+                }
                 this.updateMeta();
+            },
+
+            markSaveFailed(error = null) {
+                State.unsavedChanges = true;
+                State.saveOutcomeUncertain = State.saveOutcomeUncertain || error?.code === 'writer_save_uncertain';
+                const el = document.getElementById('ed-save-status');
+                if (el) {
+                    el.textContent = State.saveOutcomeUncertain ? 'Save unconfirmed — verify first' : 'Save failed — retry';
+                    el.title = error?.message || 'The latest edits were not confirmed saved.';
+                    el.classList.remove('text-zinc-500', 'text-amber-500');
+                    el.classList.add('text-rose-400');
+                }
             }
         };
 
@@ -4240,23 +4438,28 @@
         // ==========================================
         const App = {
             async createNewChapter() {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before creating another chapter.', 'error');
+                if (State.chapterCreateInFlight) return UI.showToast('Chapter creation is already in progress.', 'info');
+                if (State.imageUploadInFlight) return UI.showToast('Wait for the image upload before creating a chapter.', 'info');
+                if (ChapterNotes.dirty || ChapterNotes.saveInFlight) return UI.showToast('Finish the open chapter note before creating a chapter.', 'error');
                 if (!State.activeStoryId) {
                     UI.showToast('Create/select a story first.', 'error');
                     return;
                 }
 
-                if (State.unsavedChanges) {
-                    const savedBeforeCreate = await this.saveDraft({ silent: true });
-                    if (!savedBeforeCreate) return;
-                }
-
-                const nextOrder = (
-                    MockDB.chapters.length
-                        ? Math.max(...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0))
-                        : 0
-                ) + 1;
-
+                State.chapterCreateInFlight = true;
+                let created = false;
                 try {
+                    if (State.unsavedChanges || State.saveInFlight) {
+                        const savedBeforeCreate = await this.flushPendingEdits();
+                        if (!savedBeforeCreate) return;
+                    }
+
+                    const nextOrder = (
+                        MockDB.chapters.length
+                            ? Math.max(...MockDB.chapters.map(chapter => Number(chapter.chapter_order) || 0))
+                            : 0
+                    ) + 1;
                     const saved = await DB.saveChapter(null, {
                         story_id: State.activeStoryId,
                         chapter_order: nextOrder,
@@ -4272,14 +4475,20 @@
                         updated_at: new Date().toISOString()
                     });
 
-                    await DB.loadChapters(State.activeStoryId);
-
+                    MockDB.chapters.push(saved);
+                    created = true;
+                    State.chapterCreateTargetId = saved.id;
                     await this.openEditorForChapter(saved.id);
+                    if (State.activeChapterId !== saved.id) throw new Error('The new chapter was not opened.');
                     Dashboard.render();
 
                     UI.showToast(`Chapter ${nextOrder} opened in a new tab.`, 'success');
                 } catch (error) {
-                    UI.showToast(error.message || 'Could not create draft.', 'error');
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
+                    UI.showToast(created ? 'Draft was created, but could not be opened. Find it in the chapter index.' : error.message || 'Could not create draft.', 'error');
+                } finally {
+                    State.chapterCreateInFlight = false;
+                    State.chapterCreateTargetId = null;
                 }
             },
 
@@ -4288,8 +4497,8 @@
                 const chapter = MockDB.chapters.find(c => c.id === chapterId);
                 if (!chapter) return;
 
-                if (State.unsavedChanges) {
-                    const savedBeforeCreate = await this.saveDraft({ silent: true });
+                if (State.unsavedChanges || State.saveInFlight) {
+                    const savedBeforeCreate = await this.flushPendingEdits();
                     if (!savedBeforeCreate) return;
                 }
 
@@ -4316,6 +4525,20 @@
             },
 
             async openEditorForChapter(id) {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before switching chapters.', 'error');
+                const storyId = State.activeStoryId;
+                while (State.editorTransitionInFlight) await State.editorTransitionInFlight;
+                if (storyId !== State.activeStoryId) return;
+                const transition = this.openEditorForChapterOnce(id);
+                State.editorTransitionInFlight = transition;
+                try { return await transition; }
+                finally { if (State.editorTransitionInFlight === transition) State.editorTransitionInFlight = null; }
+            },
+
+            async openEditorForChapterOnce(id) {
+                if (State.chapterCreateInFlight && id !== State.chapterCreateTargetId) return UI.showToast('Wait for chapter creation before switching chapters.', 'info');
+                if (State.imageUploadInFlight) return UI.showToast('Wait for the image upload before switching chapters.', 'info');
+                if (ChapterNotes.saveInFlight || ChapterNotes.dirty) return UI.showToast('Finish or discard the open chapter note before switching chapters.', 'error');
                 const chapter = MockDB.chapters.find(item => item.id === id);
                 if (!chapter) return;
 
@@ -4327,9 +4550,16 @@
                     return;
                 }
 
-                if (State.unsavedChanges) {
-                    const savedBeforeSwitch = await this.saveDraft({ silent: true });
+                if (State.unsavedChanges || State.saveInFlight) {
+                    const savedBeforeSwitch = await this.flushPendingEdits();
                     if (!savedBeforeSwitch) return;
+                }
+
+                if (State.activeTabType === 'chapter' && State.activeChapterId && State.quillInstance) {
+                    State.editorPositions[State.activeChapterId] = {
+                        selection: State.quillInstance.getSelection(),
+                        scrollTop: State.quillInstance.root.scrollTop
+                    };
                 }
 
                 if (!State.openChapterIds.includes(id)) {
@@ -4383,21 +4613,30 @@
                         'silent'
                     );
                     updateSystemMessageVariants();
+                    const previousPosition = State.editorPositions[id];
+                    if (previousPosition?.selection) {
+                        State.quillInstance.setSelection(Math.min(previousPosition.selection.index, State.quillInstance.getLength() - 1), previousPosition.selection.length, 'silent');
+                    } else {
+                        State.quillInstance.setSelection(0, 0, 'silent');
+                    }
+                    State.quillInstance.root.scrollTop = previousPosition?.scrollTop || 0;
 
                     const banner = document.getElementById('ed-banner');
                     const btn = document.getElementById('btn-publish');
                     const statusPill = document.getElementById('ed-status-pill');
 
-                    btn.classList.remove('hidden');
+                    btn.classList.toggle('hidden', Boolean(chapter.is_published));
 
                     if (chapter.is_published) {
                         banner.classList.remove('hidden');
                         btn.innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
+                        document.getElementById('btn-save-draft').innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Save Live Changes';
                         statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
                         statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
                     } else {
                         banner.classList.add('hidden');
                         btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
+                        document.getElementById('btn-save-draft').innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Save Draft';
                         statusPill.className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
                         statusPill.innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
                     }
@@ -4407,7 +4646,7 @@
                     Dashboard.renderEditorTabs();
                 } finally {
                     State.isHydratingEditor = false;
-                    Editor.markSaved();
+                    Editor.markSaved(chapter.updated_at);
                 }
             },
 
@@ -4423,8 +4662,8 @@
                     return;
                 }
 
-                if (State.unsavedChanges) {
-                    const savedBeforeSwitch = await this.saveDraft({ silent: true });
+                if (State.unsavedChanges || State.saveInFlight) {
+                    const savedBeforeSwitch = await this.flushPendingEdits();
                     if (!savedBeforeSwitch) return;
                 }
 
@@ -4493,16 +4732,17 @@
                     Dashboard.renderEditorTabs();
                 } finally {
                     State.isHydratingEditor = false;
-                    Editor.markSaved();
+                    Editor.markSaved(sp.updated_at);
                 }
             },
 
             async closeChapterTab(id) {
+                if (State.imageUploadInFlight && id === State.activeChapterId) return UI.showToast('Wait for the image upload before closing this chapter.', 'info');
                 const closingIndex = State.openChapterIds.indexOf(id);
                 if (closingIndex === -1) return;
 
-                if (State.activeTabType === 'chapter' && id === State.activeChapterId && State.unsavedChanges) {
-                    const savedBeforeClose = await this.saveDraft({ silent: true });
+                if (State.activeTabType === 'chapter' && id === State.activeChapterId && (State.unsavedChanges || State.saveInFlight)) {
+                    const savedBeforeClose = await this.flushPendingEdits();
                     if (!savedBeforeClose) return;
                 }
 
@@ -4532,8 +4772,8 @@
                 const closingIndex = State.openScratchpadIds.indexOf(id);
                 if (closingIndex === -1) return;
 
-                if (State.activeTabType === 'scratchpad' && id === State.activeScratchpadId && State.unsavedChanges) {
-                    const savedBeforeClose = await this.saveDraft({ silent: true });
+                if (State.activeTabType === 'scratchpad' && id === State.activeScratchpadId && (State.unsavedChanges || State.saveInFlight)) {
+                    const savedBeforeClose = await this.flushPendingEdits();
                     if (!savedBeforeClose) return;
                 }
 
@@ -4601,18 +4841,26 @@
             },
 
             async quickSetChapterTier(id, tierId) {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before changing access.', 'error');
+                if (State.tierUpdateInFlight) return UI.showToast('Wait for the current access update to finish.', 'info');
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === id);
                 if (index === -1) return;
 
+                State.tierUpdateInFlight = true;
+                let updateWait = null;
                 try {
+                    while (State.saveInFlight) await State.saveInFlight;
                     if (id === State.activeChapterId && State.unsavedChanges) {
-                        const savedBeforeTierChange = await this.saveDraft({ silent: true });
+                        const savedBeforeTierChange = await this.flushPendingEdits();
                         if (!savedBeforeTierChange) {
                             Dashboard.render();
                             return;
                         }
                     }
-                    const saved = await DB.updateChapterFields(id, { required_tier_id: tierId || null });
+                    const update = DB.updateChapterFields(id, { required_tier_id: tierId || null });
+                    updateWait = update.then(() => true, () => false);
+                    State.saveInFlight = updateWait;
+                    const saved = await update;
                     MockDB.chapters[index] = saved;
 
                     if (id === State.activeChapterId) {
@@ -4623,12 +4871,20 @@
                     UI.showToast(`Access changed to ${MockDB.tiers.find(tier => tier.id === tierId)?.name || 'Free Access'}.`, 'success');
                 } catch (error) {
                     Dashboard.render();
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
                     UI.showToast(error.message || 'Could not update chapter access.', 'error');
+                } finally {
+                    if (State.saveInFlight === updateWait) State.saveInFlight = null;
+                    State.tierUpdateInFlight = false;
                 }
             },
 
             async deleteChapter(id) {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before deleting a chapter.', 'error');
+                if (State.tierUpdateInFlight) return UI.showToast('Wait for the access update before deleting a chapter.', 'info');
+                if (State.imageUploadInFlight && id === State.activeChapterId) return UI.showToast('Wait for the image upload before deleting this chapter.', 'info');
                 if (!id) return;
+                if (id === State.activeChapterId && State.saveInFlight) await State.saveInFlight;
                 const chapter = MockDB.chapters.find(item => item.id === id);
                 if (!chapter) return;
 
@@ -4663,6 +4919,7 @@
                     Dashboard.renderEditorTabs();
                     UI.showToast('Chapter deleted.', 'success');
                 } catch (error) {
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
                     UI.showToast(error.message || 'Could not delete chapter.', 'error');
                 }
             },
@@ -4685,7 +4942,38 @@
                 };
             },
 
+            async flushPendingEdits() {
+                for (let attempt = 0; attempt < 4 && (State.unsavedChanges || State.saveInFlight); attempt += 1) {
+                    if (!await this.saveDraft({ silent: true })) return false;
+                }
+                if (State.unsavedChanges || State.saveInFlight) {
+                    UI.showToast('Edits are still changing. Wait for save to finish, then try again.', 'error');
+                    return false;
+                }
+                return true;
+            },
+
             async saveDraft(options = {}) {
+                if (State.saveOutcomeUncertain) {
+                    UI.showToast('The previous write is unconfirmed. Copy your work and reload to verify the server before another write.', 'error');
+                    return false;
+                }
+                while (State.saveInFlight) {
+                    const previousSucceeded = await State.saveInFlight;
+                    if (State.saveOutcomeUncertain) return false;
+                    if (!State.unsavedChanges) return previousSucceeded;
+                }
+                const save = this.saveDraftOnce(options);
+                State.saveInFlight = save;
+                try { return await save; }
+                finally { if (State.saveInFlight === save) State.saveInFlight = null; }
+            },
+
+            async saveDraftOnce(options = {}) {
+                const revision = State.editRevision;
+                const targetStoryId = State.activeStoryId;
+                const targetChapterId = State.activeChapterId;
+                const targetScratchpadId = State.activeScratchpadId;
                 if (State.activeTabType === 'scratchpad') {
                     if (!State.activeScratchpadId) return false;
                     if (options.silent && !State.unsavedChanges) return true;
@@ -4703,7 +4991,8 @@
                         });
 
                         MockDB.scratchpads[index] = saved;
-                        Editor.markSaved();
+                        if (State.editRevision === revision && State.activeStoryId === targetStoryId && State.activeScratchpadId === targetScratchpadId) Editor.markSaved(saved.updated_at);
+                        else if (State.activeScratchpadId === targetScratchpadId) Editor.scheduleAutosave();
                         Dashboard.renderSidebarChapters();
                         Dashboard.renderEditorTabs();
 
@@ -4713,6 +5002,7 @@
                         }
                         return true;
                     } catch (error) {
+                        Editor.markSaveFailed(error);
                         UI.showToast(error.message || 'Could not save scratchpad.', 'error');
                         return false;
                     }
@@ -4728,38 +5018,58 @@
                 if (index === -1) return false;
 
                 const existing = MockDB.chapters[index];
+                if (existing.is_published && options.silent) {
+                    UI.showToast('Published edits are not autosaved. Use Save Live Changes before leaving.', 'error');
+                    return false;
+                }
 
                 try {
-                    const saved = await DB.saveChapter(State.activeChapterId, {
+                    const saved = await DB.saveChapter(targetChapterId, {
                         ...this.getEditorData(),
                         is_published: Boolean(existing.is_published)
                     });
 
                     MockDB.chapters[index] = saved;
-                    Editor.markSaved();
+                    if (State.editRevision === revision && State.activeStoryId === targetStoryId && State.activeChapterId === targetChapterId) Editor.markSaved(saved.updated_at);
+                    else if (State.activeChapterId === targetChapterId) Editor.scheduleAutosave();
                     Dashboard.renderSidebarChapters();
                     Dashboard.renderEditorTabs();
 
                     if (!options.silent) {
                         Dashboard.render();
-                        UI.showToast('Changes saved successfully.', 'success');
+                        UI.showToast(existing.is_published ? 'Live chapter updated.' : 'Draft saved.', 'success');
                     }
                     return true;
                 } catch (error) {
+                    Editor.markSaveFailed(error);
                     UI.showToast(error.message || 'Could not save draft.', 'error');
                     return false;
                 }
             },
 
             async publishChapter() {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before publishing again.', 'error');
+                while (State.saveInFlight) await State.saveInFlight;
+                const operation = this.publishChapterOnce();
+                State.saveInFlight = operation;
+                try { return await operation; }
+                finally { if (State.saveInFlight === operation) State.saveInFlight = null; }
+            },
+
+            async publishChapterOnce() {
                 if (!State.activeChapterId) return;
+                if (State.currentView !== 'editor') return;
 
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
                 if (index === -1) return;
+                if (MockDB.chapters[index].is_published) {
+                    UI.showToast('This chapter is already live. Use Save Live Changes to update it.', 'info');
+                    return;
+                }
 
                 const data = this.getEditorData();
 
-                if (!data.title.trim()) {
+                if (!document.getElementById('ed-title').value.trim()) {
                     UI.showToast('Title is required to publish.', 'error');
                     return;
                 }
@@ -4769,8 +5079,10 @@
                     return;
                 }
 
+                const revision = State.editRevision;
+                const targetId = State.activeChapterId;
                 try {
-                    const saved = await DB.saveChapter(State.activeChapterId, {
+                    const saved = await DB.saveChapter(targetId, {
                         ...data,
                         is_published: true
                     });
@@ -4778,20 +5090,34 @@
                     MockDB.chapters[index] = saved;
 
                     document.getElementById('ed-banner').classList.remove('hidden');
-                    document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-sync"></i> Update Live';
+                    document.getElementById('btn-publish').classList.add('hidden');
+                    document.getElementById('btn-save-draft').innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Save Live Changes';
                     document.getElementById('ed-status-pill').className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300';
                     document.getElementById('ed-status-pill').innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Live';
 
-                    Editor.markSaved();
+                    if (State.activeChapterId === targetId && State.editRevision === revision) Editor.markSaved(saved.updated_at);
+                    else if (State.activeChapterId === targetId) Editor.scheduleAutosave();
                     Dashboard.render();
 
                     UI.showToast('Chapter is now live.', 'success');
+                    return true;
                 } catch (error) {
+                    Editor.markSaveFailed(error);
                     UI.showToast(error.message || 'Could not publish chapter.', 'error');
+                    return false;
                 }
             },
 
             async unpublishChapter() {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before changing publication state.', 'error');
+                while (State.saveInFlight) await State.saveInFlight;
+                const operation = this.unpublishChapterOnce();
+                State.saveInFlight = operation;
+                try { return await operation; }
+                finally { if (State.saveInFlight === operation) State.saveInFlight = null; }
+            },
+
+            async unpublishChapterOnce() {
                 if (!State.activeChapterId) return;
 
                 const confirmed = confirm('Revert to draft? Readers will lose access immediately.');
@@ -4800,8 +5126,10 @@
                 const index = MockDB.chapters.findIndex(chapter => chapter.id === State.activeChapterId);
                 if (index === -1) return;
 
+                const revision = State.editRevision;
+                const targetId = State.activeChapterId;
                 try {
-                    const saved = await DB.saveChapter(State.activeChapterId, {
+                    const saved = await DB.saveChapter(targetId, {
                         ...this.getEditorData(),
                         is_published: false
                     });
@@ -4809,16 +5137,22 @@
                     MockDB.chapters[index] = saved;
 
                     document.getElementById('ed-banner').classList.add('hidden');
+                    document.getElementById('btn-publish').classList.remove('hidden');
                     document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-rocket"></i> Publish';
+                    document.getElementById('btn-save-draft').innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Save Draft';
                     document.getElementById('ed-status-pill').className = 'inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300';
                     document.getElementById('ed-status-pill').innerHTML = '<i class="fa-solid fa-circle text-[6px]"></i> Draft';
 
-                    Editor.markSaved();
+                    if (State.activeChapterId === targetId && State.editRevision === revision) Editor.markSaved(saved.updated_at);
+                    else if (State.activeChapterId === targetId) Editor.scheduleAutosave();
                     Dashboard.render();
 
                     UI.showToast('Chapter reverted to draft.', 'info');
+                    return true;
                 } catch (error) {
+                    Editor.markSaveFailed(error);
                     UI.showToast(error.message || 'Could not unpublish chapter.', 'error');
+                    return false;
                 }
             },
 
@@ -5295,6 +5629,9 @@
 
         const ChapterNotes = {
             dirty: false,
+            revision: 0,
+            saveInFlight: false,
+            returnFocus: null,
 
             current() {
                 return MockDB.scratchpads.find(note => note.id === document.getElementById('chapter-note-id')?.value) || null;
@@ -5334,6 +5671,14 @@
             },
 
             canSwitch(nextId = '') {
+                if (this.saveInFlight) {
+                    UI.showToast('Wait for the chapter note save to finish.', 'info');
+                    return false;
+                }
+                if (State.saveOutcomeUncertain) {
+                    UI.showToast('Copy your work and verify the unconfirmed write before switching notes.', 'error');
+                    return false;
+                }
                 const drawer = document.getElementById('chapter-note-drawer');
                 const currentId = document.getElementById('chapter-note-id')?.value || '';
                 if (!drawer || drawer.classList.contains('hidden') || !this.dirty || currentId === nextId) return true;
@@ -5341,6 +5686,7 @@
             },
 
             show(note) {
+                this.returnFocus = document.activeElement;
                 const chapter = MockDB.chapters.find(item => item.id === note.chapter_id);
                 document.getElementById('chapter-note-id').value = note.id || '';
                 document.getElementById('chapter-note-chapter-id').value = note.chapter_id || '';
@@ -5352,9 +5698,12 @@
                     : 'Chapter note';
                 document.getElementById('chapter-note-delete').classList.toggle('hidden', !note.id);
                 const drawer = document.getElementById('chapter-note-drawer');
+                drawer.setAttribute('role', 'dialog');
+                drawer.setAttribute('aria-modal', 'true');
                 drawer.classList.remove('hidden');
                 drawer.classList.add('flex');
                 this.dirty = false;
+                this.revision = 0;
                 this.updateCount();
                 document.getElementById('chapter-note-status').textContent = 'Saved';
                 setTimeout(() => document.getElementById('chapter-note-title')?.focus(), 0);
@@ -5362,7 +5711,8 @@
 
             markDirty() {
                 this.dirty = true;
-                document.getElementById('chapter-note-status').textContent = 'Unsaved';
+                this.revision += 1;
+                document.getElementById('chapter-note-status').textContent = State.saveOutcomeUncertain ? 'Save unconfirmed — verify first' : 'Unsaved';
                 this.updateCount();
             },
 
@@ -5375,9 +5725,14 @@
 
             async save(event) {
                 event?.preventDefault();
+                if (State.saveOutcomeUncertain) return UI.showToast('Copy this note and reload to verify the unconfirmed write before retrying.', 'error');
+                if (this.saveInFlight) return UI.showToast('Chapter note save is already in progress.', 'info');
                 const id = document.getElementById('chapter-note-id').value || null;
                 const chapterId = document.getElementById('chapter-note-chapter-id').value;
                 if (!chapterId) return UI.showToast('Chapter note is missing its parent chapter.', 'error');
+                const revision = this.revision;
+                this.saveInFlight = true;
+                document.getElementById('chapter-note-status').textContent = 'Saving…';
                 try {
                     const saved = await DB.saveScratchpad(id, {
                         chapter_id: chapterId,
@@ -5389,18 +5744,33 @@
                     else MockDB.scratchpads.push(saved);
                     document.getElementById('chapter-note-id').value = saved.id;
                     document.getElementById('chapter-note-delete').classList.remove('hidden');
-                    this.dirty = false;
-                    document.getElementById('chapter-note-status').textContent = 'Saved';
+                    const newerEdits = this.revision !== revision;
+                    this.dirty = newerEdits || State.saveOutcomeUncertain;
+                    document.getElementById('chapter-note-status').textContent = State.saveOutcomeUncertain
+                        ? 'Save unconfirmed — verify first'
+                        : newerEdits ? 'Unsaved newer edits — save again' : 'Saved';
                     this.renderForChapter(chapterId);
                     Dashboard.render();
                     ContextWorkspace.render();
-                    UI.showToast('Chapter note saved.', 'success');
+                    UI.showToast(newerEdits ? 'Earlier note revision saved. Save the newer edits again.' : 'Chapter note saved.', newerEdits ? 'info' : 'success');
                 } catch (error) {
+                    this.dirty = true;
+                    if (error?.code === 'writer_save_uncertain') {
+                        State.saveOutcomeUncertain = true;
+                        State.unsavedChanges = true;
+                        document.getElementById('chapter-note-status').textContent = 'Save unconfirmed — verify first';
+                    } else {
+                        document.getElementById('chapter-note-status').textContent = 'Save failed — retry';
+                    }
                     UI.showToast(error.message || 'Could not save chapter note.', 'error');
+                } finally {
+                    this.saveInFlight = false;
                 }
             },
 
             async delete(id) {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before deleting a note.', 'error');
+                if (this.saveInFlight) return UI.showToast('Wait for the chapter note save to finish before deleting it.', 'info');
                 const note = MockDB.scratchpads.find(item => item.id === id);
                 if (!note) return false;
                 if (!confirm(`Delete chapter note “${note.title || 'Untitled'}” permanently? This cannot be undone.`)) return false;
@@ -5416,6 +5786,10 @@
                     UI.showToast('Chapter note deleted.', 'success');
                     return true;
                 } catch (error) {
+                    if (error?.code === 'writer_save_uncertain') {
+                        Editor.markSaveFailed(error);
+                        document.getElementById('chapter-note-status').textContent = 'Deletion unconfirmed — verify first';
+                    }
                     UI.showToast(error.message || 'Could not delete chapter note.', 'error');
                     return false;
                 }
@@ -5427,11 +5801,15 @@
             },
 
             close(force = false) {
+                if (!force && this.saveInFlight) return UI.showToast('Wait for the chapter note save to finish.', 'info');
+                if (!force && State.saveOutcomeUncertain) return UI.showToast('Copy this note and verify the unconfirmed write before closing.', 'error');
                 if (!force && this.dirty && !confirm('Discard unsaved chapter-note changes?')) return;
                 const drawer = document.getElementById('chapter-note-drawer');
                 drawer.classList.add('hidden');
                 drawer.classList.remove('flex');
                 this.dirty = false;
+                this.returnFocus?.focus?.();
+                this.returnFocus = null;
             }
         };
 
@@ -5467,8 +5845,13 @@
             draggedLibraryKey: '',
             draggedOrderIndex: -1,
             blockEditorDirty: false,
+            blockEditRevision: 0,
+            blockSaveInFlight: false,
+            duplicateInFlight: false,
+            presetSaveInFlight: false,
 
             async load(storyId) {
+                const loadRevision = this.loadRevision = (this.loadRevision || 0) + 1;
                 try {
                     const savedOrder = JSON.parse(localStorage.getItem('ea-writer-context-dock-order') || 'null');
                     if (Array.isArray(savedOrder) && savedOrder.length === this.sectionOrder.length && this.sectionOrder.every(section => savedOrder.includes(section))) {
@@ -5496,11 +5879,12 @@
                     return;
                 }
                 try {
-                    const [{ data: blocks, error: blockError }, { data: presets, error: presetError }, { data: summaryDetails, error: summaryDetailError }] = await Promise.all([
+                    const [{ data: blocks, error: blockError }, { data: presets, error: presetError }, { data: summaryDetails, error: summaryDetailError }] = await withWriterDeadline(Promise.all([
                         supabaseClient.from('writer_context_blocks').select('*').eq('story_id', storyId).order('sort_order').order('created_at'),
                         supabaseClient.from('writer_context_presets').select('*').eq('story_id', storyId).order('name'),
                         supabaseClient.from('writer_summary_details').select('context_block_id,status')
-                    ]);
+                    ]), 'Context workspace');
+                    if (loadRevision !== this.loadRevision) return;
                     if (blockError) throw blockError;
                     if (presetError) throw presetError;
                     if (summaryDetailError) throw summaryDetailError;
@@ -5513,16 +5897,18 @@
                     this.presets = presets || [];
                     const presetIds = this.presets.map(preset => preset.id);
                     if (presetIds.length) {
-                        const { data: items, error: itemError } = await supabaseClient
+                        const { data: items, error: itemError } = await withWriterDeadline(supabaseClient
                             .from('writer_context_preset_items')
                             .select('*')
                             .in('preset_id', presetIds)
-                            .order('position');
+                            .order('position'), 'Context preset items');
+                        if (loadRevision !== this.loadRevision) return;
                         if (itemError) throw itemError;
                         this.presetItems = items || [];
                     }
                     this.restoreState(storyId);
                 } catch (error) {
+                    if (loadRevision !== this.loadRevision) return;
                     console.warn('Context Workspace unavailable:', error);
                     this.available = false;
                     this.error = error.message || 'Apply the Writer Context Workspace migration.';
@@ -5975,19 +6361,22 @@
             },
 
             async duplicateItem(key) {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before duplicating an item.', 'error');
+                if (this.duplicateInFlight) return UI.showToast('Item duplication is already in progress.', 'info');
                 const item = this.itemMap().get(key);
                 if (!item) return;
+                this.duplicateInFlight = true;
                 try {
                     if (item.itemType === 'context_block') {
                         const source = this.blocks.find(block => block.id === item.id);
-                        const { data, error } = await supabaseClient.from('writer_context_blocks').insert({
+                        const { data, error } = await runWriterMutation(supabaseClient.from('writer_context_blocks').insert({
                             story_id: source.story_id,
                             block_type: source.block_type,
                             title: `${source.title} Copy`,
                             content: source.content,
                             sort_order: this.blocks.filter(block => block.block_type === source.block_type).length,
                             updated_at: new Date().toISOString()
-                        }).select().single();
+                        }).select().single(), 'Context block duplication');
                         if (error) throw error;
                         this.blocks.push(data);
                         this.selected.add(`block:${data.id}`);
@@ -6026,7 +6415,10 @@
                     this.render();
                     UI.showToast('Item duplicated.', 'success');
                 } catch (error) {
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
                     UI.showToast(error.message || 'Could not duplicate item.', 'error');
+                } finally {
+                    this.duplicateInFlight = false;
                 }
             },
 
@@ -6176,13 +6568,14 @@
                 const items = this.selectedItemsInOrder();
                 const markdown = this.buildMarkdown(items);
                 const preview = document.getElementById('context-preview');
+                const previewScroll = document.getElementById('context-preview-scroll');
                 if (preview) {
-                    if (this.previewRendered) this.previewScroll = preview.scrollTop;
+                    if (this.previewRendered && previewScroll) this.previewScroll = previewScroll.scrollTop;
                     preview.textContent = markdown || 'Select context blocks, chapters, or scratchpads from the library.';
-                    preview.scrollTop = this.previewScroll;
+                    if (previewScroll) previewScroll.scrollTop = this.previewScroll;
                     this.previewRendered = true;
-                    preview.onscroll = () => {
-                        this.previewScroll = preview.scrollTop;
+                    if (previewScroll) previewScroll.onscroll = () => {
+                        this.previewScroll = previewScroll.scrollTop;
                         this.persistState();
                     };
                 }
@@ -6248,6 +6641,8 @@
 
             async savePreset(saveAs) {
                 if (!this.available || !State.activeStoryId) return;
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before saving a preset.', 'error');
+                if (this.presetSaveInFlight) return UI.showToast('Preset save is already in progress.', 'info');
                 let preset = this.presets.find(item => item.id === this.activePresetId);
                 let name = preset?.name || '';
                 if (saveAs || !preset) {
@@ -6255,49 +6650,46 @@
                     if (!name?.trim()) return;
                     preset = null;
                 }
-                const record = {
-                    story_id: State.activeStoryId,
-                    name: name.trim(),
-                    mode: this.mode,
-                    section_order: this.sectionOrder,
-                    token_budget: this.tokenBudget,
-                    active_section: this.activeSection,
-                    updated_at: new Date().toISOString()
-                };
+                const selectedRows = this.selectedItemsInOrder().map(item => ({
+                    item_type: item.itemType === 'chapter_note' ? 'scratchpad' : item.itemType,
+                    context_block_id: item.itemType === 'context_block' ? item.id : null,
+                    chapter_id: item.itemType === 'chapter' ? item.id : null,
+                    scratchpad_id: item.itemType === 'chapter_note' ? item.id : null
+                }));
+                this.presetSaveInFlight = true;
+                let savedId = '';
                 try {
-                    let saved;
-                    if (preset) {
-                        const { data, error } = await supabaseClient.from('writer_context_presets').update(record).eq('id', preset.id).select().single();
-                        if (error) throw error;
-                        saved = data;
-                    } else {
-                        const { data, error } = await supabaseClient.from('writer_context_presets').insert(record).select().single();
-                        if (error) throw error;
-                        saved = data;
+                    const { data: saved, error } = await runWriterMutation(supabaseClient.rpc('save_writer_context_preset', {
+                        p_preset_id: preset?.id || null,
+                        p_story_id: State.activeStoryId,
+                        p_name: name.trim(),
+                        p_mode: this.mode,
+                        p_section_order: this.sectionOrder,
+                        p_token_budget: this.tokenBudget,
+                        p_active_section: this.activeSection,
+                        p_items: selectedRows
+                    }).single(), 'Preset save');
+                    if (error) throw error;
+                    if (!saved?.id) {
+                        const uncertain = new Error('Preset save returned no preset. Reload and verify before retrying.');
+                        uncertain.code = 'writer_save_uncertain';
+                        throw uncertain;
                     }
-                    const { error: deleteError } = await supabaseClient.from('writer_context_preset_items').delete().eq('preset_id', saved.id);
-                    if (deleteError) throw deleteError;
-                    const rows = this.selectedItemsInOrder().map((item, position) => ({
-                        preset_id: saved.id,
-                        item_type: item.itemType === 'chapter_note' ? 'scratchpad' : item.itemType,
-                        context_block_id: item.itemType === 'context_block' ? item.id : null,
-                        chapter_id: item.itemType === 'chapter' ? item.id : null,
-                        scratchpad_id: item.itemType === 'chapter_note' ? item.id : null,
-                        position
-                    }));
-                    if (rows.length) {
-                        const { error: insertError } = await supabaseClient.from('writer_context_preset_items').insert(rows);
-                        if (insertError) throw insertError;
-                    }
+                    savedId = saved.id;
                     await this.load(State.activeStoryId);
-                    this.loadPreset(saved.id);
+                    if (!this.available || !this.presets.some(item => item.id === savedId)) throw new Error('Saved preset could not be refreshed. Reload Writer before trying again.');
+                    this.loadPreset(savedId);
                     UI.showToast('Context preset saved.', 'success');
                 } catch (error) {
-                    UI.showToast(error.message || 'Could not save context preset.', 'error');
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
+                    UI.showToast(savedId ? `Preset saved, but the display could not refresh. ${error.message || 'Reload Writer.'}` : error.message || 'Could not save context preset.', 'error');
+                } finally {
+                    this.presetSaveInFlight = false;
                 }
             },
 
             async deletePreset() {
+                if (this.presetSaveInFlight) return UI.showToast('Wait for the preset save to finish.', 'info');
                 if (!this.activePresetId) return;
                 const preset = this.presets.find(item => item.id === this.activePresetId);
                 if (!confirm(`Delete preset "${preset?.name || 'selected preset'}"?`)) return;
@@ -6308,6 +6700,7 @@
             },
 
             async renamePreset() {
+                if (this.presetSaveInFlight) return UI.showToast('Wait for the preset save to finish.', 'info');
                 const preset = this.presets.find(item => item.id === this.activePresetId);
                 if (!preset) return UI.showToast('Load a saved preset first.', 'error');
                 const name = prompt('Rename preset:', preset.name);
@@ -6325,44 +6718,57 @@
             },
 
             async duplicatePreset() {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before duplicating a preset.', 'error');
+                if (this.presetSaveInFlight) return UI.showToast('Wait for the preset save to finish.', 'info');
                 const preset = this.presets.find(item => item.id === this.activePresetId);
                 if (!preset) return UI.showToast('Load a saved preset first.', 'error');
                 const name = prompt('Duplicate preset as:', `${preset.name} Copy`);
                 if (!name?.trim()) return;
+                this.presetSaveInFlight = true;
+                let savedId = '';
                 try {
-                    const { data: saved, error } = await supabaseClient.from('writer_context_presets').insert({
-                        story_id: preset.story_id,
-                        name: name.trim(),
-                        mode: preset.mode,
-                        section_order: preset.section_order,
-                        token_budget: preset.token_budget,
-                        active_section: preset.active_section || this.activeSection,
-                        updated_at: new Date().toISOString()
-                    }).select().single();
-                    if (error) throw error;
                     const rows = this.presetItems
                         .filter(item => item.preset_id === preset.id)
-                        .map(({ item_type, context_block_id, chapter_id, scratchpad_id, position }) => ({
-                            preset_id: saved.id,
+                        .sort((a, b) => Number(a.position) - Number(b.position) || String(a.id).localeCompare(String(b.id)))
+                        .map(({ item_type, context_block_id, chapter_id, scratchpad_id }) => ({
                             item_type,
                             context_block_id,
                             chapter_id,
-                            scratchpad_id,
-                            position
+                            scratchpad_id
                         }));
-                    if (rows.length) {
-                        const { error: itemError } = await supabaseClient.from('writer_context_preset_items').insert(rows);
-                        if (itemError) throw itemError;
+                    const { data: saved, error } = await runWriterMutation(supabaseClient.rpc('save_writer_context_preset', {
+                        p_preset_id: null,
+                        p_story_id: preset.story_id,
+                        p_name: name.trim(),
+                        p_mode: preset.mode,
+                        p_section_order: preset.section_order,
+                        p_token_budget: preset.token_budget,
+                        p_active_section: preset.active_section || this.activeSection,
+                        p_items: rows
+                    }).single(), 'Preset duplication');
+                    if (error) throw error;
+                    if (!saved?.id) {
+                        const uncertain = new Error('Preset duplication returned no preset. Reload and verify before retrying.');
+                        uncertain.code = 'writer_save_uncertain';
+                        throw uncertain;
                     }
+                    savedId = saved.id;
                     await this.load(State.activeStoryId);
-                    this.loadPreset(saved.id);
+                    if (!this.available || !this.presets.some(item => item.id === savedId)) throw new Error('Duplicated preset could not be refreshed. Reload Writer before trying again.');
+                    this.loadPreset(savedId);
                     UI.showToast('Preset duplicated.', 'success');
                 } catch (error) {
-                    UI.showToast(error.message || 'Could not duplicate preset.', 'error');
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
+                    UI.showToast(savedId ? `Preset duplicated, but the display could not refresh. ${error.message || 'Reload Writer.'}` : error.message || 'Could not duplicate preset.', 'error');
+                } finally {
+                    this.presetSaveInFlight = false;
                 }
             },
 
             openBlockModal(id = '', preferredType = '') {
+                if (this.blockSaveInFlight) return UI.showToast('Wait for the context block save to finish.', 'info');
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before opening another context block.', 'error');
+                if (!document.getElementById('modal-context-block').classList.contains('hidden') && this.blockEditorDirty && !confirm('Discard unsaved context-block changes?')) return;
                 const block = this.blocks.find(item => item.id === id);
                 document.getElementById('context-block-id').value = block?.id || '';
                 document.getElementById('context-block-type').value = block?.block_type || preferredType || 'writing_style';
@@ -6372,6 +6778,7 @@
                 document.getElementById('context-block-delete').classList.toggle('hidden', !block);
                 document.getElementById('context-block-copy').classList.toggle('hidden', !block);
                 this.blockEditorDirty = false;
+                this.blockEditRevision = 0;
                 this.updateBlockEditorCount();
                 document.getElementById('context-block-save-status').textContent = block ? 'Saved' : 'New block';
                 UI.openModal('modal-context-block');
@@ -6379,6 +6786,8 @@
             },
 
             closeBlockEditor(force = false) {
+                if (!force && this.blockSaveInFlight) return UI.showToast('Wait for the context block save to finish.', 'info');
+                if (!force && State.saveOutcomeUncertain) return UI.showToast('Copy your work and verify the unconfirmed write before closing.', 'error');
                 if (!force && this.blockEditorDirty && !confirm('Discard unsaved context-block changes?')) return;
                 this.blockEditorDirty = false;
                 UI.closeModal('modal-context-block');
@@ -6386,8 +6795,9 @@
 
             markBlockDirty() {
                 this.blockEditorDirty = true;
+                this.blockEditRevision += 1;
                 const status = document.getElementById('context-block-save-status');
-                if (status) status.textContent = 'Unsaved';
+                if (status) status.textContent = State.saveOutcomeUncertain ? 'Save unconfirmed — verify first' : 'Unsaved';
                 this.updateBlockEditorCount();
             },
 
@@ -6407,6 +6817,8 @@
 
             async saveBlock(event) {
                 event.preventDefault();
+                if (State.saveOutcomeUncertain) return UI.showToast('Copy your work and verify the unconfirmed write before retrying.', 'error');
+                if (this.blockSaveInFlight) return UI.showToast('Context block save is already in progress.', 'info');
                 const id = document.getElementById('context-block-id').value;
                 const blockType = document.getElementById('context-block-type').value;
                 const record = {
@@ -6417,28 +6829,43 @@
                     updated_at: new Date().toISOString()
                 };
                 if (!record.title) return;
+                const revision = this.blockEditRevision;
+                this.blockSaveInFlight = true;
+                document.getElementById('context-block-save-status').textContent = 'Saving…';
                 try {
                     let saved;
                     if (id) {
-                        const { data, error } = await supabaseClient.from('writer_context_blocks').update(record).eq('id', id).select().single();
+                        const { data, error } = await runWriterMutation(supabaseClient.from('writer_context_blocks').update(record).eq('id', id).select().single(), 'Context block save');
                         if (error) throw error;
                         saved = data;
                         this.blocks = this.blocks.map(block => block.id === id ? saved : block);
                     } else {
                         record.sort_order = this.blocks.filter(block => block.block_type === blockType).length;
-                        const { data, error } = await supabaseClient.from('writer_context_blocks').insert(record).select().single();
+                        const { data, error } = await runWriterMutation(supabaseClient.from('writer_context_blocks').insert(record).select().single(), 'Context block creation');
                         if (error) throw error;
                         saved = data;
                         this.blocks.push(saved);
                         this.selected.add(`block:${saved.id}`);
                         if (!this.order.includes(`block:${saved.id}`)) this.order.push(`block:${saved.id}`);
                     }
-                    this.blockEditorDirty = false;
-                    this.closeBlockEditor(true);
+                    const newerEdits = this.blockEditRevision !== revision;
+                    this.blockEditorDirty = newerEdits || State.saveOutcomeUncertain;
+                    document.getElementById('context-block-id').value = saved.id;
+                    document.getElementById('context-block-delete').classList.remove('hidden');
+                    document.getElementById('context-block-copy').classList.remove('hidden');
+                    document.getElementById('context-block-save-status').textContent = State.saveOutcomeUncertain
+                        ? 'Save unconfirmed — verify first'
+                        : newerEdits ? 'Unsaved newer edits — save again' : 'Saved';
+                    if (!this.blockEditorDirty) this.closeBlockEditor(true);
                     this.render();
-                    UI.showToast('Context block saved.', 'success');
+                    UI.showToast(newerEdits ? 'Earlier block revision saved. Save the newer edits again.' : 'Context block saved.', newerEdits ? 'info' : 'success');
                 } catch (error) {
+                    this.blockEditorDirty = true;
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
+                    document.getElementById('context-block-save-status').textContent = error?.code === 'writer_save_uncertain' ? 'Save unconfirmed — verify first' : 'Save failed — retry';
                     UI.showToast(error.message || 'Could not save context block.', 'error');
+                } finally {
+                    this.blockSaveInFlight = false;
                 }
             },
 
@@ -6454,10 +6881,17 @@
             },
 
             async deleteBlock(id) {
+                if (State.saveOutcomeUncertain) return UI.showToast('Verify the unconfirmed write before deleting a context block.', 'error');
+                if (this.blockSaveInFlight) return UI.showToast('Wait for the context block save to finish.', 'info');
                 const block = this.blocks.find(item => item.id === id);
                 if (!block || !confirm(`Delete context block "${block.title}"?`)) return;
-                const { error } = await supabaseClient.from('writer_context_blocks').delete().eq('id', id);
-                if (error) return UI.showToast(error.message, 'error');
+                try {
+                    const { error } = await runWriterMutation(supabaseClient.from('writer_context_blocks').delete().eq('id', id), 'Context block deletion');
+                    if (error) throw error;
+                } catch (error) {
+                    if (error?.code === 'writer_save_uncertain') Editor.markSaveFailed(error);
+                    return UI.showToast(error.message || 'Could not delete context block.', 'error');
+                }
                 this.blocks = this.blocks.filter(item => item.id !== id);
                 this.selected.delete(`block:${id}`);
                 this.order = this.order.filter(key => key !== `block:${id}`);
@@ -6519,7 +6953,7 @@
         // SAFETY GUARD
         // ==========================================
         window.addEventListener('beforeunload', event => {
-            if (State.unsavedChanges || ContextWorkspace.blockEditorDirty || ChapterNotes.dirty || AIChat.isStreaming || SummaryManager.dirty || SummaryManager.generating) {
+            if (State.unsavedChanges || State.chapterCreateInFlight || State.tierUpdateInFlight || ContextWorkspace.blockEditorDirty || ContextWorkspace.blockSaveInFlight || ContextWorkspace.duplicateInFlight || ContextWorkspace.presetSaveInFlight || ChapterNotes.dirty || ChapterNotes.saveInFlight || AIChat.isStreaming || SummaryManager.dirty || SummaryManager.generating) {
                 event.preventDefault();
                 event.returnValue = '';
             }

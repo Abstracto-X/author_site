@@ -1,5 +1,48 @@
 # Changelog
 
+## 2026-10-01 18:45 Asia/Kolkata — Atomic Writer presets and note deletion guard
+
+Area: standalone Writer / database integration
+
+- Switched Context preset Save/Save As and Duplicate from separate browser table writes to the owner-installed `save_writer_context_preset` RPC. The ordered item selection and preset settings now commit together; there is no fallback to the old multi-request path.
+- Made preset duplication single-flight and story-switch-blocking. A successful database write followed by a failed display refresh is reported as a refresh problem, while a timed-out or missing-result write remains unconfirmed until verified.
+- Blocked Chapter Note deletion while a note save is in flight, preventing save/delete races.
+- Verified the installed RPC signature, ordering fix, and authenticated EXECUTE grant with restricted read-only queries. Added Writer contract tests for RPC payload/order/error behavior, refresh messaging, note deletion guard, and inline-script syntax; signed-in browser QA remains pending.
+- Files: `writer.html`, `tests/writer-safety.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `docs/DATABASE_CONTEXT.md`, `docs/WRITER_MANUAL_QA.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
+## 2026-09-30 21:00 Asia/Kolkata — Writer save safety and workspace UX repair
+
+Area: standalone Writer
+
+- Serialized Writer saves and tied Saved status to the edit revision actually persisted. Transition saves now flush newer typing instead of clearing it with an older response; failed saves keep an explicit failed status.
+- Serialized rapid chapter-tab switches and publish/unpublish writes against draft saves so a late autosave cannot undo a publication-state change.
+- Protected story/chapter switching against pending edits and in-flight uploads, blocked story changes while other Writer editors or AI generation are dirty/busy, and added safe story-load recovery.
+- Stopped background autosave for published chapters. **Save Live Changes** is now the sole visible action for editing published content; drafts and chapter notes still autosave. This keeps the existing database contract without implying a private revision that does not exist.
+- Scoped publishing shortcuts to the active, unobstructed Editor; corrected empty-title validation; removed silent base64 image-upload fallback; restored in-session chapter caret/scroll positions.
+- Added Writer hash navigation, modal focus handling, Context preview scroll restoration, non-overlay tablet Context layout, more legible Context tabs, reduced-motion styling, startup read deadlines/retry, and removed duplicate chapter-note loading.
+- Bounded Context, Summary, AI thread/message, and model-catalog reads and ignored older responses after a newer story/thread load, preventing stale auxiliary data from overwriting the current workspace.
+- Added a Stop generation action and two-minute abort deadline for Summary Manager; dismissing an in-progress generation now cancels it instead of leaving story switching busy indefinitely.
+- Added 30-second abort deadlines for chapter/note writes and a persistent unconfirmed-save state when the server outcome may be ambiguous. Further writes and note switching/closing remain blocked until the author copies their work and verifies the server state; a late save acknowledgement cannot clear the warning. Verified the pinned Supabase mutation builder exposes `abortSignal()`.
+- Prevented a Chapter Note save response from hiding edits typed while that save was in flight. Concurrent note saves and note/chapter/story transitions are blocked during the write; newer edits remain visibly unsaved for another explicit save.
+- Made new-chapter creation single-flight, retained the newly created row locally without a redundant reload, and distinguished creation failure from failure to open an already-created chapter. Bounded Context-block save/delete/duplicate writes, kept newer in-flight edits visibly unsaved, and surfaced ambiguous write outcomes instead of inviting duplicate retries.
+- Kept the global unconfirmed-write warning monotonic for the page session: an unrelated later failure cannot downgrade an earlier ambiguous server outcome to an ordinary retry prompt.
+- Changed Context preset replacement to stage new item rows before deleting old ones, with bounded writes and single-flight Save, so a failed insertion cannot erase the last known-good selection. This remains non-atomic pending a reviewed transaction-backed backend operation.
+- Serialized quick chapter-tier updates with the Writer save lock and blocked overlapping tier clicks/story switches/deletion while access is changing, avoiding stale responses and concurrent draft writes that could restore an old tier.
+- Added an owner-facing signed-in Writer QA checklist covering draft/live-save behavior, save races, Context/Notes, accessibility, responsive layouts, and failure recovery without touching real published content.
+- Switched the standalone Writer from floating Supabase CDN major-version loading to the repository's pinned local 2.111.0 browser bundle.
+- Added a plain browser fallback notice for missing Quill, Supabase, Markdown, or Tailwind globals so dependency failures do not strand authors on a blank Writer page.
+- Added isolated Node regression tests for save races, published-chapter autosave prevention, and transition flushing. No schema or production-data changes.
+- Files: `writer.html`, `js/writer-ai-chat.js`, `js/writer-summary-manager.js`, `tests/writer-safety.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `docs/WRITER_MANUAL_QA.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
+## 2026-09-15 08:32 Asia/Kolkata — Restrained reader header controls
+
+Area: reader chrome
+
+- Kept the existing subscription homepage layout unchanged.
+- Reduced top-bar utility controls to 40px with 21px icons and replaced the settings sunburst/gear with a distinct sliders icon.
+- Bumped only the changed stylesheet and utility-script asset URLs to `20260915.4`.
+- Files: `index.html`, `styles.css`, `js/subscription/utils.js`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
 ## 2026-09-15 01:12 Asia/Kolkata — Harden reader library and chapter loading recovery
 
 Area: reader

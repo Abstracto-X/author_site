@@ -216,6 +216,19 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `Views.chapters` in `admin.html` renders the embedded Writer / Chapters workspace instead of redirecting, so stale `ea-admin-last-view = chapters` localStorage does not bounce `admin.html` into `writer.html`.
 - `writer.html` is now the active Supabase-backed Writer surface; its current Quill/editor logic is inline in that file, while `js/admin-writer.js` remains an alternate/legacy helper unless the page explicitly loads it.
 
+## 2026-09-30 21:00 Asia/Kolkata - Writer safety and navigation functions
+
+- `withWriterDeadline(promise, label, milliseconds)` bounds Writer admin/session/workspace/chapter reads and yields a retryable error instead of indefinite startup.
+- `runWriterMutation(query, label, milliseconds)` adds an abort deadline to chapter/note mutations and reports timed-out writes as unconfirmed rather than safely retryable.
+- `Editor.scheduleAutosave()` autosaves only unpublished chapters/notes; `Editor.markUnsaved()`, `markSaved(persistedAt)`, and `markSaveFailed()` maintain revision-linked, persistent save status.
+- `App.flushPendingEdits()` repeatedly saves through the latest edit revision before story/chapter transitions; `App.saveDraft()` serializes writes and `App.saveDraftOnce()` guards each acknowledgement against newer typing.
+- `App.openEditorForChapter()` serializes rapid tab switches before delegating hydration to `openEditorForChapterOnce()`; `publishChapter()` and `unpublishChapter()` share the save-in-flight lock with drafts so publish state cannot race an autosave.
+- `Router.navigate(view, options)` updates Writer hash history and view focus. `State.editorPositions` tracks chapter caret/scroll positions for in-session tab switches.
+- `UI.openModal()` / `closeModal()` preserve return focus; the global key handler traps focus in active Writer dialogs and scopes publishing shortcuts to an unobstructed Editor.
+- `DB.loadWorkspace()` no longer loads chapter-linked notes a second time after `DB.loadChapters()` already did so.
+- `ContextWorkspace.load(storyId)`, `AIChat.loadStory(storyId)` / `openThread(id)`, and `SummaryManager.loadStory(storyId)` bound their remote reads and discard stale responses after a newer story/thread load begins.
+- `SummaryManager.generate()` bounds the Edge Function request and ignores canceled responses; `cancelGeneration()` aborts the request and clears the busy state, including when the Summary Manager is dismissed.
+
 ## 2026-08-20 12:57 Asia/Kolkata - Writer system-dialogue source editing and bulk formatting
 
 - `Editor.refreshSystemMessageEditingState(range)` gives the system-message block containing the caret a temporary bracket-source appearance. Moving the caret away restores the rendered blue/red box; the temporary class is stripped during save serialization.
@@ -281,10 +294,10 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `ContextWorkspace.editItem(key)`, `duplicateItem(key)`, and `deleteItem(key)` dispatch complete lifecycle actions to the rich context-block drawer or the existing chapter/scratchpad Writer workflows.
 - `ContextWorkspace.openBlockModal()`, `markBlockDirty()`, `formatBlock()`, `saveBlock(event)`, `duplicateOpenBlock()`, `deleteOpenBlock()`, and `closeBlockEditor()` provide integrated rich block editing, live counts, keyboard save, and unsaved-change protection.
 - `ContextWorkspace.selectActiveSection()`, `clearActiveSection()`, and `clearSelection()` provide active-tab and global selection controls.
-- `ContextWorkspace.savePreset(saveAs)`, `loadPreset(id)`, `renamePreset()`, `duplicatePreset()`, and `deletePreset()` manage named context/scene presets with section order, item order, mode, active tab, selection, and token budget.
+- `ContextWorkspace.savePreset(saveAs)`, `loadPreset(id)`, `renamePreset()`, `duplicatePreset()`, and `deletePreset()` manage named context/scene presets with section order, item order, mode, active tab, selection, and token budget. Save/Save As and Duplicate use one `save_writer_context_preset` RPC each for atomic item replacement/creation; failed display refreshes are reported separately from write failures.
 - `ContextWorkspace.outputForFormat(format)`, `copy(format)`, and `download(format)` export selected context as Markdown, plain text, or ChatGPT-compatible system/user message JSON.
 - `Router.navigate('context')` exposes the workspace as the third admin Writer surface and persists the current top-level Writer surface; changing the active story reloads its isolated database data and per-story local session.
-- `ChapterNotes.create(chapterId)`, `open(id)`, `show(note)`, `save(event)`, `delete(id)`, `close(force)`, and `renderForChapter(chapterId)` manage chapter-linked private notes in an in-screen drawer. Dirty-state confirmation and the global reload guard protect unsaved note edits.
+- `ChapterNotes.create(chapterId)`, `open(id)`, `show(note)`, `save(event)`, `delete(id)`, `close(force)`, and `renderForChapter(chapterId)` manage chapter-linked private notes in an in-screen drawer. Dirty-state confirmation and the global reload guard protect unsaved note edits; deletion is blocked while a note save is in flight.
 - `App.createScratchpadForChapter(id)`, `openEditorForScratchpad(id)`, and `deleteScratchpad(id)` remain compatibility entry points but now dispatch to `ChapterNotes`; chapter notes are no longer rendered in `Dashboard.renderEditorTabs()`.
 
 ## 2026-07-25 09:43 Asia/Kolkata - Standalone Writer AI chat drawer

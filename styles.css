@@ -5955,6 +5955,16 @@ body.lightbox-open {
   overflow: hidden;
 }
 
+/* Keep top-bar utilities restrained and visually distinct from primary navigation. */
+.topbar .tb-btn {
+  width:40px;
+  height:40px;
+}
+.topbar .tb-btn > svg {
+  width:21px;
+  height:21px;
+}
+
 /* Gallery Mobile Responsiveness */
 @media (max-width: 860px) {
   .archive-feature {

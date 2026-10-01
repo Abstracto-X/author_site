@@ -11,7 +11,10 @@ const SummaryManager = {
     generatedSignature: '',
     dirty: false,
     generating: false,
+    generationRevision: 0,
+    generationAbortController: null,
     initialized: false,
+    returnFocus: null,
     filter: '',
 
     async init() {
@@ -31,6 +34,7 @@ const SummaryManager = {
     },
 
     async loadStory(storyId) {
+        const loadRevision = this.loadRevision = (this.loadRevision || 0) + 1;
         this.storyId = storyId || '';
         this.blocks = [];
         this.details = new Map();
@@ -42,7 +46,7 @@ const SummaryManager = {
         if (!this.storyId) return this.render();
 
         try {
-            const [{ data: blocks, error: blockError }, { data: details, error: detailError }] = await Promise.all([
+            const [{ data: blocks, error: blockError }, { data: details, error: detailError }] = await withWriterDeadline(Promise.all([
                 supabaseClient
                     .from('writer_context_blocks')
                     .select('*')
@@ -53,7 +57,8 @@ const SummaryManager = {
                     .from('writer_summary_details')
                     .select('*')
                     .order('updated_at', { ascending: false })
-            ]);
+            ]), 'Summary Manager');
+            if (loadRevision !== this.loadRevision) return;
             if (blockError) throw blockError;
             if (detailError) throw detailError;
             this.blocks = blocks || [];
@@ -64,6 +69,7 @@ const SummaryManager = {
             this.newSummary(this.kind, false);
             this.setStatus('Drafts remain private until explicitly accepted.');
         } catch (error) {
+            if (loadRevision !== this.loadRevision) return;
             this.setStatus(error.message || 'Summary Manager schema is unavailable.', true);
             this.render();
         }
@@ -74,15 +80,24 @@ const SummaryManager = {
     },
 
     open() {
-        document.getElementById('summary-manager')?.classList.add('is-open');
-        document.getElementById('summary-manager')?.setAttribute('aria-hidden', 'false');
+        this.returnFocus = document.activeElement;
+        const manager = document.getElementById('summary-manager');
+        manager?.classList.add('is-open');
+        manager?.setAttribute('aria-hidden', 'false');
+        manager?.setAttribute('role', 'dialog');
+        manager?.setAttribute('aria-modal', 'true');
         this.render();
+        manager?.querySelector('input:not([type="hidden"]), button')?.focus();
     },
 
     close(force = false) {
         if (!force && (this.dirty || this.generating) && !confirm('Close Summary Manager and discard unsaved review changes?')) return;
+        if (this.generating) this.cancelGeneration();
+        if (this.dirty) this.newSummary(this.kind, false);
         document.getElementById('summary-manager')?.classList.remove('is-open');
         document.getElementById('summary-manager')?.setAttribute('aria-hidden', 'true');
+        this.returnFocus?.focus?.();
+        this.returnFocus = null;
     },
 
     detailFor(blockId) {
@@ -329,6 +344,7 @@ const SummaryManager = {
     renderActions() {
         const status = this.activeBlockId ? this.statusFor(this.blocks.find(block => block.id === this.activeBlockId)) : '';
         document.getElementById('summary-generate')?.toggleAttribute('disabled', this.generating);
+        document.getElementById('summary-cancel-generation')?.classList.toggle('hidden', !this.generating);
         document.getElementById('summary-save-draft')?.toggleAttribute('disabled', this.generating);
         document.getElementById('summary-accept')?.toggleAttribute('disabled', this.generating || status === 'accepted');
         document.getElementById('summary-archive')?.toggleAttribute('disabled', !this.activeBlockId || status === 'archived' || this.generating);
@@ -394,13 +410,19 @@ const SummaryManager = {
     },
 
     async generate() {
+        if (this.generating) return;
         const payload = this.requestPayload();
         if (!payload.source_ids.length) return UI.showToast('Select at least one factual source.', 'error');
+        const revision = ++this.generationRevision;
+        const controller = new AbortController();
+        this.generationAbortController = controller;
+        const timeout = setTimeout(() => controller.abort(new Error('Summary generation timed out. Retry when the connection is stable.')), 120000);
         this.generating = true;
         this.renderActions();
         this.setStatus(`Generating ${this.kind === 'short' ? 'Short' : 'Long'} Summary with ${payload.model_id}…`);
         try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
+            const { data: { session } } = await withWriterDeadline(supabaseClient.auth.getSession(), 'Writer session');
+            if (revision !== this.generationRevision) return;
             if (!session?.access_token) throw new Error('Your Writer session expired. Sign in again.');
             const response = await fetch(`${SUPABASE_URL}/functions/v1/writer-generate-summary`, {
                 method: 'POST',
@@ -409,9 +431,11 @@ const SummaryManager = {
                     'apikey': SUPABASE_ANON_KEY,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal
             });
-            const result = await response.json().catch(() => ({}));
+            const result = await withWriterDeadline(response.json().catch(() => ({})), 'Summary response', 30000);
+            if (revision !== this.generationRevision) return;
             if (!response.ok) throw new Error(result.error || `Summary generation failed (${response.status}).`);
             if (this.activeBlockId && this.statusFor(this.blocks.find(block => block.id === this.activeBlockId)) === 'accepted') {
                 this.activeBlockId = '';
@@ -427,11 +451,26 @@ const SummaryManager = {
             this.renderWarnings();
             this.setStatus('Generated draft ready for review. Edit, regenerate, save draft, or explicitly accept.');
         } catch (error) {
+            if (revision !== this.generationRevision) return;
             this.setStatus(error.message || 'Summary generation failed.', true);
         } finally {
-            this.generating = false;
-            this.renderActions();
+            clearTimeout(timeout);
+            if (revision === this.generationRevision) {
+                this.generating = false;
+                this.generationAbortController = null;
+                this.renderActions();
+            }
         }
+    },
+
+    cancelGeneration() {
+        if (!this.generating) return;
+        this.generationRevision += 1;
+        this.generationAbortController?.abort();
+        this.generationAbortController = null;
+        this.generating = false;
+        this.setStatus('Generation stopped. No summary was saved.');
+        this.renderActions();
     },
 
     async saveDraft(showToast = true) {
