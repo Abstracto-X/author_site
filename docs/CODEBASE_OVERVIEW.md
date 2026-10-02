@@ -20,6 +20,8 @@ Writer save contract: unpublished chapters autosave to Supabase; Chapter Notes a
 
 Context preset Save/Save As and Duplicate call the admin-only `save_writer_context_preset` RPC, which saves preset settings and ordered selection rows in one database transaction. A failed call does not replace the prior selection or leave an empty duplicate. The Writer treats timed-out writes as unconfirmed and distinguishes a successful write with a failed display refresh. Chapter Note deletion waits for any in-flight note save.
 
+The Context center panel has Prompt Preview and Item Content tabs. Context blocks are edited in that panel instead of a side overlay; chapter and chapter-note items can be opened there for a read-only preview, with chapter editing remaining a separate Writer action. Chapter cards copy their content rather than offering duplication. The global Clear selection control is in the Context toolbar. Context item inventory delays rich-to-Markdown conversion until an item's content is needed and caches the result, while search and preview redraws are coalesced to reduce large-story UI stalls.
+
 Quick chapter-tier updates are single-flight and share the chapter-save lock while the access mutation is pending, preventing a concurrent draft save from overwriting the newly chosen tier. Story switching and chapter deletion wait until that access update finishes.
 
 Use `docs/WRITER_MANUAL_QA.md` for the owner-led signed-in verification pass before deployment; Node contract tests do not replace browser, auth, storage, or responsive-layout checks.

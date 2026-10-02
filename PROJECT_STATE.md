@@ -2,6 +2,57 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-02 Asia/Kolkata — Writer chapter link browser QA
+
+Status: NEEDS REVIEW
+
+Area:
+- writer
+
+Files touched:
+- `writer.html`
+
+Summary:
+- Chapter index now has a Copy link action beside Delete, targeting the reader's direct chapter route.
+
+Remaining work:
+- Verify clipboard permission and the copied URL in a signed-in admin browser, including a draft chapter's access behavior.
+
+Risks / notes:
+- Node tests could not launch in the sandbox because Node reported EPERM resolving the workspace path.
+
+Verification needed:
+- Signed-in browser check of copied links and mobile index layout.
+
+## 2026-10-01 Asia/Kolkata — Context canvas follow-up and chapter version design
+
+Status: NEEDS REVIEW
+
+Area:
+- writer / database
+
+Files touched:
+- `writer.html`
+- `tests/writer-safety.test.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/ADMIN_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+
+Summary:
+- Context now uses a central preview/item canvas, chapter Copy replaces Duplicate, and Clear selection is prominent. Rich-text conversion is lazy/cached, with coalesced redraws. Focused Node tests pass; signed-in browser visual QA has not been completed.
+- Requested chapter version history is not implemented. The owner chose autosave as a recoverable working draft and explicit Save as a timestamped version. Other publish/restore semantics are still being clarified. Current published-chapter Save Live Changes still writes live content immediately, so do not represent it as version-safe.
+
+Remaining work:
+- Complete the chapter-version/publish contract and indexed outline/summary range design, prepare reviewed schema migration first, then implement browser code only after owner applies and verifies it. Locally remember the last long/short outline combination; save a named preset to Supabase only on explicit request.
+- Test the Context canvas, copy action, responsiveness, keyboard flow, and large-chapter performance in a signed-in admin browser before publishing. Existing atomic-preset browser QA remains separately tracked below.
+
+Risks / notes:
+- No production schema or data was changed by this task. No commit or push was made.
+
+Verification needed:
+- Owner browser QA of Context interactions and subsequent schema/function checks for versioning and ranges.
+
 ## 2026-10-01 18:45 Asia/Kolkata — Atomic Writer preset rollout: browser QA pending
 
 Status: NEEDS REVIEW

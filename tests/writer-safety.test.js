@@ -522,6 +522,45 @@ test('chapter note deletion is blocked while its save is in flight', async () =>
     assert.match(messages.at(-1), /wait for the chapter note save/i);
 });
 
+test('Context chapter Open stays in Context and chapter Copy uses original content', async () => {
+    const source = methodsBetween('        const ContextWorkspace = {', '        // ==========================================\n        // SAFETY GUARD');
+    const context = {
+        State: { activeStoryId: 'story' },
+        MockDB: { chapters: [{ id: 'chapter', title: 'Chapter 7', content: '<p>Original text</p>', chapter_order: 7 }], tiers: [], scratchpads: [] },
+        localStorage: { getItem: () => null },
+        App: { openEditorForChapter() { throw new Error('Context Open must not navigate to Writer'); } }
+    };
+    vm.createContext(context);
+    vm.runInContext(`${source}\nthis.workspace = ContextWorkspace;`, context);
+    const workspace = context.workspace;
+    workspace.openItemPreview = key => { workspace.activeItemKey = key; };
+    let copied = null;
+    workspace.copyRichContent = (html, label) => { copied = { html, label }; };
+    await workspace.editItem('chapter:chapter');
+    await workspace.copyItem('chapter:chapter');
+    assert.equal(workspace.activeItemKey, 'chapter:chapter');
+    assert.deepEqual(copied, { html: '<p>Original text</p>', label: 'Chapter 7' });
+    assert.doesNotMatch(workspace.itemActionsHtml({ key: 'chapter:chapter', itemType: 'chapter' }), /duplicateItem/);
+});
+
+test('Context item inventory defers Markdown conversion until content is opened', () => {
+    const source = methodsBetween('        const ContextWorkspace = {', '        // ==========================================\n        // SAFETY GUARD');
+    const context = {
+        State: { activeStoryId: 'story' },
+        MockDB: { chapters: [{ id: 'chapter', title: 'Chapter 7', content: '<p>Original text</p>', chapter_order: 7, word_count: 2 }], tiers: [], scratchpads: [] },
+        localStorage: { getItem: () => null }
+    };
+    vm.createContext(context);
+    vm.runInContext(`${source}\nthis.workspace = ContextWorkspace;`, context);
+    let conversions = 0;
+    context.workspace.markdown = value => { conversions += 1; return value; };
+    const items = context.workspace.allItems();
+    assert.equal(conversions, 0);
+    assert.equal(items[0].content, '<p>Original text</p>');
+    assert.equal(items[0].content, '<p>Original text</p>');
+    assert.equal(conversions, 1);
+});
+
 test('the pinned Supabase mutation builder supports cancellation', () => {
     const sdk = fs.readFileSync(path.join(__dirname, '..', 'vendor', 'supabase', 'supabase-2.111.0.min.js'), 'utf8');
     const context = {

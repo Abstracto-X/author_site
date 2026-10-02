@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-02 Asia/Kolkata — Writer chapter link action
+
+Area: standalone Writer
+
+- Added a Copy link button beside Delete for each chapter in the Writer index. It copies the public reader URL and notes when an unpublished chapter is not yet available to readers.
+- Files: `writer.html`, `docs/ADMIN_FUNCTION_INDEX.md`, `CHANGELOG.md`.
+
+## 2026-10-01 Asia/Kolkata — Context canvas and large-story navigation
+
+Area: standalone Writer Context
+
+- Replaced the Context block side overlay with Prompt Preview / Item Content tabs in the central canvas. Chapter Open now previews content in Context with a separate Edit in Writer action; chapter cards offer Copy content instead of Duplicate.
+- Promoted Clear selection to the main Context toolbar. Deferred and cached rich-text conversion, and coalesced search/preview redraws to reduce stalls when navigating large chapter lists.
+- Added focused tests for chapter Open/Copy and lazy item conversion. Chapter version history, indexed outline ranges, overlap warnings, and a locally remembered outline combination remain unimplemented pending database design/owner review.
+- Files: `writer.html`, `tests/writer-safety.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
 ## 2026-10-01 18:45 Asia/Kolkata — Atomic Writer presets and note deletion guard
 
 Area: standalone Writer / database integration
