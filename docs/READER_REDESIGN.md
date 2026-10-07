@@ -58,3 +58,7 @@ Compact/Focus modes and their controls/handlers/CSS are removed. Old saved mode 
 The non-reader desktop shell now fills the viewport beside a 78px rail fixed flush to the left edge, without the centered 1500px cap or outer gutters. The mobile shell remains full width with bottom navigation. The homepage Artwork panel uses a single vertical flex stack; its own scroller is vertical-only while the panel height stays aligned with the chapter list on desktop. This replaces CSS multi-columns, which could generate horizontal overflow when height-constrained. Caption-free, square-corner tiles and existing opening/access behavior remain.
 
 19 isolated tests passed, including CSS layout invariants. Fresh visual browser verification remains pending because the in-app browser's connection timed out while binding the preview tab; check default zoom at desktop and mobile, both axes of scroll, and rail alignment after refresh.
+
+## Artwork column clarification — 2026-10-07
+
+Retain two side-by-side tiles at normal desktop/mobile widths and three at wide widths. The fix is the scroll *axis*: CSS grid rows flow downward in a height-limited panel with `overflow-y: auto` and `overflow-x: hidden`; the browser must never add columns sideways. The earlier single-column interpretation was incorrect. At tablet widths the full-width panel displays three tiles across and scrolls with the page.

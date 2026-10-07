@@ -151,6 +151,6 @@ test('desktop shell is edge-latched and home artwork scrolls vertically',()=>{
   const css=read('styles/reader-redesign.css');
   assert.match(css, /#app \{ width: 100%; max-width: none; margin: 0; padding-left: 78px/);
   assert.match(css, /\.sidenav \{[\s\S]*?position: fixed; top: 0; bottom: 0; left: 0;/);
-  assert.match(css, /\.rh-masonry \{[^}]*flex-direction: column;[^}]*overflow-y: auto; overflow-x: hidden;/);
+  assert.match(css, /\.rh-masonry \{[^}]*display: grid; grid-template-columns: repeat\(2,minmax\(0,1fr\)\); grid-auto-flow: row;[^}]*overflow-y: auto; overflow-x: hidden;/);
   assert.doesNotMatch(css, /\.rh-masonry \{[^}]*column-count:/);
 });
