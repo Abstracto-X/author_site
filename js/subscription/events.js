@@ -458,7 +458,7 @@ function handleAct(act, el){
       saveStore(); render({preserveScroll:true}); break;
     case "open-home-gallery":
       openSheet(
-        () => homeGalleryImageSheet(el.dataset.galleryUrl, el.dataset.galleryCaption, el.dataset.galleryCharacter),
+        () => homeGalleryImageSheet(el.dataset.galleryUrl, el.dataset.galleryCaption, el.dataset.galleryCharacter, el.dataset.galleryNsfw === "true"),
         { wide:true }
       );
       break;
@@ -486,8 +486,8 @@ function handleAct(act, el){
     case "open-notification": openReaderNotification(el.dataset.notificationId, el.dataset.chapterId, el.dataset.notificationUrl); break;
     case "refresh-notifications": refreshReaderNotifications({browser:false}).then(()=>toast("Notifications refreshed",null,{icon:"bell"})).catch(err=>toast("Refresh failed",err.message||"Unable to load alerts.",{icon:"alert",kind:"bad"})); break;
     case "toggle-r18":
-      if (!(isAdmin() || activeEntitlements().length>0)) break;
-      State.showR18 = !State.showR18; State.galleryLimit=24; render({preserveScroll:true}); break;
+      if (!homeCanViewMatureGallery()) { openSheet(matureArtworkAccessSheet); break; }
+      State.showR18 = !State.showR18; render({preserveScroll:true}); break;
     case "nav-gallery": nav('/gallery/' + (el.dataset.slug || '')); break;
     case "nav-gallery-char": nav('/gallery/' + (el.dataset.slug || '') + '/' + (el.dataset.charId || '')); break;
     case "select-gallery-character":

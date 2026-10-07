@@ -176,6 +176,7 @@ body:not(.in-reader) .rh-gallery :is(.rh-panel-head,.rh-gallery-alert,.rh-panel-
 body:not(.in-reader) .rh-gallery-alert { display: flex; align-items: stretch; gap: 8px; padding: 12px 14px 0; }
 body:not(.in-reader) .rh-gallery-alert>span { flex: 1; display: flex; align-items: center; padding: 10px; border: 1px solid color-mix(in srgb,var(--accent) 25%,transparent); border-radius: 12px; background: var(--accent-soft); color: var(--accent); font: 700 9px/1.6 var(--ui); text-transform: uppercase; letter-spacing: .07em; }
 body:not(.in-reader) .rh-gallery-alert .btn { font-size: 10px; padding-inline: 12px; }
+body:not(.in-reader) .rh-gallery-alert [data-act="toggle-r18"] { flex: 1; }
 body:not(.in-reader) .rh-masonry { flex: 1; min-height: 0; min-width: 0; padding: 6px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-flow: row dense; grid-auto-rows: 8px; align-content: start; gap: 6px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
 body:not(.in-reader) .rh-masonry .traditional-gallery-card { min-width: 0; min-height: 0; margin: 0; border-radius: 0; overflow: hidden; border: 0; }
 body:not(.in-reader) .rh-masonry .traditional-gallery-card img { border-radius: 0; display: block; width: 100%; height: auto; object-fit: contain; }
@@ -230,6 +231,10 @@ body:not(.in-reader) .rh-mobile-tabs { display: none; }
 
 @media(min-width:1700px) { body:not(.in-reader) .rh-masonry { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 
+/* Eligible readers see NSFW previews blurred until hover or the shared reveal toggle. */
+body:not(.in-reader) :is(.traditional-gallery-card,.archive-gallery-card,.rg-art,.rg-deck-card,.rg-lb-stage,.home-gallery-sheet).nsfw-blurred img { filter: blur(22px); transition: filter .2s ease; }
+body:not(.in-reader) :is(.traditional-gallery-card,.archive-gallery-card,.rg-art,.rg-deck-card,.rg-lb-stage,.home-gallery-sheet).nsfw-blurred:hover img { filter: none; }
+@media(hover:none) { body:not(.in-reader) :is(.traditional-gallery-card,.archive-gallery-card,.rg-art,.rg-deck-card,.rg-lb-stage,.home-gallery-sheet).nsfw-blurred:hover img { filter: blur(22px); } }
 /* Unified artwork browser: CSS-column masonry and stacked tag collections. */
 body:not(.in-reader) .rg-browser { max-width: 1180px; margin: 0 auto; font-family: 'Montserrat',var(--ui); }
 body:not(.in-reader) .rg-routebar { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; font-size: 10px; color: var(--text-faint); }

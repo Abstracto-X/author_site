@@ -3,10 +3,16 @@
 function isMatureTag(tag) {
   return ["r18","mature","nsfw","18+"].includes(String(tag || "").toLowerCase().trim());
 }
+function galleryMatureBlurClass(image) {
+  return homeIsMatureGalleryImage(image) && homeCanViewMatureGallery() && !State.showR18 ? "nsfw-blurred" : "";
+}
+function matureArtworkAccessSheet() {
+  return `<button class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><div class="empty"><div class="em">${I.lock}</div><h3>Subscription required</h3><p>Active member access is required to view NSFW artwork.</p><button class="btn primary" data-nav="/benefits">Explore membership</button><button class="btn ghost" data-nav="/vault">Manage access</button></div>`;
+}
 function filterGalleryImages(images) {
   const query = String(State.gallerySearch || "").toLowerCase().trim();
   const tag = State.filterTag || "All";
-  const mature = (isAdmin() || activeEntitlements().length>0) && !!State.showR18;
+  const mature = homeCanViewMatureGallery();
   return (images || []).filter(img => {
     const tags = Array.isArray(img.image_tags) ? img.image_tags : [];
     if (tags.some(isMatureTag) && !mature) return false;
@@ -41,7 +47,8 @@ function renderGalleryCard(img,index) {
   const url = homeSafeMediaUrl(img.image_url);
   const thumb = homeThumbnailUrl(url,800);
   const tags = (img.image_tags || []).filter(t=>!isMatureTag(t));
-  return `<article class="rg-art" style="--art-tone:${galleryTone(img)}">
+  const blurred = galleryMatureBlurClass(img);
+  return `<article class="rg-art ${blurred}" style="--art-tone:${galleryTone(img)}">
     <button class="rg-art-open" data-act="open-lightbox" data-img-id="${esc(img.id)}" data-img-index="${index}" aria-label="View ${esc(caption)}">
       <img src="${esc(thumb)}" data-full-src="${thumb!==url?esc(url):""}" alt="${esc(caption)}" loading="lazy" decoding="async" onerror="galleryImageFailed(this)">
       <span class="rg-art-top"><span>${esc(char.name || "Archive")}</span>${tags[0]?`<span>${esc(tags[0])}</span>`:""}</span>
@@ -56,7 +63,7 @@ function renderGalleryDecks(images) {
     if (!groups.has(key)) groups.set(key,[]);
     groups.get(key).push({img,index});
   });
-  return [...groups].map(([tag,rows])=>`<button class="rg-deck" data-act="open-lightbox" data-img-id="${esc(rows[0].img.id)}" data-img-index="${rows[0].index}" aria-label="Open ${esc(tag)} collection, ${rows.length} artworks"><span class="rg-deck-stack">${rows.slice(0,3).map(({img})=>`<span class="rg-deck-card"><img src="${esc(homeThumbnailUrl(img.image_url,540))}" data-full-src="${esc(homeSafeMediaUrl(img.image_url))}" alt="" loading="lazy" decoding="async" onerror="galleryImageFailed(this)"></span>`).join("")}</span><span class="rg-deck-title"><small>${rows.length} artworks</small><strong>${esc(tag)} collection</strong></span></button>`).join("");
+  return [...groups].map(([tag,rows])=>`<button class="rg-deck" data-act="open-lightbox" data-img-id="${esc(rows[0].img.id)}" data-img-index="${rows[0].index}" aria-label="Open ${esc(tag)} collection, ${rows.length} artworks"><span class="rg-deck-stack">${rows.slice(0,3).map(({img})=>`<span class="rg-deck-card ${galleryMatureBlurClass(img)}"><img src="${esc(homeThumbnailUrl(img.image_url,540))}" data-full-src="${esc(homeSafeMediaUrl(img.image_url))}" alt="" loading="lazy" decoding="async" onerror="galleryImageFailed(this)"></span>`).join("")}</span><span class="rg-deck-title"><small>${rows.length} artworks</small><strong>${esc(tag)} collection</strong></span></button>`).join("");
 }
 function galleryImageFailed(image) {
   if (homeThumbnailFailed(image)) return;
@@ -95,17 +102,17 @@ function renderUnifiedGallery(charId) {
   const contextKey = story.id+":"+(charId || "all");
   if (State.galleryContextKey!==contextKey) { State.galleryContextKey=contextKey; State.galleryLimit=24; State.filterTag="All"; }
   State.currentGalleryImages = selected ? storyImages.filter(img=>img.character_id===charId) : storyImages;
-  const allowed = State.currentGalleryImages.filter(img=>!(img.image_tags || []).some(isMatureTag) || ((isAdmin() || activeEntitlements().length>0) && State.showR18));
+  const allowed = State.currentGalleryImages.filter(img=>!homeIsMatureGalleryImage(img) || homeCanViewMatureGallery());
   const featured = selected || chars.find(c=>homeSafeMediaUrl(c.profile_image_url)) || chars[0];
   const portrait = homeSafeMediaUrl(featured?.profile_image_url || story.cover_image_url);
   const tags = [...new Set(allowed.flatMap(img=>(img.image_tags || []).filter(t=>!isMatureTag(t))))];
   if (State.filterTag!=="All" && !tags.includes(State.filterTag)) State.filterTag="All";
   const results = galleryResultMarkup();
   const newest = Math.max(0,...allowed.map(img=>homeFeedDate(img.created_at)));
-  const canMature = isAdmin() || activeEntitlements().length>0;
+  const canMature = homeCanViewMatureGallery();
   const heading = selected?.name || "Visual Archive";
   return `<section class="rg-browser">
-    <div class="rg-routebar"><a href="#/" data-nav="/">${I.chevL} Story hub</a><span>${esc(story.title)}</span>${canMature?`<button class="btn sm ${State.showR18?"danger":"ghost"}" data-act="toggle-r18" aria-pressed="${!!State.showR18}">${State.showR18?"Hide mature artwork":"Show mature artwork"}</button>`:""}</div>
+    <div class="rg-routebar"><a href="#/" data-nav="/">${I.chevL} Story hub</a><span>${esc(story.title)}</span><button class="btn sm ${canMature && State.showR18?"danger":"ghost"}" data-act="toggle-r18" aria-pressed="${canMature && !!State.showR18}">${canMature && State.showR18?"BLUR NSFW":"SHOW NSFW"}</button></div>
     <section class="rg-masthead">
       <div class="rg-portrait">${portrait?`<img src="${esc(homeThumbnailUrl(portrait,540))}" data-full-src="${esc(portrait)}" alt="${esc(featured?.name || story.title)}" decoding="async" onerror="galleryImageFailed(this)">`:`<span class="rg-portrait-empty">${I.user}</span>`}</div>
       <div class="rg-profile"><div class="rh-kicker">${allowed.length} published artworks</div><h1 tabindex="-1">${esc(heading)}</h1><div class="rg-role">${esc(selected?.role_title || "Character visual archive")}</div><p class="rg-bio">${esc(selected?.biography || selected?.bio || "Explore character portraits, visual studies, and artwork from this story. Select a collection below or browse the complete archive.")}</p></div>
@@ -139,7 +146,7 @@ function renderGalleryLightbox(index) {
   const caption=img.caption || `${char.name || "Archive"} artwork`;
   return `<div class="rg-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-labelledby="gallery-lightbox-title">
     <div class="rg-lb-backdrop" data-act="close-lightbox"></div>
-    <div class="rg-lb-body"><div class="rg-lb-stage">
+    <div class="rg-lb-body"><div class="rg-lb-stage ${galleryMatureBlurClass(img)}">
       <button class="rg-lb-prev" data-act="lightbox-prev" aria-label="Previous artwork" ${index===0?"disabled":""}>${I.chevL}</button>
       <img src="${esc(homeSafeMediaUrl(img.image_url))}" alt="${esc(caption)}" onerror="galleryImageFailed(this)">
       <button class="rg-lb-next" data-act="lightbox-next" aria-label="Next artwork" ${index===images.length-1?"disabled":""}>${I.chevR}</button>

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-07 — Shared NSFW artwork reveal behavior
+
+Area: reader presentation / access-aware artwork
+
+- Added Show NSFW to Home Artwork and Gallery. Readers without active entitlement/admin see only safe images and receive a subscription-required prompt when pressing it.
+- Eligible readers see mature-tagged images automatically but blurred by default in Home tiles, Multigrid, Gallery tiles/decks and full-size viewers. Hover reveals a single image; the shared toggle reveals all, and Blur NSFW restores blur. Entitlement filtering remains in force regardless of toggle state.
+- No backend, RLS, schema, storage or Admin/Writer change. Files: `index.html`, `styles/reader-redesign.css`, `js/subscription/views/home-library.js`, `gallery.js`, `js/subscription/events.js`, tests and reader docs/state.
+- Validation: 22 isolated tests and whitespace checks pass. Signed-in visual QA remains pending.
+
+
 ## 2026-10-07 — Actual variable-height Home Artwork masonry
 
 Area: reader presentation

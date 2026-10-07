@@ -5,7 +5,7 @@
 - Match `reference/abstracto_redesign_sample(1) - Copy.html` and `reference/abstracto_full_gallery - Copy.html` closely, adapting the CSS/visual patterns in `reference/aether-ui-starter.zip` into plain browser code.
 - Redesign all reader-facing discovery/account/support surfaces, with a unified artwork browser. Do not change Admin, Writer, chapter prose, reader controls/preferences, or system-dialogue frames.
 - Keep Supabase data/query/auth/access contracts unchanged. No schema changes, new backend features, sample production data, or artwork discussions.
-- Preserve existing mature-artwork behavior: homepage visibility for entitled/admin readers; gallery explicit opt-in for those readers only.
+- Preserve the mature-artwork entitlement gate: non-subscribers see only normal images; entitled/admin readers see mature images blurred until hover or the shared Show NSFW reveal toggle.
 - User authorized automated browser/visual checks and regular commits on `codex/reader-redesign`. Do not mutate production content for tests.
 
 ## Feature preservation map
@@ -18,7 +18,7 @@
 | Library search, story follow, chapter tier/access state, sharing | Existing views/events with shared glass components |
 | Gallery archive/character links | Unified browser; existing character deep links select a collection |
 | Artwork search/tag/sort/shuffle/grid/deck/lightbox/votes | Unified gallery toolbar, collections, artwork and image-side metadata |
-| Gallery mature filtering, entitlement gate | Explicit gallery toggle and existing access checks |
+| Gallery/Home mature filtering, entitlement gate | Shared Show NSFW reveal toggle, default blur for entitled readers, subscription prompt for others, existing access checks |
 | Patreon/Boosty, access keys, sign-in/up/recovery/profile | Existing sheets/Vault/actions with the shared component theme |
 | Shelf/bookmarks/quotes/history, notifications/preferences | Existing routes/actions; new shared theme |
 | Updates/calendar/collections/extras/recap/help/support | Existing routes/content; new shared theme, honest empty states |
@@ -66,3 +66,9 @@ Retain two side-by-side tiles at normal desktop/mobile widths and three at wide 
 ## Actual masonry correction — 2026-10-07
 
 The previous equal-row grid was not masonry. Homepage Artwork now uses small grid tracks with per-tile row spans computed from each loaded image's natural aspect ratio and rendered width. Tiles keep their varied heights and dense staggered placement in two columns (three when wide). Image load and container-width changes recalculate spans; the artwork panel still scrolls only vertically. Multigrid sizing remains separate. 20 isolated tests pass, including a portrait-vs-landscape span test. Browser visual QA is still needed because the in-app browser timed out in the previous pass.
+
+## Shared NSFW artwork preview — 2026-10-07
+
+Both Home Artwork (Split and Multigrid) and the unified Gallery show a Show NSFW control. Guests and signed-in readers without active entitlement see only normal published artwork; clicking the control opens a subscription-required sheet linking to Membership and Vault. Active-entitlement/admin readers see all artwork returned by Supabase, including mature-tagged rows, but those images are blurred by default in tiles, gallery decks, and full-size viewers. Hover temporarily clears blur on devices with hover; the shared Show NSFW state clears all blur across Home and Gallery, and Blur NSFW restores it. The state is session-local and never changes Supabase access, RLS, storage, or media data. Touch users use the toggle rather than hover.
+
+22 isolated tests cover the eligibility filter, default blur/reveal classes in Home/Gallery/decks/lightbox, safe guest images and the subscription prompt. Signed-in visual and entitlement checks remain owner-led QA. The prior in-app browser connection has timed out repeatedly, so this pass does not claim browser verification.

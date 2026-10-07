@@ -11,7 +11,8 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | `views/account-access.js` | `curatedUpdateCard(update, index)` | Resolves real chapter updates into shared Curated cards; retains original rows for non-chapter updates. |
 | `views/home-library.js` | `homeMasonrySpan()` / `sizeHomeGalleryTiles()` | Measure natural artwork ratios into masonry row spans and recalculate on image load/container resize; retain Multigrid image sizing. |
 | `views/home-library.js` | `setupHomeArchive()` | Disconnects stale observer and aligns desktop split-gallery height to the chapter panel. |
-| `views/gallery.js` | `renderUnifiedGallery(charId)` | Shared story artwork browser with character collection deep-link support and mature-access gate. |
+| `views/gallery.js` | `renderUnifiedGallery(charId)` | Shared story artwork browser with character collection deep-link support and mature-access gate/default blur. |
+| `views/gallery.js` | `galleryMatureBlurClass(image)` / `matureArtworkAccessSheet()` | Applies the shared eligible-reader NSFW blur state and explains subscription requirements to other readers. |
 | `views/gallery.js` | `galleryResultMarkup()` / `refreshGalleryResults()` | Filters/sorts real artwork and incrementally renders grid/decks without losing search focus. |
 | `views/gallery.js` | `renderGalleryCard()` / `renderGalleryDecks()` | Masonry artwork cards and stacked tag collections with shared lightbox indices. |
 | `views/gallery.js` | `galleryTone()` / `galleryVoteControls()` / `galleryImageFailed()` | Stable decorative accents, existing vote controls, and honest failed-image state. |

@@ -57,10 +57,10 @@ test('home mature behavior stays entitled-only without gallery opt-in',()=>{
   const h=harness(); assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),1);
   assert.equal(h.run('testEntitled=true;homeGalleryItems(D.STORIES[0]).length'),2);
 });
-test('gallery mature filtering requires entitlement AND opt-in',()=>{
+test('gallery mature images require entitlement but not opt-in to appear',()=>{
   const h=harness();
   assert.equal(h.run('State.showR18=true;filterGalleryImages(D.GALLERY_IMAGES).length'),1);
-  assert.equal(h.run('testEntitled=true;State.showR18=false;filterGalleryImages(D.GALLERY_IMAGES).length'),1);
+  assert.equal(h.run('testEntitled=true;State.showR18=false;filterGalleryImages(D.GALLERY_IMAGES).length'),2);
   assert.equal(h.run('State.showR18=true;filterGalleryImages(D.GALLERY_IMAGES).length'),2);
 });
 test('chapter reader source and backend contracts remain unchanged by redesign',()=>{
@@ -73,7 +73,7 @@ test('unified gallery and character deep links render the same browser controls'
   const h=harness();
   const all=h.run('route.params.slug="story";VIEWS.gallery()');
   assert.match(all,/rg-masthead/); assert.match(all,/Search captions or tags/);
-  assert.match(all,/select-gallery-character/); assert.doesNotMatch(all,/View Mature art/);
+  assert.match(all,/select-gallery-character/); assert.match(all,/SHOW NSFW/);
   assert.match(h.run('route.params.charId="c1";VIEWS.galleryChar()'),/Biography/);
   assert.match(h.run('route.params.charId="missing";VIEWS.galleryChar()'),/Character not found/);
 });
@@ -160,4 +160,26 @@ test('masonry spans follow each artwork natural aspect ratio',()=>{
   assert.ok(h.run('homeMasonrySpan(260,600,1000)') > h.run('homeMasonrySpan(260,1000,600)'));
   assert.equal(h.run('homeMasonrySpan(0,1000,600)'),1);
   assert.match(read('js/subscription/views/home-library.js'),/ResizeObserver/);
+});
+
+test('NSFW previews blur by default across home, gallery, decks and lightbox',()=>{
+  const h=harness();
+  assert.match(h.run('VIEWS.home()'),/SHOW NSFW/);
+  assert.match(h.run('route.params.slug="story";VIEWS.gallery()'),/SHOW NSFW/);
+  h.run('testEntitled=true;State.showR18=false;State.currentGalleryImages=D.GALLERY_IMAGES');
+  assert.match(h.run('homeTraditionalGalleryCard({image:D.GALLERY_IMAGES[1]})'),/traditional-gallery-card nsfw-blurred/);
+  assert.match(h.run('homeFeedGalleryCard({image:D.GALLERY_IMAGES[1]},0)'),/archive-gallery-card[^\"]*nsfw-blurred/);
+  assert.match(h.run('renderGalleryCard(D.GALLERY_IMAGES[1],1)'),/rg-art nsfw-blurred/);
+  assert.match(h.run('renderGalleryDecks([D.GALLERY_IMAGES[1]])'),/rg-deck-card nsfw-blurred/);
+  assert.match(h.run('renderGalleryLightbox(0)'),/rg-lb-stage nsfw-blurred/);
+  assert.doesNotMatch(h.run('State.showR18=true;renderGalleryCard(D.GALLERY_IMAGES[1],1)'),/nsfw-blurred/);
+  assert.match(h.run('State.showR18=false;homeGalleryImageSheet("https://example.com/mature.jpg","Mature","Character",true)'),/home-gallery-sheet nsfw-blurred/);
+  assert.match(read('styles/reader-redesign.css'),/nsfw-blurred:hover img \{ filter: none;/);
+});
+test('non-subscribed readers see only normal artwork and an access prompt',()=>{
+  const h=harness();
+  assert.equal(h.run('filterGalleryImages(D.GALLERY_IMAGES).length'),1);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),1);
+  assert.match(h.run('matureArtworkAccessSheet()'),/Subscription required/);
+  assert.match(h.run('route.params.slug="story";VIEWS.gallery()'),/data-act="toggle-r18"/);
 });

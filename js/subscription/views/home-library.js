@@ -559,8 +559,8 @@ function homeFeedGalleryCard(item, index){
   const caption = image.caption || `${character} artwork`;
   const thumbnailUrl = homeThumbnailUrl(url, 800);
   const tagLine = image.image_tags?.length ? image.image_tags.slice(0,2).join(" · ") : "New artwork";
-  return `<article class="archive-feed-card archive-gallery-card ${homeFeedLayoutClass(index, "gallery", true)}">
-    <button class="archive-gallery-open" data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
+  return `<article class="archive-feed-card archive-gallery-card ${homeFeedLayoutClass(index, "gallery", true)} ${galleryMatureBlurClass(image)}">
+    <button class="archive-gallery-open" data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" data-gallery-nsfw="${homeIsMatureGalleryImage(image)}" aria-label="View ${esc(caption)}">
       <img class="archive-gallery-image" src="${esc(thumbnailUrl)}" data-full-src="${thumbnailUrl!==url?esc(url):""}" alt="${esc(caption)}" loading="lazy" decoding="async" onerror="homeThumbnailFailed(this)">
       <span class="archive-image-shade"></span>
       <span class="archive-card-badge">${I.spark} Gallery</span>
@@ -607,8 +607,8 @@ function homeTraditionalGalleryCard(item){
   const character = image.character?.name || image.character_name || "Gallery";
   const caption = image.caption || `${character} artwork`;
   const thumbnailUrl = homeThumbnailUrl(url, 560);
-  return `<article class="traditional-gallery-card">
-    <button data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
+  return `<article class="traditional-gallery-card ${galleryMatureBlurClass(image)}">
+    <button data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" data-gallery-nsfw="${homeIsMatureGalleryImage(image)}" aria-label="View ${esc(caption)}">
       <img src="${esc(thumbnailUrl)}" data-full-src="${thumbnailUrl!==url?esc(url):""}" alt="${esc(caption)}" loading="lazy" decoding="async" onerror="homeThumbnailFailed(this)">
     </button>
   </article>`;
@@ -654,11 +654,11 @@ function sizeHomeGalleryTiles(){
     homeMasonryObserver.observe(masonry);
   }
 }
-function homeGalleryImageSheet(url, caption, character){
+function homeGalleryImageSheet(url, caption, character, mature){
   const safeUrl = homeSafeMediaUrl(url);
   if (!safeUrl) return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="empty"><h3>Image unavailable</h3><p>This gallery image could not be opened.</p></div>`;
   return `<span class="close-x" data-act="close-sheet">${I.x}</span>
-    <div class="home-gallery-sheet">
+    <div class="home-gallery-sheet ${mature && homeCanViewMatureGallery() && !State.showR18?"nsfw-blurred":""}">
       <img src="${esc(safeUrl)}" alt="${esc(caption || character || "Gallery image")}">
       <div><div class="eyebrow">${esc(character || "Gallery")}</div><h3>${esc(caption || "Untitled artwork")}</h3></div>
     </div>`;
@@ -737,12 +737,12 @@ VIEWS.home = function(){
         </section>
         <section class="rh-panel rh-gallery" id="home-gallery-panel">
           <header class="rh-panel-head"><div><div class="rh-kicker">Visual archive</div><h2>Artwork</h2></div><span>${gallery.length} images</span></header>
-          <div class="rh-gallery-alert"><span>${gallery.length?"Discover the visual archive":"The visual archive awaits"}</span><button class="btn primary" data-nav="/gallery/${esc(primary.slug)}">Open Gallery ${I.external}</button></div>
+          <div class="rh-gallery-alert"><button class="btn ghost" data-act="toggle-r18" aria-pressed="${homeCanViewMatureGallery() && !!State.showR18}">${homeCanViewMatureGallery() && State.showR18?"BLUR NSFW":"SHOW NSFW"}</button><button class="btn primary" data-nav="/gallery/${esc(primary.slug)}">Open Gallery ${I.external}</button></div>
           <div class="rh-masonry">${gallery.slice(0,galleryLimit).map(homeTraditionalGalleryCard).join("") || `<div class="rh-empty"><h3>No artwork yet</h3><p>Published artwork will appear here.</p></div>`}</div>
           ${gallery.length>galleryLimit?`<button class="rh-panel-link" data-act="home-gallery-load-more">Load more artwork (${gallery.length-galleryLimit} remaining) ${I.chevR}</button>`:""}
         </section>
       </div>`:`
-      <div class="rh-filters" role="group" aria-label="Mixed feed filter">${mixedFilters.map(([value,label])=>`<button data-act="home-feed-filter" data-feed-filter="${esc(value)}" class="${filter===value?"active":""}" aria-pressed="${filter===value}">${esc(label)}</button>`).join("")}</div>
+      <div class="rh-filters" role="group" aria-label="Mixed feed filter"><button data-act="toggle-r18" aria-pressed="${homeCanViewMatureGallery() && !!State.showR18}">${homeCanViewMatureGallery() && State.showR18?"BLUR NSFW":"SHOW NSFW"}</button>${mixedFilters.map(([value,label])=>`<button data-act="home-feed-filter" data-feed-filter="${esc(value)}" class="${filter===value?"active":""}" aria-pressed="${filter===value}">${esc(label)}</button>`).join("")}</div>
       <div class="archive-feed-grid">${mixedFiltered.slice(0,limit).map((item,index)=>item.type==="gallery"?homeFeedGalleryCard(item,index):homeFeedChapterCard(item,index)).join("") || `<div class="rh-empty"><h3>Nothing published here yet</h3><p>No published content matches this filter.</p></div>`}</div>
       ${mixedFiltered.length>limit?`<button class="rh-panel-link" data-act="home-feed-load-more">Load more chapters &amp; artwork (${mixedFiltered.length-limit} remaining) ${I.chevR}</button>`:""}`}
     <nav class="rh-quick-links" aria-label="Story quick links">
