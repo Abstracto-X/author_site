@@ -2,6 +2,40 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-07 14:46 Asia/Kolkata — Reader redesign reference assessment
+
+Status: IN PROGRESS
+
+Area:
+- reader / design
+
+Files touched:
+- `PROJECT_STATE.md` only
+
+Summary:
+- Reviewed both owner-supplied HTML files under `reference/` and the current reader entry, theme tokens, shell/router, active homepage renderer, gallery views, and relevant project context.
+- Home reference uses a desktop icon rail, cinematic cover/synopsis hero, tier-colored chapter cards alongside a height-aligned scrollable masonry gallery, mobile chapter/gallery tabs, and quick links.
+- Gallery reference uses an artwork backdrop, character masthead/collection strip, search/tag/sort controls, masonry and stacked collection decks, incremental loading, and an image/metadata split lightbox.
+- References are standalone visual prototypes, not a replacement runtime framework: sample content, local-only vote counters, canned discussions, and several decorative controls must not become fake production features/data.
+- Owner confirmed reader-facing scope only; Admin, Writer, and the chapter reader remain unchanged. Reproduce the reference styling as closely as possible while preserving existing features and similar navigation.
+- Preserve existing home layout functionality and implement reference-only UI behaviors where they require no backend alteration. Use a unified gallery artwork browser while retaining existing deep-link compatibility.
+- No backend/schema alterations, artwork discussions, or new backend-dependent features. Preserve current mature-artwork access behavior and provide the gallery opt-in toggle for eligible readers.
+- Automated browser checks and image inspection are authorized for the redesign; production-content mutation is not part of testing.
+- Inspected `reference/aether-ui-starter.zip`: its source components target React/TypeScript/Vite/Storybook. Adapt its CSS/tokens/component visual patterns into the existing plain HTML/CSS/browser JavaScript architecture rather than introducing that toolchain.
+
+Remaining work:
+- Scope/design answers are collected; create `codex/reader-redesign` when beginning implementation, preserving unrelated work.
+- Inventory existing reader features and map them to the new components while preserving Supabase/auth/access contracts, routes, delegated events, and stored preferences.
+
+Risks / notes:
+- Initial Git status showed only untracked `reference/`; both supplied files were left untouched. Git inspection used a command-scoped safe.directory setting because the sandbox account differs from the checkout owner.
+- No runtime changes, branch creation, database queries/writes, commit, push, or browser automation performed in this assessment.
+- Current home admits mature artwork for entitled/admin readers without the gallery's explicit opt-in; the owner requested preserving this behavior.
+
+Verification needed:
+- Source inspection only so far; visual rendering and real guest/member/admin interaction checks remain for implementation.
+
+
 ## 2026-10-02 Asia/Kolkata — Writer chapter link browser QA
 
 Status: NEEDS REVIEW
