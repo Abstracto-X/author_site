@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-07 15:30 Asia/Kolkata — Story home and unified artwork browser
+
+Area: reader presentation
+
+- Rebuilt the active homepage with reference hero, chapter/artwork split, tier-colored cards, Curated/Compact/Focus modes, tier filters, incremental loading, mobile tabs, and retained Multigrid. Existing reading/follow/access/progress and mature-home behavior are preserved.
+- Unified archive and character gallery routes into one reference-style browser with character selection, search/tags/sort/shuffle, masonry and stacked decks, incremental artwork loading, and image-side metadata lightbox. Reused existing up/down vote contract; added focus lifecycle and single-flight/late-completion guards. No discussions or backend changes.
+- Reference-style shared components apply to existing account/discovery/support routes while excluding the chapter reader. New sessions default to Split archive; saved home layout preferences are retained.
+- Files: `index.html`, `styles/reader-redesign.css`, `js/subscription/state.js`, `js/subscription/router.js`, `js/subscription/events.js`, `js/subscription/views/home-library.js`, `js/subscription/views/gallery.js`, `tests/reader-redesign.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
 ## 2026-10-07 15:00 Asia/Kolkata — Reader redesign foundation
 
 Area: reader presentation

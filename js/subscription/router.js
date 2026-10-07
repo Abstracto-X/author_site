@@ -51,7 +51,11 @@ function backendSetupView(){
   const offline = typeof navigator !== "undefined" && navigator.onLine === false;
   return `<div class="empty reader-recovery" style="padding-top:90px"><div class="em">${I.alert}</div><h3>${offline ? "You're offline" : "Library temporarily unavailable"}</h3><p>${offline ? "Reconnect to the internet and the reader will try again automatically." : "The library did not load this time. Retry first, or use Repair & reload to bypass stale site files without deleting your sign-in or reader preferences."}</p><div class="reader-recovery-actions"><button class="btn story" data-act="retry-library">${I.sync}Try again</button><button class="btn ghost" data-act="repair-reader">Repair &amp; reload</button><button class="btn ghost" data-nav="/help">${I.help}Reader help</button></div>${isAdmin()?`<div class="card" style="text-align:left;max-width:640px;margin:16px auto"><div style="font-weight:700;margin-bottom:8px">Admin diagnostic</div><p class="faint" style="font-size:.78rem;margin:0">${esc(msg)}</p></div>`:""}</div>`;
 }
-function render(){
+function render(options = {}){
+  const scrollY = window.scrollY || 0;
+  const focused = options.preserveScroll ? document.activeElement : null;
+  const focusData = focused?.dataset ? Object.entries(focused.dataset).filter(([key])=>["act","homeLayout","homeDisplay","homeTab","homeTier","tag"].includes(key)) : [];
+  if (typeof closeGalleryLightbox === "function" && document.getElementById("gallery-lightbox")) closeGalleryLightbox();
   route = parseHash();
   const main = document.getElementById("main");
   const inReader = route.name === "read";
@@ -73,7 +77,11 @@ function render(){
     if (inStudio && isAdmin()){ ensureStudioChrome(); }
     else if (!inReader){ ensureChrome(); }
     afterRender();
-    if (window.scrollTo) { try { window.scrollTo(0,0); } catch(e){} }
+    if (options.preserveScroll && focusData.length) {
+      const match = [...main.querySelectorAll("button[data-act]")].find(el=>focusData.every(([key,value])=>el.dataset[key]===value));
+      if (match) match.focus({preventScroll:true});
+    }
+    if (window.scrollTo) { try { window.scrollTo(0,options.preserveScroll ? scrollY : 0); } catch(e){} }
   };
   apply();
 }

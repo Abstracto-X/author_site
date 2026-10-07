@@ -25,7 +25,7 @@ Summary:
 
 Remaining work:
 - `codex/reader-redesign` created; supplied references/scope committed as `c8e974a`. User requested regular checkpoint commits; an explicit active goal now records the redesign scope.
-- Shared shell/component CSS and reference fonts added in an isolated stylesheet; gallery active-nav state fixed. Home/gallery component migration and automated browser QA are next.
+- Shared foundation committed as `e33d792`. Home/reference split and unified artwork browser implemented; isolated reader tests now cover home modes/access/mature gates, gallery search/loading/shuffle/deck-lightbox indices and unsafe URLs. Automated browser/visual QA and responsive fixes are next.
 - Inventory existing reader features and map them to the new components while preserving Supabase/auth/access contracts, routes, delegated events, and stored preferences.
 
 Risks / notes:

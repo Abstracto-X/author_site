@@ -187,6 +187,7 @@ function afterRender(){
   if (!isReader){
     if (route.name === "home" && typeof sizeHomeGalleryTiles === "function") sizeHomeGalleryTiles();
   }
+  if (typeof setupHomeArchive === "function") setupHomeArchive();
   if (isReader){ setupReader(); }
   if (window.ReaderGuides && typeof window.ReaderGuides.afterRender === "function") window.ReaderGuides.afterRender();
   maybeShowWhatsNew();
@@ -282,22 +283,22 @@ function delegate(){
   document.addEventListener("input",(e)=>{
     const t=e.target;
     if(t.id==="lib-search"){ store.filters.q=t.value; renderHeaderless(); return; }
-    if(t.id==="gallery-search-input"){ State.gallerySearch=t.value; const grid=document.getElementById("gallery-grid"); if(grid && typeof filterGalleryImages==="function"){ const filtered=sortGalleryImages(filterGalleryImages(State.currentGalleryImages||[])); grid.innerHTML=filtered.map((img,idx)=>renderGalleryCard(img,idx,State.galleryViewMode)).join(''); const lbl=document.querySelector(".gallery-count-label"); if(lbl) lbl.textContent=`${filtered.length} artworks`; } return; }
+    if(t.id==="gallery-search-input"){ State.gallerySearch=t.value; State.galleryLimit=24; refreshGalleryResults(); return; }
     if(t.dataset && t.dataset.setRange){ store.settings[t.dataset.setRange]=parseFloat(t.value); saveStore(); const lbl=t.closest(".set-group")?.querySelector("label .setting-value, label .faint"); if(lbl){ lbl.textContent = t.dataset.setRange==="fontScale"? Math.round(t.value*100)+"%" : parseFloat(t.value).toFixed(2); } applyReaderPreferences(); return; }
     if(t.dataset && t.dataset.readerBrightness!=null){ store.settings.readerBrightness=Math.min(125,Math.max(50,parseFloat(t.value)||100)); saveStore(); const lbl=t.closest(".set-group")?.querySelector(".setting-value"); if(lbl) lbl.textContent=Math.round(store.settings.readerBrightness)+"%"; applyReaderPreferences(); return; }
     if(t.dataset && t.dataset.readerCustomColor!=null){ if(/^#[0-9a-f]{6}$/i.test(t.value)){ store.settings.readerCustomBg=t.value; saveStore(); const out=t.parentElement?.querySelector("output"); if(out) out.textContent=t.value.toUpperCase(); applyReaderPreferences(); } return; }
   });
   document.addEventListener("change",(e)=>{
     const t=e.target;
-    if(t.id==="gallery-sort-select"){ State.gallerySort=t.value; render(); return; }
+    if(t.id==="gallery-sort-select"){ State.gallerySort=t.value; State.galleryLimit=24; refreshGalleryResults(); return; }
     if(t.dataset && t.dataset.readerCustomColor!=null){ refreshReaderPreferences(); return; }
   });
   document.addEventListener("keydown",(e)=>{
     if(e.key==="Escape" && readerPreferencesOpen){ closeReaderPreferences(); return; }
     if(State.lightboxIndex >= 0){
-      if(e.key==="Escape"){ closeGalleryLightbox(); }
-      else if(e.key==="ArrowLeft"){ openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); }
-      else if(e.key==="ArrowRight"){ openGalleryLightbox(State.lightboxIndex + 1); }
+      if(e.key==="Escape"){ e.preventDefault(); closeGalleryLightbox(); }
+      else if(e.key==="ArrowLeft"){ e.preventDefault(); openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); }
+      else if(e.key==="ArrowRight"){ e.preventDefault(); openGalleryLightbox(State.lightboxIndex + 1); }
     }
   });
 
@@ -448,6 +449,16 @@ function handleAct(act, el){
       saveStore();
       render();
       break;
+    case "home-display":
+      store.homeDisplay = ["curated","compact","focus"].includes(el.dataset.homeDisplay) ? el.dataset.homeDisplay : "curated";
+      saveStore(); render(); break;
+    case "home-mobile-tab":
+      State.homeMobileTab = el.dataset.homeTab === "gallery" ? "gallery" : "chapters";
+      render(); break;
+    case "home-tier":
+      store.filters.homeTier = el.dataset.homeTier || "all";
+      store.homeFeedLimit = 8;
+      saveStore(); render(); break;
     case "open-home-gallery":
       openSheet(
         () => homeGalleryImageSheet(el.dataset.galleryUrl, el.dataset.galleryCaption, el.dataset.galleryCharacter),
@@ -477,17 +488,19 @@ function handleAct(act, el){
     case "share-chapter": shareChapterLink(el.dataset.chapterId || currentChapter?.ch.id); break;
     case "open-notification": openReaderNotification(el.dataset.notificationId, el.dataset.chapterId, el.dataset.notificationUrl); break;
     case "refresh-notifications": refreshReaderNotifications({browser:false}).then(()=>toast("Notifications refreshed",null,{icon:"bell"})).catch(err=>toast("Refresh failed",err.message||"Unable to load alerts.",{icon:"alert",kind:"bad"})); break;
-    case "toggle-r18": State.showR18 = !State.showR18; render(); break;
+    case "toggle-r18":
+      if (!(isAdmin() || activeEntitlements().length>0)) break;
+      State.showR18 = !State.showR18; State.galleryLimit=24; render({preserveScroll:true}); break;
     case "nav-gallery": nav('/gallery/' + (el.dataset.slug || '')); break;
     case "nav-gallery-char": nav('/gallery/' + (el.dataset.slug || '') + '/' + (el.dataset.charId || '')); break;
-    case "filter-gallery-tag": State.filterTag = el.dataset.tag || 'All'; render(); break;
-    case "toggle-viewmode": State.galleryViewMode = State.galleryViewMode === 'deck' ? 'grid' : 'deck'; render(); break;
-    case "shuffle-gallery":
-      if (Array.isArray(State.currentGalleryImages)) {
-        State.currentGalleryImages.sort(() => Math.random() - 0.5);
-        render();
-      }
-      break;
+    case "select-gallery-character":
+      State.galleryLimit=24; State.filterTag="All";
+      nav('/gallery/'+(el.dataset.slug || '')+(el.dataset.charId?'/'+el.dataset.charId:'')); break;
+    case "filter-gallery-tag": State.filterTag = el.dataset.tag || 'All'; State.galleryLimit=24; render({preserveScroll:true}); break;
+    case "toggle-viewmode": State.galleryViewMode = State.galleryViewMode === 'deck' ? 'grid' : 'deck'; render({preserveScroll:true}); break;
+    case "shuffle-gallery": shuffleGalleryArtwork(); break;
+    case "gallery-load-more": State.galleryLimit=Number(State.galleryLimit || 24)+12; refreshGalleryResults(); break;
+    case "archive-to-top": window.scrollTo({top:0,behavior:prefersReducedMotion()?"auto":"smooth"}); break;
     case "open-lightbox": openGalleryLightbox(Number(el.dataset.imgIndex || 0)); break;
     case "close-lightbox": closeGalleryLightbox(); break;
     case "lightbox-prev": openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); break;
@@ -495,10 +508,7 @@ function handleAct(act, el){
     case "vote-image": {
       const imgId = el.dataset.imgId;
       const val = Number(el.dataset.val || 1);
-      submitGalleryVote(imgId, val).then(() => {
-        if (State.lightboxIndex >= 0) openGalleryLightbox(State.lightboxIndex);
-        else render();
-      }).catch(err => toast("Vote failed", err.message || "Please sign in to vote.", {kind:"bad", icon:"alert"}));
+      voteGalleryArtwork(imgId,val);
       break;
     }
 

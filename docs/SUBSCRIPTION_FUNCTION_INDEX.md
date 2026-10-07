@@ -2,6 +2,22 @@
 
 Generated from the current codebase. One-line descriptions are intentionally concise so agents can quickly locate ownership before editing.
 
+## 2026-10-07 — Reference-style reader redesign
+
+| File | Function | Purpose |
+|---|---|---|
+| `views/home-library.js` | Active `VIEWS.home()` | Reference hero and split archive with retained Multigrid, progress/follow/access, tier filters and incremental loading. |
+| `views/home-library.js` | `homeReferenceChapterCard(item, index)` | Tier-colored Curated chapter card preserving read/preview/lock and read-progress states. |
+| `views/home-library.js` | `setupHomeArchive()` | Disconnects stale observer and aligns desktop split-gallery height to the chapter panel. |
+| `views/gallery.js` | `renderUnifiedGallery(charId)` | Shared story artwork browser with character collection deep-link support and mature-access gate. |
+| `views/gallery.js` | `galleryResultMarkup()` / `refreshGalleryResults()` | Filters/sorts real artwork and incrementally renders grid/decks without losing search focus. |
+| `views/gallery.js` | `renderGalleryCard()` / `renderGalleryDecks()` | Masonry artwork cards and stacked tag collections with shared lightbox indices. |
+| `views/gallery.js` | `galleryTone()` / `galleryVoteControls()` / `galleryImageFailed()` | Stable decorative accents, existing vote controls, and honest failed-image state. |
+| `views/gallery.js` | `galleryLightboxImages()` / `renderGalleryLightbox()` / `openGalleryLightbox()` / `closeGalleryLightbox()` | Consistent visible collection, image/metadata split viewer, keyboard/focus lifecycle. |
+| `views/gallery.js` | `shuffleGalleryArtwork()` / `voteGalleryArtwork()` | Fisher-Yates UI shuffle; single-flight existing vote write with late-overlay guard. |
+| `router.js` | `render(options)` | Optional scroll/button-focus preservation for UI-only rerenders and lightbox cleanup on navigation. |
+
+
 Recent Patreon callback reliability changes:
 
 | File | Function | Purpose |
