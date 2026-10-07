@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-07 22:32 Asia/Kolkata — Home simplification and Curated Updates
+
+Area: reader presentation
+
+- Removed Compact/Focus modes entirely; Split archive always uses Curated cards and ignores old saved modes. Multigrid remains.
+- Removed homepage Artwork image overlays/labels; reduced gutters/padding and squared tile/button/image corners while preserving accessible captions and opening behavior.
+- Updates chapter entries now share the Curated renderer, retaining date groups, story/note context, tier/progress and resolved read/preview/lock actions. Non-chapter updates retain existing rows.
+- Validation: 18 isolated tests passed; loaded scripts parse and whitespace checks pass. New browser visual QA is pending due to in-app browser timeouts (recorded in project state).
+- Files: `index.html`, `styles/reader-redesign.css`, `js/subscription/router.js`, `events.js`, `views/home-library.js`, `views/account-access.js`, `tests/reader-redesign.test.js`, reader docs and `PROJECT_STATE.md`.
+
+
 ## 2026-10-07 15:35 Asia/Kolkata — Responsive reader verification and refinements
 
 Area: reader presentation / accessibility

@@ -610,7 +610,6 @@ function homeTraditionalGalleryCard(item){
   return `<article class="traditional-gallery-card">
     <button data-act="open-home-gallery" data-gallery-url="${esc(url)}" data-gallery-caption="${esc(caption)}" data-gallery-character="${esc(character)}" aria-label="View ${esc(caption)}">
       <img src="${esc(thumbnailUrl)}" data-full-src="${thumbnailUrl!==url?esc(url):""}" alt="${esc(caption)}" loading="lazy" decoding="async" onerror="homeThumbnailFailed(this)">
-      <span class="traditional-gallery-overlay"><small>${esc(character)}</small><strong>${esc(caption)}</strong></span>
     </button>
   </article>`;
 }
@@ -664,7 +663,6 @@ VIEWS.home = function(){
   const tier = store.filters.homeTier || "all";
   const chapters = chapterItems.filter(({chapter:ch}) => tier === "all" || (ch.required_tier_id || "free") === tier);
   const layout = store.homeLayout === "multigrid" ? "multigrid" : "traditional";
-  const display = ["curated","compact","focus"].includes(store.homeDisplay) ? store.homeDisplay : "curated";
   const mobileTab = State.homeMobileTab === "gallery" ? "gallery" : "chapters";
   const limit = Math.max(8,Number(store.homeFeedLimit || 8));
   const galleryLimit = Math.max(18,Number(State.homeGalleryLimit || 18));
@@ -674,7 +672,7 @@ VIEWS.home = function(){
   const characters = (D.CHARACTERS || []).filter(c => c.story_id === primary.id);
   const mixedFilters = [["all","All"],["chapters","Chapters"],["gallery","Gallery"],...characters.map(c => [`character:${c.id}`,c.name])];
   const followed = store.followed.includes(primary.id);
-  return `${banner}<section class="rh-home" data-home-display="${display}" data-home-mobile="${mobileTab}">
+  return `${banner}<section class="rh-home" data-home-mobile="${mobileTab}">
     <section class="rh-hero">
       <div class="rh-cover">${coverArt(primary)}</div>
       <div class="rh-hero-copy">
@@ -700,7 +698,6 @@ VIEWS.home = function(){
       <div><div class="rh-kicker">Story index + visual archive</div><h2>Continue exploring</h2></div>
       <div class="rh-switch-controls">
         <div class="rh-segmented" role="group" aria-label="Home archive layout">${[["traditional","Split archive"],["multigrid","Multigrid"]].map(([value,label])=>`<button data-act="home-layout" data-home-layout="${value}" aria-pressed="${layout===value}" class="${layout===value?"active":""}">${label}</button>`).join("")}</div>
-        ${layout==="traditional"?`<div class="rh-segmented rh-display-control" role="group" aria-label="Display mode">${["curated","compact","focus"].map(value=>`<button data-act="home-display" data-home-display="${value}" aria-pressed="${display===value}" class="${display===value?"active":""}">${value[0].toUpperCase()+value.slice(1)}</button>`).join("")}</div>`:""}
       </div>
     </div>
     ${layout==="traditional"?`
@@ -709,7 +706,7 @@ VIEWS.home = function(){
         <section class="rh-panel rh-chapters" id="home-chapters-panel">
           <header class="rh-panel-head"><div><div class="rh-kicker">Story index</div><h2>Latest Chapters</h2></div><span>${chapters.length} chapters</span></header>
           <div class="rh-filters" role="group" aria-label="Chapter access tier"><button data-act="home-tier" data-home-tier="all" class="${tier==="all"?"active":""}" aria-pressed="${tier==="all"}">All tiers</button>${[...tierMap].map(([id,name])=>`<button data-act="home-tier" data-home-tier="${esc(id)}" class="${tier===id?"active":""}" aria-pressed="${tier===id}">${esc(name)}</button>`).join("")}</div>
-          <div class="rh-chapter-grid">${chapters.slice(0,limit).map((item,index)=>display==="compact"?homeTraditionalChapterRow(item):homeReferenceChapterCard(item,index)).join("") || `<div class="rh-empty"><h3>No matching chapters</h3><p>Published chapters for this tier will appear here.</p></div>`}</div>
+          <div class="rh-chapter-grid">${chapters.slice(0,limit).map((item,index)=>homeReferenceChapterCard(item,index)).join("") || `<div class="rh-empty"><h3>No matching chapters</h3><p>Published chapters for this tier will appear here.</p></div>`}</div>
           ${chapters.length>limit?`<button class="rh-panel-link" data-act="home-feed-load-more">Load more chapters (${chapters.length-limit} remaining) ${I.chevR}</button>`:""}
           <button class="rh-panel-link" data-nav="/story/${esc(primary.slug)}/chapters">Browse every chapter ${I.chevR}</button>
         </section>
@@ -730,7 +727,7 @@ VIEWS.home = function(){
     </nav>
   </section>`;
 };
-function homeReferenceChapterCard(item,index){
+function homeReferenceChapterCard(item,index,context){
   const ch = item.chapter;
   const access = chapterResolved(ch);
   const readable = isReadable(access);
@@ -745,7 +742,8 @@ function homeReferenceChapterCard(item,index){
   const date = ch.publicDate || ch.updated_at || ch.created_at;
   return `<button class="rh-chapter ${read?"is-read":pct>0?"in-progress":"is-unread"} ${index===0?"is-featured":""}" style="${chapterTierStyle(ch)}" ${action} aria-label="${esc(ch.title)} — ${esc(readable?"Available":access.state==="preview"?"Preview":"Locked")}">
     <span class="rh-chapter-top"><span class="rh-chapter-num">${esc(displayNumber)}</span><span class="rh-chapter-labels"><span class="rh-tier">${esc(tier)}</span><span class="rh-read-state">${read?I.check:""}${esc(status)}</span></span></span>
-    <h3>${esc(title)}</h3><span class="rh-chapter-meta">${date?`<span>${I.clock}${esc(fmtDate(date))}</span>`:""}<span>${Number(ch.wordCount || ch.readTime*220 || 0).toLocaleString()} words</span>${ch.readTime?`<span>${ch.readTime} min</span>`:""}<span>${readable?I.play:access.state==="preview"?I.eye:I.lock}${readable?"Available":access.state==="preview"?"Preview":"Locked"}</span></span>
+    ${context?`<span class="rh-update-context">${esc(context.storyTitle)}</span>`:""}
+    <h3>${esc(title)}</h3>${context?.note?`<span class="rh-update-note">${esc(context.note)}</span>`:""}<span class="rh-chapter-meta">${date?`<span>${I.clock}${esc(fmtDate(date))}</span>`:""}<span>${Number(ch.wordCount || ch.readTime*220 || 0).toLocaleString()} words</span>${ch.readTime?`<span>${ch.readTime} min</span>`:""}<span>${readable?I.play:access.state==="preview"?I.eye:I.lock}${readable?"Available":access.state==="preview"?"Preview":"Locked"}</span></span>
     <span class="rh-chapter-progress"><i style="width:${read?100:pct}%"></i></span></button>`;
 }
 let homePanelObserver = null;
@@ -754,7 +752,7 @@ function setupHomeArchive(){
   const chapters = document.getElementById("home-chapters-panel");
   const gallery = document.getElementById("home-gallery-panel");
   if (!chapters || !gallery) return;
-  const sync = () => { gallery.style.height = window.innerWidth>920 && store.homeDisplay!=="focus" ? chapters.getBoundingClientRect().height+"px" : ""; };
+  const sync = () => { gallery.style.height = window.innerWidth>920 ? chapters.getBoundingClientRect().height+"px" : ""; };
   sync();
   if (typeof ResizeObserver !== "undefined") { homePanelObserver = new ResizeObserver(sync); homePanelObserver.observe(chapters); }
 }

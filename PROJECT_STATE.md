@@ -17,13 +17,14 @@ Files touched:
 
 Summary:
 - Implementation completed on `codex/reader-redesign` with regular checkpoint commits. Source references and ZIP retained unchanged.
-- Reference-style hero/split archive, retained Multigrid, Curated/Compact/Focus modes, mobile tabs, tier/access/progress/follow actions, unified gallery with character deep links, filters/sort/shuffle/decks/loading, and keyboard-accessible lightbox reuse existing data contracts.
+- Reference-style hero/split archive, retained Multigrid, Curated chapter cards, mobile tabs, tier/access/progress/follow actions, unified gallery with character deep links, filters/sort/shuffle/decks/loading, and keyboard-accessible lightbox reuse existing data contracts.
 - Shared non-reader theme covers library/discovery/account/support surfaces. Chapter reader, Admin, Writer, auth/backend, SQL and base styles remain unchanged.
 - Mature home visibility remains entitled/admin automatic; gallery requires entitlement/admin plus explicit opt-in. No discussions, fake content, new framework, or backend alteration.
 - Browser checks fixed cover containment, modal background focus, focus restoration and scroll preservation. Followed shelf now accepts current story IDs and legacy slugs.
 - Validation: 16 isolated tests passed, all loaded reader scripts parse, diff whitespace check passed; guest live-public-data browser checks had no console errors. See `docs/READER_REDESIGN.md` for coverage.
 
 Remaining work:
+- Latest follow-up removed Compact/Focus, squared/enlarged caption-free Home Artwork tiles and shared Curated cards with Updates. 18 isolated tests pass; fresh browser visual checks remain pending because the in-app browser repeatedly timed out after the preview server was restarted. Refresh Home/Updates at desktop/mobile widths and inspect actions/spacing.
 - Owner signed-in QA before merge/deploy: provider connections, access-key redemption, profile/avatar, notifications, persistent votes, eligible mature toggle, and signed-in reader access/progress.
 - Nothing pushed or deployed. Local preview served only at `http://127.0.0.1:8765/`.
 

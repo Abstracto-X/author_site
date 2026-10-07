@@ -10,7 +10,7 @@ function harness() {
     window: { localStorage: { getItem:()=>null, setItem(){} } },
     document: { querySelector:()=>null, getElementById:()=>null, documentElement:{setAttribute(){},style:{setProperty(){}}} },
     location:{ hash:'' }, navigator:{onLine:true} });
-  for (const file of ['config.js','state.js','utils.js','router.js','chrome.js','views/home-library.js','views/story-reader.js','views/gallery.js']) {
+  for (const file of ['config.js','state.js','utils.js','router.js','chrome.js','views/home-library.js','views/story-reader.js','views/gallery.js','views/account-access.js']) {
     vm.runInContext(read(`js/subscription/${file}`),context,{filename:file});
   }
   vm.runInContext(`
@@ -39,13 +39,16 @@ test('split homepage preserves reading/follow/access actions and pagination',()=
   assert.match(html,/data-read="ch0"/); assert.match(html,/data-lock="ch31"/);
   assert.match(html,/home-feed-load-more/); assert.match(html,/Open Gallery/);
 });
-test('all home display modes and mixed feed remain available',()=>{
+test('home retains curated split and mixed feed but ignores removed modes',()=>{
   const h=harness();
-  assert.match(h.run('VIEWS.home()'),/data-home-display="curated"/);
-  assert.match(h.run('store.homeDisplay="compact";VIEWS.home()'),/traditional-chapter-row/);
-  assert.match(h.run('store.homeDisplay="focus";VIEWS.home()'),/data-home-display="focus"/);
+  for (const oldMode of ['compact','focus']) {
+    const html=h.run(`store.homeDisplay="${oldMode}";VIEWS.home()`);
+    assert.match(html,/rh-chapter/);
+    assert.doesNotMatch(html,/data-home-display|home-display|traditional-chapter-row/);
+  }
   assert.match(h.run('store.homeLayout="multigrid";VIEWS.home()'),/archive-feed-grid/);
 });
+
 test('homepage tier filtering preserves exact required tier IDs',()=>{
   const h=harness(); const html=h.run('store.filters.homeTier="free";VIEWS.home()');
   assert.doesNotMatch(html,/data-lock=/); assert.match(html,/data-read="ch30"/);
@@ -125,4 +128,21 @@ test('curated cards display combined chapter numbers from real titles',()=>{
   const html=h.run('homeReferenceChapterCard({chapter:{...D.STORIES[0].chapters[0],n:80,title:"Chapter 78+79: Combined"}},0)');
   assert.match(html,/rh-chapter-num">78\+79</);
   assert.match(html,/<h3>Combined<\/h3>/);
+});
+
+test('home artwork tiles have no visible labels but keep accessible captions',()=>{
+  const h=harness();
+  const html=h.run('homeTraditionalGalleryCard({image:D.GALLERY_IMAGES[0]})');
+  assert.doesNotMatch(html,/traditional-gallery-overlay|<strong>|<small>/);
+  assert.match(html,/aria-label="View Safe art"/);
+  assert.match(html,/alt="Safe art"/);
+});
+test('updates reuse curated cards with access gates and story context',()=>{
+  const h=harness();
+  const html=h.run('D.UPDATES=[{when:"Latest",story:"story",chapter:"ch0",note:"Published"},{when:"Latest",story:"story",chapter:"ch1",note:"Members"}];VIEWS.updates()');
+  assert.match(html,/rh-updates-grid/);
+  assert.match(html,/data-read="ch0"/);
+  assert.match(html,/data-lock="ch1"/);
+  assert.match(html,/rh-update-context">Real fixture story/);
+  assert.match(html,/rh-update-note">Members/);
 });

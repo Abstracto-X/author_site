@@ -14,7 +14,7 @@
 | --- | --- |
 | Home Start/Continue, progress, synopsis, cover, chapter/word totals | Reference-style story hero |
 | Home mixed feed, character/type filters, pagination | Restyled Multigrid option |
-| Traditional chapter index + artwork archive | Reference split layout, card/compact/focus display controls |
+| Traditional chapter index + artwork archive | Reference split layout with Curated chapter cards |
 | Library search, story follow, chapter tier/access state, sharing | Existing views/events with shared glass components |
 | Gallery archive/character links | Unified browser; existing character deep links select a collection |
 | Artwork search/tag/sort/shuffle/grid/deck/lightbox/votes | Unified gallery toolbar, collections, artwork and image-side metadata |
@@ -46,3 +46,9 @@ Aether UI starter declares CC0-1.0 and credits `Abstracto-X/abstracto_tales`. It
 - Gallery search empty/recovery, stacked decks, image navigation, Escape, opener-focus restoration and inert background verified. No browser console warnings/errors recorded. Actual artwork loaded; no bundled fallback content.
 - Opened a real free chapter through the existing catalog and verified secure text hydration and unchanged reader-preference panel controls. Reader source/base styles, backend/auth, Admin and Writer were not modified (checked branch diff).
 - Authenticated provider/access-key/profile/notification/vote/mature-toggle persistence must be verified by the owner before deployment. Browser QA made no production writes. Incremental loading and entitlement cases unavailable in the live guest data were covered by isolated fixtures, not claimed as live persistence checks.
+
+## Follow-up simplification — 2026-10-07
+
+Compact/Focus modes and their controls/handlers/CSS are removed. Old saved mode values are ignored: Split archive always renders Curated cards; Multigrid remains available. Homepage Artwork uses caption-free square-corner tiles with reduced padding/gaps, retaining alt text, accessible button names, image-sheet metadata and mature gates. Updates date groups reuse the Curated cards with story/note context and resolved read/preview/lock actions; non-chapter updates retain their original renderer.
+
+18 isolated tests passed and JavaScript parsing/whitespace checks passed. Browser follow-up is pending: the localhost server was restarted, but the in-app browser timed out both on the existing tab and a fresh verification tab. Owner should refresh Home and Updates, inspect desktop/mobile tile edges/spacing and removed controls, and check a locked/free update action before deployment.

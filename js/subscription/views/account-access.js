@@ -5,11 +5,17 @@
 VIEWS.updates = function(){
   const groups={};
   D.UPDATES.forEach(u=>{ (groups[u.when]=groups[u.when]||[]).push(u); });
-  const rendered = Object.entries(groups).map(([g,items])=>`<div class="section"><div class="section-head"><h2>${g}</h2></div><div class="col-flex">${items.map(updateRow).join("")}</div></div>`).join("");
+  const rendered = Object.entries(groups).map(([g,items])=>`<div class="section"><div class="section-head"><h2>${esc(g)}</h2></div><div class="rh-chapter-grid rh-updates-grid">${items.map(curatedUpdateCard).join("")}</div></div>`).join("");
   return `<h1 class="page-title">Updates</h1><p class="page-sub">Everything new across the archive, access-aware.</p>
   <div class="chips scroll" style="margin:8px 0 18px"><a class="chip active">${I.feed}<span>All</span></a><a class="chip" data-nav="/calendar">${I.calendar}<span>Calendar</span></a></div>
   ${rendered || `<div class="empty"><div class="em">${I.feed}</div><h3>No updates yet</h3><p>New chapter and access updates will appear here when they are posted.</p></div>`}`;
 };
+
+function curatedUpdateCard(update,index){
+  const found=update.chapter?byId(update.chapter):null;
+  if (!found?.ch) return updateRow(update);
+  return homeReferenceChapterCard({chapter:found.ch},index,{storyTitle:found.story.title,note:update.note});
+}
 
 /* ============ CALENDAR ============ */
 VIEWS.calendar = function(){

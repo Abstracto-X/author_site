@@ -449,9 +449,6 @@ function handleAct(act, el){
       saveStore();
       render({preserveScroll:true});
       break;
-    case "home-display":
-      store.homeDisplay = ["curated","compact","focus"].includes(el.dataset.homeDisplay) ? el.dataset.homeDisplay : "curated";
-      saveStore(); render({preserveScroll:true}); break;
     case "home-mobile-tab":
       State.homeMobileTab = el.dataset.homeTab === "gallery" ? "gallery" : "chapters";
       render({preserveScroll:true}); break;

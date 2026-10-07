@@ -54,7 +54,7 @@ function backendSetupView(){
 function render(options = {}){
   const scrollY = window.scrollY || 0;
   const focused = options.preserveScroll ? document.activeElement : null;
-  const focusData = focused?.dataset ? Object.entries(focused.dataset).filter(([key])=>["act","homeLayout","homeDisplay","homeTab","homeTier","tag"].includes(key)) : [];
+  const focusData = focused?.dataset ? Object.entries(focused.dataset).filter(([key])=>["act","homeLayout","homeTab","homeTier","tag"].includes(key)) : [];
   if (typeof closeGalleryLightbox === "function" && document.getElementById("gallery-lightbox")) closeGalleryLightbox();
   route = parseHash();
   const main = document.getElementById("main");
