@@ -52,3 +52,9 @@ Aether UI starter declares CC0-1.0 and credits `Abstracto-X/abstracto_tales`. It
 Compact/Focus modes and their controls/handlers/CSS are removed. Old saved mode values are ignored: Split archive always renders Curated cards; Multigrid remains available. Homepage Artwork uses caption-free square-corner tiles with reduced padding/gaps, retaining alt text, accessible button names, image-sheet metadata and mature gates. Updates date groups reuse the Curated cards with story/note context and resolved read/preview/lock actions; non-chapter updates retain their original renderer.
 
 18 isolated tests passed and JavaScript parsing/whitespace checks passed. Browser follow-up is pending: the localhost server was restarted, but the in-app browser timed out both on the existing tab and a fresh verification tab. Owner should refresh Home and Updates, inspect desktop/mobile tile edges/spacing and removed controls, and check a locked/free update action before deployment.
+
+## Edge-to-edge shell and artwork scroll correction — 2026-10-07
+
+The non-reader desktop shell now fills the viewport beside a 78px rail fixed flush to the left edge, without the centered 1500px cap or outer gutters. The mobile shell remains full width with bottom navigation. The homepage Artwork panel uses a single vertical flex stack; its own scroller is vertical-only while the panel height stays aligned with the chapter list on desktop. This replaces CSS multi-columns, which could generate horizontal overflow when height-constrained. Caption-free, square-corner tiles and existing opening/access behavior remain.
+
+19 isolated tests passed, including CSS layout invariants. Fresh visual browser verification remains pending because the in-app browser's connection timed out while binding the preview tab; check default zoom at desktop and mobile, both axes of scroll, and rail alignment after refresh.

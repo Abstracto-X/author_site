@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-07 22:50 Asia/Kolkata — Edge-latched rail and vertical Artwork scroll
+
+Area: reader presentation
+
+- Removed the desktop shell width cap and outer margins; fixed the reader-facing rail to the viewport's left edge and kept a full-width mobile shell.
+- Replaced the height-constrained Artwork CSS multi-columns with a single vertical stack and vertical-only internal scrolling, preventing horizontal column overflow.
+- Files: `index.html`, `styles/reader-redesign.css`, `tests/reader-redesign.test.js`, reader docs, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 19 isolated tests and whitespace checks pass. Browser visual QA remains pending because the in-app preview tab repeatedly timed out.
+
+
 ## 2026-10-07 22:32 Asia/Kolkata — Home simplification and Curated Updates
 
 Area: reader presentation
