@@ -26,7 +26,7 @@ function bottomnav(active){
 }
 function sidenav(active){
   const items=[["home","/","Home"],["library","/library","Library"],["spark","/gallery","Gallery"],["feed","/updates","Updates"],["vault","/vault","Vault"]];
-  return `<nav class="sidenav" aria-label="Primary">${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}" aria-label="${lbl}">${I[ic]}<span>${lbl}</span></a>`).join("")}<span class="spacer"></span><a href="#/support/check-access" data-nav="/support/check-access" aria-label="Access help">${I.shield}<span>Help</span></a></nav>`;
+  return `<nav class="sidenav" aria-label="Primary"><a class="rail-brand" href="#/" data-nav="/" aria-label="Archive home">${esc(SITE_NAME.slice(0,1))}</a>${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}" aria-label="${lbl}" title="${lbl}" ${active===ic?'aria-current="page"':''}>${I[ic]}<span>${lbl}</span></a>`).join("")}<span class="spacer"></span><a href="#/support/check-access" data-nav="/support/check-access" aria-label="Access help" title="Access help">${I.shield}<span>Help</span></a></nav>`;
 }
 function announcement(){ return ""; }
 

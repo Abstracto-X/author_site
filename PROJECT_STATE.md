@@ -24,16 +24,17 @@ Summary:
 - Inspected `reference/aether-ui-starter.zip`: its source components target React/TypeScript/Vite/Storybook. Adapt its CSS/tokens/component visual patterns into the existing plain HTML/CSS/browser JavaScript architecture rather than introducing that toolchain.
 
 Remaining work:
-- Scope/design answers are collected; create `codex/reader-redesign` when beginning implementation, preserving unrelated work.
+- `codex/reader-redesign` created; supplied references/scope committed as `c8e974a`. User requested regular checkpoint commits; an explicit active goal now records the redesign scope.
+- Shared shell/component CSS and reference fonts added in an isolated stylesheet; gallery active-nav state fixed. Home/gallery component migration and automated browser QA are next.
 - Inventory existing reader features and map them to the new components while preserving Supabase/auth/access contracts, routes, delegated events, and stored preferences.
 
 Risks / notes:
 - Initial Git status showed only untracked `reference/`; both supplied files were left untouched. Git inspection used a command-scoped safe.directory setting because the sandbox account differs from the checkout owner.
-- No runtime changes, branch creation, database queries/writes, commit, push, or browser automation performed in this assessment.
+- Runtime implementation has begun on the dedicated branch. No database mutation, Admin/Writer edit, push, or deployment is planned.
 - Current home admits mature artwork for entitled/admin readers without the gallery's explicit opt-in; the owner requested preserving this behavior.
 
 Verification needed:
-- Source inspection only so far; visual rendering and real guest/member/admin interaction checks remain for implementation.
+- Shell/router JavaScript parses via stdin `node --check`; direct Node file invocation hits the sandbox's workspace-parent EPERM, so use stdin/VM or the bundled runtime as appropriate. Whitespace validation passes. Browser and signed-in owner checks remain pending.
 
 
 ## 2026-10-02 Asia/Kolkata — Writer chapter link browser QA

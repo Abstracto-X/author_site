@@ -59,6 +59,7 @@ function render(){
   if (typeof closeReaderPreferences === "function") closeReaderPreferences();
   document.body.classList.toggle("in-reader", inReader);
   document.body.classList.toggle("in-studio", inStudio);
+  document.body.classList.toggle("in-gallery", route.name === "gallery" || route.name === "galleryChar");
   const view = VIEWS[route.name] || VIEWS.home;
   const html = (!inStudio && backendSetupRequired()) ? backendSetupView() : (inStudio && !isAdmin()) ? adminGate() : view();
   const apply = ()=>{
@@ -95,7 +96,7 @@ function ensureChrome(){
   topEl.outerHTML = topbar();
   let navEl = document.querySelector(".bottomnav");
   if (!navEl){ navEl=document.createElement("nav"); app.appendChild(navEl); }
-  const active = {home:"home",library:"library",updates:"feed",shelf:"shelf",vault:"vault"}[route.name] || "";
+  const active = {home:"home",library:"library",gallery:"spark",galleryChar:"spark",updates:"feed",shelf:"shelf",vault:"vault"}[route.name] || "";
   navEl.outerHTML = bottomnav(active);
   let sideEl = document.querySelector(".sidenav");
   if (!sideEl){ sideEl=document.createElement("nav"); app.appendChild(sideEl); }

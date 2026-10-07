@@ -80,6 +80,8 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 
 `aether-app.js` is now only the small bootstrap/init file and must stay last. Its startup gate stops waiting after 12 seconds for auth initialization, loads the public library with recovery messaging, and refreshes the library if delayed authentication later succeeds.
 
+Reader redesign styling is isolated in `styles/reader-redesign.css`, loaded after `styles.css` by `index.html`. Its semantic tokens and glass components are scoped to non-chapter-reader surfaces, preserving the existing `.in-reader` design and preferences. It adapts the owner-supplied reference/starter visuals without introducing React or a build step. Scope, feature preservation, source notice, and QA checklist are in `docs/READER_REDESIGN.md`.
+
 ### Module ownership map
 
 | Module | Responsibility | Notes |

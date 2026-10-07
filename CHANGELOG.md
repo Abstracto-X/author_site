@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-07 15:00 Asia/Kolkata — Reader redesign foundation
+
+Area: reader presentation
+
+- Added an isolated non-reader glass design layer, reference typography, boxed desktop shell/icon rail, responsive mobile navigation, light/dark tokens, and reduced-motion handling. Existing chapter-reader styling remains excluded.
+- Added gallery active-navigation state and recorded the approved feature-preservation/verification contract. No backend, Admin, or Writer changes.
+- Files: `index.html`, `styles/reader-redesign.css`, `js/subscription/chrome.js`, `js/subscription/router.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/READER_REDESIGN.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
 ## 2026-10-02 Asia/Kolkata — Writer chapter link action
 
 Area: standalone Writer
