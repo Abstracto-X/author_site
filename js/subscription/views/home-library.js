@@ -613,21 +613,46 @@ function homeTraditionalGalleryCard(item){
     </button>
   </article>`;
 }
+let homeMasonryObserver = null;
+function homeMasonrySpan(tileWidth, imageWidth, imageHeight){
+  if (!(tileWidth > 0 && imageWidth > 0 && imageHeight > 0)) return 1;
+  return Math.max(1, Math.ceil((tileWidth * imageHeight / imageWidth + 6) / 14));
+}
 function sizeHomeGalleryTiles(){
+  if (homeMasonryObserver) { homeMasonryObserver.disconnect(); homeMasonryObserver = null; }
   document.querySelectorAll(".archive-gallery-card").forEach(card => {
     const image = card.querySelector(".archive-gallery-image");
     if (!image) return;
     const applySize = () => {
       if (!image.naturalWidth || !image.naturalHeight || !card.clientWidth) return;
       const rowHeight = window.innerWidth <= 760 ? 270 : 245;
-      const gap = window.innerWidth <= 760 ? 10 : 10;
       const desiredHeight = card.clientWidth * (image.naturalHeight / image.naturalWidth);
-      const span = Math.max(1, Math.min(5, Math.ceil((desiredHeight + gap) / (rowHeight + gap))));
+      const span = Math.max(1, Math.min(5, Math.ceil((desiredHeight + 10) / (rowHeight + 10))));
       card.style.gridRowEnd = `span ${span}`;
     };
     if (image.complete) applySize();
     else image.addEventListener("load", applySize, { once:true });
   });
+  const masonry = document.querySelector(".rh-masonry");
+  if (!masonry) return;
+  const cards = [...masonry.querySelectorAll(".traditional-gallery-card")];
+  const sizeCards = () => cards.forEach(card => {
+    const image = card.querySelector("img");
+    if (image?.naturalWidth && image.naturalHeight)
+      card.style.gridRowEnd = `span ${homeMasonrySpan(card.clientWidth, image.naturalWidth, image.naturalHeight)}`;
+  });
+  cards.forEach(card => {
+    const image = card.querySelector("img");
+    if (image?.complete) sizeCards();
+    else image?.addEventListener("load", sizeCards, {once:true});
+  });
+  if (typeof ResizeObserver !== "undefined") {
+    let width = masonry.clientWidth;
+    homeMasonryObserver = new ResizeObserver(() => {
+      if (masonry.clientWidth !== width) { width = masonry.clientWidth; sizeCards(); }
+    });
+    homeMasonryObserver.observe(masonry);
+  }
 }
 function homeGalleryImageSheet(url, caption, character){
   const safeUrl = homeSafeMediaUrl(url);

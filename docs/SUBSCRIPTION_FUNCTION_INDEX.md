@@ -9,6 +9,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | `views/home-library.js` | Active `VIEWS.home()` | Reference hero and split archive with retained Multigrid, progress/follow/access, tier filters and incremental loading. |
 | `views/home-library.js` | `homeReferenceChapterCard(item, index, context)` | Tier-colored Curated chapter card shared by Home and Updates, preserving read/preview/lock and progress; optional Updates story/note context. |
 | `views/account-access.js` | `curatedUpdateCard(update, index)` | Resolves real chapter updates into shared Curated cards; retains original rows for non-chapter updates. |
+| `views/home-library.js` | `homeMasonrySpan()` / `sizeHomeGalleryTiles()` | Measure natural artwork ratios into masonry row spans and recalculate on image load/container resize; retain Multigrid image sizing. |
 | `views/home-library.js` | `setupHomeArchive()` | Disconnects stale observer and aligns desktop split-gallery height to the chapter panel. |
 | `views/gallery.js` | `renderUnifiedGallery(charId)` | Shared story artwork browser with character collection deep-link support and mature-access gate. |
 | `views/gallery.js` | `galleryResultMarkup()` / `refreshGalleryResults()` | Filters/sorts real artwork and incrementally renders grid/decks without losing search focus. |

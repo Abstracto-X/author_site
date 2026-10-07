@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-07 — Actual variable-height Home Artwork masonry
+
+Area: reader presentation
+
+- Corrected the interim equal-row grid: artwork tile row spans now follow each image's natural aspect ratio, forming staggered two/three-column masonry with vertical-only scrolling.
+- Resizes on image load and container-width changes without changing data, open-image actions or Multigrid behavior.
+- Files: `index.html`, `styles/reader-redesign.css`, `js/subscription/views/home-library.js`, `tests/reader-redesign.test.js`, reader docs, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 20 isolated tests and whitespace checks passed; fresh browser visual QA remains pending.
+
+
 ## 2026-10-07 22:50 Asia/Kolkata — Edge-latched rail and vertical Artwork scroll
 
 Area: reader presentation

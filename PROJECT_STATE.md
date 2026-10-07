@@ -24,6 +24,7 @@ Summary:
 - Validation: 16 isolated tests passed, all loaded reader scripts parse, diff whitespace check passed; guest live-public-data browser checks had no console errors. See `docs/READER_REDESIGN.md` for coverage.
 
 Remaining work:
+- Latest masonry correction measures natural image aspect ratios into variable grid row spans, preserving staggered two/three-column tiles and vertical-only panel scrolling. 20 isolated tests pass; owner default-zoom visual confirmation remains pending because browser control timed out.
 - Latest layout correction removes the centered desktop cap/gutters, latches the rail to viewport left, and turns Home Artwork into a multi-column grid with vertical-only internal scrolling. 19 isolated tests pass; default-zoom browser visual confirmation remains pending because binding the in-app preview tab timed out again.
 - Latest follow-up removed Compact/Focus, squared/enlarged caption-free Home Artwork tiles and shared Curated cards with Updates. 18 isolated tests pass; fresh browser visual checks remain pending because the in-app browser repeatedly timed out after the preview server was restarted. Refresh Home/Updates at desktop/mobile widths and inspect actions/spacing.
 - Owner signed-in QA before merge/deploy: provider connections, access-key redemption, profile/avatar, notifications, persistent votes, eligible mature toggle, and signed-in reader access/progress.

@@ -62,3 +62,7 @@ The non-reader desktop shell now fills the viewport beside a 78px rail fixed flu
 ## Artwork column clarification — 2026-10-07
 
 Retain two side-by-side tiles at normal desktop/mobile widths and three at wide widths. The fix is the scroll *axis*: CSS grid rows flow downward in a height-limited panel with `overflow-y: auto` and `overflow-x: hidden`; the browser must never add columns sideways. The earlier single-column interpretation was incorrect. At tablet widths the full-width panel displays three tiles across and scrolls with the page.
+
+## Actual masonry correction — 2026-10-07
+
+The previous equal-row grid was not masonry. Homepage Artwork now uses small grid tracks with per-tile row spans computed from each loaded image's natural aspect ratio and rendered width. Tiles keep their varied heights and dense staggered placement in two columns (three when wide). Image load and container-width changes recalculate spans; the artwork panel still scrolls only vertically. Multigrid sizing remains separate. 20 isolated tests pass, including a portrait-vs-landscape span test. Browser visual QA is still needed because the in-app browser timed out in the previous pass.
