@@ -111,7 +111,7 @@ VIEWS.shelf = function(){
   const reads=activeReads();
   return `<h1 class="page-title">My Shelf</h1><p class="page-sub">Your threads, saved things, and reader preferences.</p>
   <div class="section"><div class="section-head"><h2>Continue your threads</h2></div><div class="lane">${reads.map(({ch,story,prog})=>`<button class="card" style="width:210px;text-align:left;${storyAccentVars(story)}" data-read="${ch.id}"><div class="faint" style="font-size:.68rem;text-transform:uppercase">${story.title}</div><div style="font-family:var(--serif);font-weight:600;margin:2px 0 8px">${ch.title}</div>${progressBar(prog.pct)}<div class="faint" style="font-size:.7rem;margin-top:6px">Resume at: ${prog.scene}</div></button>`).join("")}</div></div>
-  <div class="section"><div class="section-head"><h2>Followed</h2></div><div class="lane">${store.followed.map(id=>{const s=bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
+  <div class="section"><div class="section-head"><h2>Followed</h2></div><div class="lane">${store.followed.map(id=>{const s=D.STORIES.find(story=>story.id===id)||bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
   <div class="quicklinks" style="margin:14px 0">
     <a data-nav="/bookmarks">${I.bookmark}<span>Bookmarks</span><small>${store.bookmarks.length} saved</small></a>
     <a data-nav="/quotes">${I.quote}<span>Saved quotes</span><small>${store.quotes.length} lines</small></a>

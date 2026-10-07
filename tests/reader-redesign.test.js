@@ -112,3 +112,17 @@ test('gallery refuses unsafe media URLs and escapes captions',()=>{
   assert.equal(h.run('filterGalleryImages([{image_url:"javascript:alert(1)"}]).length'),0);
   assert.match(h.run('renderGalleryCard({...D.GALLERY_IMAGES[0],caption:"<script>"},0)'),/&lt;script&gt;/);
 });
+
+test('library pins resolve current story IDs and legacy slugs',()=>{
+  const h=harness();
+  const html=h.run('store.followed=["s1","story"];VIEWS.library()');
+  const pins=html.slice(html.indexOf('Pinned to My Shelf'));
+  assert.equal((pins.match(/Real fixture story/g)||[]).length,2);
+});
+
+test('curated cards display combined chapter numbers from real titles',()=>{
+  const h=harness();
+  const html=h.run('homeReferenceChapterCard({chapter:{...D.STORIES[0].chapters[0],n:80,title:"Chapter 78+79: Combined"}},0)');
+  assert.match(html,/rh-chapter-num">78\+79</);
+  assert.match(html,/<h3>Combined<\/h3>/);
+});

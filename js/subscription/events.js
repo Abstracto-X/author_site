@@ -434,31 +434,31 @@ function handleAct(act, el){
       store.filters.homeFeed = el.dataset.feedFilter || "all";
       store.homeFeedLimit = 10;
       saveStore();
-      render();
+      render({preserveScroll:true});
       break;
     case "home-feed-load-more":
       store.homeFeedLimit = (Number(store.homeFeedLimit || 10)) + 10;
-      render();
+      render({preserveScroll:true});
       break;
     case "home-gallery-load-more":
       State.homeGalleryLimit = (Number(State.homeGalleryLimit || 18)) + 12;
-      render();
+      render({preserveScroll:true});
       break;
     case "home-layout":
       store.homeLayout = el.dataset.homeLayout === "traditional" ? "traditional" : "multigrid";
       saveStore();
-      render();
+      render({preserveScroll:true});
       break;
     case "home-display":
       store.homeDisplay = ["curated","compact","focus"].includes(el.dataset.homeDisplay) ? el.dataset.homeDisplay : "curated";
-      saveStore(); render(); break;
+      saveStore(); render({preserveScroll:true}); break;
     case "home-mobile-tab":
       State.homeMobileTab = el.dataset.homeTab === "gallery" ? "gallery" : "chapters";
-      render(); break;
+      render({preserveScroll:true}); break;
     case "home-tier":
       store.filters.homeTier = el.dataset.homeTier || "all";
       store.homeFeedLimit = 8;
-      saveStore(); render(); break;
+      saveStore(); render({preserveScroll:true}); break;
     case "open-home-gallery":
       openSheet(
         () => homeGalleryImageSheet(el.dataset.galleryUrl, el.dataset.galleryCaption, el.dataset.galleryCharacter),

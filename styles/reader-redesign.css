@@ -365,3 +365,37 @@ body:not(.in-reader).lightbox-open { overflow: hidden; }
   body:not(.in-reader) .rg-lb-close { position: fixed; z-index: 3; }
   body:not(.in-reader) .rg-lb-counter { bottom: 8px; }
 }
+
+/* Carry the reference component language onto retained discovery/account/help views.
+   Override old neon tier fills only outside chapter reading. */
+body:not(.in-reader) .background-layer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg,rgb(2 5 7 / .65),rgb(2 5 7 / .82)); }
+html[data-theme="light"] body:not(.in-reader) .background-layer::after { background: rgb(237 243 241 / .88); }
+body:not(.in-reader) .grid-stories { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 18px; }
+body:not(.in-reader) .grid-stories .story-card { width: 100%; max-width: 270px; background: var(--surface-solid); border-radius: 18px; }
+body:not(.in-reader) .story-card .meta { padding: 15px; }
+body:not(.in-reader) .story-card .meta h3 { font-size: 16px; line-height: 1.4; }
+body:not(.in-reader) .story-card .meta .by { margin-top: 8px; font-size: 11px; line-height: 1.6; }
+body:not(.in-reader) :is(.archive-chapter-card:not(.has-art),.chapter-card.chapter-access-coded:not(.has-art)) {
+  background: linear-gradient(135deg,color-mix(in srgb,var(--chapter-tier-accent) 16%,transparent),transparent 70%),var(--surface-solid) !important;
+  border: 1px solid color-mix(in srgb,var(--chapter-tier-accent) 30%,var(--border)) !important;
+  color: var(--text) !important; box-shadow: 0 12px 32px rgb(0 0 0 / .12) !important; border-radius: 19px;
+}
+body:not(.in-reader) :is(.archive-chapter-card:not(.has-art),.chapter-card.chapter-access-coded:not(.has-art)):hover { border-color: var(--chapter-tier-accent) !important; transform: translateY(-3px); }
+body:not(.in-reader) :is(.archive-chapter-card:not(.has-art) .archive-chapter-copy h3,.chapter-card.chapter-access-coded:not(.has-art) .chapter-card-title) { color: var(--text) !important; text-shadow: none; font-weight: 600; }
+body:not(.in-reader) :is(.archive-chapter-card:not(.has-art) .archive-card-footer strong,.chapter-card.chapter-access-coded:not(.has-art) .chapter-card-meta,.chapter-card.chapter-access-coded:not(.has-art) .chapter-card-reason,.chapter-card.chapter-access-coded:not(.has-art) .chapter-card-num) { color: var(--text-faint) !important; text-shadow: none; }
+body:not(.in-reader) :is(.archive-chapter-card:not(.has-art) .archive-tier-pill,.chapter-card.chapter-access-coded:not(.has-art) .chapter-tier-badge) { background: color-mix(in srgb,var(--chapter-tier-accent) 10%,transparent) !important; color: var(--chapter-tier-accent) !important; border: 1px solid color-mix(in srgb,var(--chapter-tier-accent) 35%,transparent) !important; box-shadow: none; }
+body:not(.in-reader) .row { border-radius: 14px; border: 1px solid var(--border); background: var(--surface); padding: 14px; }
+body:not(.in-reader) .row+.row { margin-top: 8px; }
+body:not(.in-reader) .timeline { border: 1px solid var(--border); border-radius: 18px; padding: 22px; background: var(--surface); }
+body:not(.in-reader) :is(.quote-card,.benefits-list-card,.access-status-card,.membership-card) { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; }
+body:not(.in-reader) .chapter-card-title { font-family: var(--serif); font-size: 17px; line-height: 1.4; }
+body:not(.in-reader) .chapter-share { width: 36px; height: 36px; border-radius: 10px; }
+body:not(.in-reader) .story-cover-card { padding: 8px; background: var(--surface); border: 1px solid var(--border-2); }
+@media(min-width:640px) { body:not(.in-reader) .sheet { border-radius: 24px; } }
+@media(max-width:640px) {
+  body:not(.in-reader) .grid-stories { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  body:not(.in-reader) .story-card .meta { padding: 10px; }
+  body:not(.in-reader) .story-card .meta h3 { font-size: 13px; }
+  body:not(.in-reader) .rg-votes button { width: 40px; height: 40px; }
+  body:not(.in-reader) .rg-art-caption { padding-bottom: 60px; }
+}

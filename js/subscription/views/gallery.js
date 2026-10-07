@@ -165,6 +165,7 @@ function openGalleryLightbox(index) {
   const holder=document.createElement("div"); holder.innerHTML=html;
   const box=holder.firstElementChild; document.body.appendChild(box);
   document.body.classList.add("lightbox-open");
+  const app=document.getElementById("app"); if(app) app.inert=true;
   box.addEventListener("keydown",e=>{
     if(e.key!=="Tab") return;
     const controls=[...box.querySelectorAll("button:not(:disabled)")];
@@ -172,13 +173,14 @@ function openGalleryLightbox(index) {
     if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
     else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
   });
-  const restore=action ? box.querySelector(`[data-act="${action}"]${value?`[data-val="${value}"]`:""}:not(:disabled)`) : null;
+  const restore=action ? box.querySelector(`button[data-act="${action}"]${value?`[data-val="${value}"]`:""}:not(:disabled)`) : null;
   (restore || box.querySelector(".rg-lb-close")).focus();
 }
 function closeGalleryLightbox() {
   const box=document.getElementById("gallery-lightbox");
   if(box) box.remove();
   document.body.classList.remove("lightbox-open");
+  const app=document.getElementById("app"); if(app) app.inert=false;
   State.lightboxIndex=-1; State.lightboxImageId=null;
   if(galleryLightboxReturnFocus?.isConnected) galleryLightboxReturnFocus.focus();
   galleryLightboxReturnFocus=null;

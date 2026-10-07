@@ -145,7 +145,7 @@ VIEWS.library = function(){
   </div>
   <div class="section-head"><h2>${q?"Results":"All stories"}</h2><span class="faint" style="font-size:.78rem">${list.length} shown</span></div>
   ${list.length?`<div class="grid-stories stagger">${list.map(storyCard).join("")}</div>`:`<div class="empty"><div class="em">📚</div><h3>No stories match</h3><p>Try searching for something broader.</p></div>`}
-  <div class="section"><div class="section-head"><h2>Pinned to My Shelf</h2></div><div class="lane">${store.followed.map(id=>{const s=bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
+  <div class="section"><div class="section-head"><h2>Pinned to My Shelf</h2></div><div class="lane">${store.followed.map(id=>{const s=D.STORIES.find(story=>story.id===id)||bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
   `;
 };
 
@@ -738,11 +738,13 @@ function homeReferenceChapterCard(item,index){
   const read = !!store.readMarked[ch.id] || pct>=100;
   const status = read ? "Read" : pct>0 ? `Continue · ${Math.round(pct)}%` : "Unread";
   const tier = !ch.required_tier_id ? "Free access" : (ch.required_tier_name || ch.tier || "Member access");
-  const title = String(ch.title || "").replace(/^chapter\s+\d+\s*[:.\-–—]?\s*/i,"") || ch.title;
+  const numbered = String(ch.title || "").match(/^chapter\s+(\d+(?:\s*\+\s*\d+)?)\s*[:.\-–—]?\s*/i);
+  const title = numbered ? String(ch.title).slice(numbered[0].length) || ch.title : ch.title;
+  const displayNumber = numbered ? numbered[1].replace(/\s/g,"") : ch.n || "—";
   const action = readable || access.state==="preview" ? `data-read="${esc(ch.id)}"` : `data-lock="${esc(ch.id)}"`;
   const date = ch.publicDate || ch.updated_at || ch.created_at;
   return `<button class="rh-chapter ${read?"is-read":pct>0?"in-progress":"is-unread"} ${index===0?"is-featured":""}" style="${chapterTierStyle(ch)}" ${action} aria-label="${esc(ch.title)} — ${esc(readable?"Available":access.state==="preview"?"Preview":"Locked")}">
-    <span class="rh-chapter-top"><span class="rh-chapter-num">${esc(ch.n || "—")}</span><span class="rh-chapter-labels"><span class="rh-tier">${esc(tier)}</span><span class="rh-read-state">${read?I.check:""}${esc(status)}</span></span></span>
+    <span class="rh-chapter-top"><span class="rh-chapter-num">${esc(displayNumber)}</span><span class="rh-chapter-labels"><span class="rh-tier">${esc(tier)}</span><span class="rh-read-state">${read?I.check:""}${esc(status)}</span></span></span>
     <h3>${esc(title)}</h3><span class="rh-chapter-meta">${date?`<span>${I.clock}${esc(fmtDate(date))}</span>`:""}<span>${Number(ch.wordCount || ch.readTime*220 || 0).toLocaleString()} words</span>${ch.readTime?`<span>${ch.readTime} min</span>`:""}<span>${readable?I.play:access.state==="preview"?I.eye:I.lock}${readable?"Available":access.state==="preview"?"Preview":"Locked"}</span></span>
     <span class="rh-chapter-progress"><i style="width:${read?100:pct}%"></i></span></button>`;
 }
