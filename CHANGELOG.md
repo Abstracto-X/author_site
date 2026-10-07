@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-07 15:35 Asia/Kolkata — Responsive reader verification and refinements
+
+Area: reader presentation / accessibility
+
+- Corrected legacy absolute cover positioning inside the new hero, added wallpaper scrims and consistent secondary-page cards/catalog rows, and refined narrow layouts.
+- Lightbox makes the app background inert, restores actual button focus during image changes, and dismisses before guest sign-in. Home/gallery UI switches preserve scroll and focus.
+- Chapter cards correctly display combined title numbers; followed Library/Shelf cards resolve current story IDs while retaining legacy slug compatibility.
+- Validation: 16 isolated reader tests pass; desktop route audit, mobile/tablet layouts, dark/light and guest gallery/reader checks completed without console errors. Authenticated persistence remains owner-led QA, documented in project state.
+- Files: `index.html`, `styles/reader-redesign.css`, `js/subscription/events.js`, `js/subscription/views/home-library.js`, `gallery.js`, `account-access.js`, `tests/reader-redesign.test.js`, reader documentation and `PROJECT_STATE.md`.
+
 ## 2026-10-07 15:30 Asia/Kolkata — Story home and unified artwork browser
 
 Area: reader presentation

@@ -2,40 +2,38 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
-## 2026-10-07 14:46 Asia/Kolkata — Reader redesign reference assessment
+## 2026-10-07 15:35 Asia/Kolkata — Reader redesign owner verification
 
-Status: IN PROGRESS
+Status: NEEDS REVIEW
 
 Area:
 - reader / design
 
 Files touched:
-- `PROJECT_STATE.md` only
+- `index.html`, `styles/reader-redesign.css`
+- `js/subscription/chrome.js`, `router.js`, `state.js`, `events.js`
+- `js/subscription/views/home-library.js`, `gallery.js`, `account-access.js`
+- `tests/reader-redesign.test.js`, `docs/READER_REDESIGN.md`, reader overview/function index, `CHANGELOG.md`
 
 Summary:
-- Reviewed both owner-supplied HTML files under `reference/` and the current reader entry, theme tokens, shell/router, active homepage renderer, gallery views, and relevant project context.
-- Home reference uses a desktop icon rail, cinematic cover/synopsis hero, tier-colored chapter cards alongside a height-aligned scrollable masonry gallery, mobile chapter/gallery tabs, and quick links.
-- Gallery reference uses an artwork backdrop, character masthead/collection strip, search/tag/sort controls, masonry and stacked collection decks, incremental loading, and an image/metadata split lightbox.
-- References are standalone visual prototypes, not a replacement runtime framework: sample content, local-only vote counters, canned discussions, and several decorative controls must not become fake production features/data.
-- Owner confirmed reader-facing scope only; Admin, Writer, and the chapter reader remain unchanged. Reproduce the reference styling as closely as possible while preserving existing features and similar navigation.
-- Preserve existing home layout functionality and implement reference-only UI behaviors where they require no backend alteration. Use a unified gallery artwork browser while retaining existing deep-link compatibility.
-- No backend/schema alterations, artwork discussions, or new backend-dependent features. Preserve current mature-artwork access behavior and provide the gallery opt-in toggle for eligible readers.
-- Automated browser checks and image inspection are authorized for the redesign; production-content mutation is not part of testing.
-- Inspected `reference/aether-ui-starter.zip`: its source components target React/TypeScript/Vite/Storybook. Adapt its CSS/tokens/component visual patterns into the existing plain HTML/CSS/browser JavaScript architecture rather than introducing that toolchain.
+- Implementation completed on `codex/reader-redesign` with regular checkpoint commits. Source references and ZIP retained unchanged.
+- Reference-style hero/split archive, retained Multigrid, Curated/Compact/Focus modes, mobile tabs, tier/access/progress/follow actions, unified gallery with character deep links, filters/sort/shuffle/decks/loading, and keyboard-accessible lightbox reuse existing data contracts.
+- Shared non-reader theme covers library/discovery/account/support surfaces. Chapter reader, Admin, Writer, auth/backend, SQL and base styles remain unchanged.
+- Mature home visibility remains entitled/admin automatic; gallery requires entitlement/admin plus explicit opt-in. No discussions, fake content, new framework, or backend alteration.
+- Browser checks fixed cover containment, modal background focus, focus restoration and scroll preservation. Followed shelf now accepts current story IDs and legacy slugs.
+- Validation: 16 isolated tests passed, all loaded reader scripts parse, diff whitespace check passed; guest live-public-data browser checks had no console errors. See `docs/READER_REDESIGN.md` for coverage.
 
 Remaining work:
-- `codex/reader-redesign` created; supplied references/scope committed as `c8e974a`. User requested regular checkpoint commits; an explicit active goal now records the redesign scope.
-- Shared foundation committed as `e33d792`. Home/reference split and unified artwork browser implemented; isolated reader tests now cover home modes/access/mature gates, gallery search/loading/shuffle/deck-lightbox indices and unsafe URLs. Automated browser/visual QA and responsive fixes are next.
-- Inventory existing reader features and map them to the new components while preserving Supabase/auth/access contracts, routes, delegated events, and stored preferences.
+- Owner signed-in QA before merge/deploy: provider connections, access-key redemption, profile/avatar, notifications, persistent votes, eligible mature toggle, and signed-in reader access/progress.
+- Nothing pushed or deployed. Local preview served only at `http://127.0.0.1:8765/`.
 
 Risks / notes:
-- Initial Git status showed only untracked `reference/`; both supplied files were left untouched. Git inspection used a command-scoped safe.directory setting because the sandbox account differs from the checkout owner.
-- Runtime implementation has begun on the dedicated branch. No database mutation, Admin/Writer edit, push, or deployment is planned.
-- Current home admits mature artwork for entitled/admin readers without the gallery's explicit opt-in; the owner requested preserving this behavior.
+- New sessions default to Split archive; previously saved Multigrid preferences remain preserved.
+- Adapted CSS/visual patterns from the React starter without importing its runtime/toolchain or sample data.
+- Browser QA intentionally performed no production writes. Fixture tests do not verify authenticated persistence.
 
 Verification needed:
-- Shell/router JavaScript parses via stdin `node --check`; direct Node file invocation hits the sandbox's workspace-parent EPERM, so use stdin/VM or the bundled runtime as appropriate. Whitespace validation passes. Browser and signed-in owner checks remain pending.
-
+- Complete the signed-in checklist in `docs/READER_REDESIGN.md`; confirm owner visual acceptance against supplied references.
 
 ## 2026-10-02 Asia/Kolkata — Writer chapter link browser QA
 

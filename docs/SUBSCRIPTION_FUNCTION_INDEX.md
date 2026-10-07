@@ -17,6 +17,8 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | `views/gallery.js` | `shuffleGalleryArtwork()` / `voteGalleryArtwork()` | Fisher-Yates UI shuffle; single-flight existing vote write with late-overlay guard. |
 | `router.js` | `render(options)` | Optional scroll/button-focus preservation for UI-only rerenders and lightbox cleanup on navigation. |
 
+Library and `VIEWS.shelf()` resolve followed story IDs against `D.STORIES` before falling back to legacy slugs; storage keys and Follow writes remain unchanged. Gallery lightbox sets the application shell inert while open and restores opener focus when dismissed.
+
 
 Recent Patreon callback reliability changes:
 

@@ -37,3 +37,12 @@ Aether UI starter declares CC0-1.0 and credits `Abstracto-X/abstracto_tales`. It
 - Signed-in owner verification: providers/access keys/profile/notifications; votes persist; mature toggle only eligible; no reader regressions.
 - Visit library/story/chapters/extras/recap/shelf/bookmarks/quotes/history/updates/calendar/collections/Vault/benefits/help/support and existing gallery deep links.
 - Do not claim authenticated production writes are verified by fixture tests or a guest browser.
+
+## Completed automated verification — 2026-10-07
+
+- 16 fixture-only VM tests passed, including all loaded classic-script parsing, home modes/actions/tier gates, mature visibility, gallery filters/pagination/shuffle/deck indices/votes/URL escaping, followed ID compatibility and combined chapter numbering. Run from repository root: `Get-Content tests/reader-redesign.test.js -Raw | node` (stdin avoids sandbox parent-path EPERM).
+- Live public Supabase data, guest session: 1440px desktop audit of Library, Updates, Calendar, Collections, Vault, Shelf, Bookmarks, Quotes, History, Notifications, Benefits, Onboarding, Help, all three Support views, Story, Catalog, Recap, Extras and Story Updates. All rendered expected headings without horizontal overflow.
+- Responsive inspection at 390px, 800px, 1024px and 1440px; mobile Library/Vault/Shelf/Benefits/Help/Catalog/Extras/Gallery had no horizontal overflow. Inspected home mobile tabs and Compact/Curated modes, desktop split alignment, gallery mobile controls, dark/light styling.
+- Gallery search empty/recovery, stacked decks, image navigation, Escape, opener-focus restoration and inert background verified. No browser console warnings/errors recorded. Actual artwork loaded; no bundled fallback content.
+- Opened a real free chapter through the existing catalog and verified secure text hydration and unchanged reader-preference panel controls. Reader source/base styles, backend/auth, Admin and Writer were not modified (checked branch diff).
+- Authenticated provider/access-key/profile/notification/vote/mature-toggle persistence must be verified by the owner before deployment. Browser QA made no production writes. Incremental loading and entitlement cases unavailable in the live guest data were covered by isolated fixtures, not claimed as live persistence checks.

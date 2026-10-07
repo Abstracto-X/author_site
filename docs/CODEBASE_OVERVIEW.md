@@ -103,7 +103,7 @@ The redesigned home defaults to a reference-style split chapter/artwork archive 
 | `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering, including tier-color-coded chapter cards/rows, direct chapter-share controls, and the admin-configurable displayed-chapter cutoff that switches system messages from the legacy treatment to the ornate three-slice frame. Displayed numbers are parsed from titles such as `Chapter 72`, falling back to `chapter_order`. |
 | `views/account-access.js` | Updates, calendar, collections, vault, shelf, notifications, benefits, onboarding. | Must not render hardcoded fake backend content. |
 | `views/help-support.js` | Help/support routes. | Mostly static support copy/forms. |
-| `views/gallery.js` | Visual Archive and character gallery routes. | Visual Archive landing page, featured character hero, roster collection decks, "Fresh Transmissions", per-character gallery, tag filters, grid/deck mode toggles, interactive lightbox modal, image upvoting, and subscriber-only opt-in access for mature-tagged artwork. |
+| `views/gallery.js` | Visual Archive and character gallery routes. | Unified story artwork browser with character collection selection/deep links, search/tag/sort/shuffle, incremental masonry/deck rendering, keyboard-accessible image/metadata lightbox, existing up/down votes, and subscriber-only opt-in mature artwork. |
 | `views/studio-preview.js` | Archived/inactive studio placeholder module. | Not loaded by `index.html`; `/studio/*` redirects to `admin.html`. |
 | `author-studio.js` | Archived/inactive reader-side author/studio prototype helpers. | Not loaded by `index.html`; useful ideas were ported into Admin CMS. |
 | `sheets.js` | Sheet/modal builders. | Account/auth/access sheets, overall site settings, and the dedicated non-modal Reader Preferences rail/drawer used only on chapter routes. |
@@ -134,7 +134,7 @@ Common route groups include:
 | `/story/<slug>` | `views/story-reader.js` | Story hub/details. |
 | `/story/<slug>/chapters` | `views/story-reader.js` | Chapter shelf/catalog. |
 | `/read/<chapter>` | `views/story-reader.js` | Directly addressable chapter reader route; share controls generate this hash URL, while authentication and tier checks still apply to the recipient. |
-| `/gallery`, `/gallery/<slug>`, `/gallery/<slug>/<charId>` | `views/gallery.js` | Visual Archive landing page and individual character artwork gallery viewer. Mature-tagged rows require an active entitlement or admin access; other readers see a subscription banner and no mature previews. |
+| `/gallery`, `/gallery/<slug>`, `/gallery/<slug>/<charId>` | `views/gallery.js` | Unified Visual Archive; character links select a collection in the same artwork browser. Mature-tagged rows require an active entitlement or admin access; other readers see a subscription banner and no mature previews. |
 | `/vault`, `/shelf`, `/notifications`, `/benefits`, `/onboarding` | `views/account-access.js` | Member/account/access surfaces. |
 | `/updates`, `/calendar`, `/collections` | `views/account-access.js` | Backend-aware update/calendar/collection surfaces; must show honest empty states if no DB data exists. |
 | `/help`, `/support` | `views/help-support.js` | Help/support pages. |
