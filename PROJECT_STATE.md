@@ -1519,3 +1519,32 @@ Verification needed:
 - Still confirm normal signed-in library/chapter loading.
 - Still confirm a real browser offline-to-online transition triggers the automatic reconnect path; controlled request failure and manual retry are verified.
 - Confirm Google/Patreon/Boosty sign-in callbacks still refresh catalog access after the pinned SDK change.
+
+## 2026-10-10 01:10 Asia/Kolkata — Reader redesign branch functionality review
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- PROJECT_STATE.md (review record only; no runtime changes)
+
+Summary:
+- Reviewed clean codex/reader-redesign HEAD 3faa42a against main (merge-base comparison). All 22 reader-redesign VM tests passed; loaded classic scripts parse; git diff --check passed.
+- Confirmed P2: selecting Shuffled in gallery-sort-select only sets gallerySort and refreshes results; no shuffle IDs are generated. With no prior shuffle-button click, sortGalleryImages assigns Infinity to every position and preserves input order. Reproduced with eight fixture images: art0 through art7 remained in order and galleryShuffleIds was undefined. A shuffle from another collection likewise supplies no useful ordering for new IDs.
+- The separate shuffle-gallery button does generate a Fisher-Yates ordering. Dropdown selection should initialize ordering for the current collection, with a regression test covering dropdown behavior rather than only preseeded shuffle IDs.
+- No core reader/access-contract regression identified in static review. Backend/auth, chapter-reader view, sheets/preferences, and base styles are unchanged by this branch. This is not proof of signed-in runtime correctness.
+
+Remaining work:
+- Fix the Shuffled dropdown behavior and add event-path coverage.
+- Owner-led desktop/mobile and authenticated QA before merge/deployment: providers, key redemption, profile/avatar, notification preferences, vote persistence/removal, mature blur/reveal, reader progress/comments/reactions and preferences.
+
+Risks / notes:
+- No browser session or production queries/writes were performed during this review.
+- Existing fixture suite does not exercise real DOM delegation, authentication callbacks, Supabase persistence, or computed responsive styles.
+- A suspected Load more hidden-state issue was ruled out: reader-redesign.css explicitly enforces [hidden] display:none !important.
+
+Verification needed:
+- Select Shuffled directly after entering a gallery without first pressing its shuffle button; confirm a generated randomized ordering. Repeat in a different character collection.
+- Complete owner-led QA above; previous redesign visual notes still leave later masonry/NSFW changes awaiting verification.
