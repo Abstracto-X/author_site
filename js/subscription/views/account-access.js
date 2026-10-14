@@ -104,10 +104,14 @@ function activeProviderTier(provider){
 function providerCard(name, key, connected, tier, since, note){
   const sheet = key==='patreon'?'connect-patreon':key==='boosty_discord'?'connect-boosty':'';
   const syncAction = key==='patreon'?'resync':key==='boosty_discord'?'resync-boosty':'';
+  const verification = providerAccessStatus(key);
+  const verificationNote = verification?.state === "checking" ? "Checking membership automatically…"
+    : verification?.state === "reconnect" ? "Reconnect once to restore automatic membership verification."
+    : verification?.state === "unavailable" ? "Verification temporarily unavailable; we will retry automatically." : "";
   return `<div class="card" style="display:flex;gap:13px;align-items:center">
     <span style="width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);font-weight:700;font-size:.7rem;letter-spacing:.04em">${name.slice(0,2)}</span>
-    <div style="flex:1;min-width:0"><div style="font-weight:600">${name}</div><div class="faint" style="font-size:.76rem">${connected?(tier||"Connected")+(since?" · since "+fmtDate(since):""):(note||"Not connected")}</div></div>
-    ${connected?`<button class="btn sm ghost" data-act="${syncAction}">${I.sync}Sync</button>`:`<button class="btn sm story" ${sheet?`data-sheet="${sheet}"`:'disabled'}>Connect</button>`}
+    <div style="flex:1;min-width:0"><div style="font-weight:600">${name}</div><div class="faint" style="font-size:.76rem">${verificationNote || (connected?(tier||"Connected")+(since?" · since "+fmtDate(since):""):(note||"Not connected"))}</div></div>
+    ${verification?.state === "reconnect" ? `<button class="btn sm story" data-sheet="${sheet}">Reconnect</button>` : connected?`<button class="btn sm ghost" data-act="${syncAction}" ${verification?.state === "checking" ? "disabled" : ""}>${I.sync}Check now</button>`:`<button class="btn sm story" ${sheet?`data-sheet="${sheet}"`:'disabled'}>Connect</button>`}
   </div>`;
 }
 function maskKey(c){ if(c.length<=4) return c; return "••••-••••-••••-"+c.slice(-4); }

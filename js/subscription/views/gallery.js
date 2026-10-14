@@ -102,6 +102,7 @@ function renderUnifiedGallery(charId) {
   const contextKey = story.id+":"+(charId || "all");
   if (State.galleryContextKey!==contextKey) { State.galleryContextKey=contextKey; State.galleryLimit=24; State.filterTag="All"; }
   State.currentGalleryImages = selected ? storyImages.filter(img=>img.character_id===charId) : storyImages;
+  if (State.gallerySort==="shuffle" && State.galleryShuffleContext!==contextKey) generateGalleryShuffleIds(State.currentGalleryImages,contextKey);
   const allowed = State.currentGalleryImages.filter(img=>!homeIsMatureGalleryImage(img) || homeCanViewMatureGallery());
   const featured = selected || chars.find(c=>homeSafeMediaUrl(c.profile_image_url)) || chars[0];
   const portrait = homeSafeMediaUrl(featured?.profile_image_url || story.cover_image_url);
@@ -192,11 +193,15 @@ function closeGalleryLightbox() {
   if(galleryLightboxReturnFocus?.isConnected) galleryLightboxReturnFocus.focus();
   galleryLightboxReturnFocus=null;
 }
-function shuffleGalleryArtwork() {
-  const ids=(State.currentGalleryImages || []).map(img=>img.id);
+function generateGalleryShuffleIds(images,contextKey=State.galleryContextKey) {
+  const ids=(images || []).map(img=>img.id);
   for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
-  State.galleryShuffleIds=ids; State.gallerySort="shuffle"; State.galleryLimit=24;
-  render({preserveScroll:true});
+  State.galleryShuffleIds=ids; State.galleryShuffleContext=contextKey;
+}
+function shuffleGalleryArtwork(refreshOnly=false) {
+  generateGalleryShuffleIds(State.currentGalleryImages);
+  State.gallerySort="shuffle"; State.galleryLimit=24;
+  if (refreshOnly) refreshGalleryResults(); else render({preserveScroll:true});
 }
 async function voteGalleryArtwork(imgId,value) {
   if(galleryPendingVotes.has(imgId)) return;

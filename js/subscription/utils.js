@@ -63,6 +63,12 @@ applyTheme();
 /* ============ access-state resolver ============ */
 function chapterResolved(ch) {
   const P = persona();
+  // Backend catalogs already apply the exact tier-rank and entitlement rules.
+  // Do not turn every paid tier into access to every published chapter here.
+  if (ch.backend) {
+    if (ch.can_read_backend) return { state: ch.access_state_backend === "free" ? "free" : "unlocked", isEarly:false, admin:!!P.admin };
+    return { state:gateDisplay(ch), isEarly:ch.state === "early", noTier:!!P.noTier };
+  }
   if (ch.state === "free") return { state:"free", isEarly:false };
   if (ch.state === "unavailable") return { state:"unavailable" };
   if (P.admin) return { state:"unlocked", isEarly: ch.state==="early", admin:true };
@@ -101,6 +107,13 @@ function reasonFor(ch, r) {
   if (r.state === "expired") return "Your member access has expired. Renew to continue.";
   if (r.noTier) return "Your provider tier does not include this library.";
   if (r.state === "key") return "Redeem an access key to read this chapter.";
+  if (ch.backend && !isReadable(r)) {
+    const statuses = ["patreon", "boosty_discord"].map(providerAccessStatus);
+    if (statuses.some(s => s?.state === "checking")) return "We are checking your membership automatically.";
+    if (statuses.some(s => s?.state === "unavailable")) return "Membership verification is temporarily unavailable. We will retry automatically; you do not need to reconnect.";
+    if (statuses.some(s => s?.state === "reconnect")) return "Your membership authorization needs attention. Reconnect your provider in the Vault to continue.";
+    return ch.required_tier_name ? `This chapter requires ${ch.required_tier_name} access or a higher tier.` : "This chapter is not currently available to your account.";
+  }
   return D.KEY_REASONS[ch.id] || "";
 }
 function isReadable(r){ return r.state==="free" || r.state==="unlocked"; }

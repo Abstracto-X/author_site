@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-10-14 20:47 Asia/Kolkata — Automatic reader membership recovery
+
+Area: reader authentication / chapter access reliability
+
+- Connected Patreon and Boosty/Discord now refresh automatically when stale or crossing expiry, at startup and on visible-tab/online lifecycle checks. Manual sync is no longer the default renewal workflow.
+- Added bounded/coalesced provider calls, cooldown/backoff, safe verification outcomes, and expiry-signature tracking. Temporary account-read failures retain known state; account changes/late responses are guarded.
+- Deferred Supabase auth-event network work outside the callback lock. Access-only catalogs preserve authorized loaded text; locked-chapter clicks and denied secure fetches attempt automatic recovery, with dismissal/navigation protection.
+- Bumped touched reader asset versions. Added the first-pass reliability audit and explicitly tracked remaining backend/cross-tab/account-state/content/UX checks.
+- Files: `index.html`, `js/subscription/auth.js`, `backend.js`, `utils.js`, `events.js`, `aether-app.js`, `views/account-access.js`, `tests/reader-access-refresh.test.js`, reader overview/function index/reliability audit, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 39 reader regression tests passed (including 12 new lifecycle/recovery tests); loaded reader scripts parse. No production deployment, privileged provider resync, or database modification performed; signed-in/provider QA remains required.
+
+## 2026-10-14 20:30 Asia/Kolkata — Reader chapter access labels follow server entitlement
+
+Area: reader access
+
+- Backend chapter cards and routes now honor catalog `can_read` instead of treating any paid tier as access to every paid chapter.
+- Reader entitlement display excludes expired rows even when their stored status remains `active`.
+- Files: `js/subscription/utils.js`, `js/subscription/auth.js`, `tests/reader-chapter-access.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: three focused Node tests and syntax checks passed. Signed-in browser and production deployment checks remain pending.
+
+## 2026-10-10 20:49 Asia/Kolkata — Gallery shuffle and front-page mature artwork order
+
+Area: reader gallery / home artwork
+
+- Selecting Shuffled in the Gallery sort dropdown now generates an actual order; switching collections while Shuffled regenerates that collection's order. The shuffle button still reshuffles.
+- Eligible readers see up to four newest published mature artworks ahead of newer safe images in Home Artwork's initial gallery batch. Guests/non-entitled readers still see only safe artwork; blur/reveal behavior is unchanged. No artwork is fabricated if fewer than four exist.
+- Files: `index.html`, `js/subscription/events.js`, `js/subscription/views/gallery.js`, `js/subscription/views/home-library.js`, `tests/reader-redesign.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `docs/READER_REDESIGN.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 24 isolated tests and touched JavaScript syntax checks passed; browser/entitlement visual QA remains pending.
+
 ## 2026-10-07 — Shared NSFW artwork reveal behavior
 
 Area: reader presentation / access-aware artwork

@@ -23,6 +23,7 @@ async function bootstrapReaderData(){
   ]);
   await loadBackendLibrary();
   if (typeof startReaderNotificationPolling === "function") startReaderNotificationPolling();
+  startReaderAccessRefresh();
   saveStore();
   render();
   if (authState.passwordRecovery && authState.user) setTimeout(() => openSheet(sheetUpdatePassword), 0);

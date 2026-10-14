@@ -2,6 +2,89 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-14 20:47 Asia/Kolkata — Reader reliability hardening first pass
+
+Status: IN PROGRESS
+
+Area:
+- reader / auth / provider access / reliability
+
+Files touched:
+- `index.html`, `js/subscription/auth.js`, `backend.js`, `utils.js`, `events.js`, `aether-app.js`, `views/account-access.js`
+- `tests/reader-access-refresh.test.js`, `docs/READER_RELIABILITY_AUDIT.md`, reader overview/function index, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Replaced routine reader-initiated membership refresh with automatic stale/expiry verification for Patreon and Boosty/Discord. Startup, tab-return, visible-minute, online recovery, locked-chapter clicks, and a denied secure fetch have bounded recovery paths. Provider invocations are coalesced within one page; failed automatic checks back off five minutes.
+- Fixed auth-callback network scheduling to avoid the documented Supabase auth-lock hazard; account reads have bounded waits and late-account guards. Transient account failures preserve known data rather than falsely declaring no membership.
+- In-place catalog access updates preserve loaded authorized text and scroll; closing the checking sheet or navigating prevents a late chapter-opening continuation.
+- 39 reader tests pass. These are local changes only. This is not a completed all-reader audit, deployed fix, or verified live billing reconciliation.
+
+Remaining work:
+- Review/deploy the reader changes and run the real-account release matrix in `docs/READER_RELIABILITY_AUDIT.md`, including the originally reported member's fresh visit.
+- Finish provider backend work: native webhooks/scheduled reconciliation, cross-tab token refresh serialization, safe invalid-token versus transient error classification, and a refresh-once path for unexpectedly expired provider access tokens. Current client code correctly classifies only the Edge Function's explicit `connect_required`; some other token failures still arrive as generic 500s.
+- Continue the full reader audit: library reload races/failure preservation; account-owned browser state and pending writes; mature-gallery renewal refresh; direct/external/content/comment/progress routes; misleading unsupported controls; mobile OAuth continuation. See the audit document for evidence and verification scope.
+
+Risks / notes:
+- Browser coalescing cannot serialize separate tabs or server jobs. No backend rollout or schema change occurred this pass.
+- Existing unrelated dirty reader redesign/studio-planning work was preserved.
+
+Verification needed:
+- Renewed/expired/canceled/upgrade/downgrade accounts; revoked OAuth authorization; throttled/offline/slow provider; sign-out/account-switch; direct chapter link; dismissal during recovery; loaded-text/scroll/comment preservation.
+- Confirm the new cache-busting asset versions are served in production and check actual provider and chapter results after automatic verification.
+
+## 2026-10-14 20:30 Asia/Kolkata — Patreon reader access complaint
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / Patreon access
+
+Files touched:
+- `js/subscription/auth.js`, `js/subscription/utils.js`, `tests/reader-chapter-access.test.js`
+- `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Investigated the Patreon member shown as Desire in the owner's screenshot. Their connected site account had a Resident Nemesis entitlement whose `valid_until` was 2026-10-12 04:57:29 UTC; last provider sync was 2026-09-15 03:01:39 UTC. A restricted read on 2026-10-14 confirmed the server considers it inactive, although the row's status remains `active`.
+- The client could misleadingly show the expired entitlement and higher-tier chapters as unlocked. Fixed the local checks to respect validity and backend catalog access. No production rows or deployed functions were changed.
+- A read-only aggregate found 52 Patreon rows with status `active` but past `valid_until` and stale sync timestamps; whether those patrons have renewed is unknown.
+
+Remaining work:
+- Follow-up implemented locally at 20:47: stale connected membership now verifies automatically; the member should not need a routine Vault Sync after deployment. Verify their renewed entitlement on a fresh visit after rollout; do not extend access based only on the old row.
+- Deploy the reader fix after owner review; backend reconciliation for patrons who do not revisit remains unfinished and is tracked in the reliability audit.
+
+Risks / notes:
+- The screenshot shows a current pledge, but the site's stored Patreon snapshot is stale; a live provider resync is needed to verify the current billing/benefit state.
+
+Verification needed:
+- Signed-in browser test with a valid lower-tier account and an expired-entitlement account; confirm chapter labels match server access and direct chapter fetches.
+- Recheck this member's `last_synced_at`, entitlement validity, and chapter access after they sync.
+
+## 2026-10-13 06:00 Asia/Kolkata — Studio rebuild plan (writer/admin + editor + System Tracker)
+
+Status: DEFERRED (planning only)
+
+Area:
+- admin / writer / reader / database / docs
+
+Files touched:
+- `docs/STUDIO_REBUILD_PLAN.md` (new)
+- `PROJECT_STATE.md`
+
+Summary:
+- Wrote a phased plan to replace `admin.html` + `writer.html` with a parallel `studio.html` (plain scripts), a vendored pre-built TipTap editor (owner approved vendoring), structured chapter docs with generated reader HTML, bracket roles (notification/status/label/caption) instead of all brackets becoming system boxes, a small block catalogue (System Notification, Status Screen, Meta Label, Figure with character-bio dropdown, Author Note, Scene Break), chapter revisions, and a Supabase-backed System Tracker ported from the owner's `author_system_manager_v3_shop.html` prototype.
+- No code, schema, or production data changed.
+
+Remaining work:
+- Owner: Phase 0 — export the prototype's JSON (its data lives only in browser localStorage), copy the prototype into `design/system-tracker/`, answer §14 open questions in the plan.
+- Phase 1 editor spike is the go/no-go gate before any schema work.
+
+Risks / notes:
+- System Tracker prototype data is at risk until exported.
+- Plan supersedes the open "chapter version design" item (2026-10-01) once Phase 2 lands.
+
+Verification needed:
+- Owner review of `docs/STUDIO_REBUILD_PLAN.md`.
+
 ## 2026-10-07 15:35 Asia/Kolkata — Reader redesign owner verification
 
 Status: NEEDS REVIEW
@@ -1537,7 +1620,7 @@ Summary:
 - No core reader/access-contract regression identified in static review. Backend/auth, chapter-reader view, sheets/preferences, and base styles are unchanged by this branch. This is not proof of signed-in runtime correctness.
 
 Remaining work:
-- Fix the Shuffled dropdown behavior and add event-path coverage.
+- Completed in code: Shuffled dropdown generates a collection-scoped order; switching collections regenerates it.
 - Owner-led desktop/mobile and authenticated QA before merge/deployment: providers, key redemption, profile/avatar, notification preferences, vote persistence/removal, mature blur/reveal, reader progress/comments/reactions and preferences.
 
 Risks / notes:
@@ -1546,5 +1629,7 @@ Risks / notes:
 - A suspected Load more hidden-state issue was ruled out: reader-redesign.css explicitly enforces [hidden] display:none !important.
 
 Verification needed:
-- Select Shuffled directly after entering a gallery without first pressing its shuffle button; confirm a generated randomized ordering. Repeat in a different character collection.
+- Fixture checks pass for dropdown-driven shuffle generation and collection switching; manually confirm these interactions in a browser.
 - Complete owner-led QA above; previous redesign visual notes still leave later masonry/NSFW changes awaiting verification.
+
+Follow-up completed 2026-10-10 20:49 Asia/Kolkata: Front-page Home Artwork now promotes up to four published mature images for eligible readers without changing guest filtering; 24 fixture tests pass. Browser/entitlement visual QA is still pending and remains tracked in the redesign QA notes.

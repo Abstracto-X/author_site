@@ -17,7 +17,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | `views/gallery.js` | `renderGalleryCard()` / `renderGalleryDecks()` | Masonry artwork cards and stacked tag collections with shared lightbox indices. |
 | `views/gallery.js` | `galleryTone()` / `galleryVoteControls()` / `galleryImageFailed()` | Stable decorative accents, existing vote controls, and honest failed-image state. |
 | `views/gallery.js` | `galleryLightboxImages()` / `renderGalleryLightbox()` / `openGalleryLightbox()` / `closeGalleryLightbox()` | Consistent visible collection, image/metadata split viewer, keyboard/focus lifecycle. |
-| `views/gallery.js` | `shuffleGalleryArtwork()` / `voteGalleryArtwork()` | Fisher-Yates UI shuffle; single-flight existing vote write with late-overlay guard. |
+| `views/gallery.js` | `generateGalleryShuffleIds()` / `shuffleGalleryArtwork()` / `voteGalleryArtwork()` | Collection-scoped Fisher-Yates ordering for dropdown/button shuffle; single-flight existing vote write with late-overlay guard. |
 | `router.js` | `render(options)` | Optional scroll/button-focus preservation for UI-only rerenders and lightbox cleanup on navigation. |
 
 Library and `VIEWS.shelf()` resolve followed story IDs against `D.STORIES` before falling back to legacy slugs; storage keys and Follow writes remain unchanged. Gallery lightbox sets the application shell inert while open and restores opener focus when dismissed.
@@ -99,7 +99,7 @@ Recent reader notification/profile changes:
 | Line | Function | Purpose |
 |---:|---|---|
 | 9 | `getSupabase()` | Helper used by this module. |
-| 18 | `activeEntitlements()` | Helper used by this module. |
+| 18 | `activeEntitlements()` | Keeps only currently valid active rows, honoring the RPC `is_active` flag and validity dates even if the stored status remains `active` after expiry. |
 | 21 | `entitlementLevel()` | Helper used by this module. |
 | 28 | `accountLabel()` | Helper used by this module. |
 | 31 | `isAdmin()` | Helper used by this module. |
@@ -115,7 +115,9 @@ Recent reader notification/profile changes:
 | 102 | `cleanHashRoute(hash, fallbackRoute = "vault")` | Coordinates navigation or route rendering. |
 | 113 | `cleanOAuthCallbackUrl()` | Coordinates authentication/session behavior. |
 | 120 | `consumeOAuthCallback(client)` | Coordinates authentication/session behavior. |
-| n/a | `refreshReaderAccountState(options = {})` | Refreshes profile, entitlements, provider connections, notification preferences, and notifications; also renews a connected bounded Boosty/Discord role grant unless explicitly suppressed. |
+| n/a | `refreshReaderAccountState(options = {})` | Refreshes account datasets, then automatically checks stale connected Patreon and Boosty/Discord access. |
+| n/a | `refreshConnectedProviderAccess(options = {})` / `providerAccessStatus(provider)` | Checks connected providers when stale/expired, coalesces in-flight syncs, applies cooldown/backoff, and exposes safe verified/unavailable/reconnect status. |
+| n/a | `startReaderAccessRefresh()` / `refreshReaderAccessInBackground()` | Binds visible-page minute, visibility, and online recovery checks; tracks entitlement signatures across expiry and reconciles catalog access without interrupting loaded authorized text. |
 | 144 | `initAuth()` | Coordinates authentication/session behavior while ignoring duplicate `INITIAL_SESSION`, token-refresh, and same-session sign-in callbacks. |
 | 185 | `signInWithPassword(email, password)` | Coordinates authentication/session behavior. |
 | 200 | `signUpWithPassword(email, password)` | Coordinates authentication/session behavior. |
@@ -124,7 +126,7 @@ Recent reader notification/profile changes:
 | 233 | `subscriptionRedirectTo()` | Helper used by this module. |
 | 248 | `signInWithGoogle(nextAction = "")` | Coordinates authentication/session behavior. |
 | 272 | `signOutReader()` | Helper used by this module. |
-| 288 | `syncProviderEntitlements(provider = "patreon", options = {})` | Invokes the shared provider sync function for Patreon or `boosty_discord`, then refreshes reader access and connection state. |
+| n/a | `syncProviderEntitlements(provider = "patreon", options = {})` | Invokes the shared sync function with a 10-second deadline and per-user/provider single-flight request; refreshes account state only for the initiating user and supports access-only callers. |
 | 302 | `requestPatreonOAuth()` | Coordinates authentication/session behavior. |
 | n/a | `requestBoostyDiscordOAuth()` | Starts the authenticated Discord OAuth flow used to verify Boosty-assigned subscriber roles. |
 
@@ -244,6 +246,7 @@ Recent reader notification/profile changes:
 | 103 | `loadSiteSettings()` | Loads reader identity/settings from Supabase `site_settings`. |
 | n/a | `loadOptionalBackendRows(label, requestFactory)` | Resolves an optional Supabase reader query with a deadline while preserving soft-failure behavior. |
 | 119 | `loadBackendLibrary(options = {})` | Loads independent reader datasets and per-story chapter catalogs with bounded core retries, then normalizes them into runtime state. |
+| n/a | `refreshBackendChapterAccess()` | Fetches all existing-story catalogs before updating chapter access in place; preserves authorized loaded text, clears denied/unpublished text, and rejects stale-account/library results. |
 | 168 | `loadReaderChapterFromBackend(chapterId)` | Loads secure chapter text with a deadline and bounded retry, retaining a recoverable error code for the UI. |
 | 520 | `incrementChapterViews(chapterId)` | Increments the views count of a chapter in the database using a SECURITY DEFINER RPC. |
 
@@ -256,7 +259,7 @@ Recent reader notification/profile changes:
 | n/a | `toggleSiteTheme()` | Switches site chrome between light and dark without changing reader colors. |
 | n/a | `normalizeReaderTheme(id)` | Normalizes the reader-only dark/light/parchment/custom color selection. |
 | n/a | `readerThemeStyle(settings)` | Derives brightness-adjusted reader surfaces and accessible foreground/dialogue tokens, including custom colors. |
-| 18 | `chapterResolved(ch)` | Handles chapter catalog, reader, or chapter form behavior. |
+| 18 | `chapterResolved(ch)` | Uses backend catalog `can_read` as the authority for Supabase chapters; the legacy local persona fallback applies only to non-backend chapters. |
 | 43 | `gateDisplay(ch)` | Helper used by this module. |
 | 50 | `reasonFor(ch, r)` | Helper used by this module. |
 | 57 | `isReadable(r)` | Helper used by this module. |
@@ -422,6 +425,7 @@ Recent reader notification/profile changes:
 | 10 | `rememberReturn()` | Helper used by this module. |
 | n/a | `repairReaderAssets()` | Removes only Cache Storage entries/service workers scoped to this reader and reloads through a unique URL without clearing auth or preferences. |
 | 11 | `connectPatreonGo()` | Helper used by this module. |
+| n/a | `openChapterAccess(chapterId)` | Rechecks connected membership before showing a gate, opens restored chapters automatically, and ignores late completions after dismissal/navigation/account change. |
 | n/a | `connectBoostyDiscordGo()` | Signs the reader in when necessary, then starts Boosty subscriber-role verification through Discord OAuth. |
 | 26 | `redeemKey(code)` | Helper used by this module. |
 | 52 | `copyText(t)` | Helper used by this module. |

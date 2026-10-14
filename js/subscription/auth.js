@@ -16,7 +16,11 @@ function getSupabase(){
   return sbClient;
 }
 function activeEntitlements(){
-  return (authState.entitlements || []).filter(e => e && (e.status === "active" || e.is_active === true));
+  const now = Date.now();
+  return (authState.entitlements || []).filter(e => e && e.status === "active"
+    && (e.is_active === undefined || e.is_active === null || e.is_active === true)
+    && (!e.valid_from || new Date(e.valid_from).getTime() <= now)
+    && (!e.valid_until || new Date(e.valid_until).getTime() > now));
 }
 function entitlementLevel(){
   const active = activeEntitlements();
@@ -39,13 +43,14 @@ function isAdmin(){
 async function refreshProfile(){
   const client = getSupabase();
   if (!client || !authState.user) { authState.profile = null; return null; }
+  const userId = authState.user.id;
   try {
-    const { data, error } = await client.from("profiles").select("id, username, display_name, avatar_url, role").eq("id", authState.user.id).single();
-    if (error) throw error;
+    const data = await runBackendRequest("reader profile", () => client.from("profiles").select("id, username, display_name, avatar_url, role").eq("id", userId).single(), { retries:0 });
+    if (authState.user?.id !== userId) return null;
     authState.profile = data || null;
   } catch (err) {
     console.warn("Unable to load reader profile", err);
-    authState.profile = null;
+    if (authState.user?.id === userId) authState.error = err;
   }
   return authState.profile;
 }
@@ -91,14 +96,18 @@ function persona(){
 async function refreshEntitlements(){
   const client = getSupabase();
   if (!client || !authState.user) { authState.entitlements = []; return []; }
+  const userId = authState.user.id;
   try {
-    const { data, error } = await client.rpc("get_my_entitlements");
-    if (error) throw error;
+    const data = await runBackendRequest("membership access", () => client.rpc("get_my_entitlements"), { retries:0 });
+    if (authState.user?.id !== userId) return [];
     authState.entitlements = Array.isArray(data) ? data : [];
   } catch (err) {
+    if (authState.user?.id !== userId) return [];
+    // A temporary outage must not turn a known membership into "no access".
+    if (!["PGRST202", "42883"].includes(err.code)) { authState.error = err; return authState.entitlements; }
     try {
-      const { data, error } = await client.from("user_entitlements").select("*, reader_access_tiers(name, slug, tier_rank)").eq("user_id", authState.user.id);
-      if (error) throw error;
+      const data = await runBackendRequest("membership access", () => client.from("user_entitlements").select("*, reader_access_tiers(name, slug, tier_rank)").eq("user_id", userId), { retries:0 });
+      if (authState.user?.id !== userId) return [];
       authState.entitlements = (data || []).map(row => ({
         ...row,
         tier_name: row.reader_access_tiers?.name || row.tier_name,
@@ -106,8 +115,7 @@ async function refreshEntitlements(){
         tier_rank: row.reader_access_tiers?.tier_rank || row.tier_rank
       }));
     } catch (fallbackErr) {
-      authState.entitlements = [];
-      authState.error = fallbackErr;
+      if (authState.user?.id === userId) authState.error = fallbackErr;
     }
   }
   return authState.entitlements;
@@ -115,16 +123,16 @@ async function refreshEntitlements(){
 async function refreshProviderConnections(){
   const client = getSupabase();
   if (!client || !authState.user) { authState.providerConnections = []; return []; }
+  const userId = authState.user.id;
   try {
-    const { data, error } = await client
+    const data = await runBackendRequest("membership connection", () => client
       .from("provider_connections")
       .select("provider, provider_account_label, status, last_synced_at, created_at, updated_at")
-      .eq("user_id", authState.user.id);
-    if (error) throw error;
+      .eq("user_id", userId), { retries:0 });
+    if (authState.user?.id !== userId) return [];
     authState.providerConnections = Array.isArray(data) ? data : [];
   } catch (err) {
-    authState.providerConnections = [];
-    authState.error = err;
+    if (authState.user?.id === userId) authState.error = err;
   }
   return authState.providerConnections;
 }
@@ -318,14 +326,9 @@ async function refreshReaderAccountState(options = {}){
     authState.user && typeof loadNotificationPreferences === "function" ? loadNotificationPreferences() : Promise.resolve(),
     authState.user && typeof loadReaderNotifications === "function" ? loadReaderNotifications() : Promise.resolve()
   ]);
-  if (options.syncBoosty !== false && authState.user && boostyDiscordEnabled() && providerIsConnected("boosty_discord")) {
-    try {
-      await syncProviderEntitlements("boosty_discord", { refreshLibrary:false });
-    } catch (err) {
-      console.warn("Unable to refresh Boosty Discord access during startup", err);
-    }
-  }
+  await refreshConnectedProviderAccess({ syncBoosty:options.syncBoosty });
 }
+let readerAuthRevision = 0;
 async function initAuth(){
   const client = getSupabase();
   if (!client) { authState.ready = true; authState.error = new Error("Supabase setup required: set supabase.url and supabase.anonKey in js/subscription/site-config.js."); return; }
@@ -360,7 +363,7 @@ async function initAuth(){
       saveStore();
       setTimeout(() => pendingAction === "connect-patreon" ? connectPatreonGo() : connectBoostyDiscordGo(), 450);
     }
-    client.auth.onAuthStateChange(async (event, session) => {
+    client.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
         authState.session = session || authState.session;
         authState.user = authState.session?.user || null;
@@ -369,18 +372,40 @@ async function initAuth(){
       }
       const sameSession = authState.session?.access_token && authState.session.access_token === session?.access_token;
       if (event === "SIGNED_IN" && sameSession) return;
+      const revision = ++readerAuthRevision;
+      const previousUserId = authState.user?.id;
       authState.session = session || null;
       authState.user = session?.user || null;
+      if (previousUserId !== authState.user?.id) {
+        authState.profile = null;
+        authState.entitlements = [];
+        authState.providerConnections = [];
+        if (typeof D !== "undefined") (D.STORIES || []).forEach(story => story.chapters.forEach(ch => {
+          if (!ch.backend) return;
+          ch.content = null;
+          ch.contentError = null;
+          ch.can_read_backend = ch.access_state_backend === "free";
+          ch.state = ch.can_read_backend ? "free" : "locked";
+        }));
+      }
       if (!authState.user) authState.passwordRecovery = false;
       store.email = authState.user?.email || "";
-      await refreshReaderAccountState();
-      if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
-      const pendingAction = authState.user ? store.pendingAuthAction : "";
-      if (["connect-patreon", "connect-boosty-discord"].includes(pendingAction)) store.pendingAuthAction = "";
-      saveStore();
-      render();
-      if (pendingAction === "connect-patreon") setTimeout(() => connectPatreonGo(), 450);
-      if (pendingAction === "connect-boosty-discord") setTimeout(() => connectBoostyDiscordGo(), 450);
+      // Supabase callbacks run inside the auth lock. Network work must start
+      // after this synchronous callback returns, or reads can deadlock.
+      window.setTimeout(() => (async () => {
+        if (readerAuthRevision !== revision) return;
+        render({ preserveScroll:true });
+        await refreshReaderAccountState();
+        if (readerAuthRevision !== revision) return;
+        if (typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
+        if (readerAuthRevision !== revision) return;
+        const pendingAction = authState.user ? store.pendingAuthAction : "";
+        if (["connect-patreon", "connect-boosty-discord"].includes(pendingAction)) store.pendingAuthAction = "";
+        saveStore();
+        render();
+        if (pendingAction === "connect-patreon") setTimeout(() => connectPatreonGo(), 450);
+        if (pendingAction === "connect-boosty-discord") setTimeout(() => connectBoostyDiscordGo(), 450);
+      })().catch(err => { authState.error = err; console.warn("Reader session refresh failed", err.code || "reader_request_failed"); }), 0);
     });
   } catch (err) {
     authState.error = err;
@@ -496,6 +521,82 @@ async function signOutReader(){
   store.pendingAuthReturn = "";
   saveStore();
 }
+const providerSyncRequests = new Map();
+const providerAccessChecks = new Map();
+const PROVIDER_ACCESS_FRESH_MS = 15 * 60 * 1000;
+const PROVIDER_ACCESS_RETRY_MS = 60 * 1000;
+function providerAccessStatus(provider){
+  return providerAccessChecks.get(`${authState.user?.id}:${provider}`) || null;
+}
+async function refreshConnectedProviderAccess(options = {}){
+  const userId = authState.user?.id;
+  if (!userId || (typeof navigator !== "undefined" && navigator.onLine === false)) return false;
+  const providers = [patreonEnabled() ? "patreon" : "", options.syncBoosty !== false && boostyDiscordEnabled() ? "boosty_discord" : ""].filter(Boolean);
+  let refreshed = false;
+  await Promise.all(providers.map(async provider => {
+    if (!providerIsConnected(provider)) return;
+    const key = `${userId}:${provider}`;
+    const check = providerAccessChecks.get(key);
+    const lastSync = Date.parse(providerConnection(provider)?.last_synced_at || "") || 0;
+    const now = Date.now();
+    const expiredSinceSync = (authState.entitlements || []).some(e => e.provider === provider && e.status === "active" && e.valid_until && Date.parse(e.valid_until) <= now && Date.parse(e.valid_until) > lastSync);
+    if (check?.state === "reconnect" && lastSync <= check.attemptedAt && !options.force) return;
+    if (check && check.state !== "checking" && now - check.attemptedAt < PROVIDER_ACCESS_RETRY_MS * (check.state === "unavailable" ? 5 : 1)) return;
+    if (!options.force && !expiredSinceSync && now - lastSync < PROVIDER_ACCESS_FRESH_MS) return;
+    providerAccessChecks.set(key, { attemptedAt:now, state:"checking" });
+    try {
+      await syncProviderEntitlements(provider, { refreshLibrary:false });
+      if (authState.user?.id !== userId) return;
+      providerAccessChecks.set(key, { attemptedAt:now, state:"verified" });
+      refreshed = true;
+    } catch (err) {
+      if (authState.user?.id !== userId) return;
+      providerAccessChecks.set(key, { attemptedAt:now, state:err.code === "connect_required" ? "reconnect" : "unavailable" });
+      console.warn("Automatic membership verification did not complete", provider, err.code || "provider_unavailable");
+    }
+  }));
+  return refreshed;
+}
+let readerAccessRefreshTimer = null;
+let readerAccessRefreshBound = false;
+let readerAccessRefreshRequest = null;
+const readerAccessSignatures = new Map();
+async function refreshReaderAccessInBackground(){
+  if (readerAccessRefreshRequest) return readerAccessRefreshRequest;
+  if (!authState.ready || !authState.user || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+  const userId = authState.user.id;
+  readerAccessRefreshRequest = (async () => {
+    const before = readerAccessSignatures.get(userId) ?? JSON.stringify(activeEntitlements());
+    await Promise.all([refreshEntitlements(), refreshProviderConnections()]);
+    if (authState.user?.id !== userId) return;
+    const refreshed = await refreshConnectedProviderAccess();
+    if (authState.user?.id !== userId) return;
+    const after = JSON.stringify(activeEntitlements());
+    if (refreshed || before !== after) {
+      const changed = await refreshBackendChapterAccess();
+      if (changed === null) return; // Library load is busy; retry next tick.
+      readerAccessSignatures.set(userId, after);
+      const readingLoadedText = typeof route !== "undefined" && route.name === "read" && typeof currentChapter !== "undefined" && currentChapter?.ch?.content && currentChapter.ch.can_read_backend;
+      if (authState.user?.id === userId && !readingLoadedText && (changed || route.name === "vault")) render({ preserveScroll:true });
+    }
+  })().catch(err => console.warn("Automatic reader access refresh unavailable", err.code || "reader_request_failed"))
+    .finally(() => { readerAccessRefreshRequest = null; });
+  return readerAccessRefreshRequest;
+}
+function startReaderAccessRefresh(){
+  if (authState.user) readerAccessSignatures.set(authState.user.id, JSON.stringify(activeEntitlements()));
+  if (readerAccessRefreshTimer) window.clearInterval(readerAccessRefreshTimer);
+  readerAccessRefreshTimer = window.setInterval(() => {
+    if (document.visibilityState === "visible") refreshReaderAccessInBackground();
+  }, PROVIDER_ACCESS_RETRY_MS);
+  if (!readerAccessRefreshBound) {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshReaderAccessInBackground();
+    });
+    window.addEventListener("online", () => refreshReaderAccessInBackground());
+    readerAccessRefreshBound = true;
+  }
+}
 async function syncProviderEntitlements(provider = "patreon", options = {}){
   const providerKey = String(provider || "patreon").toLowerCase();
   if (providerKey === "patreon" && !patreonEnabled()) throw new Error("Patreon sync is disabled for this site.");
@@ -503,11 +604,31 @@ async function syncProviderEntitlements(provider = "patreon", options = {}){
   const client = getSupabase();
   if (!client) throw new Error("Supabase client unavailable.");
   if (!authState.user) throw new Error("Sign in before syncing access.");
-  const { data, error } = await client.functions.invoke("sync-provider-entitlements", { body:{ provider:providerKey } });
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  store.providerPending = false;
-  await Promise.all([refreshEntitlements(), refreshProviderConnections()]);
+  const userId = authState.user.id;
+  const key = `${userId}:${providerKey}`;
+  let request = providerSyncRequests.get(key);
+  if (!request) {
+    request = (async () => {
+      const { data, error } = await client.functions.invoke("sync-provider-entitlements", { body:{ provider:providerKey }, timeout:10000 });
+      if (error || data?.error) {
+        let body = data;
+        if (error?.context?.clone) { try { body = await error.context.clone().json(); } catch (_) {} }
+        const failure = new Error(body?.status === "connect_required" ? "Reconnect your membership account to continue automatic verification." : "Membership verification is temporarily unavailable. We will retry automatically.");
+        failure.code = body?.status === "connect_required" ? "connect_required" : "provider_unavailable";
+        if (authState.user?.id === userId) providerAccessChecks.set(key, { attemptedAt:Date.now(), state:failure.code === "connect_required" ? "reconnect" : "unavailable" });
+        throw failure;
+      }
+      if (authState.user?.id === userId) {
+        store.providerPending = false;
+        await Promise.all([refreshEntitlements(), refreshProviderConnections()]);
+      }
+      return data;
+    })().finally(() => providerSyncRequests.delete(key));
+    providerSyncRequests.set(key, request);
+  }
+  const data = await request;
+  if (authState.user?.id !== userId) return data;
+  providerAccessChecks.set(key, { attemptedAt:Date.now(), state:"verified" });
   if (options.refreshLibrary !== false && typeof loadBackendLibrary === "function") await loadBackendLibrary({ force:true });
   saveStore();
   return data;

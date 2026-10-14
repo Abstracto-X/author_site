@@ -16,6 +16,31 @@ function toggleBookmark(){ const f=currentChapter; if(!f) return; const id=f.ch.
 function toggleMarkRead(){ const f=currentChapter; if(!f) return; const id=f.ch.id; store.readMarked[id]=!store.readMarked[id]; saveStore(); if(store.readMarked[id]){ const exists=store.history.find(h=>h.chapterId===id&&h.kind==='completed'); if(!exists) store.history.unshift({chapterId:id, storyId:f.story.id, title:f.ch.title, when:"just now", kind:"completed"}); saveStore(); toast("Marked as read"); } updateReaderBar(); }
 function saveQuote(){ const sel=window.getSelection(); const text=sel?sel.toString().trim():""; if(text.length<4){ toast("Select some text first","Highlight a line in the chapter, then save.",{kind:"bad",icon:"quote",ms:3000}); return; } const f=currentChapter; store.quotes.unshift({id:"q"+now(), chapterId:f.ch.id, story:f.story.id, text, when:"just now"}); saveStore(); sel.removeAllRanges(); toast("Quote saved", text.slice(0,50)+(text.length>50?"…":""), {icon:"quoteFill" in I?"quote":"quote"}); }
 function rememberReturn(){ if(currentChapter) store.pendingReturn=currentChapter.ch.id; saveStore(); }
+let chapterAccessAttempt = 0;
+async function openChapterAccess(chapterId){
+  const attempt = ++chapterAccessAttempt;
+  const hash = window.location.hash;
+  const userId = authState.user?.id;
+  const found = byId(chapterId);
+  let checkingSheet = null;
+  if (found?.ch?.backend && userId && (providerIsConnected("patreon") || providerIsConnected("boosty_discord"))) {
+    openSheet(() => `<button class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><div class="reader-loading" role="status"><div class="reader-spinner"></div><h2>Checking your membership</h2><p>We will open the chapter automatically if your current access includes it.</p></div>`);
+    checkingSheet = currentSheet;
+    try {
+      await refreshConnectedProviderAccess({ force:true });
+      await refreshBackendChapterAccess();
+    } catch (err) { console.warn("Chapter membership check unavailable", err.code || "reader_request_failed"); }
+  }
+  if (attempt !== chapterAccessAttempt || hash !== window.location.hash || userId !== authState.user?.id) {
+    if (checkingSheet && currentSheet === checkingSheet) closeSheet();
+    return;
+  }
+  if (checkingSheet && currentSheet !== checkingSheet) return;
+  const current = byId(chapterId);
+  if (current && isReadable(chapterResolved(current.ch))) { closeSheet(); nav("/read/" + chapterId); return; }
+  rememberReturn();
+  openSheet(() => sheetLock(chapterId));
+}
 async function repairReaderAssets(){
   toast("Repairing reader", "Clearing site asset caches and loading a fresh copy. Your sign-in and preferences are preserved.", {icon:"sync", ms:5000});
   try {
@@ -255,7 +280,7 @@ function delegate(){
     if (t.dataset.nav!=null){ e.preventDefault(); nav(t.dataset.nav); return; }
     if (t.dataset.read!=null){ e.preventDefault(); nav("/read/"+t.dataset.read); return; }
     if (t.dataset.preview!=null){ e.preventDefault(); nav("/read/"+t.dataset.preview); return; }
-    if (t.dataset.lock!=null){ e.preventDefault(); rememberReturn(); openSheet(()=>sheetLock(t.dataset.lock)); return; }
+    if (t.dataset.lock!=null){ e.preventDefault(); openChapterAccess(t.dataset.lock); return; }
     if (t.dataset.readerPreferences!=null){ e.preventDefault(); toggleReaderPreferences(); return; }
     if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,"notification-settings":sheetNotificationSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
     if (t.dataset.follow!=null){ toggleFollow(t.dataset.follow); return; }
@@ -290,7 +315,7 @@ function delegate(){
   });
   document.addEventListener("change",(e)=>{
     const t=e.target;
-    if(t.id==="gallery-sort-select"){ State.gallerySort=t.value; State.galleryLimit=24; refreshGalleryResults(); return; }
+    if(t.id==="gallery-sort-select"){ if(t.value==="shuffle") shuffleGalleryArtwork(true); else { State.gallerySort=t.value; State.galleryLimit=24; refreshGalleryResults(); } return; }
     if(t.dataset && t.dataset.readerCustomColor!=null){ refreshReaderPreferences(); return; }
   });
   document.addEventListener("keydown",(e)=>{

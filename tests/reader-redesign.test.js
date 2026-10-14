@@ -95,6 +95,26 @@ test('shuffle order survives rendering without mutating backend data',()=>{
   assert.equal(h.run(`State.gallerySort='shuffle';State.galleryShuffleIds=['safe','mature'];sortGalleryImages(D.GALLERY_IMAGES)[0].id`),'safe');
   assert.equal(h.run(`D.GALLERY_IMAGES[0].id`),'safe');
 });
+test('Shuffled selection generates an order for the current gallery and refreshes on collection change',()=>{
+  const h=harness();
+  h.run(`State.currentGalleryImages=Array.from({length:8},(_,i)=>({...D.GALLERY_IMAGES[0],id:'art'+i,sort_order:i}));State.galleryContextKey='s1:all';Math.random=()=>0;shuffleGalleryArtwork(true);`);
+  assert.equal(h.run('State.gallerySort'),'shuffle');
+  assert.equal(h.run('State.galleryShuffleIds.length'),8);
+  assert.notEqual(h.run('sortGalleryImages(State.currentGalleryImages).map(img=>img.id).join(",")'),'art0,art1,art2,art3,art4,art5,art6,art7');
+  assert.match(read('js/subscription/events.js'),/t\.value==="shuffle"\) shuffleGalleryArtwork\(true\)/);
+  h.run(`route.params.slug='story';route.params.charId='c1';VIEWS.galleryChar()`);
+  assert.equal(h.run('State.galleryShuffleContext'),'s1:c1');
+  assert.equal(h.run('State.galleryShuffleIds.length'),2);
+});
+test('eligible home artwork promotes up to four mature images ahead of newer safe images',()=>{
+  const h=harness();
+  h.run(`D.GALLERY_IMAGES=[...Array.from({length:24},(_,i)=>({id:'safe'+i,story_id:'s1',image_url:'https://example.com/s'+i+'.jpg',image_tags:[],created_at:new Date(2026,0,24-i).toISOString()})),...Array.from({length:5},(_,i)=>({id:'mature'+i,story_id:'s1',image_url:'https://example.com/m'+i+'.jpg',image_tags:['NSFW'],created_at:new Date(2025,0,5-i).toISOString()}))];`);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),24);
+  h.run('testEntitled=true');
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,4).filter(item=>homeIsMatureGalleryImage(item.image)).length'),4);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,18).filter(item=>homeIsMatureGalleryImage(item.image)).length'),4);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),29);
+});
 test('grid and deck openers use the same image indices as lightbox',()=>{
   const h=harness();
   h.run('State.currentGalleryImages=D.GALLERY_IMAGES;');

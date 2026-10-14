@@ -676,6 +676,29 @@ async function requestBrowserNotifications(){
   return permission;
 }
 
+async function refreshBackendChapterAccess(){
+  const client = getSupabase();
+  const userId = authState.user?.id || null;
+  if (!client || backendState.loading) return null;
+  const stories = D.STORIES || [];
+  // Fetch all catalogs before changing any state; a network error is not a lock.
+  const catalogs = await Promise.all(stories.map(story => runBackendRequest("chapter access", () => client.rpc("get_chapter_catalog", { target_story_id:story.id }), { timeoutMs:10000, retries:0 })));
+  if ((authState.user?.id || null) !== userId || D.STORIES !== stories) return false;
+  let changed = false;
+  stories.forEach((story, index) => {
+    const rows = new Map((catalogs[index] || []).map(row => [row.id, row]));
+    story.chapters.forEach(ch => {
+      const row = rows.get(ch.id);
+      const next = row ? normalizeBackendChapter(row, story) : { state:"unavailable", can_read_backend:false, access_state_backend:"unavailable" };
+      const keys = ["state", "can_read_backend", "access_state_backend", "required_tier_id", "required_tier_name", "tier"];
+      if (keys.some(key => ch[key] !== next[key])) changed = true;
+      keys.forEach(key => { ch[key] = next[key]; });
+      if (!next.can_read_backend) ch.content = null;
+    });
+  });
+  D.UPDATES = buildBackendUpdates(stories);
+  return changed;
+}
 async function loadReaderChapterFromBackend(chapterId){
   const client = getSupabase();
   const found = byId(chapterId);
@@ -684,10 +707,26 @@ async function loadReaderChapterFromBackend(chapterId){
   found.ch.contentLoading = true;
   found.ch.contentError = null;
   found.ch.contentErrorCode = null;
+  const userId = authState.user?.id || null;
   try {
-    const data = await runBackendRequest("secure chapter text", () => client.rpc("get_reader_chapter", { target_chapter_id: chapterId }), { timeoutMs:15000 });
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!row || !row.can_read) throw new Error("This chapter is still locked for this account.");
+    const fetchChapter = () => runBackendRequest("secure chapter text", () => client.rpc("get_reader_chapter", { target_chapter_id: chapterId }), { timeoutMs:15000 });
+    let data = await fetchChapter();
+    let row = Array.isArray(data) ? data[0] : data;
+    if (row && !row.can_read && userId && (authState.user?.id || null) === userId) {
+      // One silent recovery attempt, with per-provider cooldown and no redirects.
+      const refreshed = await refreshConnectedProviderAccess({ force:true });
+      if (refreshed && (authState.user?.id || null) === userId) {
+        data = await fetchChapter();
+        row = Array.isArray(data) ? data[0] : data;
+      }
+    }
+    if ((authState.user?.id || null) !== userId) return false;
+    if (!row || !row.can_read) {
+      found.ch.can_read_backend = false;
+      found.ch.access_state_backend = row?.access_state || "unavailable";
+      found.ch.state = row ? backendStateToAether(row) : "unavailable";
+      throw new Error(row ? "Your current membership does not include this chapter." : "This chapter is no longer available.");
+    }
     found.ch.is_nsfw = !!row.is_nsfw;
     found.ch.external_url = row.external_url || found.ch.external_url || "";
     found.ch.views = Number(row.views || found.ch.views || 0);
