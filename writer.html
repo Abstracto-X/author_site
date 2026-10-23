@@ -247,6 +247,19 @@
         }
 
         /* Table Styles */
+        #dash-header {
+            height: auto;
+            min-height: 5rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding-block: 0.75rem;
+        }
+
+        #dash-controls {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
         .index-table th {
             position: sticky;
             top: 0;
@@ -1746,6 +1759,17 @@
                         </div>
 
                         <button
+                            id="dash-copy-access-list"
+                            type="button"
+                            onclick="App.copyAccessList()"
+                            class="hidden bg-zinc-800 hover:bg-zinc-700 text-zinc-100 px-5 py-2 rounded-full font-medium transition"
+                            hidden
+                        >
+                            <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                            <span id="dash-copy-access-label">Copy access list</span>
+                        </button>
+
+                        <button
                             onclick="App.createNewChapter()"
                             class="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2 rounded-full font-medium shadow-lg shadow-primary-500/20 transition flex items-center gap-2"
                         >
@@ -2362,6 +2386,30 @@
         const MockDB = { tiers: [], stories: [], chapters: [], scratchpads: [] };
 
         function rankOf(tier) { return Number(tier?.tier_rank ?? tier?.rank ?? 0); }
+        function chapterAccessListText(chapters, tiers, readerBaseUrl) {
+            const tierById = new Map(tiers.map(tier => [tier.id, tier]));
+            const evilTier = tiers.find(tier => tier.slug === 'resident-evil');
+            return chapters
+                .slice()
+                .sort((a, b) => Number(b.chapter_order || 0) - Number(a.chapter_order || 0))
+                .map(chapter => {
+                    const tier = chapter.required_tier_id ? tierById.get(chapter.required_tier_id) : null;
+                    if (chapter.required_tier_id && !tier) throw new Error(`Access tier is missing for ${chapter.title || 'a chapter'}.`);
+                    const rawTitle = String(chapter.title || '').replace(/\s+/g, ' ').trim();
+                    const displayTitle = /^chapter\b/i.test(rawTitle)
+                        ? rawTitle
+                        : `Chapter ${chapter.chapter_order || '?'}${rawTitle ? `: ${rawTitle}` : ''}`;
+                    const title = displayTitle.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+                    const url = new URL(readerBaseUrl);
+                    url.hash = `/read/${encodeURIComponent(chapter.id)}`;
+                    const audience = !tier ? 'everyone'
+                        : tier.slug === 'resident-nemesis' && evilTier
+                            ? `${tier.name} and ${evilTier.name}`
+                            : tier.name;
+                    return `[${title}](${url.href}) unlocked for ${audience}`;
+                })
+                .join('\n');
+        }
         function wordCountFromHtml(html) {
             const div = document.createElement('div');
             div.innerHTML = html || '';
@@ -2667,6 +2715,7 @@
             openScratchpadIds: [],
             editorPositions: {},
             dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
+            accessListChapterIds: new Set(),
             primarySidebarCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true',
             editorSettingsCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-editor-settings-collapsed') === 'true',
             systemMessageRenderingEnabled: localStorage.getItem('ea-writer-system-message-rendering') !== 'false'
@@ -2976,6 +3025,7 @@
                         await SummaryManager.loadStory(State.activeStoryId);
                         if (loadRevision !== State.storyLoadRevision) return;
                         await restoreEditorSession();
+                        State.accessListChapterIds.clear();
                         Dashboard.render();
                         Router.navigate(requestedView);
                     }
@@ -3169,6 +3219,24 @@
         // DASHBOARD LOGIC
         // ==========================================
         const Dashboard = {
+            updateAccessListButton() {
+                const button = document.getElementById('dash-copy-access-list');
+                const label = document.getElementById('dash-copy-access-label');
+                if (!button || !label) return;
+                const count = State.accessListChapterIds.size;
+                button.hidden = count === 0;
+                button.classList.toggle('hidden', count === 0);
+                label.textContent = `Copy access list (${count})`;
+            },
+
+            toggleChapterSelection(id, selected) {
+                const chapter = MockDB.chapters.find(item => item.id === id && item.story_id === State.activeStoryId);
+                if (!chapter?.is_published) return;
+                if (selected) State.accessListChapterIds.add(id);
+                else State.accessListChapterIds.delete(id);
+                this.updateAccessListButton();
+            },
+
             render() {
                 const story = MockDB.stories.find(s => s.id === State.activeStoryId);
                 document.getElementById('dash-story-title').innerText = story ? story.title : '';
@@ -3183,6 +3251,11 @@
 
                 let chapters = MockDB.chapters
                     .filter(chapter => chapter.story_id === State.activeStoryId);
+                const selectableIds = new Set(chapters.filter(chapter => chapter.is_published).map(chapter => chapter.id));
+                for (const id of State.accessListChapterIds) {
+                    if (!selectableIds.has(id)) State.accessListChapterIds.delete(id);
+                }
+                this.updateAccessListButton();
 
                 const sorters = {
                     newest: (a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0),
@@ -3296,6 +3369,12 @@
                         <td class="px-6 py-4 text-zinc-400 text-xs font-mono">${chapter.word_count || 0} words</td>
                         <td class="px-6 py-4 text-zinc-500 text-xs">${dateStr}</td>
                         <td class="px-6 py-4 text-right">
+                            <input type="checkbox" ${isPublished ? '' : 'disabled'} ${State.accessListChapterIds.has(chapter.id) ? 'checked' : ''}
+                                onclick="event.stopPropagation()"
+                                onchange="event.stopPropagation(); Dashboard.toggleChapterSelection('${UI.escapeHtml(chapter.id)}', this.checked)"
+                                class="h-4 w-4 mr-2 align-middle accent-emerald-500 cursor-pointer disabled:cursor-not-allowed"
+                                aria-label="Select ${UI.escapeHtml(chapter.title || 'chapter')} for access list"
+                                title="${isPublished ? 'Include in copied access list' : 'Publish this chapter before sharing its link'}">
                             <button type="button" onclick="event.stopPropagation(); App.copyChapterLink('${UI.escapeHtml(chapter.id)}')" class="w-8 h-8 rounded-lg text-zinc-500 hover:text-primary-300 hover:bg-primary-500/10 transition" title="Copy chapter link" aria-label="Copy link to ${UI.escapeHtml(chapter.title || 'chapter')}">
                                 <i class="fa-solid fa-link"></i>
                             </button>
@@ -4912,6 +4991,25 @@
                     UI.showToast(chapter.is_published ? 'Chapter link copied.' : 'Chapter link copied. Readers can open it after publication.', 'success');
                 } catch (error) {
                     UI.showToast('Could not copy chapter link. Check clipboard permission.', 'error');
+                }
+            },
+
+            async copyAccessList() {
+                if (State.tierUpdateInFlight) return UI.showToast('Wait for the access update before copying.', 'info');
+                const selected = MockDB.chapters.filter(chapter =>
+                    chapter.story_id === State.activeStoryId && chapter.is_published && State.accessListChapterIds.has(chapter.id));
+                if (!selected.length) {
+                    State.accessListChapterIds.clear();
+                    Dashboard.updateAccessListButton();
+                    return UI.showToast('Select at least one published chapter.', 'info');
+                }
+                try {
+                    const readerUrl = new URL('index.html', window.location.href);
+                    const text = chapterAccessListText(selected, MockDB.tiers, readerUrl.href);
+                    await navigator.clipboard.writeText(text);
+                    UI.showToast(`${selected.length} chapter access ${selected.length === 1 ? 'line' : 'lines'} copied.`, 'success');
+                } catch (error) {
+                    UI.showToast(error.message || 'Could not copy access list. Check clipboard permission.', 'error');
                 }
             },
 

@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-10-24 Asia/Kolkata — Homepage-only editorial geometry trial
+
+Area: reader homepage styling
+
+- Added the owner-requested selective editorial geometry trial: tighter structural corners, restrained card/control radii, square artwork/index numbers, and quieter borders, scoped to the homepage. The existing header, navigation, and membership pill shapes remain unchanged.
+- Files: `styles/reader-redesign.css`, `index.html`, `tests/reader-redesign.test.js`, `PROJECT_STATE.md`.
+- Validation: local signed-in visual inspection was recorded in `PROJECT_STATE.md`; automated reader tests pass. Owner mobile/light-mode/Multigrid visual acceptance remains pending.
+
+## 2026-10-24 Asia/Kolkata — Copy chapter access list from Writer index
+
+Area: standalone Writer / chapter announcements
+
+- Added published-chapter checkboxes to the Writer index Actions column and a contextual **Copy access list** button beside **New Chapter**. It copies selected chapters in descending chapter order as Patreon-ready Markdown links with `unlocked for` and the current access tier; Nemesis also names Evil. Drafts are excluded, and selection clears when changing stories.
+- Files: `writer.html`, `tests/writer-access-list.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `docs/WRITER_MANUAL_QA.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: Writer contract tests and inline-script syntax checks passed. Signed-in browser clipboard/Patreon paste verification remains pending.
+
+## 2026-10-24 Asia/Kolkata — Restore chronological homepage artwork order
+
+Area: reader homepage gallery
+
+- Removed the special promotion that placed up to four older NSFW images together at the front of Home Artwork. All eligible artwork now follows the same newest-first timestamp order in the split panel and capped mixed feed; entitlement filtering and blur/reveal remain unchanged.
+- Files: `js/subscription/views/home-library.js`, `index.html`, `tests/reader-redesign.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/READER_REDESIGN.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: reader regression tests and syntax check passed; signed-in browser visual verification is pending.
+
 ## 2026-10-14 20:47 Asia/Kolkata — Automatic reader membership recovery
 
 Area: reader authentication / chapter access reliability

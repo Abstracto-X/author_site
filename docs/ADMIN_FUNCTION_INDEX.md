@@ -261,6 +261,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `App.openEditorForChapter(id)` now adds/switches tabs and saves dirty content before switching; `App.closeChapterTab(id)` closes a tab without deleting its chapter.
 - `App.createNewChapter()` saves a dirty active tab first, creates the next `chapter_order` draft, and opens it from the editor tab-strip plus control.
 - `App.quickSetChapterTier(id, tierId)` changes access directly from the chapter index; `tierRowVisual(tierId)` gives each tier a stable row tint/accent while Free Access stays green; `App.copyChapterLink(id)` copies the reader's direct `/read/<chapter-id>` URL from the chapter index; `App.deleteChapter(id)` confirms and deletes from either the index or editor settings.
+- The standalone Writer's `Dashboard.toggleChapterSelection(id, selected)` and `App.copyAccessList()` support published-chapter checkboxes and a one-click Markdown access-list export; `chapterAccessListText()` formats current tier labels and direct reader links without any database write or Patreon integration.
 - `Editor.deleteCurrentSystemMessage()` deletes the system-message block containing the current cursor.
 - `App.copyAsMarkdown()` exports conventional LLM-friendly Markdown: `*` emphasis, `**` strong text, `-` bullets, fenced code, one bracket pair around each system box, and `---` scene dividers; internal system-box line breaks stay inside the same pair and empty boxes are omitted.
 

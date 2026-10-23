@@ -18,6 +18,8 @@ Use `writer.html` in a signed-in admin browser. This checklist is for a **dispos
 
 ## Other editors and navigation
 
+- [ ] In the chapter index, select two published chapters with different tiers. **Copy access list** should appear beside **New Chapter** with the correct count; pasting into a Patreon draft should preserve each `[Chapter title](reader URL) unlocked for Tier` line. Nemesis should also name Evil. Draft checkboxes must be disabled, and switching stories must clear the selection. Check the controls at 390px and 1024px as well.
+
 - [ ] In a Chapter Note, type during a throttled Save. The newer text must remain visible and marked unsaved for a second explicit Save; note/chapter/story switching should not discard it.
 - [ ] Repeat that in a Context block. Closing or switching the block while its Save is in flight must not discard the newer text.
 - [ ] Save and reload a disposable Context preset with chapter and note selections in a known order. Confirm the order survives reload; repeat with an empty selection.

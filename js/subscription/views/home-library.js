@@ -439,14 +439,8 @@ function homeGalleryItems(story){
       },
       story
     }));
-  const newestFirst = [...galleryItems, ...characterArt]
+  return [...galleryItems, ...characterArt]
     .sort((a,b) => homeFeedDate(b.date) - homeFeedDate(a.date));
-  if (!canViewMature) return newestFirst;
-  // Keep up to four published mature works in the initial home gallery batch,
-  // even when newer safe artwork would otherwise push them below the fold.
-  const featuredMature = newestFirst.filter(item => homeIsMatureGalleryImage(item.image)).slice(0,4);
-  const featuredIds = new Set(featuredMature.map(item => item.id));
-  return [...featuredMature, ...newestFirst.filter(item => !featuredIds.has(item.id))];
 }
 function homeFeedItems(story){
   // 1. All published chapters for this story, sorted strictly by chapter index `n` descending (Chapter 46, 45, 44, 43, 42, 41...)

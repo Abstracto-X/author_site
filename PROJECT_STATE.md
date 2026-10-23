@@ -2,6 +2,73 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-24 Asia/Kolkata — Writer access-list paste verification
+
+Status: NEEDS REVIEW
+
+Area:
+- admin / Writer
+
+Files touched:
+- `writer.html`, `tests/writer-access-list.test.js`, `docs/WRITER_MANUAL_QA.md`
+
+Summary:
+- The standalone Writer chapter index now copies selected published chapters as Markdown reader links with `unlocked for` and current tier names. No Supabase or Patreon write is made.
+
+Remaining work:
+- Owner should paste a generated list into a Patreon draft and verify link conversion and desired wording, especially Nemesis/Evil and multiple selected tiers.
+
+Risks / notes:
+- Clipboard availability depends on the browser's secure-context/permission behavior. Draft rows are intentionally not selectable.
+
+Verification needed:
+- Signed-in Writer desktop/mobile click-through, story-switch selection reset, and Patreon draft paste.
+
+## 2026-10-24 Asia/Kolkata — Homepage artwork order browser check
+
+Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- `js/subscription/views/home-library.js`, `index.html`, `tests/reader-redesign.test.js`
+
+Summary:
+- Removed the forced promotion of up to four mature artworks to the top of Home Artwork. The full collection and mixed feed now use newest-first timestamps for every eligible image. The previously attempted Visual Archive Top rated fix was backed out after the owner clarified the reported issue; the pre-existing homepage style trial remains untouched.
+
+Remaining work:
+- Verify the Home Artwork panel and Multigrid as a signed-in eligible reader and as a guest; confirm older NSFW images no longer bunch at the top, and mature access/blur still works.
+
+Risks / notes:
+- No live browser or production query was used in this correction. If the four images genuinely have the newest timestamps, they can still appear together naturally.
+
+Verification needed:
+- Owner visual check on desktop/mobile with real Supabase artwork.
+
+## 2026-10-14 — Homepage editorial geometry trial
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / homepage design
+
+Files touched:
+- `styles/reader-redesign.css`, `index.html`, `tests/reader-redesign.test.js`, `PROJECT_STATE.md`
+
+Summary:
+- Owner requested a homepage-only square-corner trial, then supplied a review favoring selective editorial geometry over uniform rectangles. The revised CSS block is gated by `body:not(.in-reader):not(.in-studio):has(#main .rh-home)` and is easy to remove if rejected. Content/routes/access are unchanged.
+- Revised hierarchy: 3px structural panels, 5px reading/quick-link cards, 3px compact filters/tier labels, 4px primary/gallery controls; square artwork/index numbers. Restored original membership pill, header and sidebar controls instead of applying the trial to shell navigation. Reduced borders on secondary controls/tier labels/stats/quick links; used restrained tone-filled chapter surfaces, slightly roomier title leading/padding and fine footer rules. Brand colors and type families remain unchanged.
+- Artwork/header/control/footer insets stay at 16px, with 8px masonry gaps. CSS asset version was bumped to `20261014.3`.
+- Local signed-in browser inspection confirmed panel/card/filter/index radii of 3/5/3/0px, square artwork, the original 999px membership pill and 14px rail-brand control, expected masonry spacing, and no captured console warnings/errors. All 40 reader tests pass. Updated comparison screenshot saved outside the repo for owner review. No backend/auth change.
+
+Remaining work:
+- Owner visual acceptance or adjustments; do not roll this shape system out to other routes without approval.
+- The homepage-only trial is included in the 2026-10-24 release candidate; visual acceptance is still pending and it should not be applied to other routes without approval.
+
+Verification needed:
+- Owner compare the local homepage to the earlier rounded design. Mobile/light-mode/Multigrid visual checks remain pending.
+
 ## 2026-10-14 20:47 Asia/Kolkata — Reader reliability hardening first pass
 
 Status: IN PROGRESS

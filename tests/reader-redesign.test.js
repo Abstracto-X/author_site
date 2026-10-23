@@ -33,6 +33,19 @@ test('all loaded classic reader scripts parse',()=>{
   assert.ok(scripts.length>=16);
   scripts.forEach(file=>new vm.Script(read(file),{filename:file}));
 });
+test('editorial geometry trial is homepage-scoped with deliberate radii and quiet borders',()=>{
+  const css = read('styles/reader-redesign.css');
+  const trial = css.slice(css.indexOf('/* Homepage-only editorial geometry trial:'));
+  assert.match(trial,/body:not\(\.in-reader\):not\(\.in-studio\):has\(#main \.rh-home\)/);
+  assert.match(trial,/border-radius: 0;/);
+  assert.match(trial,/border-radius: 3px;/);
+  assert.match(trial,/border-radius: 5px;/);
+  assert.match(trial,/border-radius: 4px;/);
+  assert.match(trial,/border-color: transparent;/);
+  assert.match(trial,/\.rh-masonry\s*\{\s*padding: 12px 16px 16px;\s*gap: 8px;/);
+  assert.doesNotMatch(trial,/\.pulse|\.avatar|\.reader-spinner|\.access-chip|\.tb-btn|\.sidenav a/);
+  assert.match(css,/\.rg-art\s*\{[^}]*border-radius: 12px/);
+});
 test('split homepage preserves reading/follow/access actions and pagination',()=>{
   const h=harness(); const html=h.run('VIEWS.home()');
   assert.match(html,/rh-hero/); assert.match(html,/data-follow="s1"/);
@@ -106,13 +119,13 @@ test('Shuffled selection generates an order for the current gallery and refreshe
   assert.equal(h.run('State.galleryShuffleContext'),'s1:c1');
   assert.equal(h.run('State.galleryShuffleIds.length'),2);
 });
-test('eligible home artwork promotes up to four mature images ahead of newer safe images',()=>{
+test('home artwork keeps true newest-first order without grouping mature images',()=>{
   const h=harness();
   h.run(`D.GALLERY_IMAGES=[...Array.from({length:24},(_,i)=>({id:'safe'+i,story_id:'s1',image_url:'https://example.com/s'+i+'.jpg',image_tags:[],created_at:new Date(2026,0,24-i).toISOString()})),...Array.from({length:5},(_,i)=>({id:'mature'+i,story_id:'s1',image_url:'https://example.com/m'+i+'.jpg',image_tags:['NSFW'],created_at:new Date(2025,0,5-i).toISOString()}))];`);
   assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),24);
   h.run('testEntitled=true');
-  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,4).filter(item=>homeIsMatureGalleryImage(item.image)).length'),4);
-  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,18).filter(item=>homeIsMatureGalleryImage(item.image)).length'),4);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,24).filter(item=>homeIsMatureGalleryImage(item.image)).length'),0);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(24).filter(item=>homeIsMatureGalleryImage(item.image)).length'),5);
   assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),29);
 });
 test('grid and deck openers use the same image indices as lightbox',()=>{
