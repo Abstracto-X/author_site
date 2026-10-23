@@ -2386,7 +2386,7 @@
         const MockDB = { tiers: [], stories: [], chapters: [], scratchpads: [] };
 
         function rankOf(tier) { return Number(tier?.tier_rank ?? tier?.rank ?? 0); }
-        function chapterAccessListText(chapters, tiers, readerBaseUrl) {
+        function chapterAccessListEntries(chapters, tiers, readerBaseUrl) {
             const tierById = new Map(tiers.map(tier => [tier.id, tier]));
             const evilTier = tiers.find(tier => tier.slug === 'resident-evil');
             return chapters
@@ -2399,16 +2399,27 @@
                     const displayTitle = /^chapter\b/i.test(rawTitle)
                         ? rawTitle
                         : `Chapter ${chapter.chapter_order || '?'}${rawTitle ? `: ${rawTitle}` : ''}`;
-                    const title = displayTitle.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
                     const url = new URL(readerBaseUrl);
                     url.hash = `/read/${encodeURIComponent(chapter.id)}`;
                     const audience = !tier ? 'everyone'
                         : tier.slug === 'resident-nemesis' && evilTier
                             ? `${tier.name} and ${evilTier.name}`
                             : tier.name;
-                    return `[${title}](${url.href}) unlocked for ${audience}`;
-                })
-                .join('\n');
+                    return { title: displayTitle, url: url.href, audience };
+                });
+        }
+        function chapterAccessListText(entries) {
+            return entries.map(({ title, url, audience }) => {
+                const markdownTitle = title.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+                return `[${markdownTitle}](${url}) unlocked for ${audience}`;
+            }).join('\n');
+        }
+        function chapterAccessListHtml(entries) {
+            const escape = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return entries.map(({ title, url, audience }) =>
+                `<p><a href="${escape(url)}">[${escape(title)}]</a> unlocked for ${escape(audience)}</p>`
+            ).join('');
         }
         function wordCountFromHtml(html) {
             const div = document.createElement('div');
@@ -5005,9 +5016,18 @@
                 }
                 try {
                     const readerUrl = new URL('index.html', window.location.href);
-                    const text = chapterAccessListText(selected, MockDB.tiers, readerUrl.href);
-                    await navigator.clipboard.writeText(text);
-                    UI.showToast(`${selected.length} chapter access ${selected.length === 1 ? 'line' : 'lines'} copied.`, 'success');
+                    const entries = chapterAccessListEntries(selected, MockDB.tiers, readerUrl.href);
+                    const text = chapterAccessListText(entries);
+                    if (navigator.clipboard?.write && window.ClipboardItem) {
+                        await navigator.clipboard.write([new ClipboardItem({
+                            'text/html': new Blob([chapterAccessListHtml(entries)], { type: 'text/html' }),
+                            'text/plain': new Blob([text], { type: 'text/plain' })
+                        })]);
+                        UI.showToast(`${selected.length} linked chapter ${selected.length === 1 ? 'line' : 'lines'} copied.`, 'success');
+                    } else {
+                        await navigator.clipboard.writeText(text);
+                        UI.showToast('Copied plain text only. This browser cannot copy formatted links.', 'info');
+                    }
                 } catch (error) {
                     UI.showToast(error.message || 'Could not copy access list. Check clipboard permission.', 'error');
                 }

@@ -13,10 +13,10 @@ Files touched:
 - `writer.html`, `tests/writer-access-list.test.js`, `docs/WRITER_MANUAL_QA.md`
 
 Summary:
-- The standalone Writer chapter index now copies selected published chapters as Markdown reader links with `unlocked for` and current tier names. No Supabase or Patreon write is made.
+- The standalone Writer chapter index now copies selected published chapters as real HTML hyperlinks with `unlocked for` and current tier names, plus a plain Markdown clipboard fallback. The initial plain-text-only copy was corrected after the owner showed Patreon does not render pasted Markdown links. No Supabase or Patreon write is made.
 
 Remaining work:
-- Owner should paste a generated list into a Patreon draft and verify link conversion and desired wording, especially Nemesis/Evil and multiple selected tiers.
+- Owner should paste a newly generated list into a Patreon draft and verify linked title rendering and desired wording, especially Nemesis/Evil and multiple selected tiers.
 
 Risks / notes:
 - Clipboard availability depends on the browser's secure-context/permission behavior. Draft rows are intentionally not selectable.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-24 Asia/Kolkata — Copy actual hyperlinks for Patreon access lists
+
+Area: standalone Writer / chapter announcements
+
+- Corrected **Copy access list** to place `text/html` anchor links alongside a `text/plain` Markdown fallback on the clipboard. Patreon can now receive already-linked chapter titles rather than literal Markdown that it merely auto-links at the URL. Unsupported browsers explicitly report the plain-text fallback.
+- Files: `writer.html`, `tests/writer-access-list.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `docs/WRITER_MANUAL_QA.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: Writer contract tests passed; real Patreon draft paste remains to be checked by the owner.
+
 ## 2026-10-24 Asia/Kolkata — Homepage-only editorial geometry trial
 
 Area: reader homepage styling

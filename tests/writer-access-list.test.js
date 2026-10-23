@@ -5,14 +5,14 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'writer.html'), 'utf8');
-const from = html.indexOf('function chapterAccessListText(');
+const from = html.indexOf('function chapterAccessListEntries(');
 const to = html.indexOf('function wordCountFromHtml(', from);
 assert.ok(from >= 0 && to > from, 'Writer access-list formatter exists');
 const formatterSource = html.slice(from, to);
 const format = (chapters, tiers) => {
     const context = vm.createContext({ URL, chapters, tiers, baseUrl: 'https://cornyshitler.pages.dev/index.html' });
     vm.runInContext(formatterSource, context);
-    return vm.runInContext('chapterAccessListText(chapters, tiers, baseUrl)', context);
+    return vm.runInContext('chapterAccessListText(chapterAccessListEntries(chapters, tiers, baseUrl))', context);
 };
 
 test('selected chapters copy as descending linked unlock lines using real tier names', () => {
@@ -39,6 +39,15 @@ test('free chapters and Markdown-sensitive titles remain copyable', () => {
     assert.equal(result, '[Chapter 5: A \\[Strange\\] Escape](https://cornyshitler.pages.dev/index.html#/read/free-id) unlocked for everyone');
 });
 
+test('rich clipboard HTML contains actual safe anchor links, not literal Markdown', () => {
+    const chapters = [{ id: 'chapter-id', chapter_order: 80, title: 'Symbiotic <Bonding>', required_tier_id: 'l' }];
+    const tiers = [{ id: 'l', slug: 'resident-licker', name: 'Resident Licker' }];
+    const context = vm.createContext({ URL, chapters, tiers, baseUrl: 'https://cornyshitler.pages.dev/index.html' });
+    vm.runInContext(formatterSource, context);
+    const result = vm.runInContext('chapterAccessListHtml(chapterAccessListEntries(chapters, tiers, baseUrl))', context);
+    assert.equal(result, '<p><a href="https://cornyshitler.pages.dev/index.html#/read/chapter-id">[Chapter 80: Symbiotic &lt;Bonding&gt;]</a> unlocked for Resident Licker</p>');
+});
+
 test('Writer selection is restricted to published chapters and stays inside the dashboard', () => {
     assert.match(html, /id="dash-copy-access-list"[\s\S]*?onclick="App\.copyAccessList\(\)"/);
     assert.match(html, /chapter\.is_published && State\.accessListChapterIds\.has\(chapter\.id\)/);
@@ -46,11 +55,14 @@ test('Writer selection is restricted to published chapters and stays inside the 
     assert.match(html, /State\.accessListChapterIds\.clear\(\);\s*Dashboard\.render\(\);/);
 });
 
-test('Copy access list writes only checked published chapters to the clipboard', async () => {
+test('Copy access list writes rich links for only checked published chapters', async () => {
     const start = html.indexOf('async copyAccessList()');
     const end = html.indexOf('async deleteChapter(id)', start);
     assert.ok(start >= 0 && end > start);
     const writes = [];
+    class ClipboardItemStub {
+        constructor(data) { this.data = data; }
+    }
     const context = vm.createContext({
         URL,
         State: { activeStoryId: 'story', accessListChapterIds: new Set(['live', 'draft', 'other']), tierUpdateInFlight: false },
@@ -64,13 +76,19 @@ test('Copy access list writes only checked published chapters to the clipboard',
         },
         Dashboard: { updateAccessListButton() {} },
         UI: { showToast() {} },
-        navigator: { clipboard: { async writeText(text) { writes.push(text); } } },
-        window: { location: { href: 'https://cornyshitler.pages.dev/writer.html' } }
+        Blob,
+        ClipboardItem: ClipboardItemStub,
+        navigator: { clipboard: { async write(items) { writes.push(items); } } },
+        window: { ClipboardItem: ClipboardItemStub, location: { href: 'https://cornyshitler.pages.dev/writer.html' } }
     });
     vm.runInContext(formatterSource, context);
     vm.runInContext(`const App = { ${html.slice(start, end)} async deleteChapter() {} };`, context);
     await vm.runInContext('App.copyAccessList()', context);
-    assert.deepEqual(writes, [
-        '[Chapter 3: A Way Out](https://cornyshitler.pages.dev/index.html#/read/live) unlocked for Resident Tyrant'
-    ]);
+    assert.equal(writes.length, 1);
+    assert.equal(writes[0].length, 1);
+    const data = writes[0][0].data;
+    assert.equal(await data['text/plain'].text(),
+        '[Chapter 3: A Way Out](https://cornyshitler.pages.dev/index.html#/read/live) unlocked for Resident Tyrant');
+    assert.equal(await data['text/html'].text(),
+        '<p><a href="https://cornyshitler.pages.dev/index.html#/read/live">[Chapter 3: A Way Out]</a> unlocked for Resident Tyrant</p>');
 });
