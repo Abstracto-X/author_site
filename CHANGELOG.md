@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-29 Asia/Kolkata — Unwrap AI Studio system-message code fences on Writer paste
+
+Area: standalone Writer / Markdown paste
+
+- Writer now detects Markdown `html` fences containing only `sys-msg-box` div lines and unwraps them before Markdown-to-Quill conversion. This prevents AI Studio's system messages from appearing as literal code while leaving unrelated code fences unchanged.
+- Files: `writer.html`, `tests/writer-paste.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/WRITER_MANUAL_QA.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 35 Writer tests and inline script syntax passed; signed-in browser paste verification is pending.
+
 ## 2026-10-24 Asia/Kolkata — Copy actual hyperlinks for Patreon access lists
 
 Area: standalone Writer / chapter announcements

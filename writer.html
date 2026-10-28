@@ -3544,6 +3544,18 @@
             return template.innerHTML;
         }
 
+        function unwrapFencedSystemMessageHtml(markdown) {
+            return String(markdown || '').replace(
+                /^([ \t]*)(`{3,}|~{3,})[ \t]*(?:html)?[ \t]*\r?\n([\s\S]*?)^\1\2[ \t]*$/gmi,
+                (fence, indent, marker, body) => {
+                    const lines = body.replace(/\r\n?/g, '\n').split('\n').filter(line => line.trim());
+                    const isSystemDiv = /^\s*<div\s+class\s*=\s*(["'])sys-msg-box\1\s*>.*<\/div>\s*$/i;
+                    if (!lines.length || !lines.every(line => isSystemDiv.test(line))) return fence;
+                    return `\n\n${lines.map(line => line.trim()).join('\n')}\n\n`;
+                }
+            );
+        }
+
         function markdownToEditorHtml(markdown) {
             let md = String(markdown || '');
 
@@ -3833,6 +3845,7 @@
 
                     const html = clipboard.getData('text/html') || '';
                     const text = clipboard.getData('text/plain') || '';
+                    const normalizedText = text ? unwrapFencedSystemMessageHtml(text) : text;
 
                     /*
                      * Rule:
@@ -3840,14 +3853,14 @@
                      * 2. Plain Markdown becomes rich text.
                      * 3. Weak HTML wrappers around Markdown are treated as Markdown.
                      */
-                    if (html && richHtmlLooksUseful(html)) {
+                    if (normalizedText === text && html && richHtmlLooksUseful(html)) {
                         return;
                     }
 
-                    if (text && looksLikeMarkdown(text)) {
+                    if (normalizedText && (normalizedText !== text || looksLikeMarkdown(normalizedText))) {
                         event.preventDefault();
 
-                        const editorHtml = markdownToEditorHtml(text);
+                        const editorHtml = markdownToEditorHtml(normalizedText);
                         pasteHtmlAtCursor(editorHtml);
 
                         UI.showToast('Markdown pasted as rich text.', 'success');

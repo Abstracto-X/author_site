@@ -2,6 +2,28 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-29 Asia/Kolkata — AI Studio system-message paste browser check
+
+Status: NEEDS REVIEW
+
+Area:
+- admin / Writer
+
+Files touched:
+- `writer.html`, `tests/writer-paste.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/WRITER_MANUAL_QA.md`
+
+Summary:
+- Writer unwraps Markdown HTML code fences containing only `sys-msg-box` div lines before paste conversion, without changing unrelated fences.
+
+Remaining work:
+- Owner should paste a fresh AI Studio Copy Markdown chapter into a signed-in Writer session and confirm the system messages render as editable boxes.
+
+Risks / notes:
+- The normalizer targets exact `sys-msg-box` div lines in an `html` or unlabeled fence. Different AI output markup may need a separate rule.
+
+Verification needed:
+- Check surrounding prose, inline code, multiple system lines, ordinary code fences, and save/reopen rendering in a draft chapter.
+
 ## 2026-10-24 Asia/Kolkata — Writer access-list paste verification
 
 Status: NEEDS REVIEW

@@ -19,6 +19,7 @@ Use `writer.html` in a signed-in admin browser. This checklist is for a **dispos
 ## Other editors and navigation
 
 - [ ] In the chapter index, select two published chapters with different tiers. **Copy access list** should appear beside **New Chapter** with the correct count; pasting into a Patreon draft should show clickable bracketed chapter titles followed by `unlocked for Tier`, not raw `[title](URL)` Markdown. Nemesis should also name Evil. Draft checkboxes must be disabled, and switching stories must clear the selection. Check the controls at 390px and 1024px as well.
+- [ ] In Writer, paste AI Studio Copy Markdown containing a fenced `html` block made only of `<div class="sys-msg-box">…</div>` lines. The lines should appear as editable system boxes, not a literal code block; surrounding prose and inline code should remain. Paste an unrelated or mixed-content code fence and confirm it stays code.
 
 - [ ] In a Chapter Note, type during a throttled Save. The newer text must remain visible and marked unsaved for a second explicit Save; note/chapter/story switching should not discard it.
 - [ ] Repeat that in a Context block. Closing or switching the block while its Save is in flight must not discard the newer text.
