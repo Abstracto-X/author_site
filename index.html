@@ -12,11 +12,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/reader-redesign.css?v=20261014.3">
+  <link rel="stylesheet" href="styles/reader-foundation.css?v=20261029.1">
 </head>
 <body>
   <div class="background-layer" id="global-bg"></div>
   <div id="app">
-    <main id="main" aria-live="polite"></main>
+    <a class="reader-skip-link" href="#main" data-act="skip-to-content">Skip to content</a>
+    <main id="main" aria-live="polite" tabindex="-1"></main>
   </div>
 
   <noscript>
@@ -31,19 +33,20 @@
   <!-- Self-hosted and version-pinned so reader startup does not depend on a third-party CDN. -->
   <script src="vendor/supabase/supabase-2.111.0.min.js?v=20260915.3"></script>
   <script src="js/subscription/config.js?v=20260915.3"></script>
-  <script src="js/subscription/state.js?v=20261007.6"></script>
+  <script src="js/subscription/state.js?v=20261029.1"></script>
   <script src="js/subscription/auth.js?v=20261014.1"></script>
   <script src="js/subscription/backend.js?v=20261014.1"></script>
   <script src="js/subscription/utils.js?v=20261014.1"></script>
-  <script src="js/subscription/chrome.js?v=20261007.6"></script>
-  <script src="js/subscription/router.js?v=20261007.6"></script>
+  <script src="js/subscription/chrome.js?v=20261029.1"></script>
+  <script src="js/subscription/router.js?v=20261029.1"></script>
   <script src="js/subscription/views/home-library.js?v=20261024.1"></script>
-  <script src="js/subscription/views/story-reader.js?v=20260915.3"></script>
-  <script src="js/subscription/views/account-access.js?v=20261014.1"></script>
-  <script src="js/subscription/views/help-support.js?v=20260915.3"></script>
+  <script src="js/subscription/views/story-reader.js?v=20261029.1"></script>
+  <script src="js/subscription/views/account-access.js?v=20261029.1"></script>
+  <script src="js/subscription/views/help-support.js?v=20261029.1"></script>
   <script src="js/subscription/views/gallery.js?v=20261010.1"></script>
-  <script src="js/subscription/sheets.js?v=20260915.3"></script>
-  <script src="js/subscription/events.js?v=20261014.1"></script>
+  <script src="js/subscription/sheets.js?v=20261029.1"></script>
+  <script src="js/subscription/views/reader-settings.js?v=20261029.1"></script>
+  <script src="js/subscription/events.js?v=20261029.1"></script>
   <script src="js/subscription/onboarding.js?v=20260915.3"></script>
   <script src="js/subscription/aether-app.js?v=20261014.1"></script>
 </body>

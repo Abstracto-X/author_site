@@ -42,6 +42,7 @@ const defaultStore = () => ({
   dismissedNotifs: [],
   filters: { q:"", chips:[] },
   homeLayout: "traditional",
+  readerNavCollapsed: false,
   theme: "dark"
 });
 let store;

@@ -13,6 +13,7 @@ function parseHash(){
   else if (p[0]==="updates") r.name="updates";
   else if (p[0]==="calendar") r.name="calendar";
   else if (p[0]==="collections"){ r.name = p[1]?"collection":"collections"; r.params.slug=p[1]; }
+  else if (p[0]==="settings") r.name="settings";
   else if (p[0]==="vault") r.name="vault";
   else if (p[0]==="my-shelf") r.name="shelf";
   else if (p[0]==="bookmarks") r.name="bookmarks";
@@ -40,7 +41,7 @@ function parseHash(){
   return r;
 }
 
-function nav(path){ if(path===location.hash||( "#"+path)===location.hash){ render(); } else { location.hash = path; } }
+function nav(path){ if (typeof closeSheet === "function") closeSheet(); if(path===location.hash||( "#"+path)===location.hash){ render(); } else { location.hash = path; } }
 
 
 function backendSetupRequired(){ return !backendState.loaded || (!!backendState.error && !(D.STORIES || []).length); }
@@ -65,7 +66,8 @@ function render(options = {}){
   document.body.classList.toggle("in-studio", inStudio);
   document.body.classList.toggle("in-gallery", route.name === "gallery" || route.name === "galleryChar");
   const view = VIEWS[route.name] || VIEWS.home;
-  const html = (!inStudio && backendSetupRequired()) ? backendSetupView() : (inStudio && !isAdmin()) ? adminGate() : view();
+  const catalogIndependent = ["help","checkAccess","wrongAccount","contact","settings"].includes(route.name);
+  const html = (!inStudio && !catalogIndependent && backendSetupRequired()) ? backendSetupView() : (inStudio && !isAdmin()) ? adminGate() : view();
   const apply = ()=>{
     if (inReader){
       main.innerHTML = html;
@@ -93,6 +95,7 @@ function prefersReducedMotion(){ return window.matchMedia && window.matchMedia("
 let chromeBuilt = false;
 function ensureChrome(){
   const app = document.getElementById("app");
+  document.body.classList.toggle("reader-nav-collapsed", store.readerNavCollapsed === true);
   // remove studio chrome if present (leaving studio)
   const studioTopEl = document.querySelector(".studio-top");
   if (studioTopEl) studioTopEl.remove();
@@ -104,7 +107,7 @@ function ensureChrome(){
   topEl.outerHTML = topbar();
   let navEl = document.querySelector(".bottomnav");
   if (!navEl){ navEl=document.createElement("nav"); app.appendChild(navEl); }
-  const active = {home:"home",library:"library",gallery:"spark",galleryChar:"spark",updates:"feed",shelf:"shelf",vault:"vault"}[route.name] || "";
+  const active = {home:"home",library:"library",story:"library",chapters:"library",recap:"library",extras:"library",storyUpdates:"library",collections:"library",collection:"library",gallery:"spark",galleryChar:"spark",updates:"feed",calendar:"feed",shelf:"shelf",bookmarks:"shelf",quotes:"shelf",history:"shelf",vault:"vault",benefits:"vault",settings:"cog",help:"help",checkAccess:"help",wrongAccount:"help",contact:"help"}[route.name] || "";
   navEl.outerHTML = bottomnav(active);
   let sideEl = document.querySelector(".sidenav");
   if (!sideEl){ sideEl=document.createElement("nav"); app.appendChild(sideEl); }

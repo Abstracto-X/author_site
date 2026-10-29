@@ -8,55 +8,42 @@ VIEWS.help = function(){
   <div class="quicklinks" style="margin:14px 0">
     <a data-nav="/support/check-access">${I.shield}<span>Access Check</span><small>Diagnose now</small></a>
     <a data-nav="/support/wrong-account">${I.user}<span>Wrong account?</span><small>Recovery flow</small></a>
-    <a data-nav="/support/contact">${I.mail}<span>Contact support</span><small>With context packet</small></a>
+    <a data-nav="/support/contact">${I.mail}<span>Contact support</span><small>Review your access details</small></a>
   </div>
   <div class="section"><div class="section-head"><h2>Access-state glossary</h2></div><div class="col-flex">${D.GLOSSARY_STATES.map(g=>`<div class="card" style="display:flex;gap:12px;align-items:center"><span class="ax ${g.color==='good'?'free':g.color}" style="font-size:1.2rem"><span class="ic" style="width:22px;height:22px">${I[g.icon]}</span></span><div style="flex:1"><div style="font-weight:600;font-size:.9rem">${g.label}</div><div class="faint" style="font-size:.78rem">${g.d}</div></div></div>`).join("")}</div></div>
   <div class="section"><div class="section-head"><h2>Common questions</h2></div><div class="col-flex">${q.map(([t,a])=>`<details class="card" style="padding:0"><summary style="padding:14px 16px;cursor:pointer;font-weight:600;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">${t}${I.chevR}</summary><div style="padding:0 16px 14px" class="muted" >${a}</div></details>`).join("")}</div></div>
   <div class="section"><div class="section-head"><h2>Features explained</h2></div><div class="col-flex">
     <div class="card"><div style="font-weight:600;margin-bottom:4px">${I.eye} Previews</div><p class="muted" style="font-size:.82rem;margin:0">Previews show real opening text. The rest of the chapter is never sent to your browser until access is verified.</p></div>
-    <div class="card"><div style="font-weight:600;margin-bottom:4px">${I.msg} Paragraph &amp; chapter comments</div><p class="muted" style="font-size:.82rem;margin:0">Tap a paragraph chip to note a specific line, or leave a chapter note at the end. Toggle chips in reader settings.</p></div>
-    <div class="card"><div style="font-weight:600;margin-bottom:4px">${I.spark} Illustrated chapters</div><p class="muted" style="font-size:.82rem;margin:0">Some chapters include inline figures. Hide them in reader settings if you prefer pure text.</p></div>
+    <div class="card"><div style="font-weight:600;margin-bottom:4px">${I.msg} Paragraph &amp; chapter comments</div><p class="muted" style="font-size:.82rem;margin:0">Tap a paragraph chip to note a specific line, or leave a chapter note at the end. Chapter notes are available at the end of each chapter.</p></div>
+    <div class="card"><div style="font-weight:600;margin-bottom:4px">${I.spark} Illustrated chapters</div><p class="muted" style="font-size:.82rem;margin:0">Some chapters include inline figures. Open a figure to view it in more detail.</p></div>
     <div class="card"><div style="font-weight:600;margin-bottom:4px">${I.alert} Unavailable chapters</div><p class="muted" style="font-size:.82rem;margin:0">A temporary connection, account-check, or server error can interrupt a chapter request. Use Try again, verify your connection, then use Check access if the problem continues.</p></div>
   </div></div>`;
 };
 
 /* ============ SUPPORT ============ */
 VIEWS.checkAccess = function(){
-  const P=persona();
-  const patreonConnected=providerIsConnected("patreon");
-  const boostyConnected=providerIsConnected("boosty_discord");
-  return `<a class="section-link" data-nav="/help" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}Help</a>
-  <h1 class="page-title">Access Health Check</h1><p class="page-sub">A guided check of your access — no jargon.</p>
-  <div class="card tinted" style="margin:14px 0"><div class="between"><div><div class="eyebrow">Signed-in account</div><div style="font-family:var(--serif);font-weight:600">${P.signedIn?store.email:"Not signed in"}</div></div>${P.signedIn?badge("free",I.check+"Verified"):badge("","Guest")}</div></div>
-  <div class="timeline">
-    <div class="tl-item"><div class="when">Step 1</div><div class="what">Account verified</div><div class="faint" style="font-size:.78rem">${P.signedIn?"You're signed in.":"Sign in to continue."}</div></div>
-    <div class="tl-item ${P.provider?'':'warn'}"><div class="when">Step 2</div><div class="what">Provider: ${P.provider||"none connected"}</div><div class="faint" style="font-size:.78rem">${P.provider?"Connected.":"Connect provider or redeem a key."}</div></div>
-    <div class="tl-item ${P.pending?'warn':''}"><div class="when">Step 3</div><div class="what">${P.pending?"Sync in progress":"Last sync: just now"}</div><div class="faint" style="font-size:.78rem">${P.pending?"Verifying your tier — automatic.":"Access is up to date."}</div></div>
-    <div class="tl-item ${P.level>0||store.grantedKey?'':'bad'}"><div class="when">Step 4</div><div class="what">${P.tier||"Tier"} ${P.noTier?"(not qualifying)":""}</div><div class="faint" style="font-size:.78rem">${P.level>0?"Qualifies for this library.":P.noTier?"This tier doesn't include access.":"No active tier."}</div></div>
-  </div>
-  <div class="col-flex" style="margin-top:14px">
-    ${patreonConnected?`<button class="btn ghost" data-act="resync">${I.sync}Sync Patreon</button>`:""}
-    ${boostyConnected?`<button class="btn ghost" data-act="resync-boosty">${I.sync}Sync Boosty role</button>`:""}
-    ${!patreonConnected&&!boostyConnected?`<button class="btn story" data-sheet="connect-provider">${I.vault}Connect provider</button>`:""}
-    <button class="btn ghost" data-sheet="redeem">${I.key}Try a key instead</button>
-    <button class="btn ghost" data-nav="/support/wrong-account">${I.user}Not seeing your access?</button>
-  </div>`;
+  const P=persona(), access=readerAccessSummary(P);
+  const providers=[["Patreon","patreon"],["Boosty via Discord","boosty_discord"]].filter(([,key])=>providerConnection(key));
+  return `<div class="reader-workspace">${readerPageHeading("Check your access","A snapshot of your account and its latest recorded membership checks.")}
+    <div class="reader-support-grid"><section class="reader-panel"><h2>Your reader account</h2><p class="reader-note">${esc(P.signedIn?store.email:"You are browsing without signing in.")}</p><span class="reader-status" data-state="${access.state}">${I.user}${esc(access.label)}</span><p>${esc(P.admin?"Admin reader override":P.tier||"Free chapters remain available.")}</p><button class="btn ghost" data-sheet="persona">${P.signedIn?'View account':'Sign in'}</button></section>
+    <section class="reader-panel"><h2>Membership checks</h2>${providers.length?providers.map(([name,key])=>`<div class="reader-check-row"><h3>${name}</h3><p>${esc(providerIsConnected(key)?'Connected':'Not currently connected')}</p><p class="reader-note">${esc(providerVerificationText(key))}</p></div>`).join(""):'<p class="reader-note">No provider connection is recorded for this account.</p>'}<a class="btn ghost" href="#/vault" data-nav="/vault">Manage connections ${I.chevR}</a></section></div>
+    <p class="reader-note">This page does not run a new verification or guarantee that a provider is reachable. Use your connection in the Vault to check again.</p>
+    <a class="reader-text-link" href="#/support/wrong-account" data-nav="/support/wrong-account">Not seeing your membership? ${I.chevR}</a></div>`;
 };
 VIEWS.wrongAccount = function(){
-  const steps=["Are you signed into the same reader account you used before? Check your email in the Vault.","For Patreon, connect the Patreon account that owns the membership.","For Boosty, connect the same Discord account in both Boosty and EvilArchives, and confirm Boosty assigned its subscriber role.","Or redeem your access key again — it binds to this account.","Still stuck? Send a support packet with one tap."];
+  const steps=["Are you signed into the same reader account you used before? Check your email in the Vault.","For Patreon, connect the Patreon account that owns the membership.","For Boosty, connect the same Discord account in both Boosty and EvilArchives, and confirm Boosty assigned its subscriber role.","Access keys are tied to the account that redeemed them. Check that account before trying a different one.","Still stuck? Copy your access details and share them privately with the author."];
   return `<a class="section-link" data-nav="/help" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}Help</a>
   <h1 class="page-title">Wrong Account Assistant</h1><p class="page-sub">Access on a different account? Let's recover it.</p>
   <div class="timeline">${steps.map((s,i)=>`<div class="tl-item"><div class="when">Step ${i+1}</div><div class="what">${s}</div></div>`).join("")}</div>
-  <div class="col-flex" style="margin-top:14px">${patreonEnabled()?`<button class="btn story" data-sheet="connect-patreon">${I.vault}Reconnect Patreon</button>`:""}${boostyDiscordEnabled()?`<button class="btn story" data-sheet="connect-boosty">${I.msg}Reconnect Boosty through Discord</button>`:""}<button class="btn ghost" data-sheet="redeem">${I.key}Redeem key</button><button class="btn ghost" data-nav="/support/contact">${I.mail}Send support packet</button></div>`;
+  <div class="col-flex" style="margin-top:14px">${patreonEnabled()?`<button class="btn story" data-sheet="connect-patreon">${I.vault}Reconnect Patreon</button>`:""}${boostyDiscordEnabled()?`<button class="btn story" data-sheet="connect-boosty">${I.msg}Reconnect Boosty through Discord</button>`:""}<button class="btn ghost" data-sheet="redeem">${I.key}Redeem key</button><button class="btn ghost" data-nav="/support/contact">${I.mail}Get support details</button></div>`;
 };
 VIEWS.contact = function(){
-  const P=persona();
-  const pkt=["Account: "+(P.signedIn?store.email:"(not signed in)"),"Access: "+(P.tier||P.expired?"expired":P.pending?"sync pending":P.noTier?"no qualifying tier":"none"),"Provider: "+(P.provider||"none"),"Last sync: just now","Masked key suffix: "+(store.redeemedKeys[0]?"…"+store.redeemedKeys[0].code.slice(-4):"none")];
-  return `<a class="section-link" data-nav="/help" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}Help</a>
-  <h1 class="page-title">Contact Support</h1><p class="page-sub">We'll attach a context packet so you don't have to explain everything.</p>
-  <div class="card" style="margin:14px 0"><div class="eyebrow" style="margin-bottom:8px">Auto-attached packet (no secrets)</div><div style="font-family:var(--ui);font-size:.78rem;line-height:1.8">${pkt.map(p=>`<div>${esc(p)}</div>`).join("")}</div></div>
-  <form data-contact-form><div class="col-flex"><input class="pill-input" style="text-align:left" name="subject" placeholder="Subject"><textarea name="msg" rows="4" style="background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-sm);padding:13px;font-size:.9rem" placeholder="What's going on?"></textarea><button class="btn story" type="submit">${I.mail}Send to support</button></div></form>
-  <div class="card" style="margin-top:14px;display:flex;gap:11px;align-items:center"><span class="faint">${I.msg}</span><div style="flex:1"><div style="font-weight:600;font-size:.86rem">Prefer real-time?</div><div class="faint" style="font-size:.74rem">The archive Discord has a #aether-pages-help channel.</div></div><button class="btn sm ghost" data-act="external-discord">${I.external}</button></div>`;
+  const P=persona(), access=readerAccessSummary(P);
+  const packet=["Account: "+(P.signedIn?store.email:"Not signed in"),"Access: "+access.label,"Tier: "+(P.tier||"None"),"Provider: "+(P.provider||"None")];
+  for(const [name,key] of [["Patreon","patreon"],["Boosty","boosty_discord"]]) if(providerConnection(key)) packet.push(name+": "+providerVerificationText(key));
+  return `<div class="reader-workspace">${readerPageHeading("Get help with access","Useful details to share privately with the author.")}
+    <div class="reader-support-grid"><section class="reader-panel"><h2>Before you get in touch</h2><p>There is no support inbox on this site. Use the author's contact channel on your membership platform. Nothing is sent from this page.</p><p class="reader-note">The details include your account email. Review them before copying and share them only in a private message, never a public comment.</p><a class="reader-text-link" href="#/support/check-access" data-nav="/support/check-access">Check your account first ${I.chevR}</a></section>
+    <section class="reader-panel"><h2>Your access details</h2><pre class="reader-support-packet">${esc(packet.join("\n"))}</pre><button class="btn ghost" data-copy="${esc(packet.join("\n"))}">${I.copy}Copy details</button></section></div></div>`;
 };
 
 function notFound(what){ return `<div class="empty" style="padding-top:80px"><div class="em">🛡️</div><h3>${what} not found</h3><p>This may have moved or been archived.</p><button class="btn" data-nav="/">Back home</button></div>`; }

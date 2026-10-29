@@ -7,7 +7,7 @@ VIEWS.updates = function(){
   D.UPDATES.forEach(u=>{ (groups[u.when]=groups[u.when]||[]).push(u); });
   const rendered = Object.entries(groups).map(([g,items])=>`<div class="section"><div class="section-head"><h2>${esc(g)}</h2></div><div class="rh-chapter-grid rh-updates-grid">${items.map(curatedUpdateCard).join("")}</div></div>`).join("");
   return `<h1 class="page-title">Updates</h1><p class="page-sub">Everything new across the archive, access-aware.</p>
-  <div class="chips scroll" style="margin:8px 0 18px"><a class="chip active">${I.feed}<span>All</span></a><a class="chip" data-nav="/calendar">${I.calendar}<span>Calendar</span></a></div>
+  
   ${rendered || `<div class="empty"><div class="em">${I.feed}</div><h3>No updates yet</h3><p>New chapter and access updates will appear here when they are posted.</p></div>`}`;
 };
 
@@ -20,81 +20,61 @@ function curatedUpdateCard(update,index){
 /* ============ CALENDAR ============ */
 VIEWS.calendar = function(){
   return `<h1 class="page-title">Release Calendar</h1><p class="page-sub">Upcoming public and member releases.</p>
-  <div class="empty"><div class="em">${I.calendar}</div><h3>No calendar entries</h3><p>No release dates have been posted yet.</p></div>`;
+  <div class="empty"><div class="em">${I.calendar}</div><h3>No calendar entries</h3><p>A release calendar is not available. Find published chapters in Updates.</p></div>`;
 };
 
 /* ============ COLLECTIONS ============ */
-VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Curated story groups.</p><div class="empty"><div class="em">${I.layers}</div><h3>No collections</h3><p>Collections have not been posted yet. Browse the Library for all available stories.</p><button class="btn story" data-nav="/library">${I.library}Open Library</button></div>`; };
+VIEWS.collection = VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Curated story groups.</p><div class="empty"><div class="em">${I.layers}</div><h3>No collections</h3><p>Collections are not available. Browse the Library for all published stories.</p><button class="btn story" data-nav="/library">${I.library}Open Library</button></div>`; };
 
 /* ============ VAULT ============ */
+function readerAccessSummary(P=persona()){
+  const state=P.admin?"admin":!P.signedIn?"guest":P.expired?"expired":P.pending?"pending":P.level>0?"active":"none";
+  const labels={admin:"Admin access",guest:"Guest reader",expired:"Access expired",pending:"Checking access",active:"Membership active",none:"Free reader"};
+  return {state,label:labels[state]};
+}
+function providerVerificationText(provider){
+  const check=providerAccessStatus(provider);
+  if(check?.state==="checking") return "Checking membership…";
+  if(check?.state==="reconnect") return "Reconnect to verify your membership.";
+  if(check?.state==="unavailable") return "Verification is unavailable. We will retry automatically.";
+  const stamp=providerConnection(provider)?.last_synced_at;
+  const date=stamp?new Date(stamp):null;
+  return date && Number.isFinite(date.getTime()) ? "Last checked "+date.toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"}) : "No verification time available.";
+}
 VIEWS.vault = function(){
-  const P=persona();
+  const P=persona(), access=readerAccessSummary(P);
   const readable=countReadable();
-  const early=D.STORIES.reduce((n,s)=>n+s.chapters.filter(c=>c.state==="early").length,0);
   const locked=D.STORIES.reduce((n,s)=>n+s.chapters.filter(c=>!isReadable(chapterResolved(c))&&c.state!=="unavailable").length,0);
-  const state = P.admin?"admin":P.expired?"expired":P.pending?"pending":P.noTier?"none":P.level>0?"active":"none";
-  const stateLabel={admin:"Admin access",active:"Active",expired:"Expired",pending:"Syncing",none:"No access"}[state];
-  const patreonConnection = providerConnection("patreon");
-  const patreonConnected = providerIsConnected("patreon");
-  const patreonTier = activeProviderTier("patreon") || (patreonConnected ? "Connected - no active site tier" : null);
-  const patreonSince = patreonConnection?.created_at || null;
-  const patreonNote = patreonConnection && !patreonConnected
-    ? `Connection status: ${String(patreonConnection.status || "unknown")}`
-    : "Not connected";
-  const boostyConnection = providerConnection("boosty_discord");
-  const boostyConnected = providerIsConnected("boosty_discord");
-  const boostyTier = activeProviderTier("boosty_discord") || (boostyConnected ? "Connected - no active Boosty role" : null);
-  const boostySince = boostyConnection?.created_at || null;
-  const boostyNote = boostyConnection && !boostyConnected
-    ? `Connection status: ${String(boostyConnection.status || "unknown")}`
-    : "Not connected";
-  const statusIcon = state==="active" || state==="admin" ? I.checkCirc : state==="expired" ? I.lock : state==="pending" ? I.sync : I.lock;
-  return `
-  <h1 class="page-title">The Vault</h1>
-  <p class="page-sub">One place for every kind of access: Patreon, Boosty through Discord, access keys, and direct grants.</p>
-  <div class="card tinted" style="margin:14px 0;display:flex;gap:14px;align-items:center">
-    <span class="ax ${state==='active'||state==='admin'?'unlocked':state==='expired'?'expired':state==='pending'?'pending':'locked'}" style="font-size:1.6rem"><span class="ic" style="width:30px;height:30px">${statusIcon}</span></span>
-    <div style="flex:1"><div class="eyebrow">Current access</div><div style="font-family:var(--serif);font-size:1.3rem;font-weight:700">${stateLabel}</div><div class="faint" style="font-size:.8rem">${P.admin?"Admin override &middot; Full published-reader access":P.tier?("via "+P.provider+" &middot; "+P.tier):P.signedIn?"Signed in, no active access":"Browsing as guest"}</div></div>
-  </div>
-
-  <div class="section"><div class="section-head"><h2>What your access unlocks</h2></div>
-    <div class="stat-grid"><div class="stat"><div class="n">${readable}</div><div class="l">Readable chapters</div></div><div class="stat"><div class="n">${early}</div><div class="l">Early access</div></div><div class="stat"><div class="n">${D.STORIES.reduce((n,s)=>n+s.chapters.filter(c=>hasImages(c)).length,0)}</div><div class="l">Illustrated</div></div><div class="stat"><div class="n">${locked}</div><div class="l">Still locked</div></div></div>
-  </div>
-
-  <div class="section"><div class="section-head"><h2>Providers</h2></div>
-    <div class="col-flex">
-      ${P.admin?`<div class="card" style="display:flex;gap:13px;align-items:center"><span style="width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent)">${I.shield}</span><div style="flex:1;min-width:0"><div style="font-weight:600">Admin override</div><div class="faint" style="font-size:.76rem">This profile can read every published subscription chapter without a member entitlement.</div></div><span class="badge free">${I.check}Active</span></div>`:""}
-      ${patreonEnabled()?providerCard("Patreon","patreon",patreonConnected,patreonTier,patreonSince,patreonNote):""}
-      ${boostyDiscordEnabled()?providerCard("Boosty via Discord","boosty_discord",boostyConnected,boostyTier,boostySince,boostyNote):""}
-      ${!patreonEnabled()&&!boostyDiscordEnabled()?`<div class="empty"><div class="em">${I.vault}</div><h3>No providers enabled</h3><p>Use an access key or contact support if you expected member access.</p></div>`:""}
+  const story=D.STORIES.find(s=>s.slug===D.PRIMARY_SLUG)||D.STORIES[0];
+  const cover=story?homeSafeMediaUrl(story.cover_image_url||story.cover):"";
+  const title=P.admin?"The archive is yours to explore." : P.level>0 ? (P.tier||"Member access") : P.pending ? "Finding your membership." : "There is more to the story.";
+  const description=P.admin?"Your admin profile can read all published chapters. This is separate from a paid membership."
+    : P.level>0 ? "Your membership is connected. Explore the chapters available to you, or manage your connections here."
+    : P.pending?"Your provider is being checked. Your chapter access will update when verification finishes."
+    : P.expired?"Your previous access has ended. Reconnect your membership to check whether it has renewed."
+    : P.signedIn?"Read free chapters now. Connect a membership or use an access key to unlock more."
+    : "Free chapters are open to everyone. Sign in to connect your membership or redeem an access key.";
+  const providers=[["Patreon","patreon",patreonEnabled()],["Boosty via Discord","boosty_discord",boostyDiscordEnabled()]].filter(x=>x[2]);
+  return `<div class="reader-workspace vault-page">
+    ${readerPageHeading("The Vault","Your reading access, in one place.",`<a class="btn ghost" href="#/library" data-nav="/library">Explore the library ${I.chevR}</a>`)}
+    <div class="vault-layout">
+      <section class="vault-membership" aria-labelledby="vault-membership-title">
+        <div class="vault-membership-body"><span class="reader-status" data-state="${access.state}">${access.state==='active'||access.state==='admin'?I.checkCirc:I.book}${esc(access.label)}</span>
+          <h2 id="vault-membership-title">${esc(title)}</h2><p>${esc(description)}</p>
+          ${P.signedIn?`<button class="btn ghost" data-sheet="persona">${I.user}Your account</button>`:`<button class="btn primary" data-sheet="persona">${I.user}Sign in to connect</button>`}
+        </div>
+        ${cover?`<figure class="vault-cover"><img src="${esc(cover)}" alt="${esc(story.title)}" loading="lazy"><figcaption>${esc(story.title)}</figcaption></figure>`:''}
+        <dl class="vault-counts"><div><dt>Chapters you can read</dt><dd>${readable}</dd></div><div><dt>Member chapters locked</dt><dd>${locked}</dd></div></dl>
+      </section>
+      <section class="reader-panel vault-connections" aria-labelledby="vault-connections-title"><h2 id="vault-connections-title">Your connections</h2><p class="reader-note">Connect the account that holds your membership. Access is checked automatically.</p>
+        <div class="provider-list">${providers.map(([name,key])=>providerCard(name,key,providerIsConnected(key),activeProviderTier(key),null,"Not connected")).join("")||'<p>No membership providers are currently available.</p>'}</div>
+        <a class="reader-text-link" href="#/support/check-access" data-nav="/support/check-access">Check an access problem ${I.chevR}</a>
+      </section>
+      ${accessKeysEnabled()?`<section class="reader-panel vault-key" aria-labelledby="vault-key-title"><span class="reader-section-icon" aria-hidden="true">${I.key}</span><div><h2 id="vault-key-title">An invitation to read</h2><p class="reader-note">Have an access key? Redeem it securely to add its access to your account.</p><button class="btn ghost" data-sheet="redeem">Redeem a key ${I.chevR}</button></div></section>`:''}
+      <aside class="vault-help"><h2>A little help?</h2><p class="reader-note">Already a member, but a chapter is still locked?</p><a href="#/support/wrong-account" data-nav="/support/wrong-account">Find the right account ${I.chevR}</a><a href="#/help" data-nav="/help">Read the access guide ${I.chevR}</a></aside>
+      ${store.redeemedKeys.length?`<section class="reader-panel vault-records"><h2>Key redemption history</h2><p class="reader-note">A redemption record is not a guarantee of current access. Chapter availability reflects your verified access.</p><ul>${store.redeemedKeys.map(k=>`<li><span>${esc(k.label||"Access key")}<small>${esc(maskKey(String(k.code||"")))}</small></span><time>${esc(k.when||"Redeemed")}</time></li>`).join("")}</ul></section>`:''}
     </div>
-  </div>
-
-  <div class="section"><div class="section-head"><h2>Redeem an access key</h2></div>
-    <div class="card">
-      <p class="muted" style="font-size:.84rem;margin:0 0 12px">Beta readers, reviewers, gifts &amp; campaigns use keys. Enter one to attach access to your account.</p>
-      <div style="display:flex;gap:9px"><input id="key-input" class="pill-input" style="text-align:left;flex:1" placeholder="XXXX-XXXX-XXXX-XXXX"><button class="btn story" data-sheet="redeem">${I.key}Redeem</button></div>
-
-    </div>
-    ${store.redeemedKeys.length?`<div class="card" style="margin-top:12px"><div class="eyebrow" style="margin-bottom:8px">Redeemed keys</div>${store.redeemedKeys.map(k=>`<div class="between" style="padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.86rem;font-weight:600">${k.label}</div><div class="faint" style="font-size:.72rem;font-family:var(--ui);letter-spacing:.08em">${maskKey(k.code)}</div></div><span class="badge key">${I.key}Active</span></div>`).join("")}</div>`:""}
-  </div>
-
-  <div class="section"><div class="section-head"><h2>Access timeline</h2></div>
-    <div class="card"><div class="timeline">
-      ${store.redeemedKeys.length?store.redeemedKeys.map(k=>`<div class="tl-item"><div class="when">${esc(k.when || "Redeemed")}</div><div class="what">Access key redeemed${k.label?`: ${esc(k.label)}`:""}</div></div>`).join(""):`<p class="faint" style="font-size:.82rem;margin:0">No access events have been recorded for this account yet.</p>`}
-    </div></div>
-  </div>
-
-  <div class="section"><div class="section-head"><h2>Troubleshoot &amp; verify</h2></div>
-    <div class="quicklinks">
-      <a data-nav="/support/check-access">${I.shield}<span>Health Check</span><small>Verify your access</small></a>
-      <a data-nav="/support/wrong-account">${I.user}<span>Wrong account?</span><small>Recovery assistant</small></a>
-      <a data-nav="/benefits">${I.spark}<span>Benefits</span><small>What's included</small></a>
-      <a data-nav="/help">${I.info}<span>Help Center</span><small>Access glossary</small></a>
-    </div>
-  </div>
-  <div class="card" style="display:flex;gap:11px;align-items:center;margin-top:8px"><span class="faint">${I.cog}</span><div style="flex:1"><div style="font-weight:600;font-size:.86rem">Account access</div><div class="faint" style="font-size:.74rem">If something looks wrong, run the access health check or reconnect your membership provider.</div></div><button class="btn sm" data-nav="/support/check-access">Health check</button></div>
-  `;
+  </div>`;
 };
 function activeProviderTier(provider){
   const key=String(provider||"").toLowerCase();
@@ -102,17 +82,15 @@ function activeProviderTier(provider){
   return rows[0]?.tier_name||rows[0]?.name||null;
 }
 function providerCard(name, key, connected, tier, since, note){
-  const sheet = key==='patreon'?'connect-patreon':key==='boosty_discord'?'connect-boosty':'';
-  const syncAction = key==='patreon'?'resync':key==='boosty_discord'?'resync-boosty':'';
-  const verification = providerAccessStatus(key);
-  const verificationNote = verification?.state === "checking" ? "Checking membership automatically…"
-    : verification?.state === "reconnect" ? "Reconnect once to restore automatic membership verification."
-    : verification?.state === "unavailable" ? "Verification temporarily unavailable; we will retry automatically." : "";
-  return `<div class="card" style="display:flex;gap:13px;align-items:center">
-    <span style="width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);font-weight:700;font-size:.7rem;letter-spacing:.04em">${name.slice(0,2)}</span>
-    <div style="flex:1;min-width:0"><div style="font-weight:600">${name}</div><div class="faint" style="font-size:.76rem">${verificationNote || (connected?(tier||"Connected")+(since?" · since "+fmtDate(since):""):(note||"Not connected"))}</div></div>
-    ${verification?.state === "reconnect" ? `<button class="btn sm story" data-sheet="${sheet}">Reconnect</button>` : connected?`<button class="btn sm ghost" data-act="${syncAction}" ${verification?.state === "checking" ? "disabled" : ""}>${I.sync}Check now</button>`:`<button class="btn sm story" ${sheet?`data-sheet="${sheet}"`:'disabled'}>Connect</button>`}
-  </div>`;
+  const sheet=key==='patreon'?'connect-patreon':'connect-boosty';
+  const syncAction=key==='patreon'?'resync':'resync-boosty';
+  const verification=providerAccessStatus(key);
+  const reconnect=verification?.state==='reconnect';
+  return `<article class="reader-provider"><div class="reader-provider-heading"><span class="provider-monogram" aria-hidden="true">${key==='patreon'?'P':'B'}</span><div><h3>${esc(name)}</h3><span class="provider-state">${connected?'Connected':'Not connected'}</span></div></div>
+    <p>${esc(connected?(tier||"Connected, no active site tier"):(note||"Connect your membership account."))}</p>
+    ${connected||verification?`<p class="provider-verification">${esc(providerVerificationText(key))}</p>`:''}
+    ${reconnect?`<button class="btn sm story" data-sheet="${sheet}">Reconnect ${esc(name)}</button>`:connected?`<button class="btn sm ghost" data-act="${syncAction}" ${verification?.state==='checking'?'disabled':''}>${I.sync}${verification?.state==='checking'?'Checking…':'Check membership'}</button>`:`<button class="btn sm story" data-sheet="${sheet}">Connect ${esc(name)} ${I.chevR}</button>`}
+  </article>`;
 }
 function maskKey(c){ if(c.length<=4) return c; return "••••-••••-••••-"+c.slice(-4); }
 
@@ -126,16 +104,16 @@ VIEWS.shelf = function(){
     <a data-nav="/bookmarks">${I.bookmark}<span>Bookmarks</span><small>${store.bookmarks.length} saved</small></a>
     <a data-nav="/quotes">${I.quote}<span>Saved quotes</span><small>${store.quotes.length} lines</small></a>
     <a data-nav="/history">${I.clock}<span>History</span><small>Recently read</small></a>
-    <a data-sheet="settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>
+    <a href="#/settings" data-nav="/settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>
   </div>
   <div class="section"><div class="section-head"><h2>Preview trail</h2></div>
     <div class="card"><p class="muted" style="font-size:.84rem;margin:0 0 10px">Chapters you've previewed but not yet unlocked.</p>${store.history.filter(h=>h.kind==="preview").map(h=>{const f=byId(h.chapterId);return f?`<div class="between" style="padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.86rem;font-weight:600">${h.title}</div><div class="faint" style="font-size:.72rem">${f.story.title}</div></div><button class="btn sm" data-lock="${h.chapterId}">${I.lockOpen}Unlock</button></div>`:"";}).join("")||`<p class="faint" style="font-size:.8rem">No active previews.</p>`}</div>
   </div>
-  <div class="card" style="display:flex;gap:11px;align-items:center"><span class="faint">${I.download}</span><div style="flex:1"><div style="font-weight:600;font-size:.86rem">Offline queue</div><div class="faint" style="font-size:.74rem">Save chapters for transit reading while your access is active. Expires with access.</div></div><button class="btn sm ghost" data-act="offline-queue">Manage</button></div>
+
   `;
 };
 VIEWS.bookmarks = function(){ return `<h1 class="page-title">Bookmarks</h1><p class="page-sub">${store.bookmarks.length} saved places across your reading.</p><div class="col-flex stagger">${store.bookmarks.map(b=>{const f=byId(b.chapterId);return `<div class="card" style="display:flex;gap:13px;align-items:center;${f?storyAccentVars(f.story):''}"><span class="ax unlocked" style="font-size:1.2rem"><span class="ic" style="width:22px;height:22px">${I.bookmarkFill}</span></span><div style="flex:1;min-width:0"><div style="font-family:var(--serif);font-style:italic">"${b.label}"</div><div class="faint" style="font-size:.74rem">${f?f.story.title+" · "+f.ch.title:""} · ${b.when}</div></div>${f?`<button class="btn sm story" data-read="${b.chapterId}">${I.play}Open</button>`:""}</div>`;}).join("")||emptyState("bookmark","No bookmarks yet","Save a place while reading with the bookmark button.")}</div>`; };
-VIEWS.quotes = function(){ return `<h1 class="page-title">Saved Quotes</h1><p class="page-sub">${store.quotes.length} lines worth keeping.</p><div class="col-flex stagger">${store.quotes.map(q=>{const f=byId(q.chapterId);return `<div class="card tinted" style="${f?storyAccentVars(f.story):''}"><div style="display:flex;gap:10px"><span style="font-size:1.6rem;color:var(--s);line-height:.8">${I.quote}</span><div><p style="font-family:var(--serif);font-size:1rem;line-height:1.6;margin:0">${q.text}</p><div class="faint" style="font-size:.74rem;margin-top:8px">${f?f.story.title:""} · saved ${q.when}</div></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm ghost" data-copy="${esc(q.text)}">${I.copy}Copy</button><button class="btn sm ghost" data-quote-card="${q.id}">${I.spark}Share card</button></div></div>`;}).join("")||emptyState("quote","No quotes saved","Highlight text while reading to save a line.")}</div>`; };
+VIEWS.quotes = function(){ return `<h1 class="page-title">Saved Quotes</h1><p class="page-sub">${store.quotes.length} lines worth keeping.</p><div class="col-flex stagger">${store.quotes.map(q=>{const f=byId(q.chapterId);return `<div class="card tinted" style="${f?storyAccentVars(f.story):''}"><div style="display:flex;gap:10px"><span style="font-size:1.6rem;color:var(--s);line-height:.8">${I.quote}</span><div><p style="font-family:var(--serif);font-size:1rem;line-height:1.6;margin:0">${q.text}</p><div class="faint" style="font-size:.74rem;margin-top:8px">${f?f.story.title:""} · saved ${q.when}</div></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm ghost" data-copy="${esc(q.text)}">${I.copy}Copy</button></div></div>`;}).join("")||emptyState("quote","No quotes saved","Highlight text while reading to save a line.")}</div>`; };
 VIEWS.history = function(){ return `<h1 class="page-title">Reading History</h1><p class="page-sub">Your private chronicle.</p><div class="timeline">${[...store.history].map(h=>{const f=byId(h.chapterId);return `<div class="tl-item"><div class="when">${h.when}</div><div class="what">${h.kind==='preview'?'Previewed':h.kind==='completed'?'Completed':'Read'}: ${h.title}</div><div class="faint" style="font-size:.78rem">${f?f.story.title:""}</div></div>`;}).join("")}</div>`; };
 
 /* ============ NOTIFICATIONS ============ */
@@ -149,10 +127,9 @@ VIEWS.notifications = function(){
 
 /* ============ BENEFITS ============ */
 VIEWS.benefits = function(){
-  const b=[{i:"hourglass",t:"Early access",d:"Read new chapters before public release."},{i:"book",t:"Member chapters",d:"Exclusive chapters not available on the public archive."},{i:"spark",t:"Bonus materials",d:"Author notes, deleted scenes, lore & art drops."},{i:"layers",t:"Complete seasons",d:"Binge finished stories start to end."},{i:"eye",t:"Previews",d:"Sample locked chapters before deciding."},{i:"msg",t:"Supporter notes",d:"Author notes attached to releases."}];
+  const b=[{i:"book",t:"Member chapters",d:"Read the chapters included in your current access tier."},{i:"spark",t:"The visual archive",d:"Explore published artwork, with mature collections available to eligible members."},{i:"eye",t:"Read your way",d:"Choose your chapter colors, text size and reading width."}];
   return `<h1 class="page-title">Membership Benefits</h1><p class="page-sub">What member access unlocks.</p>
   <div class="grid-stories" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px">${b.map(x=>`<div class="benefit-card"><span class="ic">${I[x.i]}</span><div><h4>${x.t}</h4><p>${x.d}</p></div></div>`).join("")}</div>
-  <div class="section"><div class="section-head"><h2>Your milestones</h2></div><div class="col-flex">${D.MILESTONES.length?D.MILESTONES.map(m=>`<div class="card" style="display:flex;gap:12px;align-items:center;${m.held?'':'opacity:.5'}"><span class="ax ${m.held?'unlocked':'locked'}" style="font-size:1.2rem"><span class="ic" style="width:22px;height:22px">${m.held?I.checkCirc:I.lock}</span></span><div style="flex:1"><div style="font-family:var(--serif);font-weight:600">${m.t}</div><div class="faint" style="font-size:.76rem">${m.d}</div></div>${m.held?badge("gold","Earned"):badge("","Locked")}</div>`).join(""):`<div class="empty"><div class="em">${I.spark}</div><h3>No milestones yet</h3><p>Milestones will appear as your account history grows.</p></div>`}</div></div>
   <div class="card tinted" style="text-align:center"><div style="font-family:var(--serif);font-size:1.05rem;margin-bottom:8px">Want to unlock the archive?</div><button class="btn primary" data-sheet="connect-provider">${I.vault}Connect provider</button></div>`;
 };
 
@@ -169,7 +146,7 @@ VIEWS.onboarding = function(){
   </div>
   <div class="section"><div class="section-head"><h2>How it works</h2></div>
     <div class="col-flex">
-      ${[[I.library,"Browse the Library","Free chapters and previews, no account needed."],[I.book,"Read comfortably","Adjust type, theme & layout to your taste."],[I.vault,"Activate access","Sign in or redeem a key to unlock more."],[I.shelf,"Continue anywhere","Your place, bookmarks & quotes follow you."]].map(([ic,t,d])=>`<div class="card" style="display:flex;gap:13px;align-items:center"><span class="ax unlocked" style="font-size:1.3rem"><span class="ic" style="width:24px;height:24px">${ic}</span></span><div><div style="font-weight:600">${t}</div><div class="faint" style="font-size:.78rem">${d}</div></div></div>`).join("")}
+      ${[[I.library,"Browse the Library","Free chapters and previews, no account needed."],[I.book,"Read comfortably","Adjust type, theme & layout to your taste."],[I.vault,"Activate access","Sign in or redeem a key to unlock more."],[I.shelf,"Continue anywhere","Return to your saved place, bookmarks and quotes in this browser."]].map(([ic,t,d])=>`<div class="card" style="display:flex;gap:13px;align-items:center"><span class="ax unlocked" style="font-size:1.3rem"><span class="ic" style="width:24px;height:24px">${ic}</span></span><div><div style="font-weight:600">${t}</div><div class="faint" style="font-size:.78rem">${d}</div></div></div>`).join("")}
     </div>
   </div>
   <button class="btn primary block" data-nav="/">Enter the archive</button>`;

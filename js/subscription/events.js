@@ -129,7 +129,18 @@ async function redeemKey(code){
   if(err){err.style.color="var(--bad)";err.textContent="Supabase is unavailable; key redemption cannot run.";}
   return false;
 }
-function copyText(t){ try{ navigator.clipboard&&navigator.clipboard.writeText(t); }catch(e){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); } toast("Copied to clipboard"); }
+async function copyText(text){
+  try {
+    if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+    else {
+      const area=document.createElement("textarea"); area.value=text; document.body.appendChild(area); area.select();
+      let copied=false;
+      try { copied=document.execCommand("copy"); } finally { area.remove(); }
+      if(!copied) throw new Error("Clipboard unavailable");
+    }
+    toast("Copied to clipboard");
+  } catch(error){ toast("Could not copy", "Select and copy the text manually.", {kind:"bad",icon:"alert"}); }
+}
 
 function chapterDirectUrl(chapterId){
   const url = new URL(window.location.href);
@@ -272,7 +283,7 @@ function delegate(){
     }
   });
   document.addEventListener("click",(e)=>{
-    const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-reader-preferences],[data-set-reader-theme],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-set-reader-font],[data-shelf-view],[data-quote-card],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
+    const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-reader-preferences],[data-set-reader-theme],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-set-reader-font],[data-shelf-view],[data-chapter-sort],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
     if(!t) return;
     if (t.dataset.siteTheme!=null){ setTheme(t.dataset.siteTheme); openSheet(currentSheet?currentSheet.builder:sheetSettings, currentSheet?currentSheet.opts:null); toast("Theme: "+(THEMES.find(x=>x.id===t.dataset.siteTheme)?.name), null, {icon:"palette"}); render(); return; }
 
@@ -282,12 +293,12 @@ function delegate(){
     if (t.dataset.preview!=null){ e.preventDefault(); nav("/read/"+t.dataset.preview); return; }
     if (t.dataset.lock!=null){ e.preventDefault(); openChapterAccess(t.dataset.lock); return; }
     if (t.dataset.readerPreferences!=null){ e.preventDefault(); toggleReaderPreferences(); return; }
-    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={settings:sheetSettings,"notification-settings":sheetNotificationSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
+    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={navigation:sheetNavigation,settings:sheetSettings,"notification-settings":sheetNotificationSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
     if (t.dataset.follow!=null){ toggleFollow(t.dataset.follow); return; }
     if (t.dataset.react!=null){ if(currentChapter) setReaction(currentChapter.ch.id, t.dataset.react); return; }
     if (t.dataset.persona!=null){ store.personaId=t.dataset.persona; saveStore(); closeSheet(); toast("Viewing as "+(D.PERSONAS.find(p=>p.id===t.dataset.persona)?.label),null,{icon:"user"}); render(); return; }
     if (t.dataset.filter!=null){ const k=t.dataset.filter; const i=store.filters.chips.indexOf(k); if(i>=0) store.filters.chips.splice(i,1); else store.filters.chips.push(k); saveStore(); renderHeaderless(); return; }
-    if (t.dataset.toggle!=null){ store.settings[t.dataset.toggle]=!store.settings[t.dataset.toggle]; saveStore(); if(t.dataset.toggle==="appBackground" && typeof applyAppBackground==="function") applyAppBackground(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } if(t.dataset.toggle==="dyslexiaMode"){ applyReaderPreferences(); refreshReaderPreferences(); } return; }
+    if (t.dataset.toggle!=null){ store.settings[t.dataset.toggle]=!store.settings[t.dataset.toggle]; saveStore(); if(t.dataset.toggle==="appBackground" && typeof applyAppBackground==="function") applyAppBackground(); if(typeof applyBgSettings==="function") applyBgSettings(); if(currentSheet){ openSheet(currentSheet.builder, currentSheet.opts); } else { t.classList.toggle("on", !!store.settings[t.dataset.toggle]); t.setAttribute("aria-checked", String(!!store.settings[t.dataset.toggle])); } if(t.dataset.toggle==="dyslexiaMode"){ applyReaderPreferences(); refreshReaderPreferences(); } return; }
     if (t.dataset.shelfView!=null){ store.filters.shelfView=t.dataset.shelfView; saveStore(); render(); return; }
     if (t.dataset.chapterSort!=null){ store.filters.chapterSort=t.dataset.chapterSort; saveStore(); render(); return; }
     if (t.dataset.setTheme!=null){ setTheme(t.dataset.setTheme); if(currentSheet) openSheet(currentSheet.builder,currentSheet.opts); if(route.name==="read") renderReaderOnly(); return; }
@@ -300,7 +311,6 @@ function delegate(){
     if (t.dataset.fig!=null){ openSheet(()=>sheetImage(t.dataset.fig, t.closest("figure")?.querySelector("figcaption")?.textContent)); return; }
     if (t.dataset.para!=null && currentChapter){ openSheet(()=>sheetParaComments(currentChapter.ch.id, parseInt(t.dataset.para))); return; }
     if (t.dataset.copy!=null){ copyText(t.dataset.copy); return; }
-    if (t.dataset.quoteCard!=null){ toast("Quote card ready","Copied as a shareable card.",{icon:"spark"}); return; }
     if (t.dataset.dismiss!=null){ dismissReaderNotification(t.dataset.dismiss).finally(()=>render()); return; }
     if (t.dataset.toastAction!=null){ const a=t.dataset.toastAction; if(a.startsWith("return:")){ store.pendingReturn=null; saveStore(); nav("/read/"+a.split(":")[1]); } return; }
     if (t.dataset.act!=null){ e.preventDefault(); e.stopPropagation(); handleAct(t.dataset.act, t); return; }
@@ -319,6 +329,16 @@ function delegate(){
     if(t.dataset && t.dataset.readerCustomColor!=null){ refreshReaderPreferences(); return; }
   });
   document.addEventListener("keydown",(e)=>{
+    if(currentSheet && e.key==="Escape"){ e.preventDefault(); closeSheet(); return; }
+    if(currentSheet && e.key==="Tab"){
+      const sheet=document.querySelector(".sheet");
+      const focusable=[...sheet.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')].filter(node=>node.getClientRects().length);
+      const first=focusable[0], last=focusable[focusable.length-1];
+      if(!first){ e.preventDefault(); sheet.focus(); }
+      else if(e.shiftKey && (document.activeElement===first || !focusable.includes(document.activeElement))){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && (document.activeElement===last || !focusable.includes(document.activeElement))){ e.preventDefault(); first.focus(); }
+      return;
+    }
     if(e.key==="Escape" && readerPreferencesOpen){ closeReaderPreferences(); return; }
     if(State.lightboxIndex >= 0){
       if(e.key==="Escape"){ e.preventDefault(); closeGalleryLightbox(); }
@@ -423,7 +443,6 @@ function delegate(){
       }
       return;
     }
-    if(f.dataset.contactForm!=null){ e.preventDefault(); f.reset(); toast("Support message sent","We'll reply by email.",{icon:"mail",ms:5000}); return; }
   });
   // selection for quote saving
   document.addEventListener("mouseup",()=>{ if(route.name!=="read") return; const sel=window.getSelection(); const text=sel?sel.toString().trim():""; const prose=document.getElementById("prose"); if(text.length>3 && prose && prose.contains(sel.anchorNode)){ ensureQuoteFab(true); } else { ensureQuoteFab(false); } });
@@ -436,9 +455,17 @@ function ensureQuoteFab(show){ if(show){ if(quoteFab) return; quoteFab=document.
 
 function handleAct(act, el){
   switch(act){
+    case "skip-to-content": document.getElementById("main")?.focus(); break;
     case "close-sheet": closeSheet(); break;
     case "close-reader-preferences": closeReaderPreferences(); break;
-    case "toggle-site-theme": toggleSiteTheme(); updateSiteThemeControls(); break;
+    case "reader-nav-toggle":
+      store.readerNavCollapsed = !store.readerNavCollapsed; saveStore(); ensureChrome();
+      document.querySelector('[data-act="reader-nav-toggle"]')?.focus({preventScroll:true});
+      if(typeof setupHomeArchive==="function") setupHomeArchive(); break;
+    case "choose-site-theme":
+      setTheme(el.dataset.theme); render({preserveScroll:true});
+      document.querySelector(`[data-act="choose-site-theme"][data-theme="${store.theme}"]`)?.focus({preventScroll:true}); break;
+    case "toggle-site-theme": toggleSiteTheme(); updateSiteThemeControls(); if(route.name==="settings") render({preserveScroll:true}); break;
     case "retry-library":
       if (backendState.loading) break;
       backendState.loaded = false;
@@ -497,7 +524,12 @@ function handleAct(act, el){
     case "show-signup": openSheet(sheetSignup); break;
     case "show-forgot-password": openSheet(sheetForgotPassword); break;
     case "reader-signout": signOutReader().then(()=>{ closeSheet(); toast("Signed out", null, {icon:"user"}); render(); }).catch(err=>toast("Sign out failed", err.message, {icon:"alert", kind:"bad"})); break;
-    case "request-browser-notifications": requestBrowserNotifications().then(()=>saveNotificationPreferences({ browser_enabled:true, email_enabled:store.settings.emailNotifications !== false, new_chapters_enabled:store.settings.chapterNotifications !== false, minimum_tier_rank:0 }).catch(()=>null)).then(()=>{ toast("Browser notifications enabled", "We can show chapter alerts while the site is open.", {icon:"bell"}); openSheet(currentSheet?.builder || sheetNotificationSettings); }).catch(err=>toast("Notifications blocked", err.message || "Permission was not granted.", {icon:"alert", kind:"bad"})); break;
+    case "request-browser-notifications":
+      requestBrowserNotifications().then(()=>{
+        toast("Browser permission granted", "Save your notification preferences to apply them to your account.", {icon:"bell"});
+        if(currentSheet) openSheet(currentSheet.builder);
+        else if(route.name==="settings") render({preserveScroll:true});
+      }).catch(err=>toast("Notifications blocked",err.message||"Permission was not granted.",{icon:"alert",kind:"bad"})); break;
     case "resync": syncProviderEntitlements().then((data)=>{ const grants = Number(data?.grants || 0); toast("Sync complete", grants ? `${grants} Patreon entitlement${grants===1?"":"s"} active.` : "Patreon linked, but no mapped tier was found.", {icon:"checkCirc", ms:4000}); render(); }).catch(err=>toast("Sync failed", err.message || "Unable to refresh provider entitlements.", {icon:"alert", kind:"bad"})); break;
     case "resync-boosty": syncProviderEntitlements("boosty_discord").then((data)=>{ const grants = Number(data?.grants || 0); const detail = data?.status === "not_in_server" ? "Join the Discord server, then try again." : grants ? "Your Boosty Discord role is active." : "No mapped Boosty subscriber role was found."; toast("Boosty sync complete", detail, {icon:grants?"checkCirc":"info", ms:5000}); render(); }).catch(err=>toast("Boosty sync failed", err.message || "Unable to verify Discord roles.", {icon:"alert", kind:"bad"})); break;
     case "expected-access": rememberReturn(); openSheet(sheetContext?sheetContext:()=>sheetLock(currentChapter?.ch.id)); break;
@@ -534,8 +566,6 @@ function handleAct(act, el){
       break;
     }
 
-    case "offline-queue": toast("Offline reading unavailable","This site currently streams chapters after access is verified.",{icon:"download",ms:4000}); break;
-    case "extra-open": toast("Opening bonus material","Author note · reader format.",{icon:"spark"}); break;
     case "main-archive": if (mainArchiveEnabled()) window.open(MAIN_ARCHIVE_URL, "_blank", "noopener"); break;
     case "open-boosty": if (BOOSTY_URL) window.open(BOOSTY_URL, "_blank", "noopener"); else toast("Boosty link unavailable", "No Boosty page is configured for this site.", {icon:"alert", kind:"bad"}); break;
     case "external-discord": toast("Community link unavailable","No community link is configured for this site.",{icon:"msg"}); break;

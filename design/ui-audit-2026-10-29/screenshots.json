@@ -1,0 +1,226 @@
+[
+  {
+    "name": "01-home",
+    "label": "Home / split archive",
+    "url": "http://127.0.0.1:8765/index.html#/",
+    "file": "screenshots/01-home.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "03-updates",
+    "label": "Updates",
+    "url": "http://127.0.0.1:8765/index.html#/updates",
+    "file": "screenshots/03-updates.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "14-help",
+    "label": "Help center",
+    "url": "http://127.0.0.1:8765/index.html#/help",
+    "file": "screenshots/14-help.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "15-check-access",
+    "label": "Access diagnostic",
+    "url": "http://127.0.0.1:8765/index.html#/support/check-access",
+    "file": "screenshots/15-check-access.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "16-wrong-account",
+    "label": "Wrong account help",
+    "url": "http://127.0.0.1:8765/index.html#/support/wrong-account",
+    "file": "screenshots/16-wrong-account.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "17-contact",
+    "label": "Contact support",
+    "url": "http://127.0.0.1:8765/index.html#/support/contact",
+    "file": "screenshots/17-contact.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "18-story",
+    "label": "Story hub",
+    "url": "http://127.0.0.1:8765/index.html#/story/a-zombie-tale",
+    "file": "screenshots/18-story.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "19-chapters",
+    "label": "Chapter catalog",
+    "url": "http://127.0.0.1:8765/index.html#/story/a-zombie-tale/chapters",
+    "file": "screenshots/19-chapters.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "20-recap",
+    "label": "Story recap",
+    "url": "http://127.0.0.1:8765/index.html#/story/a-zombie-tale/recap",
+    "file": "screenshots/20-recap.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "21-extras",
+    "label": "Story extras",
+    "url": "http://127.0.0.1:8765/index.html#/story/a-zombie-tale/extras",
+    "file": "screenshots/21-extras.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "22-story-updates",
+    "label": "Story updates",
+    "url": "http://127.0.0.1:8765/index.html#/story/a-zombie-tale/updates",
+    "file": "screenshots/22-story-updates.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "23-gallery",
+    "label": "Visual archive",
+    "url": "http://127.0.0.1:8765/index.html#/gallery",
+    "file": "screenshots/23-gallery.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "02-library",
+    "label": "Library",
+    "url": "http://127.0.0.1:8765/index.html#/library",
+    "file": "screenshots/02-library.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "04-calendar",
+    "label": "Release calendar",
+    "url": "http://127.0.0.1:8765/index.html#/calendar",
+    "file": "screenshots/04-calendar.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "05-collections",
+    "label": "Collections",
+    "url": "http://127.0.0.1:8765/index.html#/collections",
+    "file": "screenshots/05-collections.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "06-vault",
+    "label": "Access Vault",
+    "url": "http://127.0.0.1:8765/index.html#/vault",
+    "file": "screenshots/06-vault.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "07-shelf",
+    "label": "My Shelf",
+    "url": "http://127.0.0.1:8765/index.html#/my-shelf",
+    "file": "screenshots/07-shelf.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "08-bookmarks",
+    "label": "Bookmarks",
+    "url": "http://127.0.0.1:8765/index.html#/bookmarks",
+    "file": "screenshots/08-bookmarks.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "09-quotes",
+    "label": "Saved Quotes",
+    "url": "http://127.0.0.1:8765/index.html#/quotes",
+    "file": "screenshots/09-quotes.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "10-history",
+    "label": "Reading History",
+    "url": "http://127.0.0.1:8765/index.html#/history",
+    "file": "screenshots/10-history.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "11-notifications",
+    "label": "Notifications",
+    "url": "http://127.0.0.1:8765/index.html#/notifications",
+    "file": "screenshots/11-notifications.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "12-benefits",
+    "label": "Membership Benefits",
+    "url": "http://127.0.0.1:8765/index.html#/benefits",
+    "file": "screenshots/12-benefits.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "13-onboarding",
+    "label": "Onboarding",
+    "url": "http://127.0.0.1:8765/index.html#/onboarding",
+    "file": "screenshots/13-onboarding.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "24-reader",
+    "label": "Free Chapter 1 / reader opening viewport (private prose capture)",
+    "url": "http://127.0.0.1:8765/index.html#/read/bfd3d614-707e-4009-8ab9-f4296ecd4765",
+    "file": "screenshots/24-reader.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "25-reader-preferences",
+    "label": "Reader Preferences rail (private prose capture)",
+    "url": "http://127.0.0.1:8765/index.html#/read/bfd3d614-707e-4009-8ab9-f4296ecd4765",
+    "file": "screenshots/25-reader-preferences.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "26-site-settings",
+    "label": "Site settings / desktop modal",
+    "url": "http://127.0.0.1:8765/index.html#/read/bfd3d614-707e-4009-8ab9-f4296ecd4765",
+    "file": "screenshots/26-site-settings.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "27-admin-gate",
+    "label": "Admin CMS / access denied",
+    "url": "http://127.0.0.1:8765/admin.html",
+    "file": "screenshots/27-admin-gate.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "28-writer-gate",
+    "label": "Writer / access-denied recovery",
+    "url": "http://127.0.0.1:8765/writer.html",
+    "file": "screenshots/28-writer-gate.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "29-mobile-home",
+    "label": "Home / 390 x 844 phone viewport",
+    "url": "http://127.0.0.1:8765/index.html#/",
+    "file": "screenshots/29-mobile-home.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "30-mobile-vault",
+    "label": "Vault / 390 x 844 phone viewport",
+    "url": "http://127.0.0.1:8765/index.html#/vault",
+    "file": "screenshots/30-mobile-vault.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "ref-01-abstracto-story",
+    "label": "Abstracto-inspired story hub demo",
+    "url": "local static reference demo",
+    "file": "screenshots/ref-01-abstracto-story.jpg",
+    "fullPage": false
+  },
+  {
+    "name": "ref-02-abstracto-gallery",
+    "label": "Abstracto-inspired visual archive demo",
+    "url": "local static reference demo",
+    "file": "screenshots/ref-02-abstracto-gallery.jpg",
+    "fullPage": false
+  }
+]

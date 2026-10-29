@@ -595,9 +595,9 @@ VIEWS.recap = function(){
   if (!s.chapters.length) return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a><h1 class="page-title">Story Recap</h1><div class="empty"><div class="em">${I.info}</div><h3>No recap yet</h3><p>Publish chapters first, then the recap page will have chapter context.</p></div>`;
   return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
   <h1 class="page-title">Story Recap</h1>
-  <p class="page-sub">Spoiler-controlled backend recap area.</p>
+  <p class="page-sub">Revisit the premise without reading ahead.</p>
   <div class="card tinted" style="margin:14px 0"><div class="eyebrow">Spoiler-free premise</div><p class="muted" style="font-family:var(--serif);font-size:1rem;line-height:1.7;margin:8px 0 0">${esc(s.recapSafe || s.premise || "No public recap has been written yet.")}</p></div>
-  <div class="empty"><div class="em">${I.list}</div><h3>No detailed recap yet</h3><p>Detailed recap text should come from backend-authored story/chapter metadata, not bundled sample prose.</p></div>
+  <div class="empty"><div class="em">${I.list}</div><h3>No detailed recap yet</h3><p>A detailed recap is not available for this story.</p></div>
   <button class="btn story block" data-read="${s.chapters[0].id}">${I.play}Start / continue reading</button>`;
 };
 
@@ -607,7 +607,7 @@ VIEWS.extras = function(){
   return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
   <h1 class="page-title">Bonus Materials</h1>
   <p class="page-sub">Author notes, deleted scenes, lore, and art posted for this story.</p>
-  <div class="empty"><div class="em">${I.spark}</div><h3>No extras yet</h3><p>No backend bonus-material feed is configured for this story yet.</p></div>`;
+  <div class="empty"><div class="em">${I.spark}</div><h3>No extras yet</h3><p>No bonus materials are available for this story.</p></div>`;
 };
 
 /* ============ STORY UPDATES ============ */

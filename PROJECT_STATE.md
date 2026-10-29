@@ -2,6 +2,41 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-10-29 21:18 Asia/Kolkata — Whole-site UI audit baseline
+
+Status: NEEDS REVIEW
+
+Area:
+- reader | admin | docs
+
+Files touched:
+- `design/ui-audit-2026-10-29/AUDIT.md`
+- `design/ui-audit-2026-10-29/index.html`
+- `design/ui-audit-2026-10-29/screenshots.json`
+- `design/ui-audit-2026-10-29/screenshots/`
+- `design/ui-audit-2026-10-29/contact-final-*.jpg`
+- `.tmp/ui-audit-reader-notes.md`
+- `.tmp/ui-audit-reference-notes.md`
+- `.tmp/ui-audit-cms-writer-notes.md`
+
+Summary:
+- Consolidated source audit notes and created a local screenshot index plus privacy-safe contact sheets. Manifest has 32 images: 24 reader destinations/states, two overlays, two access gates, two mobile views and two reference demos. Screenshots were corrected/verified after a screenshot compositor lag issue; audit records actual bitmap dimensions.
+- Source confirms oversized empty SVGs, unsupported support/share/offline claims, and admin/Writer layout/accessibility risks. No production code or intentional database/content write was performed.
+
+Remaining work:
+- Owner review of audit findings and selection of design direction/page-family order.
+- Consider further mobile widths, alternate Home/Gallery modes, other overlays, gated/unavailable chapter states and authorized admin-only internals if needed for the next phase.
+
+Risks / notes:
+- Current browser session is Resident Nemesis, not admin. Admin gate is captured; Writer shell displays an "Admin Session" sidebar label while body indicates access denial. Do not treat either as an authorized admin capture or bypass checks.
+- Opening a free chapter may have caused regular app-side reading-history/progress effects; these were not audited or reversed. No deliberate content/admin writes or preference changes were performed.
+- Support/access and reader-text captures contain account/prose details. Keep original images local/private; contact sheets/index thumbnails omit them.
+- Screenshot dimensions/theme/auth scope and limitations are documented in `design/ui-audit-2026-10-29/AUDIT.md`; this audit does not verify persistence, backend correctness, all responsive states, or every auth/data variation.
+
+Verification needed:
+- Owner visual review of `design/ui-audit-2026-10-29/index.html` and findings.
+- Capture any additional variants needed before choosing implementation scope; none were necessary to complete the requested representative baseline.
+
 ## 2026-10-29 Asia/Kolkata — AI Studio system-message paste browser check
 
 Status: NEEDS REVIEW

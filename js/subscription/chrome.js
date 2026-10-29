@@ -10,23 +10,40 @@ function topbar(){
   const label = !P.signedIn?"Not signed in":P.expired?"Access expired":P.pending?"Sync pending":P.noTier?"No access":P.admin?"Admin mode":P.tier?("Active · "+P.tier):"Signed in";
   const unread = store.notifs.filter(n=>!n.read).length;
   return `<header class="topbar">
-    <a class="brand" href="#/" data-nav="/">${brandMark()}<span class="btxt"><span class="serif">${esc(SITE_NAME)}</span><small>${esc(SITE_TAGLINE)}</small></span></a>
+    <a class="brand" href="#/" data-nav="/">${brandMark()}<span class="btxt"><span class="serif">${esc(SITE_NAME)}</span></span></a>
     <span class="spacer"></span>
     <button class="access-chip" data-state="${state}" data-nav="/vault"><span class="pulse"></span>${label}</button>
     ${isAdmin()?`<a class="tb-btn admin-shortcut" href="writer.html" aria-label="Writer">${I.book}</a><a class="tb-btn admin-shortcut" href="admin.html" aria-label="Admin CMS">${I.shield}</a>`:""}
     <button class="tb-btn site-theme-toggle" data-act="toggle-site-theme" aria-label="Switch to ${store.theme==='light'?'dark':'light'} theme" title="Switch site theme">${store.theme==='light'?I.moon:I.sun}</button>
-    <button class="tb-btn" data-sheet="settings" aria-label="Site settings" title="Site settings">${I.cog}</button>
+    <button class="tb-btn" data-nav="/settings" aria-label="Site settings" title="Site settings">${I.cog}</button>
     <button class="tb-btn" data-nav="/notifications" aria-label="Notifications">${I.bell}${unread?`<span class="dot"></span>`:""}</button>
     <button class="tb-btn" data-sheet="persona" aria-label="Account and access">${I.user}</button>
   </header>`;
 }
+// Shared navigation keeps the same destinations at both breakpoints.
+function readerNavItems(){
+  return [["home","/","Home"],["library","/library","Library"],["spark","/gallery","Gallery"],["feed","/updates","Updates"],
+    ["shelf","/my-shelf","My Shelf"],["vault","/vault","The Vault"],["help","/help","Help"],["cog","/settings","Settings"]];
+}
+function readerNavLink(ic,path,label,active){
+  return `<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}" aria-label="${label}" title="${label}" ${active===ic?'aria-current="page"':''}>${I[ic]}<span>${label}</span></a>`;
+}
 function bottomnav(active){
-  const items=[["home","/","Home"],["library","/library","Library"],["spark","/gallery","Gallery"],["feed","/updates","Updates"],["vault","/vault","Vault"]];
-  return `<nav class="bottomnav">${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}">${I[ic]}<span>${lbl}</span></a>`).join("")}</nav>`;
+  const items=readerNavItems().filter(([ic])=>["home","library","spark","vault"].includes(ic));
+  return `<nav class="bottomnav" aria-label="Mobile navigation">${items.map(([ic,path,label])=>readerNavLink(ic,path,label,active)).join("")}<button type="button" data-sheet="navigation" aria-label="More pages" aria-haspopup="dialog" class="${['shelf','feed','help','cog'].includes(active)?'active':''}">${I.list}<span>More</span></button></nav>`;
 }
 function sidenav(active){
-  const items=[["home","/","Home"],["library","/library","Library"],["spark","/gallery","Gallery"],["feed","/updates","Updates"],["vault","/vault","Vault"]];
-  return `<nav class="sidenav" aria-label="Primary"><a class="rail-brand" href="#/" data-nav="/" aria-label="Archive home">${esc(SITE_NAME.slice(0,1))}</a>${items.map(([ic,path,lbl])=>`<a href="#${path}" data-nav="${path}" class="${active===ic?'active':''}" aria-label="${lbl}" title="${lbl}" ${active===ic?'aria-current="page"':''}>${I[ic]}<span>${lbl}</span></a>`).join("")}<span class="spacer"></span><a href="#/support/check-access" data-nav="/support/check-access" aria-label="Access help" title="Access help">${I.shield}<span>Help</span></a></nav>`;
+  return `<nav class="sidenav" id="reader-navigation" aria-label="Primary">
+    <a class="rail-brand" href="#/" data-nav="/" aria-label="${esc(SITE_NAME)} home"><b>${esc(SITE_NAME.slice(0,1))}</b><span>${esc(SITE_NAME)}</span></a>
+    <div class="reader-nav-links">${readerNavItems().map(([ic,path,label],i)=>`${i===4||i===6?'<div class="reader-nav-divider"></div>':''}${readerNavLink(ic,path,label,active)}`).join("")}</div>
+    <button type="button" class="reader-nav-toggle" data-act="reader-nav-toggle" aria-controls="reader-navigation" aria-expanded="${!store.readerNavCollapsed}" aria-label="${store.readerNavCollapsed?'Expand':'Collapse'} navigation">${store.readerNavCollapsed?I.chevR:I.chevL}<span>Collapse sidebar</span></button>
+  </nav>`;
+}
+function readerPageHeading(title,description,actions=""){
+  return `<header class="reader-page-heading"><div><h1 class="page-title">${esc(title)}</h1>${description?`<p class="page-sub">${esc(description)}</p>`:''}</div>${actions?`<div class="reader-page-actions">${actions}</div>`:''}</header>`;
+}
+function readerEmptyState(icon,title,description,action=""){
+  return `<div class="empty reader-empty"><span class="em" aria-hidden="true">${I[icon]||I.book}</span><h2>${esc(title)}</h2><p>${esc(description)}</p>${action}</div>`;
 }
 function announcement(){ return ""; }
 

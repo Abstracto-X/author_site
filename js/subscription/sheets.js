@@ -3,24 +3,42 @@
 
 /* ============ sheets ============ */
 let currentSheet = null;
+let sheetReturnFocus = null;
 function openSheet(builder, opts){
   opts = opts||{};
   if (readerPreferencesOpen) closeReaderPreferences();
+  const opener = currentSheet ? sheetReturnFocus : document.activeElement;
   closeSheet(true);
+  sheetReturnFocus = opener;
   const scrim = document.querySelector(".scrim") || (()=>{const d=document.createElement("div");d.className="scrim";document.body.appendChild(d);return d;})();
   const sheet = document.querySelector(".sheet") || (()=>{const d=document.createElement("div");d.className="sheet";document.body.appendChild(d);return d;})();
   sheet.innerHTML = `<span class="grip"></span>${builder()}`;
+  sheet.setAttribute("role", "dialog");
+  sheet.setAttribute("aria-modal", "true");
+  sheet.setAttribute("aria-label", sheet.querySelector("h2")?.textContent || "Reader dialog");
+  sheet.setAttribute("tabindex", "-1");
+  sheet.inert = false;
+  const app = document.getElementById("app");
+  if (app) app.inert = true;
   document.body.classList.add("has-sheet");
-  requestAnimationFrame(()=>{ scrim.classList.add("open"); sheet.classList.add("open"); });
-  currentSheet = { builder, opts };
-  if (opts.onMount) requestAnimationFrame(()=>opts.onMount(sheet));
+  const openedSheet = { builder, opts };
+  currentSheet = openedSheet;
+  requestAnimationFrame(()=>{
+    if(currentSheet !== openedSheet) return;
+    scrim.classList.add("open"); sheet.classList.add("open"); sheet.focus({preventScroll:true});
+    if (opts.onMount) opts.onMount(sheet);
+  });
 }
 function closeSheet(silent){
   const scrim = document.querySelector(".scrim"), sheet = document.querySelector(".sheet");
   if (scrim) scrim.classList.remove("open");
-  if (sheet) sheet.classList.remove("open");
+  if (sheet) { sheet.classList.remove("open"); sheet.inert = true; }
+  const app = document.getElementById("app");
+  if (app) app.inert = false;
   document.body.classList.remove("has-sheet");
   currentSheet = null;
+  if (!silent && sheetReturnFocus?.isConnected) sheetReturnFocus.focus({preventScroll:true});
+  sheetReturnFocus = null;
 }
 
 let readerPreferencesOpen = false;
@@ -95,16 +113,21 @@ function sheetReaderSettings(){
   return readerPreferencesPanel();
 }
 
-function sheetNotificationSettings(){
+function notificationPreferencesForm(){
   const st=store.settings;
-  const browserState = ("Notification" in window) ? Notification.permission : "unsupported";
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="sheet-kicker">Account</div><h2>Notification settings</h2><p class="sheet-sub">Choose how new chapter alerts reach you.</p>
-  <form data-notification-form class="set-group"><label>Chapter notifications</label>
-    ${toggleRow("chapterNotifications","New chapter alerts","Create in-app notifications for chapters you can access",st.chapterNotifications)}
-    ${toggleRow("emailNotifications","Email updates","Queue email updates for new chapters in your tiers",st.emailNotifications)}
-    ${toggleRow("browserNotifications","Browser popups","Show browser notifications when this site is open",st.browserNotifications)}
-    <div class="settings-actions"><div class="settings-status">Browser permission: <b>${browserState}</b>. Email uses your account email.</div><button class="btn sm story" type="button" data-act="request-browser-notifications">${I.bell}Enable browser permission</button><button class="btn sm ghost" type="submit">${I.check}Save preferences</button></div>
+  const browserState=("Notification" in window)?Notification.permission:"unsupported";
+  return `<form data-notification-form class="notification-preferences-form">
+    ${toggleRow("chapterNotifications","New chapter alerts","Show in-app alerts for chapters you can access",st.chapterNotifications)}
+    ${toggleRow("browserNotifications","Browser popups","Show alerts while this site is open",st.browserNotifications)}
+    <p class="reader-note">Browser permission: ${esc(browserState)}. ${authState.user?'Save to apply notification preferences to your account.':'Sign in to save notification preferences.'}</p>
+    <div class="settings-actions">${browserState!=='unsupported'&&browserState!=='granted'?`<button class="btn sm ghost" type="button" data-act="request-browser-notifications">${I.bell}Enable browser permission</button>`:''}<button class="btn sm story" type="submit">${I.check}Save preferences</button></div>
   </form>`;
+}
+function sheetNotificationSettings(){
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Notification settings</h2><p class="sheet-sub">Choose how new chapter alerts reach you.</p>${notificationPreferencesForm()}`;
+}
+function sheetNavigation(){
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close navigation">${I.x}</button><h2>Your archive</h2><nav class="reader-more-links" aria-label="All reader pages">${readerNavItems().map(([ic,path,label])=>readerNavLink(ic,path,label,"")).join("")}<a href="#/bookmarks" data-nav="/bookmarks">${I.bookmark}<span>Bookmarks</span></a><a href="#/quotes" data-nav="/quotes">${I.quote}<span>Saved quotes</span></a><a href="#/history" data-nav="/history">${I.clock}<span>Reading history</span></a></nav>`;
 }
 
 function sheetSiteSettings(){
@@ -112,25 +135,20 @@ function sheetSiteSettings(){
   const story = getActiveStory();
   const storySurface = ["story","chapters","recap","extras","storyUpdates"].includes(route?.name);
   const browserState = ("Notification" in window) ? Notification.permission : "unsupported";
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="sheet-kicker">Site</div><h2>Settings</h2><p class="sheet-sub">Site appearance and notification delivery. Chapter typography lives under Aa.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><div class="sheet-kicker">Site</div><h2>Settings</h2><p class="sheet-sub">Site appearance and notification delivery. Chapter typography lives under Aa.</p>
   <div class="set-group"><label>Site chrome</label>${toggleRow("appBackground","Background artwork","Use the configured site art behind library pages",st.appBackground)}</div>
   ${storySurface && story ? `<div class="set-group"><label>Story backdrop</label>
     <div class="seg">${[["story","Artwork"],["gradient","Ambient"],["solid","Solid"]].map(([k,l])=>`<button class="${st.bgMode===k?'active':''}" data-set-bg-mode="${k}">${l}</button>`).join("")}</div>
     ${st.bgMode === "story" ? wallpaperSwatches(story) : ""}
     ${st.bgMode === "story" ? toggleRow("bgBlur","Soften artwork","Blur the story backdrop behind the page",st.bgBlur) : ""}
   </div>` : ""}
-  <form data-notification-form class="set-group"><label>Notifications</label>
-    ${toggleRow("chapterNotifications","New chapter alerts","Create in-app alerts for accessible chapters",st.chapterNotifications)}
-    ${toggleRow("emailNotifications","Email updates","Send chapter updates to your account email",st.emailNotifications)}
-    ${toggleRow("browserNotifications","Browser popups","Show alerts while this site is open",st.browserNotifications)}
-    <div class="settings-actions"><div class="settings-status">Browser permission: <b>${browserState}</b></div><button class="btn sm story" type="button" data-act="request-browser-notifications">${I.bell}Enable browser</button><button class="btn sm ghost" type="submit">${I.check}Save preferences</button></div>
-  </form>`;
+  ${notificationPreferencesForm()}`;
 }
 
 function sheetSettings(){
   return sheetSiteSettings();
 }
-function toggleRow(key,title,sub,on){ return `<div class="toggle-row"><div class="lbl">${title}<small>${sub}</small></div><button class="switch ${on?'on':''}" data-toggle="${key}" aria-label="${title}"></button></div>`; }
+function toggleRow(key,title,sub,on){ return `<div class="toggle-row"><div class="lbl">${title}<small>${sub}</small></div><button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${!!on}" data-toggle="${key}" aria-label="${title}"></button></div>`; }
 
 function sheetPersona(){
   const P=persona();
@@ -138,16 +156,16 @@ function sheetPersona(){
   const signedIn = !!authState.user;
   const avatar = profileAvatar();
   const status = P.admin ? "Admin reader override active" : signedIn ? (active.length ? `${active.length} active entitlement${active.length===1?"":"s"}` : "Signed in, no active member entitlement") : "Guest reader";
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Account</h2>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Account</h2>
   <div class="card tinted" style="margin-bottom:14px;display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(accountLabel())}</div><div class="faint" style="font-size:.76rem">${esc(P.tier || status)}</div></div>${signedIn?`<button class="btn sm ghost" data-sheet="profile">Edit</button><button class="btn sm ghost" data-act="reader-signout">Sign out</button>`:""}</div>
-  <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/notifications">${I.bell}<span>Notifications</span><small>Chapter alerts</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a data-sheet="settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
+  <div class="quicklinks" style="margin-bottom:16px"><a data-nav="/vault">${I.vault}<span>Vault</span><small>Manage access</small></a><a data-nav="/notifications">${I.bell}<span>Notifications</span><small>Chapter alerts</small></a><a data-nav="/my-shelf">${I.shelf}<span>My Shelf</span><small>Your library</small></a><a href="#/settings" data-nav="/settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>${isAdmin()?`<a href="writer.html"><span>${I.book}</span><span>Writer</span><small>Draft chapters</small></a><a href="admin.html"><span>${I.shield}</span><span>Admin CMS</span><small>Production controls</small></a>`:""}</div>
   ${signedIn?`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:7px">Entitlements</div>${P.admin?`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">Admin reader override</span><span class="badge free">active</span></div><p class="faint" style="font-size:.78rem;margin:4px 0 0">This is not a paid/member entitlement; it is attached to your admin profile role.</p>`:active.length?active.map(e=>`<div class="between" style="gap:10px;padding:6px 0"><span style="font-weight:600;font-size:.86rem">${esc(e.tier_name || e.name || e.tier || "Reader access")}</span><span class="badge free">active</span></div>`).join(""):`<p class="faint" style="font-size:.8rem;margin:0">No active entitlement returned yet. Connect provider or redeem an access key.</p>`}</div>`:`<div class="card" style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">Continue</div><div class="col-flex"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button><div class="faint" style="font-size:.74rem;text-align:center">or use email</div><form data-auth-form="signin"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="current-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Sign in with email</button><button class="btn ghost block" type="button" data-act="show-signup">Create email account</button><button class="btn ghost block" type="button" data-act="show-forgot-password">Forgot password?</button></div></form></div></div>`}
   <div class="card" style="margin-top:8px"><div style="font-weight:600;font-size:.86rem">Need help?</div><div class="faint" style="font-size:.74rem;margin-top:4px">Open the Vault to manage access, reconnect a membership provider, or redeem an access key.</div></div>`;
 }
 function sheetProfile(){
   if (!authState.user) return sheetPersona();
   const avatar = profileAvatar();
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Edit profile</h2><p class="sheet-sub">Customize the name and avatar readers see on comments.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Edit profile</h2><p class="sheet-sub">Customize the name and avatar readers see on comments.</p>
   <form data-profile-form class="card profile-form-grid">
     <div style="display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div class="faint" style="font-size:.78rem">Images upload to your private Reader folder path and are served by public URL.</div></div>
     <input class="pill-input" name="display_name" value="${esc(authState.profile?.display_name || "")}" placeholder="Display name" autocomplete="name" style="text-align:left">
@@ -168,21 +186,21 @@ function sheetWhatsNew(){
   <button class="btn story block" data-act="dismiss-whats-new">${I.check}Got it</button>`;
 }
 function sheetSignup(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Save your library</h2><p class="sheet-sub">Use Google for the fastest setup, or create an email login for key redemption, membership linking, and future cross-device shelf sync.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Save your library</h2><p class="sheet-sub">Use Google for the fastest setup, or create an email login for key redemption, membership linking, and future cross-device shelf sync.</p>
   <div class="card" style="margin-bottom:12px"><button class="btn story block" type="button" data-act="google-signin">${I.external}Continue with Google</button></div>
   <form data-auth-form="signup" class="card"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><input class="pill-input" name="password" type="password" autocomplete="new-password" placeholder="Password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn ghost block" type="submit">${I.user}Create email login</button><button class="btn ghost block" type="button" data-sheet="persona">Back to sign in</button></div></form>`;
 }
 function sheetForgotPassword(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Reset password</h2><p class="sheet-sub">Enter your account email and we will send a secure password reset link.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Reset password</h2><p class="sheet-sub">Enter your account email and we will send a secure password reset link.</p>
   <form data-auth-form="recover" class="card"><div class="col-flex"><input class="pill-input" name="email" type="email" autocomplete="email" placeholder="reader@example.com" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.mail}Send reset link</button><button class="btn ghost block" type="button" data-sheet="persona">Back to sign in</button></div></form>`;
 }
 function sheetUpdatePassword(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Set new password</h2><p class="sheet-sub">Your reset link is verified. Choose a new password for this reader account.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Set new password</h2><p class="sheet-sub">Your reset link is verified. Choose a new password for this reader account.</p>
   <form data-auth-form="update" class="card"><div class="col-flex"><input class="pill-input" name="password" type="password" autocomplete="new-password" placeholder="New password" style="text-align:left"><div class="faint" data-auth-status style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.user}Update password</button></div></form>`;
 }
 function sheetLock(chId){
   const f=byId(chId); if(!f) return "<p>Not found.</p>"; const {ch,story}=f; const r=chapterResolved(ch);
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button>
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px"><span class="ax ${accessTag(r)[0]}" style="font-size:1.5rem"><span class="ic" style="width:28px;height:28px">${accessTag(r)[2]}</span></span><div><h2>${ch.title}</h2><div class="sheet-sub" style="margin:0">${story.title} · Chapter ${ch.n}</div></div></div>
   <div class="card" style="margin-bottom:14px"><p class="muted" style="font-size:.86rem;margin:0">${reasonFor(ch,r)}</p></div>
   <div class="col-flex" style="gap:9px">
@@ -194,11 +212,11 @@ function sheetLock(chId){
   </div>`;
 }
 function sheetRedeem(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Redeem an access key</h2><p class="sheet-sub">Keys unlock beta, reviewer, gift &amp; campaign content. Access binds to your account.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Redeem an access key</h2><p class="sheet-sub">Keys unlock beta, reviewer, gift &amp; campaign content. Access binds to your account.</p>
   <form data-redeem-form><div class="col-flex"><input id="key-input-sheet" class="pill-input" name="key" style="text-align:left;letter-spacing:.1em" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><div id="key-error" class="faint" style="font-size:.76rem;min-height:1em"></div><button class="btn story block" type="submit">${I.key}Redeem key</button></div></form>`;
 }
 function sheetConnectPatreon(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Activate with Patreon</h2><p class="sheet-sub">Patreon verifies membership; your reader account keeps access, keys, progress, and provider links together.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Activate with Patreon</h2><p class="sheet-sub">Patreon verifies membership; your reader account keeps access, keys, progress, and provider links together.</p>
   <div class="card" style="margin-bottom:14px"><div class="between"><div><div style="font-weight:600">One smooth flow</div><div class="faint" style="font-size:.78rem">${authState.user?"We will send you to Patreon, then sync your tier back here.":"Continue with Google first, then we will automatically send you to Patreon to activate access."}</div></div>${I.vault}</div></div>
   <div class="col-flex" style="gap:9px">${authState.user?`<button class="btn story block" data-act="connect-patreon-go">${I.vault}Continue with Patreon</button>`:`<button class="btn story block" data-act="google-then-patreon">${I.external}Continue with Google, then Patreon</button><button class="btn ghost block" data-sheet="persona">${I.user}Use email instead</button>`}<button class="btn ghost block" data-sheet="redeem">${I.key}I have a key instead</button><a class="btn ghost block" data-nav="/support/wrong-account">${I.user}Wrong account?</a></div>`;
 }
@@ -207,11 +225,11 @@ function sheetConnectProvider(){
     patreonEnabled()?`<button class="btn story block" data-sheet="connect-patreon">${I.vault}Patreon membership</button>`:"",
     boostyDiscordEnabled()?`<button class="btn story block" data-sheet="connect-boosty">${I.msg}Boosty through Discord</button>`:""
   ].filter(Boolean).join("");
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Choose your membership provider</h2><p class="sheet-sub">Connect the service where your active subscription lives. Provider access stays attached to this reader account.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Choose your membership provider</h2><p class="sheet-sub">Connect the service where your active subscription lives. Provider access stays attached to this reader account.</p>
   <div class="col-flex" style="gap:9px">${choices||`<div class="card"><p class="faint" style="margin:0">No membership providers are enabled.</p></div>`}<button class="btn ghost block" data-sheet="redeem">${I.key}I have an access key</button></div>`;
 }
 function sheetConnectBoosty(){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Activate with Boosty</h2><p class="sheet-sub">Boosty assigns your subscriber role in Discord; EvilArchives verifies that role without reading your messages.</p>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Activate with Boosty</h2><p class="sheet-sub">Boosty assigns your subscriber role in Discord; EvilArchives verifies that role without reading your messages.</p>
   <div class="card" style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:6px">Before connecting</div><ol class="faint" style="font-size:.78rem;line-height:1.65;margin:0;padding-left:20px"><li>Subscribe to the matching tier on Boosty.</li><li>Connect the same Discord account in Boosty Connected Apps.</li><li>Join the EvilArchives Discord server and wait for the subscriber role.</li></ol></div>
   <div class="col-flex" style="gap:9px">
     ${BOOSTY_URL?`<button class="btn ghost block" data-act="open-boosty">${I.external}Open the Boosty page</button>`:""}
@@ -224,13 +242,12 @@ function sheetContext(){
   const f=currentChapter; if(!f) return "<p>Open a chapter first.</p>"; const {ch,story,index}=f;
   const prog=store.progress[ch.id];
   const next=story.chapters[index+1]; const nr=next?chapterResolved(next):null;
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>${ch.title}</h2><div class="sheet-sub">${story.title} · Chapter ${ch.n} · ${ch.arc||""}</div>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>${ch.title}</h2><div class="sheet-sub">${story.title} · Chapter ${ch.n} · ${ch.arc||""}</div>
   <div class="card" style="margin-bottom:12px">${prog?`<div class="between"><span class="faint" style="font-size:.78rem">Progress</span><span style="font-size:.8rem;font-weight:600">${prog.pct}%</span></div>${progressBar(prog.pct)}`:`<p class="faint" style="font-size:.8rem;margin:0">Not started. Est. ${ch.wordCount || (ch.readTime * 220)} words.</p>`}</div>
   <div class="col-flex" style="gap:8px">
     <button class="btn ghost block" data-act="reader-bookmark">${I.bookmark}${store.bookmarks.find(b=>b.chapterId===ch.id)?'Remove bookmark':'Bookmark chapter'}</button>
     <button class="btn ghost block" data-act="reader-savequote">${I.quote}Save a quote</button>
     <button class="btn ghost block" data-act="reader-markread">${store.readMarked[ch.id]?I.check+'Marked read':'Mark as read'}</button>
-    <button class="btn ghost block" data-act="offline-queue">${I.download}Save for offline</button>
     <a class="btn ghost block" data-nav="/story/${story.slug}/recap">${I.list}Read recap</a>
     <a class="btn ghost block" data-nav="/story/${story.slug}/extras">${I.spark}Bonus materials</a>
     ${next?`<div class="card" style="margin-top:4px"><div class="between"><div><div class="faint" style="font-size:.7rem;text-transform:uppercase">Next</div><div style="font-family:var(--serif);font-weight:600">${next.title}</div><div class="faint" style="font-size:.74rem">${axInline(nr)}</div></div>${isReadable(nr)?`<button class="btn sm story" data-read="${next.id}">${I.play}Go</button>`:`<button class="btn sm" data-lock="${next.id}">${accessTag(nr)[3]}</button>`}</div></div>`:""}
@@ -239,10 +256,10 @@ function sheetContext(){
 function sheetParaComments(chId, p){
   const list=paraComments(chId,p);
   const signedIn = !!authState.user;
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><h2>Paragraph note</h2><div class="sheet-sub">${list.length} note${list.length===1?'':'s'} on this paragraph</div>
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Paragraph note</h2><div class="sheet-sub">${list.length} note${list.length===1?'':'s'} on this paragraph</div>
   <div style="margin-bottom:14px">${list.map(commentHTML).join("")||`<p class="faint" style="font-size:.82rem">No notes yet.</p>`}</div>
   ${signedIn?`<form data-para-form="${chId}" data-para-index="${p}"><div class="col-flex"><div class="faint" style="font-size:.74rem">Posting as <b>${esc(accountLabel())}</b></div><input name="text" placeholder="Add a note on this paragraph…" required><button class="btn sm story" type="submit">${I.msg}Post</button></div></form>`:`<div class="card"><p class="faint" style="font-size:.82rem;margin:0 0 10px">Sign in to add paragraph notes.</p><button class="btn sm story" data-sheet="persona">${I.user}Sign in</button></div>`}`;
 }
 function sheetImage(fig, cap){
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span><div style="border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">${D.FIG[fig]||""}</div><p class="muted center" style="font-size:.82rem;margin-top:10px;font-style:italic">${cap||""}</p>`;
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><div style="border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">${D.FIG[fig]||""}</div><p class="muted center" style="font-size:.82rem;margin-top:10px;font-style:italic">${cap||""}</p>`;
 }
