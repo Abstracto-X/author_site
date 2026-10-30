@@ -5,10 +5,11 @@
 VIEWS.updates = function(){
   const groups={};
   D.UPDATES.forEach(u=>{ (groups[u.when]=groups[u.when]||[]).push(u); });
-  const rendered = Object.entries(groups).map(([g,items])=>`<div class="section"><div class="section-head"><h2>${esc(g)}</h2></div><div class="rh-chapter-grid rh-updates-grid">${items.map(curatedUpdateCard).join("")}</div></div>`).join("");
-  return `<h1 class="page-title">Updates</h1><p class="page-sub">Everything new across the archive, access-aware.</p>
-  
-  ${rendered || `<div class="empty"><div class="em">${I.feed}</div><h3>No updates yet</h3><p>New chapter and access updates will appear here when they are posted.</p></div>`}`;
+  const rendered = Object.entries(groups).map(([g,items])=>`<section class="section"><div class="section-head"><h2>${esc(g)}</h2></div><div class="rh-chapter-grid rh-updates-grid">${items.map(curatedUpdateCard).join("")}</div></section>`).join("");
+  return `<div class="reader-workspace updates-page">
+    ${readerPageHeading("Updates","Everything new across the archive, access-aware.",`<a class="btn ghost" href="#/library" data-nav="/library">Browse library ${I.chevR}</a>`)}
+    ${rendered || readerEmptyState("feed","No updates yet","New chapter and access updates will appear here when they are posted.")}
+  </div>`;
 };
 
 function curatedUpdateCard(update,index){
@@ -19,12 +20,19 @@ function curatedUpdateCard(update,index){
 
 /* ============ CALENDAR ============ */
 VIEWS.calendar = function(){
-  return `<h1 class="page-title">Release Calendar</h1><p class="page-sub">Upcoming public and member releases.</p>
-  <div class="empty"><div class="em">${I.calendar}</div><h3>No calendar entries</h3><p>A release calendar is not available. Find published chapters in Updates.</p></div>`;
+  return `<div class="reader-workspace">
+    ${readerPageHeading("Release Calendar","Upcoming public and member releases.",`<a class="btn ghost" href="#/updates" data-nav="/updates">Latest updates ${I.chevR}</a>`)}
+    ${readerEmptyState("calendar","No calendar entries","A release calendar is not available. Find published chapters in Updates.",`<a class="btn story" href="#/updates" data-nav="/updates">${I.feed}Open Updates</a>`)}
+  </div>`;
 };
 
 /* ============ COLLECTIONS ============ */
-VIEWS.collection = VIEWS.collections = function(){ return `<h1 class="page-title">Collections</h1><p class="page-sub">Curated story groups.</p><div class="empty"><div class="em">${I.layers}</div><h3>No collections</h3><p>Collections are not available. Browse the Library for all published stories.</p><button class="btn story" data-nav="/library">${I.library}Open Library</button></div>`; };
+VIEWS.collection = VIEWS.collections = function(){
+  return `<div class="reader-workspace">
+    ${readerPageHeading("Collections","Curated story groups.",`<a class="btn ghost" href="#/library" data-nav="/library">Open Library ${I.chevR}</a>`)}
+    ${readerEmptyState("layers","No collections","Collections are not available. Browse the Library for all published stories.",`<button class="btn story" data-nav="/library">${I.library}Open Library</button>`)}
+  </div>`;
+};
 
 /* ============ VAULT ============ */
 function readerAccessSummary(P=persona()){
@@ -94,60 +102,138 @@ function providerCard(name, key, connected, tier, since, note){
 }
 function maskKey(c){ if(c.length<=4) return c; return "••••-••••-••••-"+c.slice(-4); }
 
-/* ============ MY SHELF ============ */
+/* ============ MY SHELF & SAVED WORKSPACE ============ */
+function readerShelfSubnav(active){
+  const tabs=[
+    ["shelf","/my-shelf","My Shelf",activeReads().length],
+    ["bookmarks","/bookmarks","Bookmarks",store.bookmarks.length],
+    ["quotes","/quotes","Saved Quotes",store.quotes.length],
+    ["history","/history","Reading History",store.history.length]
+  ];
+  return `<nav class="reader-subnav shelf-subnav" aria-label="Shelf navigation">
+    <div class="reader-subnav-tabs">${tabs.map(([id,path,label,count])=>`<a href="#${path}" data-nav="${path}" class="${active===id?'active':''}" ${active===id?'aria-current="page"':''}><span>${label}</span><small>${count}</small></a>`).join("")}</div>
+  </nav>`;
+}
+
 VIEWS.shelf = function(){
   const reads=activeReads();
-  return `<h1 class="page-title">My Shelf</h1><p class="page-sub">Your threads, saved things, and reader preferences.</p>
-  <div class="section"><div class="section-head"><h2>Continue your threads</h2></div><div class="lane">${reads.map(({ch,story,prog})=>`<button class="card" style="width:210px;text-align:left;${storyAccentVars(story)}" data-read="${ch.id}"><div class="faint" style="font-size:.68rem;text-transform:uppercase">${story.title}</div><div style="font-family:var(--serif);font-weight:600;margin:2px 0 8px">${ch.title}</div>${progressBar(prog.pct)}<div class="faint" style="font-size:.7rem;margin-top:6px">Resume at: ${prog.scene}</div></button>`).join("")}</div></div>
-  <div class="section"><div class="section-head"><h2>Followed</h2></div><div class="lane">${store.followed.map(id=>{const s=D.STORIES.find(story=>story.id===id)||bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
-  <div class="quicklinks" style="margin:14px 0">
-    <a data-nav="/bookmarks">${I.bookmark}<span>Bookmarks</span><small>${store.bookmarks.length} saved</small></a>
-    <a data-nav="/quotes">${I.quote}<span>Saved quotes</span><small>${store.quotes.length} lines</small></a>
-    <a data-nav="/history">${I.clock}<span>History</span><small>Recently read</small></a>
-    <a href="#/settings" data-nav="/settings">${I.cog}<span>Settings</span><small>Site &amp; notifications</small></a>
-  </div>
-  <div class="section"><div class="section-head"><h2>Preview trail</h2></div>
-    <div class="card"><p class="muted" style="font-size:.84rem;margin:0 0 10px">Chapters you've previewed but not yet unlocked.</p>${store.history.filter(h=>h.kind==="preview").map(h=>{const f=byId(h.chapterId);return f?`<div class="between" style="padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.86rem;font-weight:600">${h.title}</div><div class="faint" style="font-size:.72rem">${f.story.title}</div></div><button class="btn sm" data-lock="${h.chapterId}">${I.lockOpen}Unlock</button></div>`:"";}).join("")||`<p class="faint" style="font-size:.8rem">No active previews.</p>`}</div>
-  </div>
+  const followedStories=store.followed.map(id=>D.STORIES.find(story=>story.id===id)||bySlug(id)).filter(Boolean);
+  const previews=store.history.filter(h=>h.kind==="preview").map(h=>{const f=byId(h.chapterId);return f?{h,f}:null;}).filter(Boolean);
+  return `<div class="reader-workspace shelf-page">
+    ${readerPageHeading("My Shelf","Your active reading threads, followed stories, and saved places.",`<a class="btn ghost" href="#/settings" data-nav="/settings">${I.cog}Settings</a>`)}
+    ${readerShelfSubnav("shelf")}
+    <div class="shelf-layout">
+      <div class="shelf-main">
+        <section class="reader-panel" aria-labelledby="shelf-threads-title">
+          <div class="section-head"><h2 id="shelf-threads-title">Continue your threads</h2><a class="reader-text-link" href="#/library" data-nav="/library">Browse library ${I.chevR}</a></div>
+          ${reads.length?`<div class="shelf-threads-grid">${reads.map(({ch,story,prog})=>`<button class="shelf-thread-card" style="${storyAccentVars(story)}" data-read="${esc(ch.id)}">
+            <div class="rh-kicker">${esc(story.title)}</div>
+            <h3>${esc(ch.title)}</h3>
+            ${progressBar(prog.pct)}
+            <div class="shelf-thread-meta"><span>${prog.pct}% read</span>${prog.scene?`<span>Resume near: ${esc(prog.scene)}</span>`:""}</div>
+          </button>`).join("")}</div>`:`<p class="reader-note">No chapters in progress yet. Open any chapter in the library and your reading position will be saved here automatically.</p>`}
+        </section>
 
-  `;
+        <section class="reader-panel" aria-labelledby="shelf-followed-title">
+          <div class="section-head"><h2 id="shelf-followed-title">Followed stories</h2></div>
+          ${followedStories.length?`<div class="grid-stories library-pinned-grid">${followedStories.map(storyCard).join("")}</div>`:`<p class="reader-note">You haven't followed any stories yet. Use Follow on a story page to keep it pinned here.</p>`}
+        </section>
+      </div>
+
+      <aside class="shelf-aside">
+        <section class="reader-panel" aria-labelledby="shelf-saved-title">
+          <h2 id="shelf-saved-title">Saved places &amp; notes</h2>
+          <div class="shelf-shortcut-list">
+            <a href="#/bookmarks" data-nav="/bookmarks"><span class="reader-section-icon">${I.bookmark}</span><div><h3>Bookmarks</h3><p class="reader-note">${store.bookmarks.length} saved place${store.bookmarks.length===1?"":"s"}</p></div>${I.chevR}</a>
+            <a href="#/quotes" data-nav="/quotes"><span class="reader-section-icon">${I.quote}</span><div><h3>Saved quotes</h3><p class="reader-note">${store.quotes.length} highlighted line${store.quotes.length===1?"":"s"}</p></div>${I.chevR}</a>
+            <a href="#/history" data-nav="/history"><span class="reader-section-icon">${I.clock}</span><div><h3>Reading history</h3><p class="reader-note">${store.history.length} recent ${store.history.length===1?"entry":"entries"}</p></div>${I.chevR}</a>
+            <a href="#/settings" data-nav="/settings"><span class="reader-section-icon">${I.cog}</span><div><h3>Settings</h3><p class="reader-note">Theme &amp; notifications</p></div>${I.chevR}</a>
+          </div>
+        </section>
+
+        <section class="reader-panel" aria-labelledby="shelf-previews-title">
+          <h2 id="shelf-previews-title">Preview trail</h2>
+          <p class="reader-note">Chapters you have previewed that remain locked.</p>
+          ${previews.length?`<div class="shelf-preview-list">${previews.map(({h,f})=>`<div class="reader-check-row between"><div><h3>${esc(h.title)}</h3><p class="reader-note">${esc(f.story.title)}</p></div><button class="btn sm ghost" data-lock="${esc(h.chapterId)}">${I.lockOpen}Unlock</button></div>`).join("")}</div>`:`<p class="reader-note">No active previews.</p>`}
+        </section>
+      </aside>
+    </div>
+  </div>`;
 };
-VIEWS.bookmarks = function(){ return `<h1 class="page-title">Bookmarks</h1><p class="page-sub">${store.bookmarks.length} saved places across your reading.</p><div class="col-flex stagger">${store.bookmarks.map(b=>{const f=byId(b.chapterId);return `<div class="card" style="display:flex;gap:13px;align-items:center;${f?storyAccentVars(f.story):''}"><span class="ax unlocked" style="font-size:1.2rem"><span class="ic" style="width:22px;height:22px">${I.bookmarkFill}</span></span><div style="flex:1;min-width:0"><div style="font-family:var(--serif);font-style:italic">"${b.label}"</div><div class="faint" style="font-size:.74rem">${f?f.story.title+" · "+f.ch.title:""} · ${b.when}</div></div>${f?`<button class="btn sm story" data-read="${b.chapterId}">${I.play}Open</button>`:""}</div>`;}).join("")||emptyState("bookmark","No bookmarks yet","Save a place while reading with the bookmark button.")}</div>`; };
-VIEWS.quotes = function(){ return `<h1 class="page-title">Saved Quotes</h1><p class="page-sub">${store.quotes.length} lines worth keeping.</p><div class="col-flex stagger">${store.quotes.map(q=>{const f=byId(q.chapterId);return `<div class="card tinted" style="${f?storyAccentVars(f.story):''}"><div style="display:flex;gap:10px"><span style="font-size:1.6rem;color:var(--s);line-height:.8">${I.quote}</span><div><p style="font-family:var(--serif);font-size:1rem;line-height:1.6;margin:0">${q.text}</p><div class="faint" style="font-size:.74rem;margin-top:8px">${f?f.story.title:""} · saved ${q.when}</div></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm ghost" data-copy="${esc(q.text)}">${I.copy}Copy</button></div></div>`;}).join("")||emptyState("quote","No quotes saved","Highlight text while reading to save a line.")}</div>`; };
-VIEWS.history = function(){ return `<h1 class="page-title">Reading History</h1><p class="page-sub">Your private chronicle.</p><div class="timeline">${[...store.history].map(h=>{const f=byId(h.chapterId);return `<div class="tl-item"><div class="when">${h.when}</div><div class="what">${h.kind==='preview'?'Previewed':h.kind==='completed'?'Completed':'Read'}: ${h.title}</div><div class="faint" style="font-size:.78rem">${f?f.story.title:""}</div></div>`;}).join("")}</div>`; };
+
+VIEWS.bookmarks = function(){
+  return `<div class="reader-workspace">
+    ${readerPageHeading("Bookmarks",`${store.bookmarks.length} saved place${store.bookmarks.length===1?"":"s"} across your reading.`)}
+    ${readerShelfSubnav("bookmarks")}
+    ${store.bookmarks.length?`<div class="reader-list-grid">${store.bookmarks.map(b=>{const f=byId(b.chapterId);return `<article class="reader-panel reader-saved-card" style="${f?storyAccentVars(f.story):''}"><span class="reader-section-icon" aria-hidden="true">${I.bookmarkFill}</span><div style="flex:1;min-width:0"><h3>"${esc(b.label)}"</h3><p class="reader-note">${f?esc(f.story.title+" · "+f.ch.title):""} · ${esc(b.when)}</p></div>${f?`<button class="btn sm story" data-read="${esc(b.chapterId)}">${I.play}Open</button>`:""}</article>`;}).join("")}</div>`:readerEmptyState("bookmark","No bookmarks yet","Save a place while reading with the bookmark button in the chapter toolbar.")}
+  </div>`;
+};
+
+VIEWS.quotes = function(){
+  return `<div class="reader-workspace">
+    ${readerPageHeading("Saved Quotes",`${store.quotes.length} line${store.quotes.length===1?"":"s"} worth keeping.`)}
+    ${readerShelfSubnav("quotes")}
+    ${store.quotes.length?`<div class="reader-list-grid">${store.quotes.map(q=>{const f=byId(q.chapterId);return `<article class="reader-panel reader-quote-card" style="${f?storyAccentVars(f.story):''}"><div class="reader-quote-body"><span class="reader-section-icon" aria-hidden="true">${I.quote}</span><div><blockquote>${esc(q.text)}</blockquote><p class="reader-note">${f?esc(f.story.title+" · "):""}saved ${esc(q.when)}</p></div></div><div class="reader-quote-actions"><button class="btn sm ghost" data-copy="${esc(q.text)}">${I.copy}Copy quote</button>${f?`<button class="btn sm ghost" data-read="${esc(q.chapterId)}">${I.book}Open chapter</button>`:""}</div></article>`;}).join("")}</div>`:readerEmptyState("quote","No quotes saved","Highlight text while reading a chapter to save a line to your collection.")}
+  </div>`;
+};
+
+VIEWS.history = function(){
+  return `<div class="reader-workspace">
+    ${readerPageHeading("Reading History","Your private reading chronicle in this browser.")}
+    ${readerShelfSubnav("history")}
+    ${store.history.length?`<div class="reader-panel"><div class="timeline">${[...store.history].map(h=>{const f=byId(h.chapterId);return `<div class="tl-item"><div class="when">${esc(h.when)}</div><div class="what">${h.kind==='preview'?'Previewed':h.kind==='completed'?'Completed':'Read'}: ${esc(h.title)}</div><div class="faint" style="font-size:.78rem">${f?esc(f.story.title):""}</div></div>`;}).join("")}</div></div>`:readerEmptyState("clock","No reading history yet","Chapters you open or preview in this browser will be listed here.",`<a class="btn ghost" href="#/library" data-nav="/library">Browse the library ${I.chevR}</a>`)}
+  </div>`;
+};
 
 /* ============ NOTIFICATIONS ============ */
 VIEWS.notifications = function(){
   const items=store.notifs;
+  const unread=items.filter(n=>!n.read).length;
   const kIcon={access:I.vault,chapter:I.bell};
-  return `<div class="between"><div><h1 class="page-title">Notifications</h1><p class="page-sub">${items.filter(n=>!n.read).length} unread</p></div><button class="btn sm ghost" data-act="notif-prefs">${I.cog}Preferences</button></div>
-  <div class="chips scroll" style="margin:8px 0 16px"><button class="btn sm ghost" data-act="refresh-notifications">${I.sync}Refresh</button><button class="btn sm ghost" data-act="mark-all-read">Mark all read</button></div>
-  <div class="col-flex stagger">${items.length?items.map(n=>`<div class="card notification-card" style="${n.read?'opacity:.65':''}"><span class="notification-icon">${kIcon[n.k]||I.bell}</span><div class="notification-copy"><div class="notification-title">${esc(n.t)}</div><div class="faint notification-body">${esc(n.d)}</div><div class="faint notification-time">${esc(n.time)}</div></div><div class="notification-actions">${n.chapter||n.url?`<button class="btn sm" data-act="open-notification" data-notification-id="${n.id}" data-chapter-id="${n.chapter||''}" data-notification-url="${esc(n.url||'')}">Open</button>`:""}<button class="tb-btn" data-dismiss="${n.id}" aria-label="Dismiss">${I.x}</button></div></div>`).join(""):`<div class="empty"><div class="em">${I.bell}</div><h3>Nothing new</h3><p>New chapter alerts for your access tier will appear here.</p></div>`}</div>`;
+  const actions=`<div class="reader-toolbar-group"><button class="btn sm ghost" data-act="refresh-notifications">${I.sync}Refresh</button><button class="btn sm ghost" data-act="mark-all-read">Mark all read</button><button class="btn sm ghost" data-act="notif-prefs">${I.cog}Preferences</button></div>`;
+  return `<div class="reader-workspace notifications-page">
+    ${readerPageHeading("Notifications",`${unread} unread alert${unread===1?"":"s"}`,actions)}
+    ${items.length?`<div class="reader-list-grid">${items.map(n=>`<article class="reader-panel notification-card" style="${n.read?'opacity:.68':''}"><span class="reader-section-icon notification-icon">${kIcon[n.k]||I.bell}</span><div class="notification-copy"><div class="notification-title">${esc(n.t)}</div><div class="faint notification-body">${esc(n.d)}</div><div class="faint notification-time">${esc(n.time)}</div></div><div class="notification-actions">${n.chapter||n.url?`<button class="btn sm story" data-act="open-notification" data-notification-id="${esc(n.id)}" data-chapter-id="${esc(n.chapter||'')}" data-notification-url="${esc(n.url||'')}">Open</button>`:""}<button class="tb-btn" data-dismiss="${esc(n.id)}" aria-label="Dismiss">${I.x}</button></div></article>`).join("")}</div>`:readerEmptyState("bell","Nothing new","New chapter alerts for your access tier will appear here.")}
+  </div>`;
 };
 
 /* ============ BENEFITS ============ */
 VIEWS.benefits = function(){
-  const b=[{i:"book",t:"Member chapters",d:"Read the chapters included in your current access tier."},{i:"spark",t:"The visual archive",d:"Explore published artwork, with mature collections available to eligible members."},{i:"eye",t:"Read your way",d:"Choose your chapter colors, text size and reading width."}];
-  return `<h1 class="page-title">Membership Benefits</h1><p class="page-sub">What member access unlocks.</p>
-  <div class="grid-stories" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px">${b.map(x=>`<div class="benefit-card"><span class="ic">${I[x.i]}</span><div><h4>${x.t}</h4><p>${x.d}</p></div></div>`).join("")}</div>
-  <div class="card tinted" style="text-align:center"><div style="font-family:var(--serif);font-size:1.05rem;margin-bottom:8px">Want to unlock the archive?</div><button class="btn primary" data-sheet="connect-provider">${I.vault}Connect provider</button></div>`;
+  const b=[
+    {i:"book",t:"Member chapters",d:"Read the chapters included in your current access tier as soon as they are released."},
+    {i:"spark",t:"The visual archive",d:"Explore published character artwork, with mature collections available to eligible members."},
+    {i:"eye",t:"Read your way",d:"Customize chapter page colors, brightness, text size, line spacing, reading width, and Dyslexia mode."}
+  ];
+  return `<div class="reader-workspace benefits-page">
+    ${readerPageHeading("Membership Benefits","What member access unlocks across the archive.",`<a class="btn ghost" href="#/vault" data-nav="/vault">Open the Vault ${I.chevR}</a>`)}
+    <div class="reader-benefits-grid">${b.map(x=>`<section class="reader-panel benefit-card"><span class="reader-section-icon" aria-hidden="true">${I[x.i]}</span><div><h2>${esc(x.t)}</h2><p class="reader-note">${esc(x.d)}</p></div></section>`).join("")}</div>
+    <section class="reader-panel benefits-cta">
+      <div><h2>Ready to connect your membership?</h2><p class="reader-note">Link your Patreon or Boosty-connected Discord account, or redeem an access key in the Vault.</p></div>
+      <div class="reader-toolbar-group"><button class="btn primary" data-sheet="connect-provider">${I.vault}Connect provider</button><a class="btn ghost" href="#/vault" data-nav="/vault">Go to the Vault</a></div>
+    </section>
+  </div>`;
 };
 
 /* ============ ONBOARDING ============ */
 VIEWS.onboarding = function(){
-  return `<h1 class="page-title">Welcome to ${esc(SITE_NAME)}</h1><p class="page-sub">A quiet reading lounge for members of the archive.</p>
-  <div class="section"><div class="section-head"><h2>Choose your first door</h2></div>
-    <div class="quicklinks">
-      <a data-nav="/library">${I.library}<span>Browse Library</span><small>All available stories</small></a>
-      <a data-nav="/vault">${I.vault}<span>Check access</span><small>Memberships and keys</small></a>
-      <a data-nav="/updates">${I.feed}<span>Latest updates</span><small>New chapters</small></a>
-      <a data-nav="/help">${I.info}<span>Need help?</span><small>Access guide</small></a>
+  const steps=[[I.library,"Browse the Library","Free chapters and previews are open with no account needed."],[I.book,"Read comfortably","Adjust chapter page color, typography, and reading width to your taste."],[I.vault,"Activate access","Connect your membership or redeem an access key to unlock member chapters."],[I.shelf,"Continue in your browser","Return to your saved place, bookmarks, and quotes anytime."]];
+  return `<div class="reader-workspace onboarding-page">
+    ${readerPageHeading(`Welcome to ${SITE_NAME}`,"A quiet reading archive for stories and character artwork.",`<button class="btn primary" data-nav="/">Enter the archive ${I.chevR}</button>`)}
+    <div class="reader-support-grid">
+      <section class="reader-panel">
+        <h2>Choose your first door</h2>
+        <p class="reader-note">Jump straight to the catalog, verify your membership, or check the latest releases.</p>
+        <div class="shelf-shortcut-list">
+          <a href="#/library" data-nav="/library"><span class="reader-section-icon">${I.library}</span><div><h3>Browse Library</h3><p class="reader-note">All published stories</p></div>${I.chevR}</a>
+          <a href="#/vault" data-nav="/vault"><span class="reader-section-icon">${I.vault}</span><div><h3>Check access</h3><p class="reader-note">Memberships and access keys</p></div>${I.chevR}</a>
+          <a href="#/updates" data-nav="/updates"><span class="reader-section-icon">${I.feed}</span><div><h3>Latest updates</h3><p class="reader-note">Newest chapter releases</p></div>${I.chevR}</a>
+          <a href="#/help" data-nav="/help"><span class="reader-section-icon">${I.info}</span><div><h3>Need help?</h3><p class="reader-note">Self-service access guide</p></div>${I.chevR}</a>
+        </div>
+      </section>
+      <section class="reader-panel">
+        <h2>How it works</h2>
+        <div class="onboarding-steps">${steps.map(([ic,t,d])=>`<div class="reader-check-row" style="display:flex;gap:14px;align-items:flex-start"><span class="reader-section-icon" aria-hidden="true">${ic}</span><div><h3>${esc(t)}</h3><p class="reader-note">${esc(d)}</p></div></div>`).join("")}</div>
+      </section>
     </div>
-  </div>
-  <div class="section"><div class="section-head"><h2>How it works</h2></div>
-    <div class="col-flex">
-      ${[[I.library,"Browse the Library","Free chapters and previews, no account needed."],[I.book,"Read comfortably","Adjust type, theme & layout to your taste."],[I.vault,"Activate access","Sign in or redeem a key to unlock more."],[I.shelf,"Continue anywhere","Return to your saved place, bookmarks and quotes in this browser."]].map(([ic,t,d])=>`<div class="card" style="display:flex;gap:13px;align-items:center"><span class="ax unlocked" style="font-size:1.3rem"><span class="ic" style="width:24px;height:24px">${ic}</span></span><div><div style="font-weight:600">${t}</div><div class="faint" style="font-size:.78rem">${d}</div></div></div>`).join("")}
-    </div>
-  </div>
-  <button class="btn primary block" data-nav="/">Enter the archive</button>`;
+  </div>`;
 };

@@ -77,14 +77,16 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 11. `js/subscription/views/story-reader.js`
 12. `js/subscription/views/account-access.js`
 13. `js/subscription/views/help-support.js`
-14. `js/subscription/sheets.js`
-15. `js/subscription/events.js`
-16. `js/subscription/onboarding.js`
-17. `js/subscription/aether-app.js`
+14. `js/subscription/views/gallery.js`
+15. `js/subscription/sheets.js`
+16. `js/subscription/views/reader-settings.js`
+17. `js/subscription/events.js`
+18. `js/subscription/onboarding.js`
+19. `js/subscription/aether-app.js`
 
 `aether-app.js` is now only the small bootstrap/init file and must stay last. Its startup gate stops waiting after 12 seconds for auth initialization, loads the public library with recovery messaging, and refreshes the library if delayed authentication later succeeds.
 
-Reader redesign styling is isolated in `styles/reader-redesign.css`, loaded after `styles.css` by `index.html`. Its full-width, viewport-edge rail and semantic glass components are scoped to non-chapter-reader surfaces, preserving the existing `.in-reader` design and preferences. It adapts the owner-supplied reference/starter visuals without introducing React or a build step. Scope, feature preservation, source notice, and QA checklist are in `docs/READER_REDESIGN.md`.
+Reader redesign styling is split across `styles/reader-redesign.css` and `styles/reader-foundation.css`, loaded after `styles.css` by `index.html`. Both are scoped to non-chapter-reader surfaces (`body:not(.in-reader):not(.in-studio)`), preserving the existing `.in-reader` chapter typography/preferences as well as `admin.html` and `writer.html`. `styles/reader-foundation.css` provides the collapsible 224px/76px desktop navigation rail (`store.sidebarCollapsed`), the 5-tab mobile bottom bar + `More` sheet, bounded empty-state SVG rules, light-mode background contrast protection, and the `.reader-workspace` / `readerPageHeading` / `readerEmptyState` / `.reader-panel` layout system used across Vault, Settings (`#/settings`), Library, Story Hub, Chapter Catalog, Updates, Shelf, Bookmarks, Saved Quotes, History, Notifications, Benefits, Onboarding, Help Center, and Support routes. It adapts the owner-supplied reference/starter visuals without introducing React or a build step. Scope, feature preservation, source notice, and QA checklist are in `docs/READER_REDESIGN.md` and `design/ui-audit-2026-10-29/AUDIT.md`.
 
 The redesigned home defaults to a reference-style split chapter/artwork archive for new sessions; existing saved Multigrid/Traditional preferences remain compatible. Split archive has Curated cards, chapter-tier filters, incremental chapter/artwork loading, and mobile chapter/gallery panels. The homepage Artwork panel is a two-column, variable-height masonry grid (three at wide widths) with measured row spans, vertical-only internal scrolling and no horizontal column flow. Artwork stays in true newest-first order without promoting mature images; guests still receive only safe artwork. The hero preserves reading progress, Start/Continue, Follow, story synopsis, and real catalog statistics. `setupHomeArchive()` disconnects its prior observer before aligning the desktop gallery height to the chapter panel.
 
@@ -97,21 +99,22 @@ The redesigned home defaults to a reference-style split chapter/artwork archive 
 | `site-config.js` | Project-specific Supabase URL/anon key and feature flags. | Runtime config file; never put service-role secrets here. |
 | `site-config.template.js` | Copyable config template. | Keep keys blank/safe. |
 | `config.js` | Safe storage wrapper, runtime site identity, reader behavior settings, config accessors, provider feature gates, DOM helpers. | Handles sandbox-proof `localStorage`/`sessionStorage` fallbacks and applies `site_settings.site_identity` plus `site_settings.reader_behavior` when loaded. |
-| `state.js` | Shared reader state objects. | Owns `store`, `authState`, `backendState`, derived access/persona defaults, and compatibility migration for independent site and chapter-reader appearance preferences. |
+| `state.js` | Shared reader state objects. | Owns `store` (including `sidebarCollapsed` and `appBackground`), `authState`, `backendState`, derived access/persona defaults, and compatibility migration for independent site and chapter-reader appearance preferences. |
 | `auth.js` | Supabase auth/session/profile/entitlement bridge. | Handles sign in/up/out, password recovery/update, Patreon and Boosty-through-Discord provider flows, callback feedback, and profile/entitlement refresh. |
 | `backend.js` | Supabase site settings, story/chapter/catalog data loading. | Owns reader identity loading from `site_settings`, published story loading, RPC calls like `get_chapter_catalog` and `get_reader_chapter`, bounded request timeouts, and one retry for transient core failures. |
-| `utils.js` | Pure-ish UI/data helpers. | Escaping, formatting, icons, cards, access labels, generated cover art, text parsing. |
-| `chrome.js` | App shell/chrome partials and toasts. | Top/bottom/side navigation and shell-level UI pieces. |
-| `router.js` | Hash route parsing and render dispatch. | Preserves route names and view registry behavior. |
-| `views/home-library.js` | Home/library routes. | Published story discovery, mobile-safe home layout, tier-colored chapter availability overview, fixed-position access pills, and empty setup state. |
-| `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Chapter access state and reader rendering, including tier-color-coded chapter cards/rows, direct chapter-share controls, and the admin-configurable displayed-chapter cutoff that switches system messages from the legacy treatment to the ornate three-slice frame. Displayed numbers are parsed from titles such as `Chapter 72`, falling back to `chapter_order`. |
-| `views/account-access.js` | Updates, calendar, collections, vault, shelf, notifications, benefits, onboarding. | Must not render hardcoded fake backend content. |
-| `views/help-support.js` | Help/support routes. | Mostly static support copy/forms. |
+| `utils.js` | Pure-ish UI/data helpers. | Escaping, formatting, icons, cards, access labels, generated cover art, text parsing, and `applyBgSettings` (honoring `store.settings.appBackground`). |
+| `chrome.js` | App shell/chrome partials and toasts. | Collapsible desktop `sidenav`, mobile `bottomnav`, `topbar`, `readerPageHeading`, `readerEmptyState`, and shell-level UI pieces. |
+| `router.js` | Hash route parsing and render dispatch. | Preserves route names, view registry behavior, and focus management on `#main`. |
+| `views/home-library.js` | Home/library routes. | Reference split archive home and `.reader-workspace.library-page` story discovery with search/filter toolbar, story dossier cards, and `Pinned to My Shelf`. |
+| `views/story-reader.js` | Story hub, chapters, reader, recap/extras/updates. | Shared `storySubnav` orientation bar, two-column `.story-workspace`, segmented chapter catalog sort controls, and untouched `.in-reader` chapter reading view. |
+| `views/account-access.js` | Updates, calendar, collections, vault, shelf, bookmarks, quotes, history, notifications, benefits, onboarding. | Editorial `.vault-layout`, two-column `.shelf-layout` with `readerShelfSubnav`, and honest empty states without fake offline or quote-card export promises. |
+| `views/help-support.js` | Help/support routes. | Two-column Help Center (`VIEWS.help`), Access Check (`VIEWS.checkAccess`), Wrong Account recovery checklist (`VIEWS.wrongAccount`), and private copyable access details (`VIEWS.contact`). |
 | `views/gallery.js` | Visual Archive and character gallery routes. | Unified story artwork browser with character collection selection/deep links, search/tag/sort/shuffle, incremental masonry/deck rendering, keyboard-accessible image/metadata lightbox, existing up/down votes, and subscriber-only blurred mature artwork with a shared Show NSFW reveal control. |
+| `views/reader-settings.js` | Dedicated `#/settings` workspace. | Site theme (`dark`/`light`), background artwork toggle (`appBackground`), notification delivery preferences, and chapter typography guidance. |
 | `views/studio-preview.js` | Archived/inactive studio placeholder module. | Not loaded by `index.html`; `/studio/*` redirects to `admin.html`. |
 | `author-studio.js` | Archived/inactive reader-side author/studio prototype helpers. | Not loaded by `index.html`; useful ideas were ported into Admin CMS. |
-| `sheets.js` | Sheet/modal builders. | Account/auth/access sheets, overall site settings, and the dedicated non-modal Reader Preferences rail/drawer used only on chapter routes. |
-| `events.js` | Delegated DOM events and after-render hooks. | Owns `data-act`, `data-nav`, `data-sheet`, reader settings, and global listeners. |
+| `sheets.js` | Sheet/modal builders. | Account/auth/access sheets, mobile `More` sheet (`sheetMore`), overall site settings, and the dedicated non-modal Reader Preferences rail/drawer used only on chapter routes. |
+| `events.js` | Delegated DOM events and after-render hooks. | Owns `data-act`, `data-nav`, `data-sheet`, reader settings, sidebar collapse toggle, and global listeners. |
 | `onboarding.js` | Feature-gated reader guide overlay. | Modular highlighted walkthrough controlled by `features.enableReaderGuides` and local dismiss state. |
 | `aether-app.js` | Bootstrap/init. | Initializes auth/backend/router/events once dependencies are loaded. |
 

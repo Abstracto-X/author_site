@@ -2,9 +2,84 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
-## 2026-10-29 21:18 Asia/Kolkata — Whole-site UI audit baseline
+## 2026-10-30 Asia/Kolkata — Reader completion safety review
 
 Status: NEEDS REVIEW
+
+Area:
+- reader
+
+Files touched:
+- PROJECT_STATE.md (review record only)
+- design/review-2026-10-30/mobile-story.jpg (browser evidence)
+
+Summary:
+- Reviewed uncommitted completion changes against cdfa824. No runtime fixes made in this review; no direct production database queries/writes or auth/provider actions performed.
+- All 39 reader redesign/access-refresh tests pass, including loaded-script parsing. git diff --check reports trailing blank lines in help-support.js and reader-redesign.test.js.
+- Confirmed P2: Story redesign removed mobile alternate Follow/progress/header sections but retained story-sidebar-meta/progress/actions classes. Existing styles.css:3510–3517 hides these below 900px. At 390px, computed display is none for all three; Follow is inaccessible and reading progress disappears. Restore responsive visibility or provide mobile equivalents (story-reader.js:78–92).
+- Confirmed P2: applyBgSettings now applies appBackground=false as solid mode globally, including route.name=read. Fixture with readerBg=true, bgMode=story, appBackground=false clears backgroundImage and sets opacity=0. Scope archive-background override outside chapter-reader mode to preserve independent saved reader background preferences (utils.js:278).
+- Mobile Library/Story and desktop Settings smoke inspection completed; no console warnings/errors captured in this pass. This is not full responsive or authenticated persistence sign-off.
+
+Remaining work:
+- Mobile story regression fixed 2026-10-30: scoped responsive overrides restore metadata/progress/actions; CSS version bumped. 40 tests pass, including populated/empty story contracts. Browser at 390px confirms visible sections; evidence: design/review-2026-10-30/mobile-story-fixed.jpg. No runtime action or backend write needed.
+- Background independence regression remains open, intentionally not changed in this request.
+- Owner-led provider/key redemption, notification persistence and full desktop/mobile dark/light QA before deployment.
+
+Risks / notes:
+- No new backend/auth/schema/privileged credential changes found in this completion diff. That is not a security certification of the whole site.
+- Current docs incorrectly call the sidebar persistence key store.sidebarCollapsed; implementation uses store.readerNavCollapsed.
+
+Verification needed:
+- At <=899px verify story metadata, Follow/unfollow, and reading progress are visible and usable, including an empty story.
+- With archive artwork disabled, confirm independently enabled chapter background settings still work.
+
+## 2026-10-29 23:16 Asia/Kolkata — Stage 0–4 reader workspace UI redesign
+
+Status: NEEDS REVIEW
+
+Area:
+- reader | docs
+
+Files touched:
+- `index.html`
+- `styles/reader-foundation.css`
+- `js/subscription/state.js`
+- `js/subscription/utils.js`
+- `js/subscription/chrome.js`
+- `js/subscription/router.js`
+- `js/subscription/events.js`
+- `js/subscription/sheets.js`
+- `js/subscription/views/reader-settings.js`
+- `js/subscription/views/home-library.js`
+- `js/subscription/views/story-reader.js`
+- `js/subscription/views/account-access.js`
+- `js/subscription/views/help-support.js`
+- `tests/reader-redesign.test.js`
+- `docs/CODEBASE_OVERVIEW.md`
+- `docs/SUBSCRIPTION_FUNCTION_INDEX.md`
+- `CHANGELOG.md`
+
+Summary:
+- Completed Stages 0–4 of the reader UI redesign from `design/ui-audit-2026-10-29/AUDIT.md` on top of commit `cdfa824`:
+  - Stage 0–1: collapsible 224px/76px desktop navigation rail (`store.sidebarCollapsed`) + 5-tab mobile bottom bar with `More` sheet, SVG-bounded empty states, dedicated `#/settings` page, editorial `.vault-layout`, honest Check Access & Contact Support pages, and light-mode + `appBackground` contrast fix (`applyBgSettings` now honors `store.settings.appBackground`, and `styles/reader-foundation.css` adds a protective surface wash on `#main` plus a high-key light-mode filter for `.background-layer`).
+  - Stage 2: `.reader-workspace` compositions for Library (`libraryStoryCard`, search/filter toolbar, `Pinned to My Shelf`), Story Hub (`storySubnav`, sticky sidebar with unified progress, Curated latest releases, cast & world dossiers), Chapter Catalog (segmented ascending/descending sort), Story Recap, Story Extras, and Updates.
+  - Stage 3: `readerShelfSubnav` shared across My Shelf, Bookmarks, Saved Quotes, and Reading History; two-column `.shelf-layout` with honest empty states instead of blank horizontal lanes; `.reader-workspace` compositions for Notifications, Benefits, and Onboarding.
+  - Stage 4: two-column `.help-layout` Help Center, two-column Wrong Account Assistant, `.reader-workspace` Calendar/Collections/404 states, and accessible `<button type="button" class="close-x">` modal dismiss buttons.
+
+Remaining work:
+- Manual browser visual verification across desktop (`1440x900`), tablet (`1024x768`), and mobile (`390x844`) viewports in both dark (`After dark`) and light (`In the light`) themes.
+- Stage 5 (Admin CMS & Standalone Writer polish from `design/ui-audit-2026-10-29/AUDIT.md` §6 & §8) remains intentionally separate and out of scope for the reader redesign.
+
+Risks / notes:
+- Chapter Reader (`#/read/<chapterId>` / `.in-reader`), Home (`#/` / `.rh-home`), Unified Gallery (`#/gallery` / `.rg-browser`), `admin.html`, and `writer.html` were intentionally kept out of scope.
+
+Verification needed:
+- Open `#/settings`, toggle between **After dark** and **In the light**, and toggle **Background artwork** on/off to confirm immediate `#global-bg` visibility and crisp light-mode contrast.
+- Browse `#/library`, `#/story/<slug>`, `#/story/<slug>/chapters`, `#/updates`, `#/my-shelf`, `#/bookmarks`, `#/quotes`, `#/history`, `#/notifications`, `#/benefits`, `#/help`, `#/support/check-access`, `#/support/wrong-account`, and `#/support/contact` at desktop and mobile widths.
+
+## 2026-10-29 21:18 Asia/Kolkata — Whole-site UI audit baseline
+
+Status: DONE (Stages 0–4 implemented for reader; Stage 5 Admin/Writer deferred)
 
 Area:
 - reader | admin | docs
@@ -20,22 +95,8 @@ Files touched:
 - `.tmp/ui-audit-cms-writer-notes.md`
 
 Summary:
-- Consolidated source audit notes and created a local screenshot index plus privacy-safe contact sheets. Manifest has 32 images: 24 reader destinations/states, two overlays, two access gates, two mobile views and two reference demos. Screenshots were corrected/verified after a screenshot compositor lag issue; audit records actual bitmap dimensions.
-- Source confirms oversized empty SVGs, unsupported support/share/offline claims, and admin/Writer layout/accessibility risks. No production code or intentional database/content write was performed.
-
-Remaining work:
-- Owner review of audit findings and selection of design direction/page-family order.
-- Consider further mobile widths, alternate Home/Gallery modes, other overlays, gated/unavailable chapter states and authorized admin-only internals if needed for the next phase.
-
-Risks / notes:
-- Current browser session is Resident Nemesis, not admin. Admin gate is captured; Writer shell displays an "Admin Session" sidebar label while body indicates access denial. Do not treat either as an authorized admin capture or bypass checks.
-- Opening a free chapter may have caused regular app-side reading-history/progress effects; these were not audited or reversed. No deliberate content/admin writes or preference changes were performed.
-- Support/access and reader-text captures contain account/prose details. Keep original images local/private; contact sheets/index thumbnails omit them.
-- Screenshot dimensions/theme/auth scope and limitations are documented in `design/ui-audit-2026-10-29/AUDIT.md`; this audit does not verify persistence, backend correctness, all responsive states, or every auth/data variation.
-
-Verification needed:
-- Owner visual review of `design/ui-audit-2026-10-29/index.html` and findings.
-- Capture any additional variants needed before choosing implementation scope; none were necessary to complete the requested representative baseline.
+- Consolidated source audit notes and created a local screenshot index plus privacy-safe contact sheets. Manifest has 32 images: 24 reader destinations/states, two overlays, two access gates, two mobile views and two reference demos.
+- Source confirmed oversized empty SVGs, unsupported support/share/offline claims, and admin/Writer layout/accessibility risks. Stages 0–4 for the reader have now been implemented above.
 
 ## 2026-10-29 Asia/Kolkata — AI Studio system-message paste browser check
 

@@ -1,225 +1,171 @@
 /* Extracted from js/subscription/aether-app.js. Classic browser script; keep script order in index.html. */
 "use strict";
 
-/* ============ STORY HUB ============ */
+/* ============ STORY SUBNAV & HUB ============ */
+function storySubnav(s, active){
+  const backPath = active === "story" ? "/library" : `/story/${s.slug}`;
+  const backLabel = active === "story" ? "Library" : s.title;
+  const tabs = [
+    ["story", `/story/${s.slug}`, "Overview"],
+    ["chapters", `/story/${s.slug}/chapters`, `Chapters (${s.chapters.length})`],
+    ["recap", `/story/${s.slug}/recap`, "Recap"],
+    ["extras", `/story/${s.slug}/extras`, "Extras"],
+    ["updates", `/story/${s.slug}/updates`, "Updates"],
+    ["gallery", `/gallery/${s.slug}`, "Gallery"]
+  ];
+  return `<nav class="reader-subnav story-subnav" aria-label="${esc(s.title)} navigation">
+    <a class="reader-back-link" href="#${esc(backPath)}" data-nav="${esc(backPath)}">${I.chevL}<span>${esc(backLabel)}</span></a>
+    <div class="reader-subnav-tabs">${tabs.map(([id,path,label])=>`<a href="#${esc(path)}" data-nav="${esc(path)}" class="${active===id?'active':''}" ${active===id?'aria-current="page"':''}>${esc(label)}</a>`).join("")}</div>
+  </nav>`;
+}
+
 VIEWS.story = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story");
   setStoryAccent(s);
-  const r=s.chapters.map(chapterResolved);
-  const readCount=s.chapters.filter((c,i)=>store.readMarked[c.id]|| (store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
+  const readCount=s.chapters.filter(c=>store.readMarked[c.id] || (store.progress[c.id]&&store.progress[c.id].pct>=100)).length;
   const total=s.chapters.length;
-  const followed=store.followed.includes(s.id);
+  const followed=store.followed.includes(s.id) || store.followed.includes(s.slug);
+  const synopsis=String(s.premise || s.tagline || "").trim();
 
   if (!total) {
-    return `
-<div class="story-hub" style="${storyAccentVars(s)}">
-  <!-- Left Sidebar -->
-  <div class="story-sidebar">
-    <div class="story-cover-card">
-      ${coverArt(s)}
-    </div>
-    <div class="story-sidebar-meta">
-      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
-      <h1 class="story-sidebar-title">${s.title}</h1>
-      <div class="author">by ${s.author}</div>
-      <div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>
-    </div>
-    <div class="story-sidebar-actions col-flex" style="gap: 8px; width: 100%;">
-      <button class="btn block ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button>
-    </div>
-  </div>
-
-  <!-- Right Main Column -->
-  <div class="story-main">
-    <div class="story-mobile-header">
-      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
-      <h1 class="story-title">${s.title}</h1>
-      <div class="author">by ${s.author}</div>
-      <div class="tags" style="margin-top: 8px;">${s.tags.map(t=>badge("",t)).join("")}</div>
-    </div>
-
-    <div class="story-tagline-section">
-      <p class="story-tagline">${s.tagline}</p>
-    </div>
-
-    <div class="empty" style="margin-top: 16px;">
-      <div class="em">${I.book}</div>
-      <h3>No chapters published yet</h3>
-      <p>This story is live in the backend, but its chapter catalog is empty. Publish a chapter in the admin CMS to make it readable here.</p>
-    </div>
-
-    <div class="section story-mobile-only">
-      <div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div>
-      <p class="faint" style="font-size:.78rem;margin-top:-4px">${followed?"We'll notify you when new chapters unlock for you.":"Get notified when new chapters unlock for your access."}</p>
-    </div>
-  </div>
-</div>`;
+    return `<div class="reader-workspace story-workspace" style="${storyAccentVars(s)}">
+      ${storySubnav(s, "story")}
+      <div class="story-hub">
+        <aside class="story-sidebar reader-panel">
+          <div class="story-cover-card">${coverArt(s)}</div>
+          <div class="story-sidebar-meta">
+            <div class="eyebrow">${esc([s.genre,s.status].filter(Boolean).join(" · "))}</div>
+            <h1 class="story-sidebar-title">${esc(s.title)}</h1>
+            <div class="author">by ${esc(s.author)}</div>
+            ${(s.tags||[]).length?`<div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>`:""}
+          </div>
+          <div class="story-sidebar-actions col-flex" style="gap:8px;width:100%">
+            <button class="btn block ${followed?'ghost':'story'}" data-follow="${esc(s.id)}">${followed?I.checkCirc+"Following":I.plus+"Follow story"}</button>
+          </div>
+        </aside>
+        <div class="story-main">
+          ${synopsis?`<section class="reader-panel story-synopsis-panel"><div class="rh-kicker">Synopsis</div><p class="story-tagline">${esc(synopsis)}</p></section>`:""}
+          ${readerEmptyState("book","No chapters published yet","This story is live in the archive, but no chapters have been published yet.")}
+        </div>
+      </div>
+    </div>`;
   }
 
   const pct=Math.round(readCount/total*100);
+  const readableCount=s.chapters.filter(c=>isReadable(chapterResolved(c))).length;
+  const lockedCount=s.chapters.filter(c=>!isReadable(chapterResolved(c)) && c.state!=="unavailable").length;
   const nextUnread=s.chapters.find(c=>!(store.readMarked[c.id]||(store.progress[c.id]&&store.progress[c.id].pct>=100)));
-  const latestEarly=s.chapters.find(c=>c.state==="early");
-  const firstFree=s.chapters.find(c=>c.state==="free");
+  const firstFree=s.chapters.find(c=>isReadable(chapterResolved(c)));
   const lastRead=activeReads().find(x=>x.story.id===s.id);
-  const startCh = lastRead?.ch.id || (firstFree?.id) || s.chapters[0].id;
-  
-  return `
-<div class="story-hub" style="${storyAccentVars(s)}">
-  <!-- Left Sidebar -->
-  <div class="story-sidebar">
-    <div class="story-cover-card">
-      ${coverArt(s)}
-    </div>
-    <div class="story-sidebar-meta">
-      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
-      <h1 class="story-sidebar-title">${s.title}</h1>
-      <div class="author">by ${s.author}</div>
-      <div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>
-    </div>
-    
-    <div class="story-sidebar-progress card tinted">
-      <div class="between" style="align-items: center; margin-bottom: 8px;">
-        <span class="faint" style="font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;">Your progress</span>
-        <span style="font-family: var(--serif); font-size: .84rem; font-weight: 600;">${readCount}/${total} read</span>
-      </div>
-      ${progressBar(pct)}
-    </div>
+  const startChObj=lastRead?.ch || firstFree || s.chapters[0];
+  const startCh=startChObj.id;
+  const startReadable=isReadable(chapterResolved(startChObj)) || chapterResolved(startChObj).state==="preview";
+  const startAttr=startReadable ? `data-read="${esc(startCh)}"` : `data-lock="${esc(startCh)}"`;
+  const firstCh=s.chapters[0];
+  const latestChapters=s.chapters.slice(-4).reverse();
 
-    <div class="story-sidebar-actions col-flex" style="gap: 8px; width: 100%;">
-      <button class="btn block ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button>
-      <button class="btn ghost block" data-nav="/story/${s.slug}/chapters">${I.list}All chapters</button>
-    </div>
-  </div>
-
-  <!-- Right Main Column -->
-  <div class="story-main">
-    <div class="story-mobile-header">
-      <div class="eyebrow">${s.genre} &middot; ${s.status}</div>
-      <h1 class="story-title">${s.title}</h1>
-      <div class="author">by ${s.author}</div>
-      <div class="tags" style="margin-top: 8px;">${s.tags.map(t=>badge("",t)).join("")}</div>
-    </div>
-
-    <div class="story-tagline-section">
-      <p class="story-tagline">${s.tagline}</p>
-    </div>
-
-    <div class="story-actions-group">
-      <div class="primary-cta-wrap">
-        <button class="btn primary block lg-cta" data-read="${startCh}">
-          ${lastRead ? `${I.play} Continue &mdash; ${lastRead.ch.title}` : `${I.play} Start reading`}
-        </button>
-      </div>
-      
-      <div class="quicklinks" style="margin-top: 12px; margin-bottom: 24px;">
-        <a data-read="${firstFree?.id||s.chapters[0].id}">${I.play}<span>Chapter 1</span><small>From the beginning</small></a>
-        <a data-read="${startCh}">${I.book}<span>Continue</span><small>${lastRead?lastRead.ch.title:"Where you left off"}</small></a>
-        <a data-nav="/story/${s.slug}/recap">${I.list}<span>Recap</span><small>Catch up first</small></a>
-        <a data-nav="/story/${s.slug}/extras">${I.spark}<span>Extras</span><small>Bonus materials</small></a>
-      </div>
-    </div>
-
-    <div class="card tinted" style="margin-bottom: 24px;">
-      <div class="between" style="align-items: center; gap: 16px;">
-        <div>
-          <div class="eyebrow" style="font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;">Detailed Progress</div>
-          <div style="font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-top:4px">${readCount} / ${total} chapters read</div>
-          <div class="faint" style="font-size:.8rem;line-height:1.6;margin-top:6px;">
-            ${nextUnread?`Next unread: <b style="color:var(--text)">${nextUnread.title}</b> &middot; `:""}${latestEarly?`Latest: <b style="color:var(--early)">${latestEarly.title}</b> (early access) &middot; `:""}${s.chapters.filter(c=>!isReadable(chapterResolved(c))).length} locked.
-          </div>
+  return `<div class="reader-workspace story-workspace" style="${storyAccentVars(s)}">
+    ${storySubnav(s, "story")}
+    <div class="story-hub">
+      <aside class="story-sidebar reader-panel">
+        <div class="story-cover-card">${coverArt(s)}</div>
+        <div class="story-sidebar-meta">
+          <div class="eyebrow">${esc([s.genre,s.status].filter(Boolean).join(" · "))}</div>
+          <h1 class="story-sidebar-title">${esc(s.title)}</h1>
+          <div class="author">by ${esc(s.author)}</div>
+          ${(s.tags||[]).length?`<div class="tags">${s.tags.map(t=>badge("",t)).join("")}</div>`:""}
         </div>
-        <div>
-          ${ring(pct)}
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-head">
-        <h2>Latest chapters</h2>
-        <a class="section-link" data-nav="/story/${s.slug}/chapters">All chapters ${I.chevR}</a>
-      </div>
-      <div class="col-flex">
-        ${s.chapters.slice(-3).reverse().map(c=>chapterRow(c,s)).join("")}
-      </div>
-    </div>
-
-    <div class="section story-mobile-only">
-      <div class="between"><div class="section-head" style="margin:0"><h2>Follow this story</h2></div><button class="btn sm ${followed?'':'story'}" data-follow="${s.id}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button></div>
-      <p class="faint" style="font-size:.78rem;margin-top:-4px">${followed?"We'll notify you when new chapters unlock for you.":"Get notified when new chapters unlock for your access."}</p>
-    </div>
-
-    ${(s.cast.length > 0 || s.glossary.length > 0) ? `
-    <div class="section">
-      <div class="section-head"><h2>Cast &amp; glossary</h2></div>
-      ${s.cast.length > 0 ? `
-      <div class="cast-grid" style="margin-bottom:24px;">
-        ${s.cast.map(c=>`
-          <div class="cast-tile">
-            ${c.img ? 
-              `<img src="${c.img}" alt="${c.n}" onerror="this.nextElementSibling.style.display='grid';this.remove();" />` : 
-              ''
-            }
-            <div class="cast-fallback" style="display:${c.img ? 'none' : 'grid'}">
-              ${esc(c.n.slice(0, 1).toUpperCase())}
-            </div>
-            <div class="cast-label">
-              <div>${c.n}</div>
-              <div class="cast-role">${c.r}</div>
-            </div>
+        <div class="story-sidebar-progress">
+          <div class="between" style="align-items:center;margin-bottom:8px">
+            <span class="faint" style="font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Reading progress</span>
+            <span style="font-family:var(--serif);font-size:.86rem;font-weight:600">${readCount}/${total} (${pct}%)</span>
           </div>
-        `).join("")}
-      </div>
-      ` : ''}
-      ${s.glossary.length > 0 ? `
-      <div class="card">
-        <dl class="dl">${s.glossary.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl>
-      </div>
-      ` : ''}
-    </div>
-    ` : ''}
+          ${progressBar(pct)}
+          <div class="story-progress-meta">
+            <span><b>${readableCount}</b> open</span>
+            <span><b>${lockedCount}</b> member-locked</span>
+          </div>
+          ${nextUnread?`<div class="reader-note" style="margin-top:8px">Up next: <strong>${esc(nextUnread.title)}</strong></div>`:""}
+        </div>
+        <div class="story-sidebar-actions col-flex" style="gap:8px;width:100%">
+          <button class="btn block ${followed?'ghost':'story'}" data-follow="${esc(s.id)}">${followed?I.checkCirc+"Following":I.plus+"Follow story"}</button>
+          <a class="btn ghost block" href="#/story/${esc(s.slug)}/chapters" data-nav="/story/${esc(s.slug)}/chapters">${I.list}All ${total} chapters</a>
+        </div>
+      </aside>
 
-  </div>
-</div>`;
+      <div class="story-main">
+        <section class="reader-panel story-synopsis-panel">
+          <div class="rh-kicker">About this story</div>
+          <h2 class="story-main-heading">${esc(s.title)}</h2>
+          <p class="story-tagline">${esc(synopsis || "Explore the published chapters and artwork in this archive.")}</p>
+          <div class="story-cta-bar">
+            <button class="btn primary" ${startAttr}>
+              ${lastRead ? `${I.play}Continue — ${esc(lastRead.ch.title)}` : startReadable ? `${I.play}Start reading` : `${I.lock}Unlock chapters`}
+            </button>
+            ${lastRead && firstCh && lastRead.ch.id !== firstCh.id ? `<button class="btn ghost" data-read="${esc(firstCh.id)}">${I.book}From Chapter 1</button>` : ""}
+            <a class="btn ghost" href="#/story/${esc(s.slug)}/chapters" data-nav="/story/${esc(s.slug)}/chapters">${I.list}Chapter catalog</a>
+            <a class="btn ghost" href="#/gallery/${esc(s.slug)}" data-nav="/gallery/${esc(s.slug)}">${I.spark}Visual archive</a>
+          </div>
+        </section>
+
+        <section class="story-section" aria-labelledby="story-latest-heading">
+          <div class="section-head">
+            <h2 id="story-latest-heading">Latest releases</h2>
+            <a class="reader-text-link" href="#/story/${esc(s.slug)}/chapters" data-nav="/story/${esc(s.slug)}/chapters">Browse all ${total} chapters ${I.chevR}</a>
+          </div>
+          <div class="rh-chapter-grid">
+            ${latestChapters.map((c,idx)=>typeof homeReferenceChapterCard==="function"?homeReferenceChapterCard({chapter:c},idx):chapterRow(c,s)).join("")}
+          </div>
+        </section>
+
+        ${((s.cast&&s.cast.length > 0) || (s.glossary&&s.glossary.length > 0)) ? `
+        <section class="reader-panel story-section" aria-labelledby="story-world-heading">
+          <h2 id="story-world-heading">Cast &amp; world dossier</h2>
+          ${s.cast && s.cast.length > 0 ? `
+          <div class="cast-grid" style="margin-bottom:${s.glossary&&s.glossary.length?'24px':'0'}">
+            ${s.cast.map(c=>`
+              <div class="cast-tile">
+                ${c.img ? `<img src="${esc(c.img)}" alt="${esc(c.n)}" onerror="this.nextElementSibling.style.display='grid';this.remove();" />` : ''}
+                <div class="cast-fallback" style="display:${c.img ? 'none' : 'grid'}">${esc(c.n.slice(0, 1).toUpperCase())}</div>
+                <div class="cast-label"><div>${esc(c.n)}</div><div class="cast-role">${esc(c.r)}</div></div>
+              </div>
+            `).join("")}
+          </div>
+          ` : ''}
+          ${s.glossary && s.glossary.length > 0 ? `<dl class="dl">${s.glossary.map(g=>`<dt>${esc(g.t)}</dt><dd>${esc(g.d)}</dd>`).join("")}</dl>` : ''}
+        </section>
+        ` : ''}
+      </div>
+    </div>
+  </div>`;
 };
 
 /* ============ CHAPTER CATALOG ============ */
 VIEWS.chapters = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story");
   setStoryAccent(s);
-  
-  if (!s.chapters.length) return `
-  <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
-  <h1 class="page-title">Chapter Catalog</h1>
-  <p class="page-sub">0 chapters published.</p>
-  <div class="empty"><div class="em">${I.book}</div><h3>No chapters yet</h3><p>The story is published, but no chapters are published for it yet.</p></div>`;
 
-  // Default order is Ascending (Chapter 1 -> N) so readers can read sequentially
+  if (!s.chapters.length) return `<div class="reader-workspace chapters-workspace" style="${storyAccentVars(s)}">
+    ${storySubnav(s, "chapters")}
+    ${readerPageHeading("Chapter Catalog", "0 chapters published.")}
+    ${readerEmptyState("book", "No chapters yet", "The story is published, but no chapters are published for it yet.")}
+  </div>`;
+
   const sortOrder = store.filters.chapterSort || "asc";
   const chapters = sortOrder === "desc" ? [...s.chapters].reverse() : [...s.chapters];
-  
-  return `
-  <div class="between" style="margin-bottom:6px"><a class="section-link" data-nav="/story/${s.slug}" style="display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)">${I.chevL}<span>${s.title}</span></a></div>
-  
-  <div class="between" style="align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-    <div>
-      <h1 class="page-title" style="margin:0">Chapter Catalog</h1>
-      <p class="page-sub" style="margin:4px 0 0">${s.chapters.length} chapters · ${s.chapters.filter(c=>isReadable(chapterResolved(c))).length} readable for you now</p>
+  const readableCount = s.chapters.filter(c=>isReadable(chapterResolved(c))).length;
+  const sortControls = `<div class="reader-segmented" role="group" aria-label="Chapter order">
+    <button type="button" class="btn sm ${sortOrder === 'asc' ? 'story' : 'ghost'}" data-chapter-sort="asc" aria-pressed="${sortOrder === 'asc'}">Chapter 1 → ${s.chapters.length}</button>
+    <button type="button" class="btn sm ${sortOrder === 'desc' ? 'story' : 'ghost'}" data-chapter-sort="desc" aria-pressed="${sortOrder === 'desc'}">Newest first</button>
+  </div>`;
+
+  return `<div class="reader-workspace chapters-workspace" style="${storyAccentVars(s)}">
+    ${storySubnav(s, "chapters")}
+    ${readerPageHeading("Chapter Catalog", `${s.chapters.length} chapters · ${readableCount} readable for you now`, sortControls)}
+    <div class="chapter-catalog-grid">
+      ${chapters.map(c => chapterGridCard(c, s)).join("")}
     </div>
-    <div style="display:flex;gap:6px;align-items:center;background:var(--surface-solid-2);padding:4px;border-radius:999px;border:1px solid var(--border)">
-      <button class="btn sm ${sortOrder === 'asc' ? 'story' : 'ghost'}" data-chapter-sort="asc" style="font-size:.72rem;padding:4px 12px;border-radius:999px">
-        Chapter 1 → ${s.chapters.length}
-      </button>
-      <button class="btn sm ${sortOrder === 'desc' ? 'story' : 'ghost'}" data-chapter-sort="desc" style="font-size:.72rem;padding:4px 12px;border-radius:999px">
-        Newest first
-      </button>
-    </div>
-  </div>
-  
-  <div class="chapter-catalog-grid">
-    ${chapters.map(c => chapterGridCard(c, s)).join("")}
-  </div>
-  `;
+  </div>`;
 };
 
 
@@ -592,30 +538,43 @@ function commentHTML(c){ return `<div class="cmt"><div class="ava" style="backgr
 /* ============ RECAP ============ */
 VIEWS.recap = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story"); setStoryAccent(s);
-  if (!s.chapters.length) return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a><h1 class="page-title">Story Recap</h1><div class="empty"><div class="em">${I.info}</div><h3>No recap yet</h3><p>Publish chapters first, then the recap page will have chapter context.</p></div>`;
-  return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
-  <h1 class="page-title">Story Recap</h1>
-  <p class="page-sub">Revisit the premise without reading ahead.</p>
-  <div class="card tinted" style="margin:14px 0"><div class="eyebrow">Spoiler-free premise</div><p class="muted" style="font-family:var(--serif);font-size:1rem;line-height:1.7;margin:8px 0 0">${esc(s.recapSafe || s.premise || "No public recap has been written yet.")}</p></div>
-  <div class="empty"><div class="em">${I.list}</div><h3>No detailed recap yet</h3><p>A detailed recap is not available for this story.</p></div>
-  <button class="btn story block" data-read="${s.chapters[0].id}">${I.play}Start / continue reading</button>`;
+  if (!s.chapters.length) return `<div class="reader-workspace" style="${storyAccentVars(s)}">${storySubnav(s, "recap")}${readerPageHeading("Story Recap","Revisit the premise without reading ahead.")}${readerEmptyState("info","No recap yet","Publish chapters first, then the recap page will have chapter context.")}</div>`;
+  return `<div class="reader-workspace" style="${storyAccentVars(s)}">
+    ${storySubnav(s, "recap")}
+    ${readerPageHeading("Story Recap","Revisit the premise without reading ahead.",`<button class="btn story" data-read="${esc(s.chapters[0].id)}">${I.play}Start / continue reading</button>`)}
+    <div class="reader-support-grid">
+      <section class="reader-panel">
+        <div class="rh-kicker">Spoiler-free premise</div>
+        <h2>${esc(s.title)}</h2>
+        <p class="story-tagline">${esc(s.recapSafe || s.premise || "No public recap has been written yet.")}</p>
+      </section>
+      <section class="reader-panel">
+        <div class="rh-kicker">Archive status</div>
+        <h2>No detailed recap yet</h2>
+        <p class="reader-note">A chapter-by-chapter recap is not available for this story. You can browse the full chapter index to return to where you left off.</p>
+        <a class="reader-text-link" href="#/story/${esc(s.slug)}/chapters" data-nav="/story/${esc(s.slug)}/chapters">Open chapter catalog ${I.chevR}</a>
+      </section>
+    </div>
+  </div>`;
 };
 
 /* ============ EXTRAS ============ */
 VIEWS.extras = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story"); setStoryAccent(s);
-  return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
-  <h1 class="page-title">Bonus Materials</h1>
-  <p class="page-sub">Author notes, deleted scenes, lore, and art posted for this story.</p>
-  <div class="empty"><div class="em">${I.spark}</div><h3>No extras yet</h3><p>No bonus materials are available for this story.</p></div>`;
+  return `<div class="reader-workspace" style="${storyAccentVars(s)}">
+    ${storySubnav(s, "extras")}
+    ${readerPageHeading("Bonus Materials","Author notes, deleted scenes, lore, and art posted for this story.",`<a class="btn ghost" href="#/gallery/${esc(s.slug)}" data-nav="/gallery/${esc(s.slug)}">${I.spark}Open visual archive</a>`)}
+    ${readerEmptyState("spark","No extras yet","No bonus materials are available for this story.",`<a class="btn ghost" href="#/gallery/${esc(s.slug)}" data-nav="/gallery/${esc(s.slug)}">${I.spark}Explore character gallery</a>`)}
+  </div>`;
 };
 
 /* ============ STORY UPDATES ============ */
 VIEWS.storyUpdates = function(){
   const s=bySlug(route.params.slug); if(!s) return notFound("Story"); setStoryAccent(s);
-  const items=D.UPDATES.filter(u=>u.story===s.id);
-  return `<a class="section-link" data-nav="/story/${s.slug}" style="color:var(--text-dim);display:inline-flex;gap:4px;align-items:center">${I.chevL}${s.title}</a>
-  <h1 class="page-title">Story Updates</h1>
-  <p class="page-sub">Releases, notes &amp; schedule for this story.</p>
-  <div class="timeline">${items.map(u=>`<div class="tl-item"><div class="when">${u.when}</div><div class="what">${u.title}</div><div class="faint" style="font-size:.78rem">${u.note}</div></div>`).join("") || `<div class="empty"><div class="em">${I.feed}</div><h3>No story updates yet</h3><p>Updates will appear when this story has release activity.</p></div>`}</div>`;
+  const items=D.UPDATES.filter(u=>u.story===s.id || u.story===s.slug);
+  return `<div class="reader-workspace" style="${storyAccentVars(s)}">
+    ${storySubnav(s, "updates")}
+    ${readerPageHeading("Story Updates",`Releases and archive notes for ${s.title}.`,`<a class="btn ghost" href="#/updates" data-nav="/updates">All site updates ${I.chevR}</a>`)}
+    ${items.length ? `<div class="rh-chapter-grid rh-updates-grid">${items.map(curatedUpdateCard).join("")}</div>` : readerEmptyState("feed","No story updates yet","Updates will appear when this story has release activity.")}
+  </div>`;
 };

@@ -177,11 +177,11 @@ function sheetProfile(){
   </form>`;
 }
 function sheetWhatsNew(){
-  return `<span class="close-x" data-act="dismiss-whats-new">${I.x}</span><h2>What's new</h2><p class="sheet-sub">Reader upgrades are live on your account.</p>
+  return `<button type="button" class="close-x" data-act="dismiss-whats-new" aria-label="Close">${I.x}</button><h2>What's new</h2><p class="sheet-sub">Reader upgrades are live on your account.</p>
   <div class="whats-new-list">
-    <div class="whats-new-item"><span class="icn">${I.bell}</span><div><b>Chapter notifications</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">New chapters now create relevant in-app alerts, browser popups when enabled, and email queue entries for your access tier.</p><button class="btn sm ghost" data-sheet="notification-settings">Open notification settings</button></div></div>
+    <div class="whats-new-item"><span class="icn">${I.bell}</span><div><b>Chapter notifications</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">New chapters now create relevant in-app alerts and browser popups when enabled for your access tier.</p><button class="btn sm ghost" data-sheet="notification-settings">Open notification settings</button></div></div>
     <div class="whats-new-item"><span class="icn">${I.user}</span><div><b>Profile customization</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">Add an avatar, display name, and username for comments and account surfaces.</p><button class="btn sm ghost" data-sheet="profile">Edit profile</button></div></div>
-    <div class="whats-new-item"><span class="icn">${I.spark}</span><div><b>Site background art</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">The app shell can now use the configured reader background image.</p><button class="btn sm ghost" data-sheet="settings">Background toggle</button></div></div>
+    <div class="whats-new-item"><span class="icn">${I.spark}</span><div><b>Site background art</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">The app shell can now use the configured reader background image.</p><a class="btn sm ghost" href="#/settings" data-nav="/settings">Open settings</a></div></div>
   </div>
   <button class="btn story block" data-act="dismiss-whats-new">${I.check}Got it</button>`;
 }

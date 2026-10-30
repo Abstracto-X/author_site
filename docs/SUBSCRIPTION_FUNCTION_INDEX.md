@@ -2,6 +2,21 @@
 
 Generated from the current codebase. One-line descriptions are intentionally concise so agents can quickly locate ownership before editing.
 
+## 2026-10-29 — Stage 0–4 reader workspace redesign
+
+| File | Function | Purpose |
+|---|---|---|
+| `chrome.js` | `readerNavItems()` / `readerNavLink()` / `sidenav(active)` / `bottomnav(active)` | Collapsible 224px/76px desktop navigation rail (`store.sidebarCollapsed`) and 5-tab mobile bottom bar with `More` sheet. |
+| `chrome.js` | `readerPageHeading(title, sub, actions)` / `readerEmptyState(icon, title, sub, action)` | Shared header and SVG-bounded empty-state components used across `.reader-workspace` views. |
+| `views/reader-settings.js` | `VIEWS.settings()` | Dedicated `#/settings` workspace for site theme (`dark`/`light`), background artwork toggle, notification preferences, and chapter typography guidance. |
+| `utils.js` | `applyBgSettings(story)` | Honors `store.settings.appBackground` before applying `data-bg-mode` so disabling Background artwork turns off `#global-bg`. |
+| `views/home-library.js` | `libraryStoryCard(s)` / `VIEWS.library()` | Two-zone `.reader-workspace.library-page` with search/filter toolbar, story dossier showcase cards, and `Pinned to My Shelf`. |
+| `views/story-reader.js` | `storySubnav(s, active)` / `VIEWS.story()` / `VIEWS.chapters()` / `VIEWS.recap()` / `VIEWS.extras()` / `VIEWS.storyUpdates()` | Shared story orientation bar (`Overview`, `Chapters`, `Recap`, `Extras`, `Updates`, `Gallery`), two-column story hub with unified progress and Curated latest releases, and segmented chapter catalog sort controls. |
+| `views/account-access.js` | `readerAccessSummary(P)` / `providerVerificationText(key)` / `VIEWS.vault()` | Editorial two-column Vault membership dossier, provider connection status, key redemption, and access records. |
+| `views/account-access.js` | `readerShelfSubnav(active)` / `VIEWS.shelf()` / `VIEWS.bookmarks()` / `VIEWS.quotes()` / `VIEWS.history()` | Shared personal-archive subnav, two-column Shelf layout with honest empty states, and `.reader-workspace` saved-item views without fake quote-card export promises. |
+| `views/account-access.js` | `VIEWS.updates()` / `VIEWS.calendar()` / `VIEWS.collections()` / `VIEWS.notifications()` / `VIEWS.benefits()` / `VIEWS.onboarding()` | `.reader-workspace` compositions for Updates, release calendar, curated collections, alerts, membership benefits, and onboarding steps. |
+| `views/help-support.js` | `VIEWS.help()` / `VIEWS.checkAccess()` / `VIEWS.wrongAccount()` / `VIEWS.contact()` / `notFound(what)` / `emptyState(ic, title, sub)` | Two-column Help Center, honest self-service access check, Wrong Account recovery checklist, copyable private support details (no fake inbox), and SVG-bounded empty/404 states. |
+
 ## 2026-10-07 — Reference-style reader redesign
 
 | File | Function | Purpose |

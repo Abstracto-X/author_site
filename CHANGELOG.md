@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-30 05:46 Asia/Kolkata — Restore mobile story controls
+
+- Restored metadata, reading progress and Follow actions in the redesigned mobile story sidebar by overriding legacy mobile hide rules; empty stories retain metadata and Follow. Chapter reader and background behavior unchanged.
+- Files: `styles/reader-foundation.css`, `index.html` (CSS version), `tests/reader-redesign.test.js`, `PROJECT_STATE.md`.
+- Validation: 40 reader tests pass; 390px browser computed styles confirm metadata/progress are block and actions flex. Screenshot: `design/review-2026-10-30/mobile-story-fixed.jpg`.
+
+
+## 2026-10-29 23:16 Asia/Kolkata — Complete Stage 0–4 reader workspace UI redesign
+
+Area: subscription reader UI / navigation / workspace layouts / light-mode contrast
+
+- Completed the Stage 0–4 reader UI redesign planned in `design/ui-audit-2026-10-29/AUDIT.md` while keeping the Chapter Reader (`.in-reader`), Home (`.rh-home`), Unified Gallery (`.rg-browser`), Admin CMS (`admin.html`), and Standalone Writer (`writer.html`) out of scope:
+  - **Stage 0–1 (Shell, Vault, Settings, Support, Light-mode contrast):** Collapsible 224px/76px desktop navigation rail (`store.sidebarCollapsed`) + 5-tab mobile bottom bar with `More` sheet; dedicated `#/settings` workspace (`js/subscription/views/reader-settings.js`); editorial `.vault-layout` membership dossier; honest self-service Check Access and Contact Support pages; fixed `applyBgSettings()` in `js/subscription/utils.js` to honor `store.settings.appBackground` so disabling "Background artwork" hides `#global-bg`, and added a protective theme wash and high-key light-mode backdrop filter in `styles/reader-foundation.css` so light mode remains legible even when background artwork is enabled.
+  - **Stage 2 (Discovery & Story Family):** Redesigned `VIEWS.library` into `.reader-workspace.library-page` with a search/filter toolbar, `.library-story-card` dossier showcase, and `Pinned to My Shelf`; added shared `storySubnav(s, active)` across `VIEWS.story`, `VIEWS.chapters`, `VIEWS.recap`, `VIEWS.extras`, and `VIEWS.storyUpdates`; restructured `VIEWS.story` into a sticky sidebar + main dossier with unified reading progress and Curated latest releases; upgraded `VIEWS.chapters` and `VIEWS.updates` to `.reader-workspace` compositions with segmented sort controls.
+  - **Stage 3 (Personal Archive & Member Surfaces):** Added `readerShelfSubnav(active)` across `VIEWS.shelf`, `VIEWS.bookmarks`, `VIEWS.quotes`, and `VIEWS.history`; restructured `VIEWS.shelf` into a two-column `.shelf-layout` with honest empty states instead of blank horizontal lanes; removed unimplemented "Share quote card" and "Offline" promises; upgraded `VIEWS.notifications`, `VIEWS.benefits`, and `VIEWS.onboarding` to `.reader-workspace` compositions.
+  - **Stage 4 (Help, Recovery & Secondary Destinations):** Redesigned `VIEWS.help` into a two-column `.help-layout` (FAQ + features explained on the left, self-service tools + access-state glossary on the right), `VIEWS.wrongAccount` into a two-column recovery checklist + reconnect panel, and `VIEWS.calendar`, `VIEWS.collections`, `notFound`, and `emptyState` into SVG-bounded `.reader-workspace` states; upgraded remaining modal close buttons in `homeGalleryImageSheet` and `sheetWhatsNew` to `<button type="button" class="close-x">`.
+- Files: `index.html`, `styles/reader-foundation.css`, `js/subscription/state.js`, `js/subscription/utils.js`, `js/subscription/chrome.js`, `js/subscription/router.js`, `js/subscription/events.js`, `js/subscription/sheets.js`, `js/subscription/views/reader-settings.js`, `js/subscription/views/home-library.js`, `js/subscription/views/story-reader.js`, `js/subscription/views/account-access.js`, `js/subscription/views/help-support.js`, `tests/reader-redesign.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: all 19 loaded reader scripts pass `vm.Script` / `node --check`; all 6 test suites (75 tests total, including 25 reader redesign tests) pass.
+
 ## 2026-10-29 Asia/Kolkata — Unwrap AI Studio system-message code fences on Writer paste
 
 Area: standalone Writer / Markdown paste

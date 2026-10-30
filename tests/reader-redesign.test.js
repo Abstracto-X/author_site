@@ -6,11 +6,18 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const read = file => fs.readFileSync(`${process.cwd()}/${file}`, 'utf8');
 function harness() {
+  const bgEl = { style: {} };
+  const bodyAttrs = {};
   const context = vm.createContext({ console, URL, setTimeout, clearTimeout,
     window: { localStorage: { getItem:()=>null, setItem(){} } },
-    document: { querySelector:()=>null, getElementById:()=>null, documentElement:{setAttribute(){},style:{setProperty(){}}} },
+    document: {
+      querySelector:()=>null,
+      getElementById:id=>id==='global-bg'?bgEl:null,
+      body: { setAttribute(k,v){ bodyAttrs[k]=v; }, getAttribute(k){ return bodyAttrs[k]; }, classList:{toggle(){},add(){},remove(){}} },
+      documentElement:{setAttribute(){},style:{setProperty(){}}}
+    },
     location:{ hash:'' }, navigator:{onLine:true} });
-  for (const file of ['config.js','state.js','utils.js','router.js','chrome.js','views/home-library.js','views/story-reader.js','views/gallery.js','views/account-access.js']) {
+  for (const file of ['config.js','state.js','utils.js','router.js','chrome.js','sheets.js','views/home-library.js','views/story-reader.js','views/gallery.js','views/account-access.js','views/help-support.js','views/reader-settings.js']) {
     vm.runInContext(read(`js/subscription/${file}`),context,{filename:file});
   }
   vm.runInContext(`
@@ -18,7 +25,14 @@ function harness() {
     const authState = {user:null};
     function isAdmin(){ return false; }
     function activeEntitlements(){ return testEntitled ? [{id:'entitlement'}] : []; }
-    function persona(){ return {signedIn:false}; }
+    function expiredEntitlements(){ return []; }
+    function providerConnection(){ return null; }
+    function providerIsConnected(){ return false; }
+    function activeProviderConnection(){ return null; }
+    function providerAccessStatus(){ return { state: 'disconnected' }; }
+    function patreonEnabled(){ return true; }
+    function boostyDiscordEnabled(){ return true; }
+    function persona(){ return {signedIn:false, label:'Guest Reader', sub:'Browse & preview'}; }
     chapterResolved = ch => ({state:ch.state});
     isReadable = access => access.state==='free' || access.state==='unlocked';
     D.PRIMARY_SLUG='story';
@@ -26,7 +40,7 @@ function harness() {
     D.CHARACTERS=[{id:'c1',story_id:'s1',name:'Character',biography:'Biography',role_title:'Medic'}];
     D.GALLERY_IMAGES=[{id:'safe',story_id:'s1',character_id:'c1',image_url:'https://example.com/safe.jpg',caption:'Safe art',image_tags:['Portrait'],sort_order:1},{id:'mature',story_id:'s1',character_id:'c1',image_url:'https://example.com/mature.jpg',caption:'Mature art',image_tags:['R18'],sort_order:0}];
   `,context);
-  return {run:code=>vm.runInContext(code,context), context};
+  return {run:code=>vm.runInContext(code,context), context, bgEl, bodyAttrs};
 }
 test('all loaded classic reader scripts parse',()=>{
   const scripts = [...read('index.html').matchAll(/<script src="(js\/subscription\/[^?]+)\?/g)].map(m=>m[1]);
@@ -215,4 +229,77 @@ test('non-subscribed readers see only normal artwork and an access prompt',()=>{
   assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),1);
   assert.match(h.run('matureArtworkAccessSheet()'),/Subscription required/);
   assert.match(h.run('route.params.slug="story";VIEWS.gallery()'),/data-act="toggle-r18"/);
+});
+
+test('Stage 1–4 reader surfaces render within .reader-workspace and preserve task hooks',()=>{
+  const h=harness();
+  h.run('route.params.slug="story"');
+  const lib=h.run('VIEWS.library()');
+  assert.match(lib,/reader-workspace library-page/);
+  assert.match(lib,/id="lib-search"/);
+  assert.match(lib,/library-story-card/);
+
+  const story=h.run('VIEWS.story()');
+  assert.match(story,/reader-workspace story-workspace/);
+  assert.match(story,/story-subnav|reader-subnav/);
+  assert.match(story,/data-follow="s1"/);
+
+  const chaps=h.run('VIEWS.chapters()');
+  assert.match(chaps,/reader-workspace chapters-workspace/);
+  assert.match(chaps,/data-chapter-sort="asc"/);
+  assert.match(chaps,/data-chapter-sort="desc"/);
+
+  for (const viewExpr of [
+    'VIEWS.recap()',
+    'VIEWS.extras()',
+    'VIEWS.storyUpdates()',
+    'VIEWS.updates()',
+    'VIEWS.calendar()',
+    'VIEWS.collections()',
+    'VIEWS.vault()',
+    'VIEWS.shelf()',
+    'VIEWS.bookmarks()',
+    'VIEWS.quotes()',
+    'VIEWS.history()',
+    'VIEWS.notifications()',
+    'VIEWS.benefits()',
+    'VIEWS.onboarding()',
+    'VIEWS.help()',
+    'VIEWS.checkAccess()',
+    'VIEWS.wrongAccount()',
+    'VIEWS.contact()',
+    'VIEWS.settings()',
+    'notFound("Story")'
+  ]) {
+    const html=h.run(viewExpr);
+    assert.match(html,/reader-workspace/, `Expected .reader-workspace in ${viewExpr}`);
+  }
+});
+
+test('disabling appBackground in settings turns off background artwork layer',()=>{
+  const h=harness();
+  h.run('D.STORIES[0].cover_image_url="https://example.com/cover.jpg";store.settings.appBackground=true;applyBgSettings()');
+  assert.equal(h.bodyAttrs['data-bg-mode'],'story');
+  assert.equal(h.bgEl.style.opacity,'1');
+
+  h.run('store.settings.appBackground=false;applyBgSettings()');
+  assert.equal(h.bodyAttrs['data-bg-mode'],'solid');
+  assert.equal(h.bgEl.style.opacity,'0');
+});
+
+test('mobile story sidebar retains metadata, progress and Follow for populated and empty stories',()=>{
+  const h=harness();
+  h.run('route.params.slug="story"');
+  const html=h.run('VIEWS.story()');
+  assert.match(html,/story-sidebar-meta/);
+  assert.match(html,/story-sidebar-progress/);
+  assert.match(html,/story-sidebar-actions/);
+  assert.match(html,/data-follow="s1"/);
+  const empty=h.run('D.STORIES[0].chapters=[];VIEWS.story()');
+  assert.match(empty,/story-sidebar-meta/);
+  assert.match(empty,/story-sidebar-actions/);
+  assert.match(empty,/data-follow="s1"/);
+  const mobile=read('styles/reader-foundation.css').split('@media (max-width: 920px)')[1].split('@media (max-width: 680px)')[0];
+  assert.match(mobile,/\.story-workspace \.story-sidebar-meta,\s*\.story-workspace \.story-sidebar-progress \{ display: block; \}/);
+  assert.match(mobile,/\.story-workspace \.story-sidebar-actions \{ display: flex; \}/);
 });

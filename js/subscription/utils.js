@@ -275,7 +275,7 @@ function getActiveStory() {
 function applyBgSettings() {
   if (!document.body) return;
   const settings = store.settings;
-  const bgMode = settings.bgMode || "story";
+  const bgMode = settings.appBackground !== false ? (settings.bgMode || "story") : "solid";
   const bgBlur = settings.bgBlur !== false;
   document.body.setAttribute("data-bg-mode", bgMode);
   document.body.setAttribute("data-bg-blur", bgBlur ? "true" : "false");

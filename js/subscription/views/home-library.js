@@ -129,24 +129,60 @@ function homeChapterAccessRow(ch, story){
 }
 
 /* ============ LIBRARY ============ */
+function libraryStoryCard(s){
+  const chapters = s.chapters || [];
+  const readableCount = chapters.filter(c=>isReadable(chapterResolved(c))).length;
+  const readCount = chapters.filter(c=>store.readMarked[c.id] || Number(store.progress[c.id]?.pct || 0) >= 100).length;
+  const pct = chapters.length ? Math.round(readCount / chapters.length * 100) : 0;
+  const followed = store.followed.includes(s.id) || store.followed.includes(s.slug);
+  const summary = String(s.premise || s.tagline || "").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+  return `<article class="reader-panel library-story-card" style="${storyAccentVars(s)}">
+    <a class="library-story-cover" href="#/story/${esc(s.slug)}" data-nav="/story/${esc(s.slug)}">${coverArt(s)}</a>
+    <div class="library-story-body">
+      <div class="rh-kicker">${esc([s.genre,s.status].filter(Boolean).join(" · "))}</div>
+      <h3><a href="#/story/${esc(s.slug)}" data-nav="/story/${esc(s.slug)}">${esc(s.title)}</a></h3>
+      <div class="library-story-author">by ${esc(s.author)}</div>
+      ${summary?`<p class="reader-note">${esc(summary.slice(0,260))}${summary.length>260?"…":""}</p>`:""}
+      <div class="library-story-stats">
+        <span><b>${chapters.length}</b> chapter${chapters.length===1?"":"s"}</span>
+        <span><b>${readableCount}</b> available to read</span>
+        <span><b>${pct}%</b> completed</span>
+      </div>
+      ${progressBar(pct)}
+      <div class="library-story-actions">
+        <a class="btn story sm" href="#/story/${esc(s.slug)}" data-nav="/story/${esc(s.slug)}">${I.book}Open story</a>
+        <a class="btn ghost sm" href="#/story/${esc(s.slug)}/chapters" data-nav="/story/${esc(s.slug)}/chapters">${I.list}Chapters</a>
+        <button type="button" class="btn ghost sm" data-follow="${esc(s.id)}">${followed?I.checkCirc+"Following":I.plus+"Follow"}</button>
+      </div>
+    </div>
+  </article>`;
+}
 VIEWS.library = function(){
   const q=store.filters.q||"";
   function matches(s){
-    if(q){ const t=(s.title+" "+s.author+" "+s.genre+" "+s.tags.join(" ")).toLowerCase(); if(!t.includes(q.toLowerCase())) return false; }
+    if(q){ const t=(s.title+" "+s.author+" "+s.genre+" "+(s.tags||[]).join(" ")).toLowerCase(); if(!t.includes(q.toLowerCase())) return false; }
     return true;
   }
   const list=D.STORIES.filter(matches);
-  return `
-  <h1 class="page-title">The Library</h1>
-  <p class="page-sub">${D.STORIES.length} stories across fantasy, gothic, and the far future.</p>
-  <div style="position:relative;margin:6px 0 18px">
-    <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-faint);display:flex">${I.search}</span>
-    <input id="lib-search" class="pill-input" style="text-align:left;padding-left:42px" placeholder="Search stories, authors, genres…" value="${esc(q)}">
-  </div>
-  <div class="section-head"><h2>${q?"Results":"All stories"}</h2><span class="faint" style="font-size:.78rem">${list.length} shown</span></div>
-  ${list.length?`<div class="grid-stories stagger">${list.map(storyCard).join("")}</div>`:`<div class="empty"><div class="em">📚</div><h3>No stories match</h3><p>Try searching for something broader.</p></div>`}
-  <div class="section"><div class="section-head"><h2>Pinned to My Shelf</h2></div><div class="lane">${store.followed.map(id=>{const s=D.STORIES.find(story=>story.id===id)||bySlug(id);return s?storyCard(s):"";}).join("")}</div></div>
-  `;
+  const pinned=store.followed.map(id=>D.STORIES.find(story=>story.id===id)||bySlug(id)).filter(Boolean);
+  return `<div class="reader-workspace library-page">
+    ${readerPageHeading("The Library",`${D.STORIES.length} published ${D.STORIES.length===1?"story":"stories"} in the archive.`,`<a class="btn ghost" href="#/updates" data-nav="/updates">Latest updates ${I.chevR}</a>`)}
+    <div class="library-toolbar">
+      <div class="library-search">
+        <span class="library-search-icon" aria-hidden="true">${I.search}</span>
+        <input id="lib-search" class="pill-input" placeholder="Search stories, authors, genres…" value="${esc(q)}" aria-label="Search library">
+      </div>
+      <span class="reader-note">${list.length} ${list.length===1?"story":"stories"} shown</span>
+    </div>
+    <section class="library-section" aria-labelledby="library-stories-heading">
+      <div class="section-head"><h2 id="library-stories-heading">${q?"Matching stories":"All stories"}</h2></div>
+      ${list.length?`<div class="library-showcase-grid">${list.map(libraryStoryCard).join("")}</div>`:readerEmptyState("library","No stories match","Try searching for a broader title, author, or genre.")}
+    </section>
+    <section class="library-section reader-panel" aria-labelledby="library-pinned-heading">
+      <div class="section-head"><h2 id="library-pinned-heading">Pinned to My Shelf</h2><a class="reader-text-link" href="#/my-shelf" data-nav="/my-shelf">Open My Shelf ${I.chevR}</a></div>
+      ${pinned.length?`<div class="grid-stories library-pinned-grid">${pinned.map(storyCard).join("")}</div>`:`<p class="reader-note">Follow a story to pin it to your shelf for quick access.</p>`}
+    </section>
+  </div>`;
 };
 
 /* ============ HOME (override: book-centered living feed) ============ */
@@ -656,8 +692,8 @@ function sizeHomeGalleryTiles(){
 }
 function homeGalleryImageSheet(url, caption, character, mature){
   const safeUrl = homeSafeMediaUrl(url);
-  if (!safeUrl) return `<span class="close-x" data-act="close-sheet">${I.x}</span><div class="empty"><h3>Image unavailable</h3><p>This gallery image could not be opened.</p></div>`;
-  return `<span class="close-x" data-act="close-sheet">${I.x}</span>
+  if (!safeUrl) return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><div class="empty"><h3>Image unavailable</h3><p>This gallery image could not be opened.</p></div>`;
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button>
     <div class="home-gallery-sheet ${mature && homeCanViewMatureGallery() && !State.showR18?"nsfw-blurred":""}">
       <img src="${esc(safeUrl)}" alt="${esc(caption || character || "Gallery image")}">
       <div><div class="eyebrow">${esc(character || "Gallery")}</div><h3>${esc(caption || "Untitled artwork")}</h3></div>
