@@ -24,6 +24,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
 
   links: {
     mainArchiveUrl: null,
+    patreonUrl: "https://www.patreon.com/cw/HornyShitler",
     supportUrl: null,
     discordUrl: null,
     boostyUrl: "https://boosty.to/hornyshitler"

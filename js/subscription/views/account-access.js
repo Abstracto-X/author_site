@@ -69,7 +69,7 @@ VIEWS.vault = function(){
       <section class="vault-membership" aria-labelledby="vault-membership-title">
         <div class="vault-membership-body"><span class="reader-status" data-state="${access.state}">${access.state==='active'||access.state==='admin'?I.checkCirc:I.book}${esc(access.label)}</span>
           <h2 id="vault-membership-title">${esc(title)}</h2><p>${esc(description)}</p>
-          ${P.signedIn?`<button class="btn ghost" data-sheet="persona">${I.user}Your account</button>`:`<button class="btn primary" data-sheet="persona">${I.user}Sign in to connect</button>`}
+          ${P.signedIn?`<button class="btn ghost" data-act="open-membership">${I.user}Your membership</button>`:`<button class="btn primary" data-act="open-membership">${I.user}Sign in to connect</button>`}
         </div>
         ${cover?`<figure class="vault-cover"><img src="${esc(cover)}" alt="${esc(story.title)}" loading="lazy"><figcaption>${esc(story.title)}</figcaption></figure>`:''}
         <dl class="vault-counts"><div><dt>Chapters you can read</dt><dd>${readable}</dd></div><div><dt>Member chapters locked</dt><dd>${locked}</dd></div></dl>

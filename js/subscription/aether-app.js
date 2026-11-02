@@ -4,10 +4,14 @@
 /* ============ init ============ */
 async function bootstrapReaderData(){
   let authTimedOut = false;
+  authState.authPending = true;
   const authPromise = Promise.resolve().then(()=>initAuth()).catch(err=>{
     authState.ready = true;
     authState.error = err;
     console.error("Auth initialization failed; continuing with the public library.", err);
+  }).finally(()=>{
+    authState.authPending = false;
+    if (typeof updateMembershipWidget === "function") updateMembershipWidget();
   });
   await Promise.race([
     authPromise,
@@ -27,12 +31,15 @@ async function bootstrapReaderData(){
   saveStore();
   render();
   if (authState.passwordRecovery && authState.user) setTimeout(() => openSheet(sheetUpdatePassword), 0);
+  else if (!authTimedOut) setTimeout(maybeShowMembershipWelcome, 0);
   if (authTimedOut) {
     authPromise.then(async () => {
       if (authState.error?.code === "reader_auth_timeout") authState.error = null;
       await loadBackendLibrary({ force:true });
       saveStore();
       render();
+      if (typeof refreshMembershipJourney === "function") refreshMembershipJourney();
+      maybeShowMembershipWelcome();
     }).catch(err => console.error("Delayed auth recovery failed", err));
   }
 }
@@ -50,7 +57,5 @@ function init(){
     backendState.loaded = false;
     render();
   });
-  // welcome toast for first bridge load
-  if(!LS.getItem("aether-welcomed")){ LS.setItem("aether-welcomed","1"); setTimeout(()=>toast(`Welcome to ${SITE_NAME}`,"Loading the published member library.",{icon:"spark",ms:6500}),900); }
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();

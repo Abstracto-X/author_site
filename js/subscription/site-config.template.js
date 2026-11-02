@@ -24,6 +24,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
 
   links: {
     mainArchiveUrl: null,
+    patreonUrl: null,
     supportUrl: null,
     discordUrl: null,
     boostyUrl: null

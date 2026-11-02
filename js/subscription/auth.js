@@ -164,18 +164,18 @@ function cleanPatreonCallbackUrl(){
 function showPatreonCallbackResult(result){
   const messages = {
     linked: ["Patreon connected", result.grants ? "Your access was updated." : "Your Patreon account was linked."],
-    no_matching_tier: ["Patreon connected", "No active paid site tier was found for this Patreon account."],
+    no_matching_tier: ["Patreon connected", "We could not find an active membership for this account yet."],
     cancelled: ["Patreon connection cancelled", "No changes were made. You can try again whenever you are ready."],
     expired_state: ["Patreon session expired", "Please start the connection again from the Vault."],
     invalid_state: ["Patreon connection could not be verified", "Please start the connection again from the Vault."],
     missing_parameters: ["Patreon connection incomplete", "Please start the connection again from the Vault."],
     token_exchange_failed: ["Patreon connection failed", "Patreon did not complete the handoff. Please try again."],
-    sync_failed: ["Patreon connected, but sync failed", "Please try syncing again from the Vault."],
+    sync_failed: ["Patreon connected, but access is still being checked", "Please try checking your membership again shortly."],
     provider_error: ["Patreon connection failed", "Patreon returned an error. Please try again."],
     callback_failed: ["Patreon connection failed", "Please try again from the Vault."],
   };
   const [title, detail] = messages[result.status] || messages.callback_failed;
-  toast(title, detail, { icon: result.status === "linked" || result.status === "no_matching_tier" ? "checkCirc" : "alert", kind: result.status === "linked" || result.status === "no_matching_tier" ? "good" : "bad", ms:7000 });
+  toast(title, detail, { icon: result.status === "linked" ? "checkCirc" : result.status === "no_matching_tier" ? "info" : "alert", kind: result.status === "linked" ? "good" : result.status === "no_matching_tier" ? "warn" : "bad", ms:7000 });
 }
 const BOOSTY_CALLBACK_STATUSES = new Set([
   "linked", "no_matching_role", "not_in_server", "cancelled", "expired_state", "invalid_state",
@@ -198,14 +198,14 @@ function cleanBoostyCallbackUrl(){
 function showBoostyCallbackResult(result){
   const messages = {
     linked: ["Boosty access connected", "Your Discord subscription role was verified and your reader access was updated."],
-    no_matching_role: ["Discord connected", "No mapped Boosty subscriber role was found. Confirm that Boosty assigned your Discord role, then sync again."],
-    not_in_server: ["Discord connected", "Join the EvilArchives Discord server and let Boosty assign your subscriber role, then sync again."],
+    no_matching_role: ["Discord connected", "Your Boosty membership has not appeared here yet. Check that Boosty is linked to this Discord account, then try again."],
+    not_in_server: ["Discord connected", "Join the EvilArchives Discord server and wait for your Boosty subscriber role, then check again."],
     cancelled: ["Boosty connection cancelled", "No changes were made. You can try again whenever you are ready."],
     expired_state: ["Discord session expired", "Please start the Boosty connection again from the Vault."],
     invalid_state: ["Discord connection could not be verified", "Please start the Boosty connection again from the Vault."],
     missing_parameters: ["Discord connection incomplete", "Please start the Boosty connection again from the Vault."],
     token_exchange_failed: ["Discord connection failed", "Discord did not complete the handoff. Please try again."],
-    sync_failed: ["Discord connected, but Boosty sync failed", "Please try syncing again from the Vault."],
+    sync_failed: ["Discord connected, but access is still being checked", "Please try checking your membership again shortly."],
     provider_error: ["Discord connection failed", "Discord returned an error. Please try again."],
     callback_failed: ["Boosty connection failed", "Please try again from the Vault."],
   };
@@ -230,19 +230,22 @@ async function uploadReaderAvatar(file){
 async function updateReaderProfile({ username, displayName, avatarFile, avatarUrl }){
   const client = getSupabase();
   if (!client || !authState.user) throw new Error("Sign in before editing your profile.");
-  const cleanUsername = String(username || "").trim().replace(/^@+/, "").replace(/\s+/g, "-").toLowerCase();
-  if (cleanUsername && !/^[a-z0-9_.-]{3,32}$/.test(cleanUsername)) throw new Error("Username must be 3-32 characters using letters, numbers, dot, underscore, or dash.");
+  const userId = authState.user.id;
+  const cleanUsername = username === undefined ? authState.profile?.username || "" : String(username || "").trim().replace(/^@+/, "").replace(/\s+/g, "-").toLowerCase();
+  if (username !== undefined && cleanUsername && !/^[a-z0-9_.-]{3,32}$/.test(cleanUsername)) throw new Error("Username must be 3-32 characters using letters, numbers, dot, underscore, or dash.");
   let finalAvatar = String(avatarUrl || authState.profile?.avatar_url || "").trim();
   if (avatarFile) finalAvatar = await uploadReaderAvatar(avatarFile);
+  if (authState.user?.id !== userId) throw new Error("Your account changed. Reopen Profile and try again.");
   const record = {
-    id: authState.user.id,
+    id: userId,
     username: cleanUsername || null,
-    display_name: String(displayName || "").trim() || null,
+    display_name: displayName === undefined ? authState.profile?.display_name || null : String(displayName || "").trim() || null,
     avatar_url: finalAvatar || null,
     updated_at: new Date().toISOString()
   };
   const { data, error } = await client.from("profiles").upsert(record, { onConflict:"id" }).select("id, username, display_name, avatar_url, role").single();
   if (error) throw error;
+  if (authState.user?.id !== userId) return data || record;
   authState.profile = data || record;
   return authState.profile;
 }
@@ -357,6 +360,8 @@ async function initAuth(){
       cleanBoostyCallbackUrl();
       setTimeout(() => showBoostyCallbackResult(boostyCallback), 0);
     }
+    if (patreonCallback || boostyCallback) store.membershipJourneyPending = true;
+    saveStore();
     if (authState.user && ["connect-patreon", "connect-boosty-discord"].includes(store.pendingAuthAction)) {
       const pendingAction = store.pendingAuthAction;
       store.pendingAuthAction = "";
@@ -403,6 +408,7 @@ async function initAuth(){
         if (["connect-patreon", "connect-boosty-discord"].includes(pendingAction)) store.pendingAuthAction = "";
         saveStore();
         render();
+        if (typeof refreshMembershipJourney === "function") refreshMembershipJourney();
         if (pendingAction === "connect-patreon") setTimeout(() => connectPatreonGo(), 450);
         if (pendingAction === "connect-boosty-discord") setTimeout(() => connectBoostyDiscordGo(), 450);
       })().catch(err => { authState.error = err; console.warn("Reader session refresh failed", err.code || "reader_request_failed"); }), 0);
@@ -439,7 +445,9 @@ async function signUpWithPassword(email, password){
   const redirect = authRedirectUrl();
   const { data, error } = await client.auth.signUp({ email, password, options:{ emailRedirectTo: redirect } });
   if (error) throw error;
-  authState.user = data?.user || null;
+  // An unconfirmed email sign-up has a user record but no usable reader session.
+  authState.session = data?.session || null;
+  authState.user = authState.session?.user || null;
   authState.passwordRecovery = false;
   store.email = email;
   saveStore();
@@ -488,7 +496,7 @@ async function signInWithGoogle(nextAction = ""){
   store.pendingAuthReturn = "subscription";
   const redirectTo = subscriptionRedirectTo();
   saveStore();
-  toast("Opening Google sign-in", "Redirecting through Supabase Auth...", {icon:"external", ms:2200});
+  toast("Opening Google", "Choose your account to continue.", {icon:"external", ms:2200});
   const { data, error } = await client.auth.signInWithOAuth({
     provider: "google",
     options: {

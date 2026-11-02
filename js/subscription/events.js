@@ -77,29 +77,32 @@ async function repairReaderAssets(){
 async function connectPatreonGo(){
   if (!authState.user){ if (googleEnabled()) await signInWithGoogle("connect-patreon"); else openSheet(sheetPersona); return; }
   try {
-    const btnMsg = "Starting Provider connection";
-    toast(btnMsg, "Redirecting through secure OAuth...", {icon:"sync", ms:3000});
+    toast("Opening Patreon", "We'll bring you back after checking your membership.", {icon:"sync", ms:3000});
     store.providerPending = true;
+    if (currentSheet?.builder === sheetMembershipJourney) store.membershipJourneyPending = true;
     saveStore();
     await requestPatreonOAuth();
   } catch (err) {
     store.providerPending = false;
+    store.membershipJourneyPending = false;
     saveStore();
-    toast("Patreon not ready", err.message || "The OAuth Edge Function needs configuration.", {icon:"alert", kind:"bad", ms:6500});
+    toast("Could not open Patreon", "Please try again in a moment.", {icon:"alert", kind:"bad", ms:6500});
     render();
   }
 }
 async function connectBoostyDiscordGo(){
   if (!authState.user){ if (googleEnabled()) await signInWithGoogle("connect-boosty-discord"); else openSheet(sheetPersona); return; }
   try {
-    toast("Starting Boosty verification", "Discord will confirm the subscriber role assigned by Boosty.", {icon:"sync", ms:3500});
+    toast("Connecting Discord", "We'll check the subscriber role linked to your Boosty membership.", {icon:"sync", ms:3500});
     store.providerPending = true;
+    if (currentSheet?.builder === sheetMembershipJourney) store.membershipJourneyPending = true;
     saveStore();
     await requestBoostyDiscordOAuth();
   } catch (err) {
     store.providerPending = false;
+    store.membershipJourneyPending = false;
     saveStore();
-    toast("Boosty connection not ready", err.message || "The Discord OAuth Edge Functions need configuration.", {icon:"alert", kind:"bad", ms:7000});
+    toast("Could not open Discord", "Please try again in a moment.", {icon:"alert", kind:"bad", ms:7000});
     render();
   }
 }
@@ -108,21 +111,22 @@ async function redeemKey(code){
   code=(code||"").trim().toUpperCase();
   const err=document.getElementById("key-error");
   if(!code){ if(err)err.textContent=""; return false; }
-  if(!authState.user){ if(err){err.style.color="var(--bad)";err.textContent="Sign in before redeeming a key.";} openSheet(sheetPersona); return false; }
+  if(!authState.user){ if(err){err.style.color="var(--bad)";err.textContent="Sign in before redeeming a key.";} openMembershipJourney(); return false; }
   const client = getSupabase();
   if (client) {
     try {
-      if(err){err.style.color="var(--text-dim)";err.textContent="Redeeming against Supabase...";}
+      if(err){err.style.color="var(--text-dim)";err.textContent="Checking your key...";}
       const { error } = await client.rpc("redeem_access_key", { submitted_code: code });
       if (error) throw error;
       await refreshEntitlements();
-      const ret=store.pendingReturn;
       closeSheet();
-      toast("Access key redeemed", "Your entitlements have been refreshed.", {icon:"key", ms:5500, action: ret?{act:"return:"+ret, label:"Return to chapter"}:null});
+      toast("Access key redeemed", "Your reading access has been updated.", {icon:"key", ms:5500});
       render();
+      openMembershipJourney();
       return true;
     } catch (rpcErr) {
-      if(err){err.style.color="var(--warn)";err.textContent=rpcErr.message || "Backend key redemption is not available yet.";}
+      console.warn("Access key redemption failed", rpcErr);
+      if(err){err.style.color="var(--warn)";err.textContent="This key could not be redeemed. Check it and try again.";}
       return false;
     }
   }
@@ -219,6 +223,7 @@ function updateReaderBar(){ const bar=document.getElementById("rbar"); if(!bar) 
 let lastScroll=0;
 function afterRender(){
   const isReader = route.name==="read";
+  if (typeof updateMembershipWidget === "function") updateMembershipWidget();
   if (typeof applyBgSettings === "function") applyBgSettings();
   if (!isReader){
     if (route.name === "home" && typeof sizeHomeGalleryTiles === "function") sizeHomeGalleryTiles();
@@ -268,6 +273,10 @@ function handleAttr(el, name, val){
   // returns true if handled
 }
 function delegate(){
+  window.addEventListener("resize",()=>{
+    const canvas = document.querySelector(".sheet.open .reader-profile-frame-art");
+    if (canvas) renderProfileFrame(canvas, canvas.closest("[data-frame]")?.dataset.frame);
+  });
   window.addEventListener("offline",()=>toast("Connection lost", "Reconnect to continue loading library and chapter data.", {icon:"alert", kind:"bad", ms:5000}));
   window.addEventListener("online",()=>{
     toast("Back online", "Retrying reader data now.", {icon:"sync", ms:3000});
@@ -293,7 +302,7 @@ function delegate(){
     if (t.dataset.preview!=null){ e.preventDefault(); nav("/read/"+t.dataset.preview); return; }
     if (t.dataset.lock!=null){ e.preventDefault(); openChapterAccess(t.dataset.lock); return; }
     if (t.dataset.readerPreferences!=null){ e.preventDefault(); toggleReaderPreferences(); return; }
-    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={navigation:sheetNavigation,settings:sheetSettings,"notification-settings":sheetNotificationSettings,persona:sheetPersona,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } openSheet(builders[sh]||sheetSettings); return; }
+    if (t.dataset.sheet!=null){ e.preventDefault(); const sh=t.dataset.sheet; const builders={navigation:sheetNavigation,settings:sheetSettings,"notification-settings":sheetNotificationSettings,persona:authState.user?sheetProfile:sheetMembershipJourney,profile:sheetProfile,"whats-new":sheetWhatsNew,signup:sheetSignup,"forgot-password":sheetForgotPassword,"update-password":sheetUpdatePassword,redeem:sheetRedeem,"connect-provider":sheetConnectProvider,"connect-patreon":sheetConnectPatreon,"connect-boosty":sheetConnectBoosty,context:sheetContext}; if(sh==="context"&&!currentChapter){ toast("Open a chapter first",null,{kind:"bad",icon:"alert"}); return; } if(sh==="persona"&&(!authState.ready||authState.authPending)){ toast("Checking your account", "Please try again in a moment.", {icon:"user"}); return; } if(sh==="persona"&&!authState.user){ openMembershipJourney(); return; } openSheet(builders[sh]||sheetSettings); return; }
     if (t.dataset.follow!=null){ toggleFollow(t.dataset.follow); return; }
     if (t.dataset.react!=null){ if(currentChapter) setReaction(currentChapter.ch.id, t.dataset.react); return; }
     if (t.dataset.persona!=null){ store.personaId=t.dataset.persona; saveStore(); closeSheet(); toast("Viewing as "+(D.PERSONAS.find(p=>p.id===t.dataset.persona)?.label),null,{icon:"user"}); render(); return; }
@@ -325,6 +334,22 @@ function delegate(){
   });
   document.addEventListener("change",(e)=>{
     const t=e.target;
+    if(t.dataset?.profileAvatarInput!=null){
+      const file=t.files?.[0];
+      if(!file) return;
+      const userId=authState.user?.id;
+      const status=t.closest(".reader-profile-identity")?.querySelector("[data-profile-status]");
+      t.disabled=true;
+      if(status){ status.style.color="var(--text-dim)"; status.textContent="Updating photo…"; }
+      updateReaderProfile({ avatarFile:file }).then(()=>{
+        if(currentSheet?.builder===sheetProfile && authState.user?.id===userId) openSheet(sheetProfile);
+        render({preserveScroll:true});
+        toast("Photo updated",null,{icon:"checkCirc"});
+      }).catch(err=>{
+        if(status){ status.style.color="var(--bad)"; status.textContent=err.message || "Photo could not be updated."; }
+      }).finally(()=>{ if(t.isConnected){ t.disabled=false; t.value=""; } });
+      return;
+    }
     if(t.id==="gallery-sort-select"){ if(t.value==="shuffle") shuffleGalleryArtwork(true); else { State.gallerySort=t.value; State.galleryLimit=24; refreshGalleryResults(); } return; }
     if(t.dataset && t.dataset.readerCustomColor!=null){ refreshReaderPreferences(); return; }
   });
@@ -371,22 +396,22 @@ function delegate(){
     }
     if(f.dataset.redeemForm!=null){ e.preventDefault(); const v=f.querySelector("[name=key]").value; const ok=await redeemKey(v); if(ok===false){ /* error shown */ } return; }
 
-    if(f.dataset.profileForm!=null){
+    if(f.dataset.profileNameForm!=null){
       e.preventDefault();
-      const status=f.querySelector("[data-profile-status]");
+      const userId=authState.user?.id;
+      const status=f.closest(".reader-profile-person")?.querySelector("[data-profile-status]");
+      const submit=f.querySelector('[type="submit"]');
+      if(submit) submit.disabled=true;
       try {
-        if(status){ status.style.color="var(--text-dim)"; status.textContent="Saving profile..."; }
-        await updateReaderProfile({
-          displayName: f.querySelector("[name=display_name]")?.value || "",
-          username: f.querySelector("[name=username]")?.value || "",
-          avatarFile: f.querySelector("[name=avatar]")?.files?.[0] || null,
-          avatarUrl: f.querySelector("[name=avatar_url]")?.value || ""
-        });
-        if(status){ status.style.color="var(--good)"; status.textContent="Profile saved."; }
-        toast("Profile saved", "Your reader profile has been updated.", {icon:"checkCirc"});
-        setTimeout(()=>openSheet(sheetPersona), 650);
+        if(status){ status.style.color="var(--text-dim)"; status.textContent="Saving name…"; }
+        await updateReaderProfile({ displayName:f.querySelector('[name="display_name"]')?.value || "" });
+        if(currentSheet?.builder===sheetProfile && authState.user?.id===userId) openSheet(sheetProfile);
+        render({preserveScroll:true});
+        toast("Name updated",null,{icon:"checkCirc"});
       } catch (err) {
-        if(status){ status.style.color="var(--bad)"; status.textContent=err.message || "Profile save failed."; }
+        if(status){ status.style.color="var(--bad)"; status.textContent=err.message || "Name could not be updated."; }
+      } finally {
+        if(submit?.isConnected) submit.disabled=false;
       }
       return;
     }
@@ -411,6 +436,7 @@ function delegate(){
 
     if(f.dataset.authForm!=null){
       e.preventDefault();
+      const inMembershipJourney = !!f.closest(".membership-journey");
       const status=f.querySelector("[data-auth-status]");
       const email=(f.querySelector("[name=email]")?.value||"").trim();
       const password=f.querySelector("[name=password]")?.value||"";
@@ -422,7 +448,8 @@ function delegate(){
           status.style.color="var(--text-dim)";
           status.textContent=f.dataset.authForm==="signup"?"Creating account...":f.dataset.authForm==="recover"?"Sending reset link...":f.dataset.authForm==="update"?"Updating password...":"Signing in...";
         }
-        if(f.dataset.authForm==="signup") await signUpWithPassword(email, password);
+        let signupData = null;
+        if(f.dataset.authForm==="signup") signupData = await signUpWithPassword(email, password);
         else if(f.dataset.authForm==="recover") {
           await sendPasswordReset(email);
           if(status){ status.style.color="var(--good)"; status.textContent="Reset email sent. Check your inbox."; }
@@ -435,8 +462,16 @@ function delegate(){
           setTimeout(()=>{ closeSheet(); render(); }, 1200);
           return;
         } else await signInWithPassword(email, password);
-        closeSheet();
-        toast(f.dataset.authForm==="signup"?"Account created":"Signed in", "Reader account is connected.", {icon:"checkCirc", ms:4500});
+        if (f.dataset.authForm==="signup" && !signupData?.session) {
+          store.membershipJourneyPending = true; saveStore();
+          if(status){ status.style.color="var(--good)"; status.textContent="Check your email to confirm your account, then return here to sign in."; }
+          toast("Check your email", "Confirm your account before signing in.", {icon:"mail", ms:5500});
+          return;
+        }
+        if (signupData?.session) await refreshReaderAccountState();
+        if (inMembershipJourney) refreshMembershipJourney();
+        else closeSheet();
+        toast(f.dataset.authForm==="signup"?"Account created":"Signed in", "Your reader account is ready.", {icon:"checkCirc", ms:4500});
         render();
       } catch (err) {
         if(status){ status.style.color="var(--bad)"; status.textContent=err.message || "Authentication failed."; }
@@ -455,6 +490,54 @@ function ensureQuoteFab(show){ if(show){ if(quoteFab) return; quoteFab=document.
 
 function handleAct(act, el){
   switch(act){
+    case "profile-frame-prev":
+    case "profile-frame-next": {
+      const frame = shiftProfileFrame(act === "profile-frame-prev" ? -1 : 1);
+      const profile = el.closest(".reader-profile");
+      if (frame && profile) {
+        const avatar = profile.querySelector(".reader-profile-avatar-wrap");
+        if (avatar) avatar.dataset.frame = frame.id;
+        renderProfileFrame(avatar?.querySelector(".reader-profile-frame-art"), frame.id);
+        const label = profile.querySelector("[data-profile-frame-label]");
+        if (label) label.textContent = frame.label;
+      }
+      break;
+    }
+    case "profile-pick-avatar": el.closest(".reader-profile-avatar-wrap")?.querySelector("[data-profile-avatar-input]")?.click(); break;
+    case "profile-edit-name": {
+      const person=el.closest(".reader-profile-person");
+      person?.querySelector(".reader-profile-name-row")?.setAttribute("hidden","");
+      const form=person?.querySelector("[data-profile-name-form]");
+      if(form){ form.hidden=false; form.querySelector("input")?.focus(); }
+      break;
+    }
+    case "profile-cancel-name": {
+      const person=el.closest(".reader-profile-person");
+      const form=person?.querySelector("[data-profile-name-form]");
+      if(form){ form.reset(); form.hidden=true; }
+      const row=person?.querySelector(".reader-profile-name-row");
+      if(row){ row.hidden=false; row.querySelector("button")?.focus(); }
+      const status=person?.querySelector("[data-profile-status]");
+      if(status) status.textContent="";
+      break;
+    }
+    case "open-membership": openMembershipJourney(); break;
+    case "membership-email-mode": membershipEmailMode = el.dataset.mode === "signup" ? "signup" : "signin"; refreshMembershipJourney(); break;
+    case "membership-google": store.membershipJourneyPending=true; saveStore(); signInWithGoogle().catch(err=>{store.membershipJourneyPending=false;saveStore();toast("Google sign-in failed",err.message||"Please try again.",{icon:"alert",kind:"bad"});}); break;
+    case "membership-patreon": connectPatreonGo(); break;
+    case "membership-boosty": connectBoostyDiscordGo(); break;
+    case "membership-guest": showMembershipGuestNotice(); break;
+    case "membership-guest-done": closeSheet(); break;
+    case "membership-subscribe": openMembershipSubscribe(); break;
+    case "membership-open-patreon": if(PATREON_URL) window.open(PATREON_URL, "_blank", "noopener"); break;
+    case "membership-open-boosty": if(BOOSTY_URL) window.open(BOOSTY_URL, "_blank", "noopener"); break;
+    case "membership-continue": {
+      const chapterId = store.pendingReturn;
+      closeSheet();
+      if(chapterId && byId(chapterId) && isReadable(chapterResolved(byId(chapterId).ch))) { store.pendingReturn=""; saveStore(); nav("/read/"+chapterId); }
+      else nav("/library");
+      break;
+    }
     case "skip-to-content": document.getElementById("main")?.focus(); break;
     case "close-sheet": closeSheet(); break;
     case "close-reader-preferences": closeReaderPreferences(); break;

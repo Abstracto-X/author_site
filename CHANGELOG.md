@@ -1,5 +1,91 @@
 # Changelog
 
+## 2026-11-03 01:22 Asia/Kolkata — Fill portrait openings and add a manual Evil grant
+
+Area: subscription reader / production access
+
+- Increased the photo diameter separately for each portrait frame so it reaches beneath each frame's inner edge without changing frame artwork or entitlement selection. Verified Licker and both Resident Evil variants in the signed-in Profile.
+- Granted the owner's identified reader account a non-expiring `resident-evil` entitlement directly in `public.user_entitlements` with `source='manual'` and no provider, plus an audit row. The existing active Patreon Nemesis entitlement was left intact; no Patreon data or connection was changed. Confirmed the reader UI reports Resident Evil after fresh auth loading.
+- Files: `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `CHANGELOG.md`, `PROJECT_STATE.md`. Production rows: `public.user_entitlements`, `public.entitlement_audit_log`.
+- Validation: verified both entitlement rows and the audit row through the restricted database role; checked photo fit in the local browser; focused reader tests passed.
+
+## 2026-11-03 01:11 Asia/Kolkata — Render portrait frames with high-quality downsampling
+
+Area: subscription reader / Profile
+
+- Traced the pale-pixel problem to browser downscaling of the three-frame CSS background sprite: a same-size canvas comparison rendered the original art markedly cleaner. Profile now draws the selected original PNG crop into a high-quality canvas at the actual layout pixel size, redrawing on frame changes and resize. The CSS image remains only as a load/error fallback. The source PNGs, tier eligibility, photo uploads, and auth state are unchanged.
+- Files: `js/subscription/membership-journey.js`, `js/subscription/sheets.js`, `js/subscription/events.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: compared CSS and canvas output at 148px; inspected Licker and Tyrant frames in the signed-in local Profile, restoring the prior Tyrant choice. The rendered canvas matches its 148px CSS layout size. Reader frame tests and syntax checks passed.
+
+## 2026-11-03 00:56 Asia/Kolkata — Restore portrait frame detail at normal zoom
+
+Area: subscription reader / Profile
+
+- Removed the blur/brightness/saturation filter from the detailed member frames; it obscured fine artwork at normal zoom. Increased the Profile frame from 120px to a responsive 128–148px and scaled the portrait opening with it, preserving the existing tier art and frame selection.
+- Files: `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: inspected signed-in Profile at desktop and 390px mobile widths; narrow-width geometry checked at 320px with no page overflow. Focused reader tests passed.
+
+## 2026-11-02 23:50 Asia/Kolkata — Soften downscaled portrait frames
+
+Area: subscription reader / Profile
+
+- The detailed Licker, Tyrant, and Nemesis source PNGs contain pale highlights that become grainy when reduced to avatar size. Applied a subtle blur and highlight reduction to those three rendered overlays only; the two Resident Evil variants retain their original red treatment. No source art, account data, or frame eligibility changed.
+- Files: `styles/membership-journey.css`, `index.html`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: inspected the signed-in Tyrant frame in the local Profile after reload; reader tests passed.
+
+## 2026-11-02 23:18 Asia/Kolkata — Add member portrait frames
+
+Area: subscription reader / Profile
+
+- Added the supplied transparent Licker/Tyrant/Nemesis frame sheet and two Resident Evil frames to `assets/profile-frames/`. Profile overlays the selected frame around the reader's photo, with previous/next controls for the current verified tier and all lower tiers. The first current-tier frame is the default, and the choice persists per reader in this browser.
+- Frame eligibility comes only from active entitlements; a saved higher-tier choice cannot remain visible after access drops. Frame choice is purely decorative and does not change avatar uploads, provider links, or chapter access.
+- Files: `assets/profile-frames/member-tiers.png`, `assets/profile-frames/resident-evil-crimson.png`, `assets/profile-frames/resident-evil-haunting.png`, `js/subscription/membership-journey.js`, `js/subscription/sheets.js`, `js/subscription/events.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: frame eligibility and preference tests passed; Nemesis, Tyrant, and Licker frames were visually inspected on the signed-in local reader at desktop size, and Profile geometry was checked at 390px. Resident Evil frames were checked as transparent source assets but not under a live Evil entitlement.
+
+## 2026-11-02 22:52 Asia/Kolkata — Inline reader profile editing
+
+Area: subscription reader / profile
+
+- Replaced the separate profile-editing form with a photo control on the avatar and a pen control beside the displayed name. Name editing opens a small inline field with save/cancel; choosing a photo starts its update. Existing account shortcuts and membership banner remain in place.
+- Hid the redundant username control while preserving existing username values during partial name/photo updates. Username remains a stored fallback for display name and part of comment metadata; no schema or auth-session behavior changed. Protected in-flight profile updates from applying to a different signed-in account.
+- Files: `js/subscription/sheets.js`, `js/subscription/events.js`, `js/subscription/auth.js`, `js/subscription/utils.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: name edit/cancel and the compact Profile layout inspected in the local signed-in browser without writing account data; profile preservation tests and reader suite passed.
+
+## 2026-11-02 03:41 Asia/Kolkata — Restore account shortcuts and verify session startup
+
+Area: subscription reader / account / auth presentation
+
+- Restored Vault, Notifications, My Shelf, Settings, and admin-only Writer/CMS links in the signed-in Profile panel. Kept the tier banner and profile editing in place.
+- During startup, show "Checking account" rather than "Not signed in" and withhold guest onboarding/widget until session verification finishes, including when the bounded auth wait times out. Raised regular sheets above mobile navigation so Profile actions remain reachable.
+- Files: `js/subscription/sheets.js`, `js/subscription/chrome.js`, `js/subscription/aether-app.js`, `js/subscription/events.js`, `js/subscription/membership-journey.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 86 tests pass, syntax and diff checks pass. Local authenticated session survived repeated reloads, restored Settings navigation worked, and mobile Profile shortcuts/save/sign-out controls were reachable without signing out or changing account data.
+
+## 2026-11-01 09:14 Asia/Kolkata — Move membership status into Profile
+
+Area: subscription reader / account UI
+
+- Limited first-visit onboarding and its floating reopen control to guests. Authenticated startup no longer opens the welcome sheet; account entry now opens Profile instead.
+- Rebuilt Profile around the reader identity, an entitlement-backed tier-colored status banner, and display-name, username, and photo editing. Simplified the guest sign-in and subscription sheets to match the site's restrained dark editorial style; removed the obsolete tier-reveal panel and technical profile copy.
+- Files: `js/subscription/membership-journey.js`, `js/subscription/sheets.js`, `js/subscription/events.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: authenticated desktop and mobile Profile inspected in the local browser; signed-in reload showed no onboarding or floating widget. Syntax and automated tests passed.
+
+## 2026-11-01 09:03 Asia/Kolkata — Fix collapsed membership welcome sheet
+
+Area: subscription reader / responsive account UI
+
+- Fixed conflicting desktop `top` and `bottom` anchors that squeezed the welcome sheet to a 2px line. The panel now has a single vertical anchor on desktop and mobile, scrolls within the viewport, and sits above the mobile navigation. The close button is visible and unavailable profile images fall back to the account icon.
+- Files: `styles/membership-journey.css`, `js/subscription/membership-journey.js`, `js/subscription/sheets.js`, `index.html`, `tests/reader-membership-journey.test.js`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: local in-app browser at 1115px and 430px showed the full panel; computed geometry confirmed an approximately 795px desktop and 810px mobile dialog instead of the former 2px height. Reader tests and syntax checks passed.
+
+## 2026-11-01 08:23 Asia/Kolkata — Unified reader sign-in and membership welcome
+
+Area: subscription reader / account / provider access
+
+- Added a first-visit, dismissible two-step sheet for email/Google account entry followed by Patreon, Boosty-through-Discord, or key connection. A persistent gold control reopens it on any reader route; locked chapters and the Vault now lead to the same flow.
+- Added optional inline username/avatar editing, email-confirmation handling, guest explanation, configured subscription destinations, and four decorative tier previews. A tier-colored access reveal appears only for a current verified entitlement; a linked provider without access gets a distinct recovery message. Existing Supabase auth, OAuth, RLS, and chapter access contracts remain unchanged.
+- Files: `index.html`, `styles/membership-journey.css`, `js/subscription/membership-journey.js`, `js/subscription/aether-app.js`, `js/subscription/auth.js`, `js/subscription/config.js`, `js/subscription/events.js`, `js/subscription/sheets.js`, `js/subscription/site-config.js`, `js/subscription/site-config.template.js`, `js/subscription/views/account-access.js`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: Node syntax checks, `git diff --check`, and all 82 repository tests (including 4 new membership tests) passed. Signed-in browser/OAuth and mobile visual verification remain for the owner.
+
 ## 2026-10-30 05:46 Asia/Kolkata — Restore mobile story controls
 
 - Restored metadata, reading progress and Follow actions in the redesigned mobile story sidebar by overriding legacy mobile hide rules; empty stories retain metadata and Follow. Chapter reader and background behavior unchanged.

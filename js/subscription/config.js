@@ -64,6 +64,7 @@ let SITE_NAME = CONFIG.siteName || "EvilArchives";
 let SITE_TAGLINE = CONFIG.siteTagline || "Premium serial fiction member library";
 let SITE_META_DESCRIPTION = CONFIG.metaDescription || "Premium member fiction reader. Read serial fiction, manage access, and continue across the member library.";
 const MAIN_ARCHIVE_URL = LINKS.mainArchiveUrl || "";
+const PATREON_URL = LINKS.patreonUrl || "";
 const BOOSTY_URL = LINKS.boostyUrl || "";
 function settingText(value, fallback){
   if (typeof value === "string" && value.trim()) return value.trim();

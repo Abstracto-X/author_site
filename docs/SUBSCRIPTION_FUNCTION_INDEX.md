@@ -67,13 +67,13 @@ Recent reader notification/profile changes:
 
 | File | Function | Purpose |
 |---|---|---|
-| `js/subscription/auth.js` | `profileAvatar()` / `uploadReaderAvatar(file)` / `updateReaderProfile(...)` | Supports signed-in reader profile edits, username/display name changes, and avatar uploads to the `Reader/<user_id>/profile/...` storage path. |
+| `js/subscription/auth.js` | `profileAvatar()` / `uploadReaderAvatar(file)` / `updateReaderProfile(...)` | Supports signed-in reader name/photo edits and avatar uploads to the `Reader/<user_id>/profile/...` storage path; omitted fields (including legacy username) are preserved during partial edits. |
 | `js/subscription/backend.js` | `loadNotificationPreferences()` / `saveNotificationPreferences(prefs)` | Loads and saves signed-in reader email/browser chapter notification preferences. |
 | `js/subscription/backend.js` | `loadReaderNotifications(options)` / `markReaderNotificationsRead(ids)` / `dismissReaderNotification(id)` | Syncs DB-backed reader notifications into the existing notifications view and updates read/dismissed state. |
 | `js/subscription/backend.js` | `refreshReaderNotifications(options)` / `startReaderNotificationPolling()` | Refreshes alerts while the tab is active, updates the bell/notification view, and resumes promptly when the tab becomes visible. |
 | `js/subscription/backend.js` | `requestBrowserNotifications()` / `maybeShowBrowserNotifications(items)` | Requests browser notification permission and displays new chapter browser notifications while the site is open. |
 | `js/subscription/events.js` | `openReaderNotification(id, chapterId, notificationUrl)` | Marks an opened alert read in local and Supabase state before navigating to its chapter/route. |
-| `js/subscription/sheets.js` | `sheetProfile()` / `sheetWhatsNew()` | Adds a profile editor sheet and versioned "What's new" update popup. |
+| `js/subscription/sheets.js` | `sheetProfile()` / `sheetWhatsNew()` | Profile combines reader identity with inline name/photo editing, selectable entitlement-gated avatar frames, an entitlement-backed tier banner, and the original account shortcuts; the separate versioned "What's new" popup remains. |
 | `js/subscription/events.js` | `maybeShowWhatsNew()` / `dismissWhatsNew()` | Shows the update popup once per signed-in user/version and persists dismissal in local storage. |
 | `js/subscription/config.js` | `applyAppBackground(url)` | Applies Admin-configured reader background imagery to the app shell. |
 | `js/subscription/views/gallery.js` | `VIEWS.gallery()` / `VIEWS.galleryChar()` | Renders the Visual Archive landing page and individual character gallery viewer with tag filtering, search, view modes, interactive lightbox, and upvote/downvote support. |
@@ -398,6 +398,22 @@ Recent reader notification/profile changes:
 | 58 | `notFound(what)` | Helper used by this module. |
 | 59 | `emptyState(ic,title,sub)` | Helper used by this module. |
 
+## `js/subscription/membership-journey.js`
+
+| Function | Purpose |
+|---|---|
+| `membershipTier` / `membershipTierCards` | Map the four known tier names to decorative emblems and neutral tier previews; never determine access. |
+| `membershipProfileBanner` | Render entitlement-backed tier color and status within signed-in Profile, with distinct admin, unconnected, and connection-needs-attention states. |
+| `availableProfileFrames` / `selectedProfileFrame` / `shiftProfileFrame` | Offer only the current verified membership tier's and lower-tier portrait frames; default to the current tier and persist the selected art per user in local browser storage. |
+| `loadProfileFrameArt` / `renderProfileFrame` | Cache the original transparent PNGs and draw the selected portrait frame to a high-quality canvas at its displayed pixel size, avoiding CSS sprite downscale aliasing; CSS art remains a load/error fallback. |
+| `sheetMembershipJourney` | Render guest sign-in/create-account with a locked provider preview and guest choice. |
+| `openMembershipJourney` / `refreshMembershipJourney` | Open guest account entry or route signed-in readers to provider connection; close guest onboarding when authentication succeeds. |
+| `updateMembershipWidget` | Keep the fixed account reopen control on guest reader routes only, hidden until session verification ends. |
+| `maybeShowMembershipWelcome` | Open onboarding after startup for first-time guests only, after auth resolution and outside recovery flows. |
+| `showMembershipGuestNotice` | Explain guest limitations without blocking free reading. |
+| `openMembershipSubscribe` | Open the styled subscription-choice dialog. |
+| `sheetMembershipSubscribe` | Show four tier previews and configured Patreon/Boosty subscription choices. |
+
 ## `js/subscription/sheets.js`
 
 | Line | Function | Purpose |
@@ -486,7 +502,7 @@ Recent reader notification/profile changes:
 
 | Line | Function | Purpose |
 |---:|---|---|
-| n/a | `bootstrapReaderData()` | Bounds the startup auth wait, loads the library, and refreshes catalog access if delayed authentication recovers. |
+| n/a | `bootstrapReaderData()` | Bounds the startup auth wait, loads the library, and refreshes catalog access if delayed authentication recovers; guest onboarding waits until the auth promise settles. |
 | 5 | `init()` | Initializes this module or application surface. |
 
 

@@ -2,6 +2,85 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-11-03 02:06 Asia/Kolkata — Resident Evil Profile theme research
+
+Status: TODO
+
+Area:
+- reader / Profile design
+
+Files touched:
+- `PROJECT_STATE.md` (research note only; no runtime changes)
+
+Summary:
+- Research direction: a pure-black Resident Evil account sheet with restrained crimson graffiti marks at the margins, distressed/stenciled display accents, and clean readable account controls. Use the two supplied red portrait frames as the visual anchor, not as a repeated full-panel texture. Current Profile inherits the global `--modal-bg` and gold accent; the existing `reference/resident-ui-toolkit/` leans crimson gothic rather than street-art. External inspiration reviewed: Techland artist Emil Cegielski's Dying Light 2 mural/sticker project and the Burnt Chapter horror collage, with WCAG 2.2 contrast/reduced-motion constraints.
+
+Remaining work:
+- After design sign-off, scope the Evil skin to the verified highest active tier on the Profile sheet, independent of which decorative portrait frame is selected. Preserve all account controls and lower-tier/current global themes.
+
+Risks / notes:
+- Pure black must remain the panel base; distressed marks should be decoration only and not interfere with text, focus indicators, or the mobile layout. Do not copy third-party artwork or ship a new font/CDN dependency.
+
+Verification needed:
+- Visual QA at desktop, 390px, and 320px; light/dark global modes, Evil entitlement expiry/downgrade, keyboard focus, contrast, and reduced motion.
+
+## 2026-11-02 23:18 Asia/Kolkata — Guest onboarding and Profile sign-off
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / auth / provider access
+
+Files touched:
+- `index.html`, `assets/profile-frames/*.png`, `styles/membership-journey.css`, `js/subscription/membership-journey.js`, `js/subscription/auth.js`, `js/subscription/chrome.js`, `js/subscription/events.js`, `js/subscription/sheets.js`, `js/subscription/utils.js`, `js/subscription/aether-app.js`, `js/subscription/views/account-access.js`
+
+Summary:
+- First-visit onboarding and floating account control now appear only to guests. Signed-in readers go straight to a Profile sheet with tier-colored, entitlement-backed membership status and profile editing. The guest and profile panels use a restrained editorial layout rather than stacked decorative cards.
+- Account shortcuts lost in the first Profile redesign were restored (Vault, Notifications, My Shelf, Settings, and admin-only Writer/CMS). Startup now waits for auth resolution before showing guest UI and labels the temporary state "Checking account." A signed-in local session survived repeated reloads; Settings navigation and desktop/mobile Profile were inspected without modifying the account. No production account, OAuth, provider, storage, or database writes were performed for verification.
+- Profile now uses inline name editing and an avatar photo control rather than a persistent editing form. The separate username input was removed because no reader-facing handle/mention feature uses it; existing username data is retained. Inline edit/cancel was inspected without saving a production profile change.
+- Owner-supplied portrait frames are now available in Profile according to active tier: Licker, Tyrant, Nemesis, and two Resident Evil variants. The default is the current tier's first frame; the user may cycle through it and lower tiers. Frame choice is local to the user's browser and never modifies Supabase access or avatar data.
+- The first three detailed frame PNGs have pale highlights that looked grainy when the full sprite was reduced as a CSS background. A same-size comparison confirmed the CSS downscale exaggerated these pixels. Profile now displays frames at 128–148px and draws them from the original PNG through a high-quality canvas downscale; the CSS image is only a load/error fallback. Source assets remain untouched. Owner should confirm the result on their own device and display scaling.
+- Profile photo openings were enlarged per frame to cover the visible inner gap. The owner's reader account received a direct, non-expiring manual Resident Evil grant in production on 2026-11-03; the existing Patreon Nemesis entitlement remains separate and unchanged. Both Evil frame variants were visually inspected with this grant, and the prior selected Licker frame was restored.
+
+Remaining work:
+- Owner to supply final tier benefit imagery and exact benefit descriptions, then replace the neutral previews without changing access logic. Portrait frame art is supplied and integrated.
+- Confirm whether the configured Patreon creator destination is the preferred public membership page and review provider recommendation wording.
+
+Risks / notes:
+- Browser redirects, email-confirmation settings, guest signup, and live profile upload/save were not exercised. Both Evil frames were inspected under a real Evil entitlement. Provider connection alone never grants access; real entitlements remain authoritative.
+- Existing unrelated registration-guide files and prior `PROJECT_STATE.md` changes were preserved.
+
+Verification needed:
+- On phone and desktop: guest first visit, dismissal/reopen, email and Google sign-in, unconfirmed email, Patreon and Boosty callbacks, connected-without-tier, direct locked-chapter return, avatar upload, keyboard focus, and reduced motion. Authenticated startup and desktop/mobile Profile presentation were locally inspected.
+
+## 2026-11-01 Asia/Kolkata — Updated registration post draft and screenshots
+
+Status: NEEDS REVIEW
+
+Area:
+- docs | reader
+
+Files touched:
+- `docs/registration-guide/POST.md`
+- `docs/registration-guide/*.jpg`
+- `PROJECT_STATE.md`
+
+Summary:
+- Drafted a copy-ready reader registration and membership-linking post from current reader code and the live guest UI at `https://cornyshitler.pages.dev/`.
+- Each numbered instruction now has a mobile-versus-desktop screenshot pair immediately beneath it, rather than separating all phone and computer images into different sequences.
+- Captured clear phone (430px) and desktop (1440px) views of the account, signup, Vault, and Patreon-entry screens. Desktop form crops are from the original browser screenshots; full desktop originals are retained beside them.
+- No account was created, OAuth flow completed, content published, or production data changed.
+
+Remaining work:
+- Site owner to review wording, upload the selected images, and publish the post in the intended channel.
+
+Risks / notes:
+- The actual signed-in/Patreon callback screens and confirmation-email behavior were not exercised. A linked provider is not necessarily an active chapter entitlement.
+- Existing untracked `registration-*.jpg` files at repository root were left untouched.
+
+Verification needed:
+- Owner-led Google/email signup, email confirmation if enabled, Patreon callback, entitlement display, and a locked-chapter access check on both phone and computer.
+
 ## 2026-10-30 Asia/Kolkata — Reader completion safety review
 
 Status: NEEDS REVIEW

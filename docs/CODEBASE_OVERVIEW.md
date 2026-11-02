@@ -79,10 +79,11 @@ The subscription reader is loaded by `index.html` as classic browser scripts, no
 13. `js/subscription/views/help-support.js`
 14. `js/subscription/views/gallery.js`
 15. `js/subscription/sheets.js`
-16. `js/subscription/views/reader-settings.js`
-17. `js/subscription/events.js`
-18. `js/subscription/onboarding.js`
-19. `js/subscription/aether-app.js`
+16. `js/subscription/membership-journey.js`
+17. `js/subscription/views/reader-settings.js`
+18. `js/subscription/events.js`
+19. `js/subscription/onboarding.js`
+20. `js/subscription/aether-app.js`
 
 `aether-app.js` is now only the small bootstrap/init file and must stay last. Its startup gate stops waiting after 12 seconds for auth initialization, loads the public library with recovery messaging, and refreshes the library if delayed authentication later succeeds.
 
@@ -114,9 +115,14 @@ The redesigned home defaults to a reference-style split chapter/artwork archive 
 | `views/studio-preview.js` | Archived/inactive studio placeholder module. | Not loaded by `index.html`; `/studio/*` redirects to `admin.html`. |
 | `author-studio.js` | Archived/inactive reader-side author/studio prototype helpers. | Not loaded by `index.html`; useful ideas were ported into Admin CMS. |
 | `sheets.js` | Sheet/modal builders. | Account/auth/access sheets, mobile `More` sheet (`sheetMore`), overall site settings, and the dedicated non-modal Reader Preferences rail/drawer used only on chapter routes. |
+| `membership-journey.js` | Guest account entry and membership presentation. | First-visit guest sign-in/create-account sheet, provider preview, guest choice, subscription links, and guest-only reopen widget. Signed-in readers use the Profile sheet for tier-colored entitlement status, name/avatar editing, and entitlement-gated profile frames; provider connection remains in the Vault/access sheets. Tier previews are presentation placeholders, never access grants. |
 | `events.js` | Delegated DOM events and after-render hooks. | Owns `data-act`, `data-nav`, `data-sheet`, reader settings, sidebar collapse toggle, and global listeners. |
 | `onboarding.js` | Feature-gated reader guide overlay. | Modular highlighted walkthrough controlled by `features.enableReaderGuides` and local dismiss state. |
 | `aether-app.js` | Bootstrap/init. | Initializes auth/backend/router/events once dependencies are loaded. |
+
+The first loaded **guest** visit opens the account sheet after auth and library startup, unless password recovery or library recovery is in progress. Startup labels the session as "Checking account" and defers guest UI until auth resolution, including after the bounded startup timeout; this does not sign the reader out. Dismissal is stored locally; the floating account button reopens it on reader routes only for guests. Authenticated readers never see the welcome sheet or floating widget: the account entry opens Profile, where the visible name can be edited inline with a pen control and the avatar can be replaced from its photo control. Existing `profiles.username` values remain stored but are not separately edited in Profile: the site has no public handle/mention route, and the displayed name comes from `display_name` first, then username as a fallback. Partial profile edits preserve untouched profile fields. Profile retains a tier-colored status derived only from current entitlements and the prior account shortcuts to Vault, Notifications, My Shelf, Settings, and admin-only Writer/CMS. Profile also overlays the owner-supplied frame art from `assets/profile-frames/` on the portrait: current verified membership tier and all lower tier frames are selectable, with the current tier's first frame as default (Resident Evil has two variants). The chosen frame is a per-user browser-local preference, not a profile upload or entitlement; a lost/downgraded tier hides ineligible frames. Locked-chapter and Vault actions lead to provider connection for signed-in readers. Email accounts without a confirmed session cannot connect a provider. Google and provider redirects retain journey intent without reopening guest onboarding after authentication. The subscription-choice sheet uses configured creator links (`links.patreonUrl`, `links.boostyUrl`); actual tier benefits and benefit art are not yet supplied by the site, so the UI does not claim specific perk quantities.
+
+Profile portrait frames now draw the original transparent art through a high-quality canvas downscale at the displayed pixel size. The CSS sprite image remains only as a load/error fallback. The canvas redraws when the selected frame or viewport size changes; this avoids the pale-pixel aliasing observed when the full sprite was shrunk as a CSS background.
 
 ### Reader data flow
 
@@ -250,6 +256,7 @@ node --check js/subscription/aether-app.js
 node --check js/subscription/config.js
 node --check js/subscription/state.js
 node --check js/subscription/auth.js
+node --check js/subscription/membership-journey.js
 node --check js/subscription/backend.js
 node --check js/subscription/utils.js
 node --check js/subscription/chrome.js

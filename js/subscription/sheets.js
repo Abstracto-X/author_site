@@ -12,6 +12,7 @@ function openSheet(builder, opts){
   sheetReturnFocus = opener;
   const scrim = document.querySelector(".scrim") || (()=>{const d=document.createElement("div");d.className="scrim";document.body.appendChild(d);return d;})();
   const sheet = document.querySelector(".sheet") || (()=>{const d=document.createElement("div");d.className="sheet";document.body.appendChild(d);return d;})();
+  sheet.classList.remove("membership-sheet");
   sheet.innerHTML = `<span class="grip"></span>${builder()}`;
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
@@ -23,9 +24,12 @@ function openSheet(builder, opts){
   document.body.classList.add("has-sheet");
   const openedSheet = { builder, opts };
   currentSheet = openedSheet;
+  if (typeof updateMembershipWidget === "function") updateMembershipWidget();
   requestAnimationFrame(()=>{
     if(currentSheet !== openedSheet) return;
     scrim.classList.add("open"); sheet.classList.add("open"); sheet.focus({preventScroll:true});
+    const profileFrame = sheet.querySelector(".reader-profile-frame-art");
+    if (profileFrame && typeof renderProfileFrame === "function") renderProfileFrame(profileFrame, profileFrame.closest("[data-frame]")?.dataset.frame);
     if (opts.onMount) opts.onMount(sheet);
   });
 }
@@ -36,7 +40,9 @@ function closeSheet(silent){
   const app = document.getElementById("app");
   if (app) app.inert = false;
   document.body.classList.remove("has-sheet");
+  document.body.classList.remove("has-membership-sheet");
   currentSheet = null;
+  if (typeof updateMembershipWidget === "function") updateMembershipWidget();
   if (!silent && sheetReturnFocus?.isConnected) sheetReturnFocus.focus({preventScroll:true});
   sheetReturnFocus = null;
 }
@@ -165,22 +171,19 @@ function sheetPersona(){
 function sheetProfile(){
   if (!authState.user) return sheetPersona();
   const avatar = profileAvatar();
-  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Edit profile</h2><p class="sheet-sub">Customize the name and avatar readers see on comments.</p>
-  <form data-profile-form class="card profile-form-grid">
-    <div style="display:flex;gap:12px;align-items:center"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="" style="width:100%;height:100%;object-fit:cover">`:I.user}</span><div class="faint" style="font-size:.78rem">Images upload to your private Reader folder path and are served by public URL.</div></div>
-    <input class="pill-input" name="display_name" value="${esc(authState.profile?.display_name || "")}" placeholder="Display name" autocomplete="name" style="text-align:left">
-    <input class="pill-input" name="username" value="${esc(authState.profile?.username || "")}" placeholder="username" autocomplete="username" style="text-align:left">
-    <input name="avatar" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
-    <input class="pill-input" name="avatar_url" value="${esc(authState.profile?.avatar_url || "")}" placeholder="Or paste image URL" style="text-align:left">
-    <div class="faint" data-profile-status style="font-size:.76rem;min-height:1em"></div>
-    <button class="btn story block" type="submit">${I.check}Save profile</button>
-  </form>`;
+  const frames = availableProfileFrames();
+  const frame = selectedProfileFrame(frames);
+  return `<div class="reader-profile"><button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><span class="reader-profile-kicker">Your account</span><h2>Profile</h2>
+    <div class="reader-profile-identity"><div class="reader-profile-avatar-wrap ${frame?"has-frame":""}" data-frame="${frame?.id || "none"}"><button type="button" class="reader-profile-avatar-button" data-act="profile-pick-avatar" aria-label="Change profile photo" title="Change profile photo"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="">`:I.user}</span>${frame?`<canvas class="reader-profile-frame-art" aria-hidden="true"></canvas>`:""}<span class="reader-profile-avatar-edit" aria-hidden="true">${I.camera}</span></button><input data-profile-avatar-input type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden></div><div class="reader-profile-person"><div class="reader-profile-name-row"><strong>${esc(accountLabel())}</strong><button type="button" data-act="profile-edit-name" aria-label="Change display name" title="Change display name">${I.pen}</button></div><form data-profile-name-form class="reader-profile-name-form" hidden><label for="reader-profile-name">Display name</label><input id="reader-profile-name" name="display_name" value="${esc(authState.profile?.display_name || "")}" maxlength="60" autocomplete="name" required placeholder="Your display name"><button type="submit" aria-label="Save display name" title="Save">${I.check}</button><button type="button" data-act="profile-cancel-name" aria-label="Cancel name change" title="Cancel">${I.x}</button></form><small>${esc(authState.user.email || "")}</small><span data-profile-status role="status" aria-live="polite"></span>${frame?`<div class="reader-profile-frame-picker" aria-label="Profile frame"><span>Profile frame</span><div>${frames.length>1?`<button type="button" data-act="profile-frame-prev" aria-label="Previous profile frame">${I.chevL}</button>`:""}<strong data-profile-frame-label>${esc(frame.label)}</strong>${frames.length>1?`<button type="button" data-act="profile-frame-next" aria-label="Next profile frame">${I.chevR}</button>`:""}</div></div>`:""}</div></div>
+    ${membershipProfileBanner()}
+    <nav class="reader-profile-links" aria-label="Account shortcuts"><a href="#/vault" data-nav="/vault">${I.vault}<span>Vault</span>${I.chevR}</a><a href="#/notifications" data-nav="/notifications">${I.bell}<span>Notifications</span>${I.chevR}</a><a href="#/my-shelf" data-nav="/my-shelf">${I.shelf}<span>My Shelf</span>${I.chevR}</a><a href="#/settings" data-nav="/settings">${I.cog}<span>Settings</span>${I.chevR}</a>${isAdmin()?`<a href="writer.html">${I.book}<span>Writer</span>${I.chevR}</a><a href="admin.html">${I.shield}<span>Admin CMS</span>${I.chevR}</a>`:""}</nav>
+    <div class="reader-profile-footer"><button type="button" data-act="reader-signout">Sign out</button></div></div>`;
 }
 function sheetWhatsNew(){
   return `<button type="button" class="close-x" data-act="dismiss-whats-new" aria-label="Close">${I.x}</button><h2>What's new</h2><p class="sheet-sub">Reader upgrades are live on your account.</p>
   <div class="whats-new-list">
     <div class="whats-new-item"><span class="icn">${I.bell}</span><div><b>Chapter notifications</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">New chapters now create relevant in-app alerts and browser popups when enabled for your access tier.</p><button class="btn sm ghost" data-sheet="notification-settings">Open notification settings</button></div></div>
-    <div class="whats-new-item"><span class="icn">${I.user}</span><div><b>Profile customization</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">Add an avatar, display name, and username for comments and account surfaces.</p><button class="btn sm ghost" data-sheet="profile">Edit profile</button></div></div>
+    <div class="whats-new-item"><span class="icn">${I.user}</span><div><b>Profile customization</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">Choose the name and photo shown with your comments.</p><button class="btn sm ghost" data-sheet="profile">Edit profile</button></div></div>
     <div class="whats-new-item"><span class="icn">${I.spark}</span><div><b>Site background art</b><p class="faint" style="font-size:.78rem;margin:.2rem 0 0">The app shell can now use the configured reader background image.</p><a class="btn sm ghost" href="#/settings" data-nav="/settings">Open settings</a></div></div>
   </div>
   <button class="btn story block" data-act="dismiss-whats-new">${I.check}Got it</button>`;
@@ -205,7 +208,7 @@ function sheetLock(chId){
   <div class="card" style="margin-bottom:14px"><p class="muted" style="font-size:.86rem;margin:0">${reasonFor(ch,r)}</p></div>
   <div class="col-flex" style="gap:9px">
     ${ch.state==='preview'?`<button class="btn story block" data-preview="${ch.id}" data-act="close-sheet">${I.eye}Read the preview</button>`:""}
-    ${r.state==='expired'?`<button class="btn story block" data-sheet="connect-provider">${I.sync}Renew membership access</button>`:`<button class="btn ${ch.state==='preview'?'ghost':'story'} block" data-sheet="connect-provider">${I.vault}Connect provider</button>`}
+    ${r.state==='expired'?`<button class="btn story block" data-act="open-membership">${I.sync}Renew membership access</button>`:`<button class="btn ${ch.state==='preview'?'ghost':'story'} block" data-act="open-membership">${I.vault}Unlock this chapter</button>`}
     <button class="btn ghost block" data-sheet="redeem">${I.key}Redeem an access key</button>
     <a class="btn ghost block" data-nav="/benefits">${I.spark}See what access unlocks</a>
     <a class="btn ghost block" data-nav="/support/check-access">${I.shield}Why is this locked?</a>
