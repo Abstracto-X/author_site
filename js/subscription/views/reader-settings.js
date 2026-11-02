@@ -6,7 +6,7 @@ VIEWS.settings = function(){
     ${readerPageHeading("Make yourself at home","A comfortable archive, on your terms.")}
     <div class="reader-settings-layout">
       <section class="reader-panel" aria-labelledby="appearance-title"><h2 id="appearance-title">Appearance</h2><p class="reader-note">Choose the atmosphere for your library. Chapter colors stay independent.</p>
-        <div class="reader-theme-options">${["dark","light"].map(theme=>`<button type="button" class="reader-theme-option ${store.theme===theme?'selected':''}" data-act="choose-site-theme" data-theme="${theme}" aria-pressed="${store.theme===theme}"><span class="theme-preview theme-preview-${theme}" aria-hidden="true"><i></i><i></i><i></i></span><span>${theme==='dark'?'After dark':'In the light'} ${store.theme===theme?I.check:''}</span></button>`).join("")}</div>
+        <div class="reader-theme-options">${[["dark","After dark"],["light","In the light"],["evil","Resident Evil"]].map(([theme,label])=>`<button type="button" class="reader-theme-option ${store.theme===theme?'selected':''}" data-act="choose-site-theme" data-theme="${theme}" aria-pressed="${store.theme===theme}"><span class="theme-preview theme-preview-${theme}" aria-hidden="true"><i></i><i></i><i></i></span><span>${label} ${store.theme===theme?I.check:''}</span></button>`).join("")}</div>
         ${toggleRow("appBackground","Background artwork","Use the site artwork behind archive pages",store.settings.appBackground)}
       </section>
       <section class="reader-panel" aria-labelledby="notifications-title"><h2 id="notifications-title">Stay in the story</h2><p class="reader-note">Choose how chapter alerts reach you.</p>${notificationPreferencesForm()}</section>

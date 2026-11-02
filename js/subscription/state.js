@@ -56,7 +56,7 @@ function loadStore(){
   // Site chrome and the chapter canvas intentionally have independent color modes.
   // Migrate legacy unified/preset values without changing the storage key.
   const legacyReaderTheme = store.settings.readerTheme || store.theme;
-  store.theme = store.theme === "light" ? "light" : "dark";
+  store.theme = ["light","evil"].includes(store.theme) ? store.theme : "dark";
   store.settings.readerTheme = ["dark","light","parchment","custom"].includes(legacyReaderTheme)
     ? legacyReaderTheme
     : legacyReaderTheme === "sepia" ? "parchment" : "dark";

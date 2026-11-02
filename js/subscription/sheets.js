@@ -12,8 +12,9 @@ function openSheet(builder, opts){
   sheetReturnFocus = opener;
   const scrim = document.querySelector(".scrim") || (()=>{const d=document.createElement("div");d.className="scrim";document.body.appendChild(d);return d;})();
   const sheet = document.querySelector(".sheet") || (()=>{const d=document.createElement("div");d.className="sheet";document.body.appendChild(d);return d;})();
-  sheet.classList.remove("membership-sheet");
+  sheet.classList.remove("membership-sheet", "profile-evil-sheet");
   sheet.innerHTML = `<span class="grip"></span>${builder()}`;
+  sheet.classList.toggle("profile-evil-sheet", !!sheet.querySelector(".reader-profile--evil"));
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
   sheet.setAttribute("aria-label", sheet.querySelector("h2")?.textContent || "Reader dialog");
@@ -173,7 +174,8 @@ function sheetProfile(){
   const avatar = profileAvatar();
   const frames = availableProfileFrames();
   const frame = selectedProfileFrame(frames);
-  return `<div class="reader-profile"><button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><span class="reader-profile-kicker">Your account</span><h2>Profile</h2>
+  const evilTheme = profileHasEvilTheme();
+  return `<div class="reader-profile${evilTheme?" reader-profile--evil":""}"><button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><span class="reader-profile-kicker">Your account</span><h2>Profile</h2>
     <div class="reader-profile-identity"><div class="reader-profile-avatar-wrap ${frame?"has-frame":""}" data-frame="${frame?.id || "none"}"><button type="button" class="reader-profile-avatar-button" data-act="profile-pick-avatar" aria-label="Change profile photo" title="Change profile photo"><span class="profile-avatar">${avatar?`<img src="${esc(avatar)}" alt="">`:I.user}</span>${frame?`<canvas class="reader-profile-frame-art" aria-hidden="true"></canvas>`:""}<span class="reader-profile-avatar-edit" aria-hidden="true">${I.camera}</span></button><input data-profile-avatar-input type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden></div><div class="reader-profile-person"><div class="reader-profile-name-row"><strong>${esc(accountLabel())}</strong><button type="button" data-act="profile-edit-name" aria-label="Change display name" title="Change display name">${I.pen}</button></div><form data-profile-name-form class="reader-profile-name-form" hidden><label for="reader-profile-name">Display name</label><input id="reader-profile-name" name="display_name" value="${esc(authState.profile?.display_name || "")}" maxlength="60" autocomplete="name" required placeholder="Your display name"><button type="submit" aria-label="Save display name" title="Save">${I.check}</button><button type="button" data-act="profile-cancel-name" aria-label="Cancel name change" title="Cancel">${I.x}</button></form><small>${esc(authState.user.email || "")}</small><span data-profile-status role="status" aria-live="polite"></span>${frame?`<div class="reader-profile-frame-picker" aria-label="Profile frame"><span>Profile frame</span><div>${frames.length>1?`<button type="button" data-act="profile-frame-prev" aria-label="Previous profile frame">${I.chevL}</button>`:""}<strong data-profile-frame-label>${esc(frame.label)}</strong>${frames.length>1?`<button type="button" data-act="profile-frame-next" aria-label="Next profile frame">${I.chevR}</button>`:""}</div></div>`:""}</div></div>
     ${membershipProfileBanner()}
     <nav class="reader-profile-links" aria-label="Account shortcuts"><a href="#/vault" data-nav="/vault">${I.vault}<span>Vault</span>${I.chevR}</a><a href="#/notifications" data-nav="/notifications">${I.bell}<span>Notifications</span>${I.chevR}</a><a href="#/my-shelf" data-nav="/my-shelf">${I.shelf}<span>My Shelf</span>${I.chevR}</a><a href="#/settings" data-nav="/settings">${I.cog}<span>Settings</span>${I.chevR}</a>${isAdmin()?`<a href="writer.html">${I.book}<span>Writer</span>${I.chevR}</a><a href="admin.html">${I.shield}<span>Admin CMS</span>${I.chevR}</a>`:""}</nav>

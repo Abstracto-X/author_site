@@ -403,6 +403,7 @@ Recent reader notification/profile changes:
 | Function | Purpose |
 |---|---|
 | `membershipTier` / `membershipTierCards` | Map the four known tier names to decorative emblems and neutral tier previews; never determine access. |
+| `profileHasEvilTheme` | Apply the Resident Evil Profile skin only when current active entitlements include that tier, independent of the chosen decorative frame. |
 | `membershipProfileBanner` | Render entitlement-backed tier color and status within signed-in Profile, with distinct admin, unconnected, and connection-needs-attention states. |
 | `availableProfileFrames` / `selectedProfileFrame` / `shiftProfileFrame` | Offer only the current verified membership tier's and lower-tier portrait frames; default to the current tier and persist the selected art per user in local browser storage. |
 | `loadProfileFrameArt` / `renderProfileFrame` | Cache the original transparent PNGs and draw the selected portrait frame to a high-quality canvas at its displayed pixel size, avoiding CSS sprite downscale aliasing; CSS art remains a load/error fallback. |

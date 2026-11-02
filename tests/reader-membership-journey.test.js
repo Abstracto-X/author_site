@@ -46,12 +46,37 @@ test("guest journey offers account creation and visibly gates membership connect
 });
 
 test("signed-in tier display lives in profile and comes only from an active entitlement", () => {
-  const instance = journey({ user:{ email:"reader@example.com" }, entitlements:[{ tier_name:"Resident Nemesis", tier_rank:3, provider:"patreon" }] });
-  const html = instance.membershipProfileBanner();
-  assert.match(html, /Resident Nemesis/);
-  assert.match(html, /Membership active/);
-  assert.match(html, /profile-tier nemesis/);
-  assert.doesNotMatch(instance.sheetMembershipJourney(), /Resident Nemesis/);
+  for (const [tierName, cls, banner] of [
+    ["Resident Licker", "licker", "tier-banner-licker.png"],
+    ["Resident Tyrant", "tyrant", "tier-banner-tyrant.png"],
+    ["Resident Nemesis", "nemesis", "tier-banner-nemesis.png"],
+    ["Resident Evil", "evil", "tier-banner-evil.png"]
+  ]) {
+    assert.ok(fs.statSync(path.join(root, "assets/profile-frames", banner)).size > 50_000);
+    const instance = journey({ user:{ email:"reader@example.com" }, entitlements:[{ tier_name:tierName, tier_rank:3, provider:"patreon" }] });
+    const html = instance.membershipProfileBanner();
+    assert.match(html, new RegExp(tierName));
+    assert.match(html, /Membership active/);
+    assert.match(html, new RegExp(`profile-tier ${cls} profile-tier-banner`));
+    assert.match(html, new RegExp(`assets/profile-frames/${banner}`));
+    assert.doesNotMatch(html, /Connected through/);
+    assert.doesNotMatch(instance.sheetMembershipJourney(), new RegExp(tierName));
+  }
+});
+
+test("Evil Profile skin follows verified access, not the selected portrait frame", () => {
+  const user = { id:"reader-1", email:"reader@example.com" };
+  const evil = journey({ user, entitlements:[{ tier_name:"Resident Evil", tier_rank:40 }] });
+  assert.equal(evil.profileHasEvilTheme(),true);
+  evil.activeEntitlements = () => [{ tier_name:"Resident Nemesis", tier_rank:30 }];
+  assert.equal(evil.profileHasEvilTheme(),false);
+  const sheets = fs.readFileSync(path.join(root, "js/subscription/sheets.js"), "utf8");
+  assert.match(sheets, /const evilTheme = profileHasEvilTheme\(\)/);
+  assert.match(sheets, /reader-profile--evil/);
+  assert.match(sheets, /classList\.remove\("membership-sheet", "profile-evil-sheet"\)/);
+  assert.match(sheets, /classList\.toggle\("profile-evil-sheet"/);
+  const css = fs.readFileSync(path.join(root, "styles/membership-journey.css"), "utf8");
+  assert.match(css, /\.sheet\.profile-evil-sheet\{[^}]*background:#000/);
 });
 
 test("profile frames stop at the reader's highest verified tier and default to it", () => {

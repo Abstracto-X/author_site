@@ -2,27 +2,54 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
-## 2026-11-03 02:06 Asia/Kolkata — Resident Evil Profile theme research
+## 2026-11-03 04:20 Asia/Kolkata — Admin-controlled test account tier override plan
 
 Status: TODO
+
+Area:
+- writer / reader / database / auth
+
+Files touched:
+- `PROJECT_STATE.md` (planning only)
+
+Summary:
+- Owner wants a Writer hamburger-menu popup to change the real effective tier of the separate Divine Devil test account. No implementation or production data change has been made for this request.
+- Live checks confirm that test account `56ea0e7f-b744-4b5f-af6f-134eb167625f` has active manual Evil and Patreon Nemesis entitlements. Simply adding or changing one row cannot reliably simulate Free/Licker/Tyrant, and provider sync can reactivate Patreon rows.
+- Effective access is determined by `has_active_entitlement` for chapter catalog/reader and chapter RLS; `get_my_entitlements` drives the reader Profile; mature gallery access uses separate `has_active_gallery_subscription`. A dedicated test override should take precedence in all three paths while leaving provider/manual rows intact.
+
+Remaining work:
+- Prepare an owner-reviewed timestamped migration for an admin-only, account-scoped override and auditable set/reset RPCs; update all effective-access paths, reader fallback behavior, and a compact Writer modal/menu. Do not apply the existing-schema migration with the restricted AI role.
+- Add tests for Free and all four tiers, reset, non-admin rejection, unrelated readers, provider resync, and reader refresh behavior; verify live after owner runs the migration.
+
+Risks / notes:
+- Keep the override confined to the named testing account, preserve its original grants and login session, and ensure direct entitlement fallback cannot bypass an active override.
+- Already-loaded chapter content may remain visible until navigation/reload under the reader's existing non-interrupting refresh behavior; new requests must use the override immediately.
+
+Verification needed:
+- Owner review of migration and the resulting Writer/reader UI; live account-level checks after manual migration application.
+
+## 2026-11-03 03:22 Asia/Kolkata — Tier banners and minimal pure-black/red Resident Evil Profile sheet
+
+Status: NEEDS REVIEW
 
 Area:
 - reader / Profile design
 
 Files touched:
-- `PROJECT_STATE.md` (research note only; no runtime changes)
+- `assets/profile-frames/tier-banner-*.png`, `js/subscription/membership-journey.js`, `js/subscription/sheets.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
 
 Summary:
-- Research direction: a pure-black Resident Evil account sheet with restrained crimson graffiti marks at the margins, distressed/stenciled display accents, and clean readable account controls. Use the two supplied red portrait frames as the visual anchor, not as a repeated full-panel texture. Current Profile inherits the global `--modal-bg` and gold accent; the existing `reference/resident-ui-toolkit/` leans crimson gothic rather than street-art. External inspiration reviewed: Techland artist Emil Cegielski's Dying Light 2 mural/sticker project and the Burnt Chapter horror collage, with WCAG 2.2 contrast/reduced-motion constraints.
+- Cropped the owner's 4-tier artwork into `tier-banner-licker.png`, `tier-banner-tyrant.png`, `tier-banner-nemesis.png`, and `tier-banner-evil.png` under `assets/profile-frames/` (`492x192` each) and replaced the text-based active-membership block in `membershipProfileBanner()` with the corresponding tier banner image.
+- Simplified `.sheet.profile-evil-sheet` to a pure `#000` background and red (`#e5192b`) UI accent variables with no custom fonts or decorative pseudo-elements.
 
 Remaining work:
-- After design sign-off, scope the Evil skin to the verified highest active tier on the Profile sheet, independent of which decorative portrait frame is selected. Preserve all account controls and lower-tier/current global themes.
+- Owner to review the tier banners and Profile sheet in browser.
 
 Risks / notes:
-- Pure black must remain the panel base; distressed marks should be decoration only and not interfere with text, focus indicators, or the mobile layout. Do not copy third-party artwork or ship a new font/CDN dependency.
+- Admin-only and unconnected/no-tier fallback states retain their text banners; active Licker/Tyrant/Nemesis/Evil tiers render their cropped banner artwork.
 
 Verification needed:
-- Visual QA at desktop, 390px, and 320px; light/dark global modes, Evil entitlement expiry/downgrade, keyboard focus, contrast, and reduced motion.
+- Refresh the reader and open Profile to confirm the tier banner and black/red Profile styling.
 
 ## 2026-11-02 23:18 Asia/Kolkata — Guest onboarding and Profile sign-off
 

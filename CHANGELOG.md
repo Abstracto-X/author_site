@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-03 03:22 Asia/Kolkata — Crop tier banners for Profile and simplify Resident Evil Profile sheet
+
+Area: subscription reader / Profile
+
+- Cropped the supplied 4-tier artwork into `assets/profile-frames/tier-banner-licker.png`, `tier-banner-tyrant.png`, `tier-banner-nemesis.png`, and `tier-banner-evil.png` (`492x192` each) and updated `membershipProfileBanner()` to display the active tier's banner image in place of the text status block.
+- Simplified `.sheet.profile-evil-sheet` to only set a pure `#000` background and red UI accent variables (`--accent`, `--tier`, borders, and dark surfaces), removing all custom fonts, pseudo-element decorations, and layout overrides.
+- Files: `assets/profile-frames/tier-banner-*.png`, `js/subscription/membership-journey.js`, `js/subscription/sheets.js`, `styles/membership-journey.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: ran `tests/reader-membership-journey.test.js` and syntax checks.
+
 ## 2026-11-03 01:22 Asia/Kolkata — Fill portrait openings and add a manual Evil grant
 
 Area: subscription reader / production access

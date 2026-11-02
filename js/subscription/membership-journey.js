@@ -4,10 +4,10 @@
 const MEMBERSHIP_WELCOME_KEY = "aether-membership-welcome-v1";
 let membershipEmailMode = "signin";
 const MEMBERSHIP_TIERS = [
-  { name:"Resident Licker", className:"licker", mark:"I" },
-  { name:"Resident Tyrant", className:"tyrant", mark:"II" },
-  { name:"Resident Nemesis", className:"nemesis", mark:"III" },
-  { name:"Resident Evil", className:"evil", mark:"IV" }
+  { name:"Resident Licker", className:"licker", mark:"I", banner:"assets/profile-frames/tier-banner-licker.png" },
+  { name:"Resident Tyrant", className:"tyrant", mark:"II", banner:"assets/profile-frames/tier-banner-tyrant.png" },
+  { name:"Resident Nemesis", className:"nemesis", mark:"III", banner:"assets/profile-frames/tier-banner-nemesis.png" },
+  { name:"Resident Evil", className:"evil", mark:"IV", banner:"assets/profile-frames/tier-banner-evil.png" }
 ];
 const PROFILE_FRAMES = [
   { id:"licker", label:"Resident Licker", tierIndex:0 },
@@ -66,6 +66,10 @@ function membershipTier(name){
   const value = String(name || "").toLowerCase();
   return MEMBERSHIP_TIERS.find(tier => value.includes(tier.name.toLowerCase())) || null;
 }
+function profileHasEvilTheme(){
+  return activeEntitlements().some(entitlement =>
+    membershipTier(entitlement.tier_name || entitlement.name || entitlement.tier)?.className === "evil");
+}
 function membershipTierCards(){
   return MEMBERSHIP_TIERS.map(tier => `<div class="membership-tier ${tier.className}"><span class="membership-tier-art" aria-hidden="true">${tier.mark}</span><div><strong>${tier.name}</strong><small>Explore this tier on the membership page</small></div></div>`).join("");
 }
@@ -95,6 +99,9 @@ function membershipProfileBanner(){
   if (best) {
     const name = best.tier_name || best.name || "Member access";
     const tier = membershipTier(name);
+    if (tier?.banner) {
+      return `<section class="profile-tier ${tier.className} profile-tier-banner" aria-label="Membership active: ${esc(name)}"><img src="${esc(tier.banner)}" alt="${esc(name)}"></section>`;
+    }
     const provider = String(best.provider || best.source || "").toLowerCase();
     const source = provider === "patreon" ? "Patreon" : provider === "boosty_discord" ? "Boosty" : provider === "access_key" ? "access key" : "your account";
     return `<section class="profile-tier ${tier?.className || "member"}" aria-label="Membership status"><span class="profile-tier-state">Membership active</span><strong>${esc(name)}</strong><p>Connected through ${esc(source)}. Chapters included with your tier are available to read.</p><button class="profile-tier-link" data-nav="/vault">View your access ${I.chevR}</button></section>`;

@@ -89,6 +89,9 @@
 .profile-tier:after{content:"";position:absolute;width:105px;height:105px;right:-30px;top:-42px;border:1px solid color-mix(in srgb,var(--tier) 28%,transparent);border-radius:50%;pointer-events:none}
 .profile-tier-state{display:block;margin-bottom:6px;color:var(--tier);font:700 10px var(--ui);letter-spacing:.12em;text-transform:uppercase}.profile-tier strong{display:block;color:var(--text);font:400 24px/1.2 var(--serif)}.profile-tier p{margin:8px 0 0;max-width:49ch;color:var(--text-dim);font:12px/1.55 var(--ui)}
 .profile-tier-link{display:inline-flex;align-items:center;gap:5px;margin-top:13px;padding:0;color:var(--tier);font:600 11px var(--ui)}.profile-tier-link svg{width:13px;height:13px}
+.profile-tier.profile-tier-banner{padding:0;background:#000}
+.profile-tier.profile-tier-banner:after{display:none}
+.profile-tier.profile-tier-banner img{display:block;width:100%;height:auto}
 .reader-profile-links{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;margin-top:18px;border-top:1px solid var(--border-2)}
 .reader-profile-links a{display:flex;align-items:center;gap:9px;min-width:0;min-height:40px;border-bottom:1px solid var(--border-2);color:var(--text-dim);font:600 11px var(--ui);text-decoration:none}
 .reader-profile-links a:hover,.reader-profile-links a:focus-visible{color:var(--accent)}
@@ -98,6 +101,9 @@
 .reader-profile-footer{display:flex;justify-content:flex-end;margin-top:19px;padding-top:14px;border-top:1px solid var(--border-2)}
 .reader-profile-footer button{padding:0;color:var(--text-dim);font:11px var(--ui)}
 .reader-profile-footer button:hover{color:var(--accent)}
+/* Resident Evil: pure black sheet background with red UI accents. */
+.sheet.profile-evil-sheet{color-scheme:dark;color:#f3efea;background:#000;--modal-bg:#000;--surface:#000;--surface-solid:#050505;--surface-2:#120305;--surface-3:#1c0509;--surface-inset:#050505;--accent:#e5192b;--on-accent:#fff;--text:#f3efea;--text-dim:#b5b1a8;--text-faint:#85827b;--border:rgb(229 25 43/.28);--border-2:rgb(229 25 43/.2)}
+.sheet.profile-evil-sheet .profile-tier.evil{--tier:#e5192b}
 @media(max-width:700px){.membership-sheet.sheet{left:0;right:0;top:auto;bottom:0;width:100%;max-height:90dvh;border-radius:12px 12px 0 0!important;transform:translateY(100%)}.membership-sheet.sheet.open{transform:translateY(0)}.membership-journey,.membership-subscribe,.membership-guest-notice{padding:27px 22px calc(25px + env(safe-area-inset-bottom))}#membership-widget{bottom:calc(82px + env(safe-area-inset-bottom))}}
 @media(max-width:430px){.membership-tier-list,.membership-subscribe-actions,.membership-provider-actions{grid-template-columns:1fr}.membership-tier-list{gap:0}}
 @media(prefers-reduced-motion:reduce){.membership-sheet.sheet,#membership-widget{transition:none}}

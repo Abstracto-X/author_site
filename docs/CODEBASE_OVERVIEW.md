@@ -124,6 +124,8 @@ The first loaded **guest** visit opens the account sheet after auth and library 
 
 Profile portrait frames now draw the original transparent art through a high-quality canvas downscale at the displayed pixel size. The CSS sprite image remains only as a load/error fallback. The canvas redraws when the selected frame or viewport size changes; this avoids the pale-pixel aliasing observed when the full sprite was shrunk as a CSS background.
 
+The Profile sheet has a dedicated pure-black/crimson Resident Evil presentation when `activeEntitlements()` includes the Evil tier. This is a local account-sheet skin only: it does not change the site theme, the reader's selected portrait frame, provider state, or chapter access. `openSheet()` removes and reapplies the sheet skin on each build so another account/dialog cannot inherit it.
+
 ### Reader data flow
 
 1. Browser loads `site-config.js`, the pinned self-hosted Supabase browser SDK, and the reader modules. Reader CSS/scripts use a deployment-version query so a release receives fresh assets without deleting authentication or preference storage. `config.js` creates the empty runtime data contract; Supabase fills story/update data later.
