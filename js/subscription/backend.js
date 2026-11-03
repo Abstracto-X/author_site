@@ -397,7 +397,7 @@ async function loadBackendLibrary(options = {}){
         .select("id, character_id, image_url, caption, image_tags, sort_order, created_at, characters!inner(id, story_id, name, role_title, profile_image_url)")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
-        .limit(60)),
+        .limit(500)),
       loadOptionalBackendRows("chapter feed images", () => client
         .from("chapter_feed_images")
         .select("id, story_id, chapter_id, image_url, source_kind, caption, sort_order, blur_for_guests")

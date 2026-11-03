@@ -138,8 +138,8 @@ test('home artwork keeps true newest-first order without grouping mature images'
   h.run(`D.GALLERY_IMAGES=[...Array.from({length:24},(_,i)=>({id:'safe'+i,story_id:'s1',image_url:'https://example.com/s'+i+'.jpg',image_tags:[],created_at:new Date(2026,0,24-i).toISOString()})),...Array.from({length:5},(_,i)=>({id:'mature'+i,story_id:'s1',image_url:'https://example.com/m'+i+'.jpg',image_tags:['NSFW'],created_at:new Date(2025,0,5-i).toISOString()}))];`);
   assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),24);
   h.run('testEntitled=true');
-  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,24).filter(item=>homeIsMatureGalleryImage(item.image)).length'),0);
-  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(24).filter(item=>homeIsMatureGalleryImage(item.image)).length'),5);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,10).filter(item=>homeIsMatureGalleryImage(item.image)).length'),5); assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(0,10).filter(item=>!homeIsMatureGalleryImage(item.image)).length'),5);
+  assert.equal(h.run('homeGalleryItems(D.STORIES[0]).slice(10).filter(item=>homeIsMatureGalleryImage(item.image)).length'),0); h.run('route.params.slug="story";VIEWS.gallery()'); assert.equal(h.run('State.gallerySort'),'shuffle'); assert.equal(h.run('galleryResultMarkup().visible.slice(0,10).filter(img=>homeIsMatureGalleryImage(img)).length'),5);
   assert.equal(h.run('homeGalleryItems(D.STORIES[0]).length'),29);
 });
 test('grid and deck openers use the same image indices as lightbox',()=>{
@@ -205,7 +205,7 @@ test('desktop shell is edge-latched and home artwork scrolls vertically',()=>{
 test('masonry spans follow each artwork natural aspect ratio',()=>{
   const h=harness();
   assert.ok(h.run('homeMasonrySpan(260,600,1000)') > h.run('homeMasonrySpan(260,1000,600)'));
-  assert.equal(h.run('homeMasonrySpan(0,1000,600)'),1);
+  assert.equal(h.run('homeMasonrySpan(0,1000,600)'),1); assert.equal(h.run('homeMasonrySpan(240,1000,600,4,8)'),13); assert.match(read('styles/reader-redesign.css'),/\.rh-masonry \.traditional-gallery-card img \{[^}]*height: 100%; min-height: 0; object-fit: cover;/);
   assert.match(read('js/subscription/views/home-library.js'),/ResizeObserver/);
 });
 

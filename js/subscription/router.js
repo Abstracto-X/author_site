@@ -57,7 +57,7 @@ function render(options = {}){
   const focused = options.preserveScroll ? document.activeElement : null;
   const focusData = focused?.dataset ? Object.entries(focused.dataset).filter(([key])=>["act","homeLayout","homeTab","homeTier","tag"].includes(key)) : [];
   if (typeof closeGalleryLightbox === "function" && document.getElementById("gallery-lightbox")) closeGalleryLightbox();
-  route = parseHash();
+  const prevRouteName = route.name; route = parseHash(); if (!options.preserveScroll) { if (route.name === "home") State.homeGalleryShuffleContext = ""; if ((route.name === "gallery" || route.name === "galleryChar") && prevRouteName !== route.name) State.galleryShuffleContext = ""; }
   const main = document.getElementById("main");
   const inReader = route.name === "read";
   const inStudio = /^studio/.test(route.name);

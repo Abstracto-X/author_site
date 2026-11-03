@@ -1,6 +1,74 @@
 # Project State
 
+## 2026-11-03 06:50 Asia/Kolkata — Home masonry tile fix and 50/50 NSFW/normal gallery randomizer
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / homepage & gallery
+
+Files touched:
+- `styles/reader-redesign.css`, `js/subscription/views/home-library.js`, `js/subscription/views/gallery.js`, `js/subscription/state.js`, `js/subscription/router.js`, `js/subscription/backend.js`, `index.html`, `tests/reader-redesign.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Eliminated the dark rectangular gap under images in the Home `.rh-masonry` panel by aligning `homeMasonrySpan()` / `sizeHomeGalleryTiles()` with the actual `grid-auto-rows` (`4px`) and `row-gap` (`8px`) and making `.traditional-gallery-card`, `button`, and `img` fill 100% of their grid cell with `object-fit: cover` and transparent backgrounds.
+- Configured a 50/50 NSFW and normal image randomizer (`buildBalancedGalleryOrder`) for both the Home screen and the Unified Gallery (now defaulting to `Shuffled`), and raised the `character_gallery_images` query limit from 60 to 500 so all published NSFW and normal artworks participate.
+
+Remaining work:
+- Owner visual verification on Home and Gallery in the browser.
+
+Risks / notes:
+- In-page actions (`SHOW NSFW` / `BLUR NSFW`, `Load more artwork`, lightbox navigation) preserve the current session shuffle so images do not jump while interacting; reloading or navigating back to Home/Gallery generates a fresh 50/50 randomized order.
+- Guests still receive only normal (non-NSFW) artwork, randomized on each visit.
+
+Verification needed:
+- Refresh `#/` and `#/gallery`, verify that masonry tiles fit tightly with no dark bottom border/gap, and confirm that reloading randomizes the displayed images with a 50/50 mixture of NSFW and normal images.
+
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
+
+## 2026-11-03 06:40 Asia/Kolkata — Reader Profile edit live QA
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / Profile / auth
+
+Files touched:
+- `js/subscription/auth.js`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Live policies confirmed `profiles` has own-row UPDATE/SELECT but no reader INSERT; test-account profile row exists. Profile save used `upsert`, causing the reported RLS error. Replaced it with an update scoped to the authenticated user ID; omitted username/avatar/name values remain preserved by existing logic.
+
+Remaining work:
+- Refresh reader, edit display name and avatar, confirm both persist after reload. Repeat with a normal reader account if available.
+
+Risks / notes:
+- If an account lacks a `profiles` row, update now reports a missing-row error instead of trying an unauthorized insert; investigate profile creation/trigger separately in that case. No login or entitlement changes.
+
+Verification needed:
+- Owner-led browser edit checks and confirmation of successful storage upload plus profile URL update.
+
+## 2026-11-03 06:35 Asia/Kolkata — Resident Evil site theme entitlement gate QA
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / appearance
+
+Files touched:
+- `js/subscription/utils.js`, `js/subscription/views/reader-settings.js`, `js/subscription/events.js`, `js/subscription/auth.js`, `js/subscription/chrome.js`, `styles/reader-foundation.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Locally gated the Evil site theme behind ready, active Resident Evil access. Settings visibly disables the option for other readers, the topbar switcher skips it, and saved Evil appearance falls back to dark during auth loading or confirmed downgrade/sign-out. No database migration or login change.
+
+Remaining work:
+- Owner browser QA for guest, Licker/Tyrant/Nemesis, Evil, and an account downgraded while Evil theme is selected; verify theme choices and chapter-reader appearance.
+
+Risks / notes:
+- This is a client-side presentation lock, not security for artwork/CSS assets; an advanced user can still manipulate local browser code. The existing one-time Evil auto-activation remains a user preference after later manual theme changes.
+
+Verification needed:
+- Confirm Settings, topbar cycling, saved Evil preference during auth startup, and downgrade behavior across reload and active tabs.
 
 ## 2026-11-03 05:35 Asia/Kolkata — Topbar horizontal tier banners, Gallery / Resident Evil theme icons, and Evil theme sheet positioning fix
 

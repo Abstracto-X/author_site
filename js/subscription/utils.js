@@ -10,19 +10,30 @@ const THEMES = [
 function normalizeTheme(id) {
   return id === "light" || id === "evil" ? id : "dark";
 }
+function canUseEvilSiteTheme(){
+  return !!authState.ready && !!authState.user && typeof profileHasEvilTheme === "function" && profileHasEvilTheme();
+}
+function effectiveSiteTheme(){
+  const theme=normalizeTheme(store.theme);
+  return theme==="evil" && !canUseEvilSiteTheme() ? "dark" : theme;
+}
 function applyTheme(){
-  const theme = normalizeTheme(store.theme);
+  const theme = effectiveSiteTheme();
   document.documentElement.setAttribute("data-theme", theme);
 }
 function setTheme(id){
   const theme = normalizeTheme(id);
-  store.theme = theme;
+  store.theme = theme==="evil" && !canUseEvilSiteTheme() ? "dark" : theme;
   saveStore();
   applyTheme();
 }
+function reconcileSiteThemeAccess(){
+  if (authState.ready && store.theme==="evil" && !canUseEvilSiteTheme()) setTheme("dark");
+  else applyTheme();
+}
 function toggleSiteTheme(){
-  const order = ["dark", "evil", "light"];
-  setTheme(order[(order.indexOf(normalizeTheme(store.theme)) + 1) % order.length]);
+  const order = canUseEvilSiteTheme() ? ["dark", "evil", "light"] : ["dark", "light"];
+  setTheme(order[(order.indexOf(effectiveSiteTheme()) + 1) % order.length]);
 }
 function normalizeReaderTheme(id){
   return ["dark","light","parchment","custom"].includes(id) ? id : "dark";

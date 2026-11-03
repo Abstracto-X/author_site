@@ -171,6 +171,33 @@ test("explicit Free test access stays Free even with a connected provider", () =
   assert.match(backendSource, /!\(authState\.entitlements \|\| \[\]\)\.some\(e => e\.source === "test_override"\)/);
 });
 
+test("Resident Evil site theme is unavailable without verified Evil access and reverts after downgrade", () => {
+  const utils = fs.readFileSync(path.join(root, "js/subscription/utils.js"), "utf8");
+  const source = utils.slice(utils.indexOf("const THEMES ="), utils.indexOf("function normalizeReaderTheme("));
+  let eligible = false;
+  const attrs = {};
+  const ctx = { authState:{ready:false,user:{id:"reader-1"}}, store:{theme:"evil"}, profileHasEvilTheme:()=>eligible,
+    saveStore:()=>{}, document:{documentElement:{setAttribute:(key,value)=>{attrs[key]=value;}}} };
+  vm.createContext(ctx);
+  vm.runInContext(source,ctx);
+  ctx.applyTheme();
+  assert.equal(attrs["data-theme"],"dark");
+  ctx.authState.ready = true;
+  ctx.reconcileSiteThemeAccess();
+  assert.equal(ctx.store.theme,"dark");
+  ctx.setTheme("evil");
+  assert.equal(ctx.store.theme,"dark");
+  ctx.toggleSiteTheme();
+  assert.equal(ctx.store.theme,"light");
+  eligible = true;
+  ctx.setTheme("evil");
+  assert.equal(attrs["data-theme"],"evil");
+  eligible = false;
+  ctx.reconcileSiteThemeAccess();
+  assert.equal(ctx.store.theme,"dark");
+  assert.equal(attrs["data-theme"],"dark");
+});
+
 test("signed-in startup never opens onboarding", () => {
   const instance = journey({ user:{ email:"reader@example.com" } });
   instance.store.membershipJourneyPending = true;
@@ -198,7 +225,7 @@ test("editing only the display name preserves the stored username and avatar", a
   let saved;
   const context = {
     authState:{ user:{ id:"reader-1" }, profile:{ username:"existing-handle", display_name:"Old", avatar_url:"https://example.test/avatar.jpg" } },
-    getSupabase:()=>({ from:()=>({ upsert:record=>{ saved=record; return { select:()=>({ single:async()=>({ data:record, error:null }) }) }; } }) }),
+    getSupabase:()=>({ from:()=>({ update:record=>{ saved=record; return { eq:(field,id)=>{ assert.equal(field,"id"); assert.equal(id,"reader-1"); return { select:()=>({ single:async()=>({ data:record, error:null }) }) }; } }; } }) }),
     uploadReaderAvatar:async()=>{ throw new Error("unexpected upload"); }
   };
   const update = vm.runInNewContext(`${fn}\nupdateReaderProfile`, context);
@@ -214,7 +241,7 @@ test("editing only the avatar preserves name and username", async () => {
   let saved;
   const context = {
     authState:{ user:{ id:"reader-1" }, profile:{ username:"existing-handle", display_name:"Existing name", avatar_url:"old.jpg" } },
-    getSupabase:()=>({ from:()=>({ upsert:record=>{ saved=record; return { select:()=>({ single:async()=>({ data:record, error:null }) }) }; } }) }),
+    getSupabase:()=>({ from:()=>({ update:record=>{ saved=record; return { eq:(field,id)=>{ assert.equal(field,"id"); assert.equal(id,"reader-1"); return { select:()=>({ single:async()=>({ data:record, error:null }) }) }; } }; } }) }),
     uploadReaderAvatar:async()=>"new.jpg"
   };
   const update = vm.runInNewContext(`${fn}\nupdateReaderProfile`, context);
@@ -274,6 +301,7 @@ test("topbar replaces Active · {Tier} text pill with cropped tier banner artwor
     ctx.SITE_NAME = "EvilArchives";
     ctx.store = { notifs:[], theme:"dark", readerNavCollapsed:false };
     ctx.persona = () => ({ signedIn:true, level:30, tier:tierName });
+    ctx.effectiveSiteTheme = () => ctx.store.theme;
     vm.runInContext(chromeSource, ctx);
     const html = ctx.topbar();
     assert.match(html, new RegExp(`class="access-chip access-chip-banner tier-${cls}"`));
@@ -285,6 +313,7 @@ test("topbar replaces Active · {Tier} text pill with cropped tier banner artwor
   const guestCtx = journey();
   guestCtx.SITE_NAME = "EvilArchives";
   guestCtx.store = { notifs:[], theme:"dark", readerNavCollapsed:false };
+  guestCtx.effectiveSiteTheme = () => guestCtx.store.theme;
   guestCtx.persona = () => ({ signedIn:false, level:0, tier:"" });
   vm.runInContext(chromeSource, guestCtx);
   const guestHtml = guestCtx.topbar();

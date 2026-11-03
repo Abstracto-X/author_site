@@ -8,7 +8,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 |---|---|---|
 | `chrome.js` | `readerNavItems()` / `readerNavLink()` / `sidenav(active)` / `bottomnav(active)` | Collapsible 224px/76px desktop navigation rail (`store.sidebarCollapsed`) and 5-tab mobile bottom bar with `More` sheet. |
 | `chrome.js` | `readerPageHeading(title, sub, actions)` / `readerEmptyState(icon, title, sub, action)` | Shared header and SVG-bounded empty-state components used across `.reader-workspace` views. |
-| `views/reader-settings.js` | `VIEWS.settings()` | Dedicated `#/settings` workspace for site theme (`dark`/`light`), background artwork toggle, notification preferences, and chapter typography guidance. |
+| `views/reader-settings.js` | `VIEWS.settings()` | Dedicated `#/settings` workspace for site theme; the Resident Evil option remains visible but disabled without verified Evil access. Also owns background artwork, notification preferences, and chapter typography guidance. |
 | `utils.js` | `applyBgSettings(story)` | Honors `store.settings.appBackground` before applying `data-bg-mode` so disabling Background artwork turns off `#global-bg`. |
 | `views/home-library.js` | `libraryStoryCard(s)` / `VIEWS.library()` | Two-zone `.reader-workspace.library-page` with search/filter toolbar, story dossier showcase cards, and `Pinned to My Shelf`. |
 | `views/story-reader.js` | `storySubnav(s, active)` / `VIEWS.story()` / `VIEWS.chapters()` / `VIEWS.recap()` / `VIEWS.extras()` / `VIEWS.storyUpdates()` | Shared story orientation bar (`Overview`, `Chapters`, `Recap`, `Extras`, `Updates`, `Gallery`), two-column story hub with unified progress and Curated latest releases, and segmented chapter catalog sort controls. |
@@ -24,7 +24,8 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | `views/home-library.js` | Active `VIEWS.home()` | Reference hero and split archive with retained Multigrid, progress/follow/access, tier filters and incremental loading. |
 | `views/home-library.js` | `homeReferenceChapterCard(item, index, context)` | Tier-colored Curated chapter card shared by Home and Updates, preserving read/preview/lock and progress; optional Updates story/note context. |
 | `views/account-access.js` | `curatedUpdateCard(update, index)` | Resolves real chapter updates into shared Curated cards; retains original rows for non-chapter updates. |
-| `views/home-library.js` | `homeMasonrySpan()` / `sizeHomeGalleryTiles()` | Measure natural artwork ratios into masonry row spans and recalculate on image load/container resize; retain Multigrid image sizing. |
+| `views/home-library.js` | `homeMasonrySpan()` / `sizeHomeGalleryTiles()` | Measure natural artwork ratios into masonry row spans using computed grid track and row-gap sizes, and recalculate on image load/container resize; retain Multigrid image sizing. |
+| `views/home-library.js` | `shuffleGalleryArray()` / `buildBalancedGalleryOrder()` | Shuffle normal and mature artwork pools independently and interleave them into a 50/50 mixture for Home and Gallery. |
 | `views/home-library.js` | `setupHomeArchive()` | Disconnects stale observer and aligns desktop split-gallery height to the chapter panel. |
 | `views/gallery.js` | `renderUnifiedGallery(charId)` | Shared story artwork browser with character collection deep-link support and mature-access gate/default blur. |
 | `views/gallery.js` | `galleryMatureBlurClass(image)` / `matureArtworkAccessSheet()` | Applies the shared eligible-reader NSFW blur state and explains subscription requirements to other readers. |
@@ -32,7 +33,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 | `views/gallery.js` | `renderGalleryCard()` / `renderGalleryDecks()` | Masonry artwork cards and stacked tag collections with shared lightbox indices. |
 | `views/gallery.js` | `galleryTone()` / `galleryVoteControls()` / `galleryImageFailed()` | Stable decorative accents, existing vote controls, and honest failed-image state. |
 | `views/gallery.js` | `galleryLightboxImages()` / `renderGalleryLightbox()` / `openGalleryLightbox()` / `closeGalleryLightbox()` | Consistent visible collection, image/metadata split viewer, keyboard/focus lifecycle. |
-| `views/gallery.js` | `generateGalleryShuffleIds()` / `shuffleGalleryArtwork()` / `voteGalleryArtwork()` | Collection-scoped Fisher-Yates ordering for dropdown/button shuffle; single-flight existing vote write with late-overlay guard. |
+| `views/gallery.js` | `generateGalleryShuffleIds()` / `shuffleGalleryArtwork()` / `voteGalleryArtwork()` | Collection-scoped 50/50 NSFW/normal balanced random ordering (now the default Gallery sort) for dropdown/button shuffle; single-flight existing vote write with late-overlay guard. |
 | `router.js` | `render(options)` | Optional scroll/button-focus preservation for UI-only rerenders and lightbox cleanup on navigation. |
 
 Library and `VIEWS.shelf()` resolve followed story IDs against `D.STORIES` before falling back to legacy slugs; storage keys and Follow writes remain unchanged. Gallery lightbox sets the application shell inert while open and restores opener focus when dismissed.
@@ -67,7 +68,7 @@ Recent reader notification/profile changes:
 
 | File | Function | Purpose |
 |---|---|---|
-| `js/subscription/auth.js` | `profileAvatar()` / `uploadReaderAvatar(file)` / `updateReaderProfile(...)` | Supports signed-in reader name/photo edits and avatar uploads to the `Reader/<user_id>/profile/...` storage path; omitted fields (including legacy username) are preserved during partial edits. |
+| `js/subscription/auth.js` | `profileAvatar()` / `uploadReaderAvatar(file)` / `updateReaderProfile(...)` | Supports signed-in reader name/photo edits and avatar uploads to the `Reader/<user_id>/profile/...` storage path; updates only the signed-in user's existing `profiles` row under own-update RLS, preserving omitted fields (including legacy username). |
 | `js/subscription/backend.js` | `loadNotificationPreferences()` / `saveNotificationPreferences(prefs)` | Loads and saves signed-in reader email/browser chapter notification preferences. |
 | `js/subscription/backend.js` | `loadReaderNotifications(options)` / `markReaderNotificationsRead(ids)` / `dismissReaderNotification(id)` | Syncs DB-backed reader notifications into the existing notifications view and updates read/dismissed state. |
 | `js/subscription/backend.js` | `refreshReaderNotifications(options)` / `startReaderNotificationPolling()` | Refreshes alerts while the tab is active, updates the bell/notification view, and resumes promptly when the tab becomes visible. |
@@ -271,7 +272,8 @@ Recent reader notification/profile changes:
 |---:|---|---|
 | 15 | `applyTheme()` | Applies the normalized dark/light/evil site-chrome mode (`data-theme`). |
 | 19 | `setTheme(id)` | Saves and applies the independent dark/light/evil site-chrome mode. |
-| n/a | `toggleSiteTheme()` | Cycles site chrome through `dark -> evil -> light` without changing reader colors. |
+| n/a | `canUseEvilSiteTheme()` / `effectiveSiteTheme()` / `reconcileSiteThemeAccess()` | Gate Evil appearance on verified Evil entitlement, display dark during pending auth, and persist a dark fallback after confirmed downgrade/sign-out. |
+| n/a | `toggleSiteTheme()` | Cycles `dark -> evil -> light` for verified Evil readers, or `dark -> light` otherwise, without changing chapter colors. |
 | n/a | `normalizeReaderTheme(id)` | Normalizes the reader-only dark/light/parchment/custom color selection. |
 | n/a | `readerThemeStyle(settings)` | Derives brightness-adjusted reader surfaces and accessible foreground/dialogue tokens, including custom colors. |
 | 18 | `chapterResolved(ch)` | Uses backend catalog `can_read` as the authority for Supabase chapters; the legacy local persona fallback applies only to non-backend chapters. |

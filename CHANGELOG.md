@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-11-03 06:50 Asia/Kolkata — Fix Home masonry tile gap and add 50/50 NSFW/normal randomizer to Home & Gallery
+
+Area: subscription reader / Home & Visual Archive gallery
+
+- Fixed the dark empty bar / gap below artwork tiles in the Home Split Archive masonry grid (`.rh-masonry`): `homeMasonrySpan()` previously divided by `14` (`8px` row + `6px` gap) while `.rh-home .rh-masonry` used `gap: 8px` (`16px` step), inflating every card's grid span by ~15% and exposing `.traditional-gallery-card`'s inherited surface background beneath `height: auto` images. Updated `homeMasonrySpan()` and `sizeHomeGalleryTiles()` to compute spans from the live `grid-auto-rows` (`4px`) and `row-gap` (`8px`), and set `.rh-masonry .traditional-gallery-card`, `button`, and `img` to `height: 100%; min-height: 0; object-fit: cover; background: transparent; box-shadow: none;` so tiles sit flush against the 8px masonry gap.
+- Added `shuffleGalleryArray()` and `buildBalancedGalleryOrder()` in `js/subscription/views/home-library.js` to randomize normal and NSFW artwork pools independently and interleave them in a 50/50 mixture for eligible readers (while guests continue to receive randomized safe artwork only).
+- Wired `homeGalleryItems()` and `generateGalleryShuffleIds()` to use the 50/50 randomizer, made `shuffle` (`Shuffled`) the default gallery sort in `js/subscription/state.js` and `js/subscription/views/gallery.js`, refreshed shuffle contexts on route navigation in `js/subscription/router.js` (while keeping order stable across in-page `SHOW NSFW` / `Load more` rerenders), and raised the `character_gallery_images` fetch limit in `js/subscription/backend.js` from 60 to 500 so older NSFW/normal rows are not truncated.
+- Files: `styles/reader-redesign.css`, `js/subscription/views/home-library.js`, `js/subscription/views/gallery.js`, `js/subscription/state.js`, `js/subscription/router.js`, `js/subscription/backend.js`, `index.html`, `tests/reader-redesign.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: all 64 reader tests across 4 test suites and `node --check` syntax checks passed.
+
+## 2026-11-03 06:40 Asia/Kolkata — Fix reader Profile edits rejected by RLS
+
+Area: subscription reader / Profile
+
+- Changed `updateReaderProfile()` from `profiles.upsert()` to an own-row `UPDATE ... WHERE id = signed-in user`. Production has own-row UPDATE/SELECT policies but no reader INSERT policy, so both name and avatar saves previously failed with an insert RLS error. No schema, grants, or login flow changed.
+- Updated save tests to require the user-ID scope and bumped the reader auth script cache version.
+- Files: `js/subscription/auth.js`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
+## 2026-11-03 06:35 Asia/Kolkata — Gate Resident Evil site theme locally by verified tier
+
+Area: subscription reader / appearance
+
+- Resident Evil theme selection now requires a ready signed-in account with active Resident Evil entitlement. Settings shows the option as a locked tier perk; the topbar switcher skips it for other readers, and `setTheme()` enforces the same local check.
+- A saved Evil theme shows dark while auth is unresolved and reverts to dark after confirmed downgrade/sign-out; existing chapter appearance and database access are unchanged.
+- Files: `js/subscription/utils.js`, `js/subscription/views/reader-settings.js`, `js/subscription/events.js`, `js/subscription/auth.js`, `js/subscription/chrome.js`, `styles/reader-foundation.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: all 101 Node tests passed and touched reader scripts parsed. Manual signed-in/guest/downgrade browser QA remains.
+
 ## 2026-11-03 05:04 Asia/Kolkata — Harden staged test-tier migration consistency and deployment
 
 Area: database / tests

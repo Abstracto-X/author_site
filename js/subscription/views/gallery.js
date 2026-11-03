@@ -26,7 +26,7 @@ function sortGalleryImages(images) {
   const sorted = [...images];
   if (State.gallerySort==="newest") sorted.sort((a,b)=>homeFeedDate(b.created_at)-homeFeedDate(a.created_at));
   else if (State.gallerySort==="top") sorted.sort((a,b)=>(State.imageVotes[b.id]?.score || 0)-(State.imageVotes[a.id]?.score || 0));
-  else if (State.gallerySort==="shuffle") {
+  else if ((State.gallerySort || "shuffle")==="shuffle") { if (!State.galleryShuffleIds?.length || !images.every(img => State.galleryShuffleIds.includes(img.id))) generateGalleryShuffleIds(State.currentGalleryImages?.length ? State.currentGalleryImages : images, State.galleryContextKey);
     const positions = new Map((State.galleryShuffleIds || []).map((id,i)=>[id,i]));
     sorted.sort((a,b)=>(positions.get(a.id) ?? Infinity)-(positions.get(b.id) ?? Infinity));
   } else sorted.sort((a,b)=>Number(a.sort_order || 0)-Number(b.sort_order || 0));
@@ -102,7 +102,7 @@ function renderUnifiedGallery(charId) {
   const contextKey = story.id+":"+(charId || "all");
   if (State.galleryContextKey!==contextKey) { State.galleryContextKey=contextKey; State.galleryLimit=24; State.filterTag="All"; }
   State.currentGalleryImages = selected ? storyImages.filter(img=>img.character_id===charId) : storyImages;
-  if (State.gallerySort==="shuffle" && State.galleryShuffleContext!==contextKey) generateGalleryShuffleIds(State.currentGalleryImages,contextKey);
+  if ((State.gallerySort || "shuffle")==="shuffle" && (State.galleryShuffleContext!==contextKey || !State.galleryShuffleIds?.length || State.galleryShuffleIds.length!==State.currentGalleryImages.length)) generateGalleryShuffleIds(State.currentGalleryImages,contextKey);
   const allowed = State.currentGalleryImages.filter(img=>!homeIsMatureGalleryImage(img) || homeCanViewMatureGallery());
   const featured = selected || chars.find(c=>homeSafeMediaUrl(c.profile_image_url)) || chars[0];
   const portrait = homeSafeMediaUrl(featured?.profile_image_url || story.cover_image_url);
@@ -123,7 +123,7 @@ function renderUnifiedGallery(charId) {
     <nav class="rg-collections" aria-label="Character collections"><a class="${selected?"":"active"}" href="#/gallery/${esc(story.slug)}" data-act="select-gallery-character" data-slug="${esc(story.slug)}" data-char-id="" ${selected?"":'aria-current="page"'}>${I.grid}<span>All archive</span></a>${chars.map(c=>`<a href="#/gallery/${esc(story.slug)}/${esc(c.id)}" data-act="select-gallery-character" data-slug="${esc(story.slug)}" data-char-id="${esc(c.id)}" class="${selected?.id===c.id?"active":""}" ${selected?.id===c.id?'aria-current="page"':""}>${homeSafeMediaUrl(c.profile_image_url)?`<img src="${esc(homeThumbnailUrl(c.profile_image_url,240))}" alt="" loading="lazy" onerror="this.hidden=true">`:I.user}<span>${esc(c.name)}</span></a>`).join("")}</nav>
     <section class="rg-toolbar">
       <label class="rg-search">${I.search}<input id="gallery-search-input" type="search" aria-label="Search gallery" placeholder="Search captions or tags" value="${esc(State.gallerySearch || "")}"></label>
-      <label class="rg-sort">Sort <select id="gallery-sort-select" aria-label="Sort gallery">${[["curated","Curated"],["newest","Newest"],["top","Top rated"],["shuffle","Shuffled"]].map(([value,label])=>`<option value="${value}" ${(State.gallerySort || "curated")===value?"selected":""}>${label}</option>`).join("")}</select></label>
+      <label class="rg-sort">Sort <select id="gallery-sort-select" aria-label="Sort gallery">${[["shuffle","Shuffled"],["curated","Curated"],["newest","Newest"],["top","Top rated"]].map(([value,label])=>`<option value="${value}" ${(State.gallerySort || "shuffle")===value?"selected":""}>${label}</option>`).join("")}</select></label>
       <button class="btn sm ghost" data-act="toggle-viewmode">${State.galleryViewMode==="deck"?I.grid:I.book}<span>${State.galleryViewMode==="deck"?"Switch to grid":"Switch to decks"}</span></button>
       <span class="gallery-count-label" aria-live="polite">${results.all.length} artworks</span>
     </section>
@@ -194,9 +194,9 @@ function closeGalleryLightbox() {
   galleryLightboxReturnFocus=null;
 }
 function generateGalleryShuffleIds(images,contextKey=State.galleryContextKey) {
-  const ids=(images || []).map(img=>img.id);
-  for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
-  State.galleryShuffleIds=ids; State.galleryShuffleContext=contextKey;
+  const ordered = buildBalancedGalleryOrder(images || [], homeIsMatureGalleryImage);
+  State.galleryShuffleIds = ordered.map(img => img.id);
+  State.galleryShuffleContext = contextKey;
 }
 function shuffleGalleryArtwork(refreshOnly=false) {
   generateGalleryShuffleIds(State.currentGalleryImages);

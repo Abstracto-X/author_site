@@ -449,6 +449,37 @@ function homeFeedDate(value){
   const stamp = new Date(value || 0).getTime();
   return Number.isFinite(stamp) ? stamp : 0;
 }
+function shuffleGalleryArray(items){
+  const list = [...(items || [])];
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+function buildBalancedGalleryOrder(items, isMatureFn = homeIsMatureGalleryImage){
+  const list = [...(items || [])];
+  const mature = shuffleGalleryArray(list.filter(item => isMatureFn(item)));
+  const normal = shuffleGalleryArray(list.filter(item => !isMatureFn(item)));
+  if (!mature.length) return normal;
+  if (!normal.length) return mature;
+  const mixed = [];
+  const maxLen = Math.max(mature.length, normal.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < mature.length && i < normal.length) {
+      if (i > 0 && Math.random() < 0.5) {
+        mixed.push(normal[i], mature[i]);
+      } else {
+        mixed.push(mature[i], normal[i]);
+      }
+    } else if (i < mature.length) {
+      mixed.push(mature[i]);
+    } else if (i < normal.length) {
+      mixed.push(normal[i]);
+    }
+  }
+  return mixed;
+}
 function homeGalleryItems(story){
   const canViewMature = homeCanViewMatureGallery();
   const galleryItems = (D.GALLERY_IMAGES || [])
@@ -475,8 +506,20 @@ function homeGalleryItems(story){
       },
       story
     }));
-  return [...galleryItems, ...characterArt]
-    .sort((a,b) => homeFeedDate(b.date) - homeFeedDate(a.date));
+  const allItems = [...galleryItems, ...characterArt];
+  const contextKey = `${story.id}:${canViewMature ? "mature" : "safe"}:${allItems.map(item => item.id).join(",")}`;
+  if (
+    State.homeGalleryShuffleContext !== contextKey ||
+    !Array.isArray(State.homeGalleryShuffleIds) ||
+    State.homeGalleryShuffleIds.length !== allItems.length
+  ) {
+    const ordered = buildBalancedGalleryOrder(allItems, item => homeIsMatureGalleryImage(item.image));
+    State.homeGalleryShuffleIds = ordered.map(item => item.id);
+    State.homeGalleryShuffleContext = contextKey;
+    return ordered;
+  }
+  const positions = new Map(State.homeGalleryShuffleIds.map((id, i) => [id, i]));
+  return [...allItems].sort((a, b) => (positions.get(a.id) ?? Infinity) - (positions.get(b.id) ?? Infinity));
 }
 function homeFeedItems(story){
   // 1. All published chapters for this story, sorted strictly by chapter index `n` descending (Chapter 46, 45, 44, 43, 42, 41...)
@@ -650,9 +693,11 @@ function homeTraditionalGalleryCard(item){
   </article>`;
 }
 let homeMasonryObserver = null;
-function homeMasonrySpan(tileWidth, imageWidth, imageHeight){
+function homeMasonrySpan(tileWidth, imageWidth, imageHeight, rowHeight = 8, rowGap = 8){
   if (!(tileWidth > 0 && imageWidth > 0 && imageHeight > 0)) return 1;
-  return Math.max(1, Math.ceil((tileWidth * imageHeight / imageWidth + 6) / 14));
+  const track = Math.max(1, Number(rowHeight) || 8);
+  const gap = Math.max(0, Number.isFinite(Number(rowGap)) ? Number(rowGap) : 8);
+  return Math.max(1, Math.round((tileWidth * imageHeight / imageWidth + gap) / (track + gap)));
 }
 function sizeHomeGalleryTiles(){
   if (homeMasonryObserver) { homeMasonryObserver.disconnect(); homeMasonryObserver = null; }
@@ -672,11 +717,16 @@ function sizeHomeGalleryTiles(){
   const masonry = document.querySelector(".rh-masonry");
   if (!masonry) return;
   const cards = [...masonry.querySelectorAll(".traditional-gallery-card")];
-  const sizeCards = () => cards.forEach(card => {
-    const image = card.querySelector("img");
-    if (image?.naturalWidth && image.naturalHeight)
-      card.style.gridRowEnd = `span ${homeMasonrySpan(card.clientWidth, image.naturalWidth, image.naturalHeight)}`;
-  });
+  const sizeCards = () => {
+    const computed = typeof window !== "undefined" && typeof window.getComputedStyle === "function" ? window.getComputedStyle(masonry) : null;
+    const rowHeight = parseFloat(computed?.gridAutoRows) || 8;
+    const rowGap = parseFloat(computed?.rowGap ?? computed?.gap) || 8;
+    cards.forEach(card => {
+      const image = card.querySelector("img");
+      if (image?.naturalWidth && image.naturalHeight && card.clientWidth > 0)
+        card.style.gridRowEnd = `span ${homeMasonrySpan(card.clientWidth, image.naturalWidth, image.naturalHeight, rowHeight, rowGap)}`;
+    });
+  };
   cards.forEach(card => {
     const image = card.querySelector("img");
     if (image?.complete) sizeCards();

@@ -81,7 +81,7 @@ loadStore();
 /* ============ global UI state ============ */
 const State = window.State || {
   gallerySearch: "",
-  gallerySort: "curated",
+  gallerySort: "shuffle",
   galleryViewMode: "grid",
   filterTag: "All",
   showR18: false,

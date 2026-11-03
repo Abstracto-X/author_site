@@ -39,7 +39,7 @@ function topbar(){
     <span class="spacer"></span>
     ${accessControl}
     ${isAdmin()?`<a class="tb-btn admin-shortcut" href="writer.html" aria-label="Writer">${I.book}</a><a class="tb-btn admin-shortcut" href="admin.html" aria-label="Admin CMS">${I.shield}</a>`:""}
-    <button class="tb-btn site-theme-toggle" data-act="toggle-site-theme" aria-label="Switch site theme (current: ${store.theme==='evil'?'Resident Evil':store.theme==='light'?'light':'dark'})" title="Switch site theme">${store.theme==='evil'?I.evil:store.theme==='light'?I.moon:I.sun}</button>
+    <button class="tb-btn site-theme-toggle" data-act="toggle-site-theme" aria-label="Switch site theme (current: ${effectiveSiteTheme()==='evil'?'Resident Evil':effectiveSiteTheme()==='light'?'light':'dark'})" title="Switch site theme">${effectiveSiteTheme()==='evil'?I.evil:effectiveSiteTheme()==='light'?I.moon:I.sun}</button>
     <button class="tb-btn" data-nav="/settings" aria-label="Site settings" title="Site settings">${I.cog}</button>
     <button class="tb-btn" data-nav="/notifications" aria-label="Notifications">${I.bell}${unread?`<span class="dot"></span>`:""}</button>
     <button class="tb-btn" data-sheet="persona" aria-label="Account and access">${I.user}</button>

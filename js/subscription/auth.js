@@ -230,13 +230,12 @@ async function updateReaderProfile({ username, displayName, avatarFile, avatarUr
   if (avatarFile) finalAvatar = await uploadReaderAvatar(avatarFile);
   if (authState.user?.id !== userId) throw new Error("Your account changed. Reopen Profile and try again.");
   const record = {
-    id: userId,
     username: cleanUsername || null,
     display_name: displayName === undefined ? authState.profile?.display_name || null : String(displayName || "").trim() || null,
     avatar_url: finalAvatar || null,
     updated_at: new Date().toISOString()
   };
-  const { data, error } = await client.from("profiles").upsert(record, { onConflict:"id" }).select("id, username, display_name, avatar_url, role").single();
+  const { data, error } = await client.from("profiles").update(record).eq("id", userId).select("id, username, display_name, avatar_url, role").single();
   if (error) throw error;
   if (authState.user?.id !== userId) return data || record;
   authState.profile = data || record;
@@ -572,6 +571,7 @@ async function refreshReaderAccessInBackground(){
     if (authState.user?.id !== userId) return;
     const refreshed = await refreshConnectedProviderAccess();
     if (authState.user?.id !== userId) return;
+    if (typeof reconcileSiteThemeAccess === "function") reconcileSiteThemeAccess();
     const after = JSON.stringify(activeEntitlements());
     if (refreshed || before !== after) {
       const changed = await refreshBackendChapterAccess();

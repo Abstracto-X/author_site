@@ -291,6 +291,9 @@ body:not(.in-reader):not(.in-studio) .reader-page-heading .page-sub { margin-bot
 .reader-theme-options { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 14px; margin: 28px 0; }
 .reader-theme-option { padding: 8px; border: 1px solid var(--border-2); border-radius: 5px; text-align: left; color: var(--text); }
 .reader-theme-option.selected { outline: 2px solid var(--good); outline-offset: 2px; }
+.reader-theme-option.is-locked { opacity: .57; cursor: not-allowed; }
+.reader-theme-option.is-locked .theme-preview { filter: grayscale(.55); }
+.reader-theme-option small { color: var(--text-dim); font-size: 10px; font-weight: 500; }
 .reader-theme-option > span:last-child { display: flex; justify-content: space-between; align-items: center; padding: 12px 3px 4px; font: 600 12px var(--ui); }
 .reader-theme-option svg { width: 15px; height: 15px; }
 .theme-preview { display: grid; grid-template-columns: 24% 1fr; grid-template-rows: 20px 60px; padding: 10px; gap: 7px; border: 1px solid rgb(128 128 128 / .2); border-radius: 2px; }
