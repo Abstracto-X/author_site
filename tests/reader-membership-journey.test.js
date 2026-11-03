@@ -8,8 +8,8 @@ const root = path.join(__dirname, "..");
 const source = fs.readFileSync(path.join(root, "js/subscription/membership-journey.js"), "utf8");
 function journey({ user = null, entitlements = [], connected = false } = {}) {
   const context = {
-    authState: { user, profile: null, passwordRecovery: false, ready:true, authPending:false },
-    activeEntitlements: () => entitlements,
+    authState: { user, profile: null, entitlements, passwordRecovery: false, ready:true, authPending:false },
+    activeEntitlements: () => entitlements.filter(item => item.status !== "inactive"),
     providerIsConnected: () => connected,
     isAdmin: () => false,
     providerAccessStatus: () => null,
@@ -23,7 +23,7 @@ function journey({ user = null, entitlements = [], connected = false } = {}) {
     backendSetupRequired: () => false,
     PATREON_URL: "https://www.patreon.com/cw/HornyShitler",
     BOOSTY_URL: "https://boosty.to/hornyshitler",
-    I: { x:"x", check:"✓", user:"u", chevR:"›", external:"↗", book:"b", spark:"✦" },
+    I: { x:"x", check:"✓", user:"u", chevR:"›", external:"↗", book:"b", spark:"✦", gallery:"🖼", evil:"☂" },
     esc: value => String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"),
     store: { providerPending:false },
     LS: { getItem:()=>null, setItem:()=>{} },
@@ -158,6 +158,19 @@ test("connected without a grant is not shown as an unlocked tier", () => {
   assert.doesNotMatch(html, /Membership active/);
 });
 
+test("explicit Free test access stays Free even with a connected provider", () => {
+  const marker = { source:"test_override", tier_slug:"free", tier_rank:0, status:"inactive", is_active:false };
+  const html = journey({ user:{ email:"reader@example.com" }, entitlements:[marker], connected:true }).membershipProfileBanner();
+  assert.match(html, /<strong>Free access<\/strong>/);
+  assert.doesNotMatch(html, /Connection needs attention|Membership active/);
+  const authSource = fs.readFileSync(path.join(root, "js/subscription/auth.js"), "utf8");
+  const refresh = authSource.slice(authSource.indexOf("async function refreshEntitlements()"), authSource.indexOf("async function refreshProviderConnections()"));
+  assert.doesNotMatch(refresh, /from\("user_entitlements"\)/);
+  assert.match(authSource, /currentSheet\?\.builder === sheetProfile\) openSheet\(sheetProfile\)/);
+  const backendSource = fs.readFileSync(path.join(root, "js/subscription/backend.js"), "utf8");
+  assert.match(backendSource, /!\(authState\.entitlements \|\| \[\]\)\.some\(e => e\.source === "test_override"\)/);
+});
+
 test("signed-in startup never opens onboarding", () => {
   const instance = journey({ user:{ email:"reader@example.com" } });
   instance.store.membershipJourneyPending = true;
@@ -231,3 +244,51 @@ test("membership sheet has one vertical anchor on desktop and mobile", () => {
   assert.match(css, /@media\(max-width:700px\)[\s\S]*\.membership-sheet\.sheet\s*\{[^}]*top:auto;\s*bottom:0;/);
   assert.match(css, /\.membership-sheet\.sheet\s*\{[^}]*z-index:115;/);
 });
+
+test("site-wide Resident Evil theme wires transparent PNG UI ornaments and tier banners", () => {
+  const foundationCss = fs.readFileSync(path.join(root, "styles/reader-foundation.css"), "utf8");
+  assert.match(foundationCss, /html\[data-theme="evil"\][\s\S]*--bg:\s*#000000;[\s\S]*--accent:\s*#e5192b;/);
+  for (const file of ["button-frame.png", "divider-ornament.png", "corner-ornament.png", "crest-emblem.png"]) {
+    const fullPath = path.join(root, "assets/evil-theme", file);
+    assert.ok(fs.existsSync(fullPath), `${file} exists in assets/evil-theme`);
+    assert.match(foundationCss, new RegExp(`assets/evil-theme/${file.replace(".", "\\.")}`));
+  }
+  for (const banner of ["tier-banner-licker.png", "tier-banner-tyrant.png", "tier-banner-nemesis.png", "tier-banner-evil.png"]) {
+    assert.ok(fs.existsSync(path.join(root, "assets/profile-frames", banner)), `${banner} exists in assets/profile-frames`);
+  }
+  const settingsSource = fs.readFileSync(path.join(root, "js/subscription/views/reader-settings.js"), "utf8");
+  assert.match(settingsSource, /\["evil","Resident Evil"\]/);
+  assert.doesNotMatch(foundationCss, /:is\([^)]*\.sheet[^)]*\)\s*\{\s*position:\s*relative/);
+});
+
+test("topbar replaces Active · {Tier} text pill with cropped tier banner artwork for active Resident tiers", () => {
+  const chromeSource = fs.readFileSync(path.join(root, "js/subscription/chrome.js"), "utf8");
+  for (const [tierName, cls, banner] of [
+    ["Resident Licker", "licker", "topbar-banner-licker.png"],
+    ["Resident Tyrant", "tyrant", "topbar-banner-tyrant.png"],
+    ["Resident Nemesis", "nemesis", "topbar-banner-nemesis.png"],
+    ["Resident Evil", "evil", "topbar-banner-evil.png"]
+  ]) {
+    assert.ok(fs.statSync(path.join(root, "assets/profile-frames", banner)).size > 100_000);
+    const ctx = journey({ user:{ email:"reader@example.com" }, entitlements:[{ tier_name:tierName, tier_rank:30, status:"active", is_active:true }] });
+    ctx.SITE_NAME = "EvilArchives";
+    ctx.store = { notifs:[], theme:"dark", readerNavCollapsed:false };
+    ctx.persona = () => ({ signedIn:true, level:30, tier:tierName });
+    vm.runInContext(chromeSource, ctx);
+    const html = ctx.topbar();
+    assert.match(html, new RegExp(`class="access-chip access-chip-banner tier-${cls}"`));
+    assert.match(html, new RegExp(`data-tier="${cls}"`));
+    assert.match(html, new RegExp(`assets/profile-frames/${banner}`));
+    assert.match(html, new RegExp(`alt="Active · ${tierName}"`));
+    assert.doesNotMatch(html, /<span class="pulse"><\/span>/);
+  }
+  const guestCtx = journey();
+  guestCtx.SITE_NAME = "EvilArchives";
+  guestCtx.store = { notifs:[], theme:"dark", readerNavCollapsed:false };
+  guestCtx.persona = () => ({ signedIn:false, level:0, tier:"" });
+  vm.runInContext(chromeSource, guestCtx);
+  const guestHtml = guestCtx.topbar();
+  assert.doesNotMatch(guestHtml, /access-chip-banner/);
+  assert.match(guestHtml, /<span class="pulse"><\/span>Not signed in/);
+});
+

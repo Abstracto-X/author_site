@@ -4,10 +4,11 @@
 /* ============ site themes ============ */
 const THEMES = [
   { id:"dark", name:"Dark Mode", dot:"linear-gradient(135deg,#14161f,#d4b06a)" },
-  { id:"light", name:"Light Mode", dot:"linear-gradient(135deg,#ffffff,#2563eb)" }
+  { id:"light", name:"Light Mode", dot:"linear-gradient(135deg,#ffffff,#2563eb)" },
+  { id:"evil", name:"Resident Evil", dot:"linear-gradient(135deg,#000000,#e5192b)" }
 ];
 function normalizeTheme(id) {
-  return id === "light" ? "light" : "dark";
+  return id === "light" || id === "evil" ? id : "dark";
 }
 function applyTheme(){
   const theme = normalizeTheme(store.theme);
@@ -20,7 +21,8 @@ function setTheme(id){
   applyTheme();
 }
 function toggleSiteTheme(){
-  setTheme(store.theme === "light" ? "dark" : "light");
+  const order = ["dark", "evil", "light"];
+  setTheme(order[(order.indexOf(normalizeTheme(store.theme)) + 1) % order.length]);
 }
 function normalizeReaderTheme(id){
   return ["dark","light","parchment","custom"].includes(id) ? id : "dark";
@@ -164,7 +166,9 @@ const I = {
   calendar:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>`,
   mail:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
   gift:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 13h18M12 9v12M12 9S9 3 6.5 5 9 9 12 9Zm0 0s3-6 5.5-4S15 9 12 9Z"/></svg>`,
-  spark:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 4 2 5.5 6 6-4 .5-5.5 2-6 6-.5-4-2-5.5-6-6 4-.5 5.5-2 6-6Z"/></svg>`,
+  gallery:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-4.5-4.5a1.5 1.5 0 0 0-2.1 0L6 19"/></svg>`,
+  evil:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.4 3.2h7.2l5.2 5.2v7.2l-5.2 5.2H8.4l-5.2-5.2V8.4Z"/><path d="M12 12 8.4 3.2h7.2ZM12 12l8.8-3.6v7.2ZM12 12l3.6 8.8H8.4ZM12 12l-8.8 3.6V8.4Z" fill="currentColor" stroke="none"/><path d="M8.4 3.2 15.6 20.8M15.6 3.2 8.4 20.8M20.8 8.4 3.2 15.6M20.8 15.6 3.2 8.4"/></svg>`,
+  spark:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-4.5-4.5a1.5 1.5 0 0 0-2.1 0L6 19"/></svg>`,
   external:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>`,
   download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>`,
   copy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>`,

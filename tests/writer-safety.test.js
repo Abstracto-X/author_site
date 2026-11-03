@@ -576,4 +576,71 @@ test('the pinned Supabase mutation builder supports cancellation', () => {
     const query = client.from('chapters').update({ title: 'test' }).eq('id', 'test').select().single();
     assert.equal(typeof query.abortSignal, 'function');
     assert.match(html, /<script src="vendor\/supabase\/supabase-2\.111\.0\.min\.js"><\/script>/);
+    assert.equal(typeof client.rpc('set_writer_test_account_tier', { selected_slug: 'free' }).abortSignal, 'function');
+});
+
+test('Writer test account control saves a selected tier and restores normal access', async () => {
+    const match = html.match(/const TestAccount = (\{[\s\S]*?\n        \});/);
+    assert.ok(match, 'TestAccount controller exists');
+    const calls = [];
+    const elements = Object.fromEntries([
+        'test-account-current', 'test-account-normal', 'test-account-tier',
+        'test-account-save', 'test-account-restore', 'test-account-status',
+        'writer-main-menu-toggle'
+    ].map(id => [id, { value: '', textContent: '', disabled: false, classList: { toggle() {} }, focus() {} }]));
+    const makeState = (override = null) => ({
+        account_email: 'divinedevil101@gmail.com',
+        override_active: override !== null,
+        override_slug: override,
+        normal_slug: 'resident-evil',
+        effective_slug: override || 'resident-evil'
+    });
+    let state = makeState();
+    const context = {
+        document: { getElementById: id => elements[id] },
+        UI: { closeWriterMenu() {}, openModal() {}, closeModal() {} },
+        supabaseClient: { rpc: (name, args) => {
+            calls.push({ name, args });
+            if (name === 'set_writer_test_account_tier') state = makeState(args.selected_slug);
+            return Promise.resolve({ data: state, error: null });
+        } },
+        withWriterDeadline: query => query,
+        runWriterMutation: query => query
+    };
+    vm.createContext(context);
+    vm.runInContext(`TestAccount = ${match[1]};`, context);
+    await context.TestAccount.open();
+    assert.equal(elements['test-account-current'].textContent, 'Resident Evil');
+    assert.equal(elements['test-account-restore'].disabled, true);
+    elements['test-account-tier'].value = 'resident-licker';
+    await context.TestAccount.save();
+    assert.equal(calls.at(-1).args.selected_slug, 'resident-licker');
+    assert.equal(elements['test-account-current'].textContent, 'Resident Licker');
+    assert.equal(elements['test-account-restore'].disabled, false);
+    for (const slug of ['free', 'resident-tyrant', 'resident-nemesis', 'resident-evil']) {
+        elements['test-account-tier'].value = slug;
+        await context.TestAccount.save();
+        assert.equal(calls.at(-1).args.selected_slug, slug);
+        assert.equal(elements['test-account-current'].textContent, context.TestAccount.labels[slug]);
+    }
+    await context.TestAccount.restore();
+    assert.equal(calls.at(-1).args.selected_slug, null);
+    assert.equal(elements['test-account-current'].textContent, 'Resident Evil');
+});
+
+test('test account migration masks grants in all access paths and scopes writes to the fixed account', () => {
+    const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261103043000_writer_test_account_tier_override.sql'), 'utf8');
+    assert.match(migration, /CHECK \(user_id = '56ea0e7f-b744-4b5f-af6f-134eb167625f'::uuid\)/);
+    assert.match(migration, /CREATE OR REPLACE FUNCTION public\.has_active_entitlement\(/);
+    assert.match(migration, /CREATE OR REPLACE FUNCTION public\.get_my_entitlements\(/);
+    assert.match(migration, /CREATE OR REPLACE FUNCTION public\.has_active_gallery_subscription\(/);
+    assert.match(migration, /DROP POLICY IF EXISTS chapters_entitled_select/);
+    assert.match(migration, /public\.has_active_entitlement\(auth\.uid\(\), required_tier_id\)/);
+    assert.match(migration, /IF NOT public\.is_admin\(\) THEN RAISE EXCEPTION/g);
+    assert.match(migration, /normalized_slug NOT IN \('free', 'resident-licker', 'resident-tyrant', 'resident-nemesis', 'resident-evil'\)/);
+    assert.doesNotMatch(migration, /(?:INSERT INTO|UPDATE|DELETE FROM) public\.user_entitlements/i);
+    assert.match(migration, /NOTIFY pgrst, 'reload schema'/);
+    assert.match(migration, /BEGIN;\s+CREATE TABLE IF NOT EXISTS/);
+    assert.match(migration, /NOTIFY pgrst, 'reload schema';\s+COMMIT;\s*$/);
+    assert.match(migration, /\(t\.is_active = true AND ue\.status = 'active' AND ue\.valid_from <= now\(\)/);
 });

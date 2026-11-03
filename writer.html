@@ -452,7 +452,7 @@
         }
 
         #primary-sidebar.is-collapsed .sidebar-brand {
-            padding-inline: 1.3rem;
+            padding-inline: 0.25rem;
         }
 
         #primary-sidebar.is-collapsed .sidebar-brand > div:first-child {
@@ -461,6 +461,50 @@
 
         #primary-sidebar.is-collapsed #editor-settings-toggle {
             display: none;
+        }
+
+        #writer-main-menu {
+            position: fixed;
+            z-index: 90;
+            width: 13.5rem;
+            padding: 0.35rem;
+            border: 1px solid #3f3f46;
+            border-radius: 0.8rem;
+            background: #18181b;
+            box-shadow: 0 18px 48px rgba(0,0,0,0.5);
+        }
+
+        #writer-main-menu button {
+            width: 100%;
+            padding: 0.7rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            border-radius: 0.55rem;
+            color: #e4e4e7;
+            font-size: 0.82rem;
+            text-align: left;
+        }
+
+        #writer-main-menu button:hover,
+        #writer-main-menu button:focus-visible {
+            background: #27272a;
+            outline: none;
+        }
+
+        #modal-test-account .test-account-card {
+            width: min(100%, 28rem);
+            border: 1px solid #3f3f46;
+            border-radius: 1rem;
+            background: #111113;
+            box-shadow: 0 28px 80px rgba(0,0,0,0.65);
+        }
+
+        #modal-test-account select:focus-visible,
+        #modal-test-account button:focus-visible,
+        #writer-main-menu-toggle:focus-visible {
+            outline: 2px solid #a5b4fc;
+            outline-offset: 2px;
         }
 
         .chapter-order-control {
@@ -1146,6 +1190,10 @@
                 padding-inline: 0.7rem;
             }
 
+            #primary-sidebar.is-collapsed .sidebar-brand {
+                padding-inline: 0.25rem;
+            }
+
             #primary-sidebar.is-collapsed .sidebar-copy,
             #primary-sidebar.is-collapsed h1,
             #primary-sidebar.is-collapsed label,
@@ -1633,6 +1681,47 @@
         </form>
     </div>
 
+    <div id="writer-main-menu" class="hidden" role="menu" aria-label="Writer menu">
+        <button type="button" role="menuitem" onclick="TestAccount.open()"><i class="fa-solid fa-user-gear w-4 text-center text-indigo-300"></i>Manage test account</button>
+    </div>
+
+    <div id="modal-test-account" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/75 p-4" onclick="if (event.target === this) TestAccount.close()">
+        <section class="test-account-card overflow-hidden" aria-labelledby="test-account-title">
+            <header class="flex items-start justify-between gap-4 border-b border-zinc-800 px-6 py-5">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-300">Reader access</p>
+                    <h2 id="test-account-title" class="mt-1 text-lg font-semibold text-zinc-100">Manage test account</h2>
+                </div>
+                <button type="button" onclick="TestAccount.close()" class="panel-toggle" aria-label="Close test account"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            <div class="space-y-5 px-6 py-5">
+                <div class="border-l-2 border-indigo-400 pl-3">
+                    <p class="text-xs font-semibold text-zinc-200">Divine Devil</p>
+                    <p class="mt-0.5 break-all text-xs text-zinc-500">divinedevil101@gmail.com</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3"><span class="block text-zinc-500">Current tier</span><strong id="test-account-current" class="mt-1 block text-sm text-zinc-100">Loading…</strong></div>
+                    <div class="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3"><span class="block text-zinc-500">Normal access</span><strong id="test-account-normal" class="mt-1 block text-sm text-zinc-100">Loading…</strong></div>
+                </div>
+                <label for="test-account-tier" class="block text-xs font-semibold text-zinc-300">Set test tier
+                    <select id="test-account-tier" class="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 outline-none">
+                        <option value="free">Free</option>
+                        <option value="resident-licker">Resident Licker</option>
+                        <option value="resident-tyrant">Resident Tyrant</option>
+                        <option value="resident-nemesis">Resident Nemesis</option>
+                        <option value="resident-evil">Resident Evil</option>
+                    </select>
+                </label>
+                <p class="text-xs leading-relaxed text-zinc-500">This changes the test account's reading access and Profile tier. Its existing memberships remain intact. Keep the admin and reader signed in through separate browser profiles.</p>
+                <p id="test-account-status" class="min-h-5 text-xs text-zinc-400" role="status" aria-live="polite"></p>
+            </div>
+            <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 px-6 py-4">
+                <button id="test-account-restore" type="button" onclick="TestAccount.restore()" class="rounded-lg px-2 py-2 text-xs font-semibold text-zinc-400 hover:text-zinc-100 disabled:opacity-40">Restore normal access</button>
+                <button id="test-account-save" type="button" onclick="TestAccount.save()" class="rounded-lg bg-indigo-500 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-400 disabled:opacity-40">Save tier</button>
+            </footer>
+        </section>
+    </div>
+
     <!-- Main App Layout -->
     <div class="flex w-full h-full">
 
@@ -1645,6 +1734,9 @@
                 <div class="sidebar-brand-title">
                     <h1 class="sidebar-copy font-bold text-zinc-100 tracking-wide text-base">Writer Studio</h1>
                     <div class="sidebar-brand-actions">
+                        <button id="writer-main-menu-toggle" type="button" onclick="UI.toggleWriterMenu()" class="panel-toggle" title="Writer menu" aria-label="Writer menu" aria-controls="writer-main-menu" aria-expanded="false">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
                         <button id="editor-settings-toggle" type="button" onclick="UI.toggleEditorSettings()" class="panel-toggle" title="Toggle chapter settings" aria-label="Toggle chapter settings" aria-expanded="true">
                             <i class="fa-solid fa-sliders"></i>
                         </button>
@@ -3091,7 +3183,7 @@
                 });
 
                 document.addEventListener('keydown', event => {
-                    const activeModal = ['modal-media', 'modal-censor', 'chapter-note-drawer']
+                    const activeModal = ['modal-media', 'modal-censor', 'modal-test-account', 'chapter-note-drawer']
                         .map(id => document.getElementById(id))
                         .find(modal => modal && !modal.classList.contains('hidden'))
                         || (SummaryManager.isOpen() ? document.getElementById('summary-manager') : null);
@@ -3143,14 +3235,25 @@
 
                     if (event.key === 'Escape') {
                         if (!document.getElementById('modal-context-block')?.classList.contains('hidden')) ContextWorkspace.closeBlockEditor();
+                        else if (!document.getElementById('modal-test-account')?.classList.contains('hidden')) TestAccount.close();
                         else if (!document.getElementById('modal-media')?.classList.contains('hidden')) UI.closeModal('modal-media');
                         else if (!document.getElementById('modal-censor')?.classList.contains('hidden')) UI.closeModal('modal-censor');
                         else if (!document.getElementById('chapter-note-drawer')?.classList.contains('hidden')) ChapterNotes.close();
                         else if (SummaryManager.isOpen()) SummaryManager.close();
+                        else if (!document.getElementById('writer-main-menu')?.classList.contains('hidden')) {
+                            this.closeWriterMenu();
+                            document.getElementById('writer-main-menu-toggle')?.focus();
+                        }
                     }
                 });
 
                 document.addEventListener('click', event => {
+                    const writerMenu = document.getElementById('writer-main-menu');
+                    const writerMenuToggle = document.getElementById('writer-main-menu-toggle');
+                    if (writerMenu && !writerMenu.classList.contains('hidden') &&
+                        !writerMenu.contains(event.target) && !writerMenuToggle?.contains(event.target)) {
+                        this.closeWriterMenu();
+                    }
                     const dropdown = document.getElementById('export-dropdown');
                     if (dropdown && !dropdown.classList.contains('hidden')) {
                         const container = document.getElementById('export-menu-container');
@@ -3169,6 +3272,24 @@
                 } else {
                     wrap.classList.add('opacity-50', 'pointer-events-none');
                 }
+            },
+
+            toggleWriterMenu() {
+                const menu = document.getElementById('writer-main-menu');
+                const toggle = document.getElementById('writer-main-menu-toggle');
+                if (!menu || !toggle) return;
+                if (!menu.classList.contains('hidden')) return this.closeWriterMenu();
+                const anchor = toggle.getBoundingClientRect();
+                menu.style.top = `${anchor.bottom + 8}px`;
+                menu.style.left = `${Math.max(8, Math.min(anchor.left, window.innerWidth - 224))}px`;
+                menu.classList.remove('hidden');
+                toggle.setAttribute('aria-expanded', 'true');
+                menu.querySelector('button')?.focus();
+            },
+
+            closeWriterMenu() {
+                document.getElementById('writer-main-menu')?.classList.add('hidden');
+                document.getElementById('writer-main-menu-toggle')?.setAttribute('aria-expanded', 'false');
             },
 
             showToast(msg, type = 'info') {
@@ -3223,6 +3344,107 @@
                 modal.classList.remove('flex');
                 this.modalReturnFocus.get(id)?.focus?.();
                 this.modalReturnFocus.delete(id);
+            }
+        };
+
+        const TestAccount = {
+            data: null,
+            busy: false,
+            loadFailed: false,
+            labels: {
+                free: 'Free',
+                'resident-licker': 'Resident Licker',
+                'resident-tyrant': 'Resident Tyrant',
+                'resident-nemesis': 'Resident Nemesis',
+                'resident-evil': 'Resident Evil'
+            },
+
+            async open() {
+                UI.closeWriterMenu();
+                document.getElementById('writer-main-menu-toggle')?.focus();
+                UI.openModal('modal-test-account');
+                this.data = null;
+                this.loadFailed = false;
+                this.render();
+                await this.load();
+            },
+
+            close() {
+                if (this.busy) return;
+                UI.closeModal('modal-test-account');
+            },
+
+            setStatus(message, isError = false) {
+                const status = document.getElementById('test-account-status');
+                status.textContent = message;
+                status.classList.toggle('text-rose-300', isError);
+                status.classList.toggle('text-zinc-400', !isError);
+            },
+
+            render() {
+                const current = document.getElementById('test-account-current');
+                const normal = document.getElementById('test-account-normal');
+                const select = document.getElementById('test-account-tier');
+                const save = document.getElementById('test-account-save');
+                const restore = document.getElementById('test-account-restore');
+                current.textContent = this.data ? this.labels[this.data.effective_slug] || 'Unknown' : this.loadFailed ? 'Unavailable' : 'Loading…';
+                normal.textContent = this.data ? this.labels[this.data.normal_slug] || 'Unknown' : this.loadFailed ? 'Unavailable' : 'Loading…';
+                if (this.data) select.value = this.data.effective_slug;
+                select.disabled = this.busy || !this.data;
+                save.disabled = this.busy || !this.data;
+                restore.disabled = this.busy || !this.data?.override_active;
+            },
+
+            async load() {
+                this.busy = true;
+                this.render();
+                this.setStatus('Checking current access…');
+                try {
+                    const { data, error } = await withWriterDeadline(
+                        supabaseClient.rpc('get_writer_test_account_tier'), 'Test account access');
+                    if (error) throw error;
+                    if (!data || data.account_email !== 'divinedevil101@gmail.com') throw new Error('Testing account verification failed.');
+                    this.data = data;
+                    this.setStatus(data.override_active ? 'Test tier is active.' : 'Using existing membership access.');
+                } catch (error) {
+                    this.data = null;
+                    this.loadFailed = true;
+                    this.setStatus(error?.code === 'PGRST202' || error?.code === '42883'
+                        ? 'This control is unavailable until the database migration is applied.'
+                        : error.message || 'Could not load test account access.', true);
+                } finally {
+                    this.busy = false;
+                    this.render();
+                }
+            },
+
+            async change(slug) {
+                if (this.busy || !this.data) return;
+                this.busy = true;
+                this.render();
+                this.setStatus('Saving access…');
+                try {
+                    const { data, error } = await runWriterMutation(
+                        supabaseClient.rpc('set_writer_test_account_tier', { selected_slug: slug }),
+                        'Test account tier change');
+                    if (error) throw error;
+                    if (!data || data.account_email !== 'divinedevil101@gmail.com') throw new Error('Testing account verification failed.');
+                    this.data = data;
+                    this.setStatus('Saved. Refresh the reader tab to see the change immediately.');
+                } catch (error) {
+                    this.setStatus(error.message || 'Could not change test account access. Reopen to verify before retrying.', true);
+                } finally {
+                    this.busy = false;
+                    this.render();
+                }
+            },
+
+            save() {
+                return this.change(document.getElementById('test-account-tier').value);
+            },
+
+            restore() {
+                return this.change(null);
             }
         };
 

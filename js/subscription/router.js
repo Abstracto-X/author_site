@@ -107,7 +107,7 @@ function ensureChrome(){
   topEl.outerHTML = topbar();
   let navEl = document.querySelector(".bottomnav");
   if (!navEl){ navEl=document.createElement("nav"); app.appendChild(navEl); }
-  const active = {home:"home",library:"library",story:"library",chapters:"library",recap:"library",extras:"library",storyUpdates:"library",collections:"library",collection:"library",gallery:"spark",galleryChar:"spark",updates:"feed",calendar:"feed",shelf:"shelf",bookmarks:"shelf",quotes:"shelf",history:"shelf",vault:"vault",benefits:"vault",settings:"cog",help:"help",checkAccess:"help",wrongAccount:"help",contact:"help"}[route.name] || "";
+  const active = {home:"home",library:"library",story:"library",chapters:"library",recap:"library",extras:"library",storyUpdates:"library",collections:"library",collection:"library",gallery:"gallery",galleryChar:"gallery",updates:"feed",calendar:"feed",shelf:"shelf",bookmarks:"shelf",quotes:"shelf",history:"shelf",vault:"vault",benefits:"vault",settings:"cog",help:"help",checkAccess:"help",wrongAccount:"help",contact:"help"}[route.name] || "";
   navEl.outerHTML = bottomnav(active);
   let sideEl = document.querySelector(".sidenav");
   if (!sideEl){ sideEl=document.createElement("nav"); app.appendChild(sideEl); }

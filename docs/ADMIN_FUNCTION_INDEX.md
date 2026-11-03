@@ -216,6 +216,11 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `Views.chapters` in `admin.html` renders the embedded Writer / Chapters workspace instead of redirecting, so stale `ea-admin-last-view = chapters` localStorage does not bounce `admin.html` into `writer.html`.
 - `writer.html` is now the active Supabase-backed Writer surface; its current Quill/editor logic is inline in that file, while `js/admin-writer.js` remains an alternate/legacy helper unless the page explicitly loads it.
 
+## 2026-11-03 04:33 Asia/Kolkata - Writer test account tier control (pending migration)
+
+- `UI.toggleWriterMenu()` / `closeWriterMenu()` expose a compact hamburger menu without changing Writer navigation or editor state.
+- `TestAccount.open()` / `load()` / `change(slug)` / `save()` / `restore()` manage the single Divine Devil reader's effective test tier through admin-checked `get_writer_test_account_tier` and `set_writer_test_account_tier` RPCs. The UI remains unavailable until the owner applies the reviewed database migration; it never updates `user_entitlements` directly.
+
 ## 2026-09-30 21:00 Asia/Kolkata - Writer safety and navigation functions
 
 - `withWriterDeadline(promise, label, milliseconds)` bounds Writer admin/session/workspace/chapter reads and yields a retryable error instead of indefinite startup.

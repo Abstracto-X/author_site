@@ -712,7 +712,8 @@ async function loadReaderChapterFromBackend(chapterId){
     const fetchChapter = () => runBackendRequest("secure chapter text", () => client.rpc("get_reader_chapter", { target_chapter_id: chapterId }), { timeoutMs:15000 });
     let data = await fetchChapter();
     let row = Array.isArray(data) ? data[0] : data;
-    if (row && !row.can_read && userId && (authState.user?.id || null) === userId) {
+    if (row && !row.can_read && userId && (authState.user?.id || null) === userId
+      && !(authState.entitlements || []).some(e => e.source === "test_override")) {
       // One silent recovery attempt, with per-provider cooldown and no redirects.
       const refreshed = await refreshConnectedProviderAccess({ force:true });
       if (refreshed && (authState.user?.id || null) === userId) {

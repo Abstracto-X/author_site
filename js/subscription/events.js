@@ -213,8 +213,8 @@ function applyReaderPreferences(){
 }
 function updateSiteThemeControls(){
   document.querySelectorAll('[data-act="toggle-site-theme"]').forEach(btn=>{
-    btn.innerHTML=store.theme==="light"?I.moon:I.sun;
-    btn.setAttribute("aria-label",`Switch site to ${store.theme==="light"?"dark":"light"} theme`);
+    btn.innerHTML=store.theme==="evil"?I.evil:store.theme==="light"?I.moon:I.sun;
+    btn.setAttribute("aria-label",`Switch site theme (current: ${store.theme==="evil"?"Resident Evil":store.theme==="light"?"light":"dark"})`);
   });
 }
 function updateReaderBar(){ const bar=document.getElementById("rbar"); if(!bar) return; const f=currentChapter; const bk=store.bookmarks.find(b=>b.chapterId===f.ch.id); const btn=bar.querySelector('[data-act="reader-bookmark"]'); if(btn){ btn.innerHTML=bk?I.bookmarkFill:I.bookmark; btn.classList.toggle("active",!!bk); } }
@@ -223,6 +223,11 @@ function updateReaderBar(){ const bar=document.getElementById("rbar"); if(!bar) 
 let lastScroll=0;
 function afterRender(){
   const isReader = route.name==="read";
+  if (typeof profileHasEvilTheme === "function" && profileHasEvilTheme() && !store.evilThemeAutoApplied) {
+    store.evilThemeAutoApplied = true;
+    setTheme("evil");
+    updateSiteThemeControls();
+  }
   if (typeof updateMembershipWidget === "function") updateMembershipWidget();
   if (typeof applyBgSettings === "function") applyBgSettings();
   if (!isReader){

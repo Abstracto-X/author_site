@@ -2,31 +2,83 @@
 
 Active memory for unfinished work, deferred decisions, risky areas, and follow-up tasks. Completed durable changes belong in `CHANGELOG.md`; current system behavior belongs in `docs/`.
 
+## 2026-11-03 05:35 Asia/Kolkata — Topbar horizontal tier banners, Gallery / Resident Evil theme icons, and Evil theme sheet positioning fix
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / topbar chrome / navigation & theme icons / UI assets
+
+Files touched:
+- `assets/profile-frames/topbar-banner-licker.png`, `assets/profile-frames/topbar-banner-tyrant.png`, `assets/profile-frames/topbar-banner-nemesis.png`, `assets/profile-frames/topbar-banner-evil.png`, `js/subscription/utils.js`, `js/subscription/chrome.js`, `js/subscription/router.js`, `js/subscription/events.js`, `js/subscription/membership-journey.js`, `js/subscription/auth.js`, `styles/reader-foundation.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Cropped the owner's 4-tier horizontal banner sheet into `1024×92` RGBA PNGs (`topbar-banner-licker.png`, `topbar-banner-tyrant.png`, `topbar-banner-nemesis.png`, `topbar-banner-evil.png`) under `assets/profile-frames/` and replaced the top bar's `Active · {Tier name}` pill in `topbar()` (`js/subscription/chrome.js`) with `.access-chip.access-chip-banner` rendering the active tier's banner.
+- Replaced the off-center 4-point star (`I.spark`) previously shared by Gallery and the Resident Evil theme toggle: Gallery now uses a framed picture/landscape icon (`I.gallery` / `I.spark`), and the Resident Evil theme switcher in the top bar uses an Umbrella octagon icon (`I.evil`).
+- Fixed `.sheet` positioning under `html[data-theme="evil"]` in `styles/reader-foundation.css` by removing `.sheet` from the `position: relative` selector list so `.sheet` retains `position: fixed`.
+- Non-entitled states (`Not signed in`, `Checking account`, `Access expired`, `Sync pending`, `No access`, and `Admin mode` without an active tier) retain the standard `.access-chip` text pill.
+
+Remaining work:
+- Owner to visually inspect the topbar tier banner, Gallery icon, Resident Evil theme switcher icon, and Profile sheet opening in the browser.
+
+Risks / notes:
+- Clicking the topbar banner preserves `data-nav="/vault"` navigation and accessible `aria-label="Active · {Tier name}"`.
+
+Verification needed:
+- Refresh the reader, open Profile from the topbar user icon while in the Resident Evil theme, and confirm the Profile sheet opens in the viewport.
+
+## 2026-11-03 04:30 Asia/Kolkata — Site-wide Resident Evil theme and custom transparent PNG UI ornaments
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / site theme / UI assets
+
+Files touched:
+- `assets/evil-theme/button-frame.png`, `assets/evil-theme/divider-ornament.png`, `assets/evil-theme/corner-ornament.png`, `assets/evil-theme/crest-emblem.png`, `styles/reader-foundation.css`, `js/subscription/state.js`, `js/subscription/utils.js`, `js/subscription/chrome.js`, `js/subscription/events.js`, `js/subscription/views/reader-settings.js`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Added a site-wide **Resident Evil** (`data-theme="evil"`) theme in `styles/reader-foundation.css` matching the Resident Evil Profile sheet's pure `#000000` background and `#e5192b` crimson UI accents, while leaving chapter reader colors (`body.in-reader`) independent.
+- Generated custom Gothic Victorian woodcut UI artwork matching `assets/profile-frames/resident-evil-crimson.png`, unmixed/keyed the backgrounds to true `Format32bppArgb` transparent PNGs in `assets/evil-theme/`, and applied them across the site on panel/sheet corners (`corner-ornament.png`), primary/story buttons via 9-slice `border-image` (`button-frame.png`), progress/loading bars and section/nav dividers (`divider-ornament.png`), and brand/empty-state/preview crests (`crest-emblem.png`).
+- Added `Resident Evil` to `#/settings` Appearance and topbar theme cycling (`dark -> evil -> light`), and auto-applied `"evil"` once (`store.evilThemeAutoApplied`) when a reader has an active Resident Evil entitlement.
+
+Remaining work:
+- Owner to visually inspect the site-wide Resident Evil theme and transparent PNG ornaments across Home, Story Hub, Vault, Settings, and Profile in the browser.
+
+Risks / notes:
+- Chapter reader typography and page colors (`body.in-reader`) remain untouched by `html[data-theme="evil"]`.
+- `store.evilThemeAutoApplied` only auto-switches to `"evil"` once so a Resident Evil member who manually switches back to `dark` or `light` keeps their manual choice.
+
+Verification needed:
+- Refresh the reader, open `#/settings` (or use the topbar theme toggle) to select **Resident Evil**, and verify the pure black & red theme, corner ornaments, 9-slice Gothic buttons, progress/loading bars, dividers, and crest emblems.
+
 ## 2026-11-03 04:20 Asia/Kolkata — Admin-controlled test account tier override plan
 
-Status: TODO
+Status: NEEDS REVIEW
 
 Area:
 - writer / reader / database / auth
 
 Files touched:
-- `PROJECT_STATE.md` (planning only)
+- `writer.html`, `supabase/migrations/20261103043000_writer_test_account_tier_override.sql`, `js/subscription/auth.js`, `js/subscription/backend.js`, `js/subscription/membership-journey.js`, `index.html`, `tests/writer-safety.test.js`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
 
 Summary:
-- Owner wants a Writer hamburger-menu popup to change the real effective tier of the separate Divine Devil test account. No implementation or production data change has been made for this request.
+- Implemented a Writer hamburger-menu popup for the separate Divine Devil test account. It reads and changes the effective test tier through fixed-account, admin-checked RPCs; the popup reports unavailable until the migration is applied. No production data or login session was changed during implementation.
 - Live checks confirm that test account `56ea0e7f-b744-4b5f-af6f-134eb167625f` has active manual Evil and Patreon Nemesis entitlements. Simply adding or changing one row cannot reliably simulate Free/Licker/Tyrant, and provider sync can reactivate Patreon rows.
-- Effective access is determined by `has_active_entitlement` for chapter catalog/reader and chapter RLS; `get_my_entitlements` drives the reader Profile; mature gallery access uses separate `has_active_gallery_subscription`. A dedicated test override should take precedence in all three paths while leaving provider/manual rows intact.
+- Prepared an owner-reviewed migration whose private single-account override takes precedence in `has_active_entitlement`, `get_my_entitlements`, mature-gallery access, and direct chapter SELECT RLS, while leaving provider/manual rows intact. Reader Free presentation and background Profile refresh are wired.
 
 Remaining work:
-- Prepare an owner-reviewed timestamped migration for an admin-only, account-scoped override and auditable set/reset RPCs; update all effective-access paths, reader fallback behavior, and a compact Writer modal/menu. Do not apply the existing-schema migration with the restricted AI role.
-- Add tests for Free and all four tiers, reset, non-admin rejection, unrelated readers, provider resync, and reader refresh behavior; verify live after owner runs the migration.
+- Site owner must review and manually run `supabase/migrations/20261103043000_writer_test_account_tier_override.sql` using an owner credential. The restricted AI role must not alter existing schema/policies.
+- After deployment, verify admin/non-admin RPC permissions, all five choices and restore, chapter catalog/RPC/direct SELECT, mature-gallery visibility, Profile/frame/banner updates, notification eligibility, and that another reader's access plus the original manual/Patreon rows are unchanged. Browser design/focus QA remains owner-led.
 
 Risks / notes:
-- Keep the override confined to the named testing account, preserve its original grants and login session, and ensure direct entitlement fallback cannot bypass an active override.
-- Already-loaded chapter content may remain visible until navigation/reload under the reader's existing non-interrupting refresh behavior; new requests must use the override immediately.
+- The SQL migration parses and 99 Node tests pass, but those tests cannot prove live RLS/RPC behavior until owner deployment.
+- Follow-up review: live read-only checks confirmed the target profile is `reader`; gallery has only `gallery_published_subscription_read` plus admin-only `parent_compat_gallery_admin_all`, not the old unrestricted public-read policy. Override table is still absent. On 2026-11-03 05:04, the staged migration was updated to require `t.is_active` in normal entitlement presentation and to wrap installation/schema-cache notification in an explicit transaction, with regression assertions. It remains unapplied. Test tiers intentionally affect persistent publish notifications/email queue eligibility; no notification behavior was changed by these fixes.
+- Keep the override confined to the named testing account; the reader no longer uses raw entitlement fallback. Already-loaded chapter content may remain visible until navigation/reload under existing refresh behavior; new requests must use the override immediately.
+- Admin Writer and reader on the same origin share Supabase's persisted browser session. To keep both accounts signed in simultaneously, use separate browser profiles/incognito contexts; the tier override itself does not sign anyone out.
 
 Verification needed:
-- Owner review of migration and the resulting Writer/reader UI; live account-level checks after manual migration application.
+- Owner review of migration and the resulting Writer/reader UI; live account-level checks after manual migration application. No production change was made by this turn.
 
 ## 2026-11-03 03:22 Asia/Kolkata — Tier banners and minimal pure-black/red Resident Evil Profile sheet
 

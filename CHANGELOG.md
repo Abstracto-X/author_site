@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-11-03 05:04 Asia/Kolkata — Harden staged test-tier migration consistency and deployment
+
+Area: database / tests
+
+- Wrapped the pending test-account override migration in an explicit transaction, including the schema-cache notification, to prevent partial manual installation.
+- Added `t.is_active = true` to the normal reader entitlement `is_active` calculation so inactive tiers cannot appear active while chapter authorization denies them. Added regression assertions for both changes.
+- Files: `supabase/migrations/20261103043000_writer_test_account_tier_override.sql`, `tests/writer-safety.test.js`, `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Production migration remains unapplied; owner review/manual execution and live RLS/RPC verification remain required.
+- Validation: 29 Writer tests passed, PostgreSQL statement parsing passed, and targeted diff whitespace checks passed. Repository-wide whitespace checking also reports an unrelated trailing blank line in `tests/reader-membership-journey.test.js`.
+
+## 2026-11-03 05:35 Asia/Kolkata — Crop 4 horizontal tier banners, replace topbar membership pill, update Gallery & Resident Evil icons, and fix Evil theme sheet positioning
+
+Area: subscription reader / topbar chrome / navigation & theme icons / UI assets
+
+- Cropped the owner-supplied horizontal 4-tier banner sheet into `assets/profile-frames/topbar-banner-licker.png`, `topbar-banner-tyrant.png`, `topbar-banner-nemesis.png`, and `topbar-banner-evil.png` (`1024×92` RGBA each, cleanly separating the overlapping vertical bounds between Nemesis and Resident Evil without clipping).
+- Updated `topbar()` in `js/subscription/chrome.js` (and `MEMBERSHIP_TIERS` in `js/subscription/membership-journey.js`) to replace the `Active · {Tier name}` text pill with `.access-chip.access-chip-banner` displaying the active tier's cropped horizontal banner artwork while preserving `/vault` navigation, accessible labels, and non-tier fallback states (`Not signed in`, `Checking account`, `Access expired`, `Sync pending`, `No access`, `Admin mode`).
+- Replaced the off-center 4-point star (`I.spark`) used for Gallery and the Resident Evil topbar theme toggle: added a framed picture/landscape icon (`I.gallery`, also updating `I.spark`) for Gallery navigation/badges and an Umbrella octagon emblem (`I.evil`) for the Resident Evil mode in `topbar()` and `updateSiteThemeControls()`.
+- Fixed a CSS specificity bug in `styles/reader-foundation.css` where `html[data-theme="evil"] body:not(.in-reader):not(.in-studio) :is(...,.sheet)` set `position: relative` on `.sheet`, overriding `.sheet`'s `position: fixed` and causing Profile/modal sheets to render offscreen at the bottom of `<body>` while `.scrim` blurred the viewport.
+- Updated `refreshReaderAccessInBackground()` in `js/subscription/auth.js` so topbar chrome also re-renders when active entitlements change even if chapter catalog readability flags did not change.
+- Files: `assets/profile-frames/topbar-banner-licker.png`, `assets/profile-frames/topbar-banner-tyrant.png`, `assets/profile-frames/topbar-banner-nemesis.png`, `assets/profile-frames/topbar-banner-evil.png`, `js/subscription/utils.js`, `js/subscription/chrome.js`, `js/subscription/router.js`, `js/subscription/events.js`, `js/subscription/membership-journey.js`, `js/subscription/auth.js`, `styles/reader-foundation.css`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: ran syntax checks on modified scripts and passed 60/60 reader tests across `tests/reader-membership-journey.test.js`, `tests/reader-redesign.test.js`, and `tests/reader-access-refresh.test.js`.
+
+## 2026-11-03 04:34 Asia/Kolkata — Stage admin-controlled test account tiers
+
+Area: standalone Writer / subscription reader / database migration
+
+- Added a Writer hamburger-menu dialog for the Divine Devil testing account with Free, Licker, Tyrant, Nemesis, Evil, and Restore normal access. The dialog calls fixed-account, admin-checked RPCs rather than editing entitlement rows in the browser.
+- Prepared `20261103043000_writer_test_account_tier_override.sql`: a private, single-account override table; audited set/reset functions; override-aware chapter entitlement, direct chapter RLS, reader entitlement presentation, and mature-gallery helper. Existing Patreon/manual grants and the reader login session are not changed.
+- Reader presentation now treats an explicit Free override as Free even when Patreon is connected, preserves known access if the entitlement RPC fails instead of reading raw grants, and refreshes an open Profile when effective entitlements change.
+- Files: `writer.html`, `supabase/migrations/20261103043000_writer_test_account_tier_override.sql`, `js/subscription/auth.js`, `js/subscription/backend.js`, `js/subscription/membership-journey.js`, `index.html`, `tests/writer-safety.test.js`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/ADMIN_FUNCTION_INDEX.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: 99 Node tests passed; touched reader scripts and Writer inline scripts parsed; migration parsed as PostgreSQL statements. **The migration has not been applied to production.** Owner review and manual execution are required before the dialog can change access.
+
+## 2026-11-03 04:30 Asia/Kolkata — Add site-wide Resident Evil theme with custom transparent PNG UI ornaments
+
+Area: subscription reader / site theme / UI assets
+
+- Added a site-wide **Resident Evil** theme (`html[data-theme="evil"]`) in `styles/reader-foundation.css` (scoped to `body:not(.in-reader):not(.in-studio)` so chapter reader colors remain independent) matching the Resident Evil Profile sheet's pure `#000000` background and vivid `#e5192b` crimson accents.
+- Generated custom Gothic Victorian woodcut UI artwork matching `assets/profile-frames/resident-evil-crimson.png`, unmixed/keyed the backgrounds to true `Format32bppArgb` transparent PNGs in `assets/evil-theme/`, and wired them across the reader shell:
+  - `assets/evil-theme/corner-ornament.png` (`360×360`) on top-left and bottom-right corners of `.rh-hero`, `.rh-panel`, `.reader-panel`, `.vault-membership`, `.sheet`, and `.sheet.profile-evil-sheet`.
+  - `assets/evil-theme/button-frame.png` (`640×143`) via 9-slice `border-image` on primary/story buttons (`.btn.story`, `.btn.primary`).
+  - `assets/evil-theme/divider-ornament.png` (`640×143`) on `.bar` progress/loading bars, `.reader-page-heading`, `.rh-panel-head`, and `.reader-nav-divider`.
+  - `assets/evil-theme/crest-emblem.png` (`280×343`) on `.topbar .brand .mark`, collapsed `.sidenav a.rail-brand b`, `.empty .em`, and `.theme-preview-evil`.
+- Wired `"evil"` in `js/subscription/state.js` (`loadStore`), `js/subscription/utils.js` (`THEMES`, `normalizeTheme`, `toggleSiteTheme`), `js/subscription/views/reader-settings.js` (`VIEWS.settings`), `js/subscription/chrome.js` (`topbar`), and `js/subscription/events.js` (`updateSiteThemeControls`, `afterRender`), including one-time automatic activation (`store.evilThemeAutoApplied`) for readers with an active Resident Evil entitlement.
+- Files: `assets/evil-theme/button-frame.png`, `assets/evil-theme/divider-ornament.png`, `assets/evil-theme/corner-ornament.png`, `assets/evil-theme/crest-emblem.png`, `styles/reader-foundation.css`, `js/subscription/state.js`, `js/subscription/utils.js`, `js/subscription/chrome.js`, `js/subscription/events.js`, `js/subscription/views/reader-settings.js`, `index.html`, `tests/reader-membership-journey.test.js`, `docs/CODEBASE_OVERVIEW.md`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: ran syntax checks across all modified reader scripts and passed `tests/reader-redesign.test.js` (28/28) and `tests/reader-membership-journey.test.js` (18/18).
+
 ## 2026-11-03 03:22 Asia/Kolkata — Crop tier banners for Profile and simplify Resident Evil Profile sheet
 
 Area: subscription reader / Profile

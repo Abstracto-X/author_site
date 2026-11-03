@@ -119,8 +119,8 @@ Recent reader notification/profile changes:
 | 28 | `accountLabel()` | Helper used by this module. |
 | 31 | `isAdmin()` | Helper used by this module. |
 | 32 | `refreshProfile()` | Loads fresh data/state from Supabase or local runtime state. |
-| 45 | `persona()` | Helper used by this module. |
-| 53 | `refreshEntitlements()` | Loads fresh data/state from Supabase or local runtime state. |
+| 45 | `persona()` | Resolves the best verified tier; an explicit inactive Free test override suppresses stale local key-holder presentation. |
+| 53 | `refreshEntitlements()` | Loads effective account access from `get_my_entitlements()` and preserves known state on read failure; it never falls back to raw entitlement rows that could bypass a test override. |
 | n/a | `refreshProviderConnections()` / `providerConnection()` / `providerIsConnected()` | Loads and resolves the reader's own provider connection status. |
 | n/a | `readPatreonCallbackResult()` / `cleanPatreonCallbackUrl()` / `showPatreonCallbackResult()` | Handles safe Patreon callback status feedback and cleanup. |
 | n/a | `readBoostyCallbackResult()` / `cleanBoostyCallbackUrl()` / `showBoostyCallbackResult()` | Handles safe Boosty-through-Discord callback feedback, missing-role/server outcomes, and URL cleanup. |
@@ -132,7 +132,7 @@ Recent reader notification/profile changes:
 | 120 | `consumeOAuthCallback(client)` | Coordinates authentication/session behavior. |
 | n/a | `refreshReaderAccountState(options = {})` | Refreshes account datasets, then automatically checks stale connected Patreon and Boosty/Discord access. |
 | n/a | `refreshConnectedProviderAccess(options = {})` / `providerAccessStatus(provider)` | Checks connected providers when stale/expired, coalesces in-flight syncs, applies cooldown/backoff, and exposes safe verified/unavailable/reconnect status. |
-| n/a | `startReaderAccessRefresh()` / `refreshReaderAccessInBackground()` | Binds visible-page minute, visibility, and online recovery checks; tracks entitlement signatures across expiry and reconciles catalog access without interrupting loaded authorized text. |
+| n/a | `startReaderAccessRefresh()` / `refreshReaderAccessInBackground()` | Binds visible-page minute, visibility, and online recovery checks; tracks effective entitlement changes across expiry/test-tier switches, reconciles catalog access, and rebuilds an open Profile sheet without logging the reader out. |
 | 144 | `initAuth()` | Coordinates authentication/session behavior while ignoring duplicate `INITIAL_SESSION`, token-refresh, and same-session sign-in callbacks. |
 | 185 | `signInWithPassword(email, password)` | Coordinates authentication/session behavior. |
 | 200 | `signUpWithPassword(email, password)` | Coordinates authentication/session behavior. |
@@ -262,16 +262,16 @@ Recent reader notification/profile changes:
 | n/a | `loadOptionalBackendRows(label, requestFactory)` | Resolves an optional Supabase reader query with a deadline while preserving soft-failure behavior. |
 | 119 | `loadBackendLibrary(options = {})` | Loads independent reader datasets and per-story chapter catalogs with bounded core retries, then normalizes them into runtime state. |
 | n/a | `refreshBackendChapterAccess()` | Fetches all existing-story catalogs before updating chapter access in place; preserves authorized loaded text, clears denied/unpublished text, and rejects stale-account/library results. |
-| 168 | `loadReaderChapterFromBackend(chapterId)` | Loads secure chapter text with a deadline and bounded retry, retaining a recoverable error code for the UI. |
+| 168 | `loadReaderChapterFromBackend(chapterId)` | Loads secure chapter text with a deadline and bounded retry, retaining a recoverable error code for the UI; skips futile provider-resync retry when an explicit test override denies a chapter. |
 | 520 | `incrementChapterViews(chapterId)` | Increments the views count of a chapter in the database using a SECURITY DEFINER RPC. |
 
 ## `js/subscription/utils.js`
 
 | Line | Function | Purpose |
 |---:|---|---|
-| 15 | `applyTheme()` | Applies the normalized dark/light site-chrome mode. |
-| 19 | `setTheme(id)` | Saves and applies the independent dark/light site-chrome mode. |
-| n/a | `toggleSiteTheme()` | Switches site chrome between light and dark without changing reader colors. |
+| 15 | `applyTheme()` | Applies the normalized dark/light/evil site-chrome mode (`data-theme`). |
+| 19 | `setTheme(id)` | Saves and applies the independent dark/light/evil site-chrome mode. |
+| n/a | `toggleSiteTheme()` | Cycles site chrome through `dark -> evil -> light` without changing reader colors. |
 | n/a | `normalizeReaderTheme(id)` | Normalizes the reader-only dark/light/parchment/custom color selection. |
 | n/a | `readerThemeStyle(settings)` | Derives brightness-adjusted reader surfaces and accessible foreground/dialogue tokens, including custom colors. |
 | 18 | `chapterResolved(ch)` | Uses backend catalog `can_read` as the authority for Supabase chapters; the legacy local persona fallback applies only to non-backend chapters. |
@@ -310,7 +310,8 @@ Recent reader notification/profile changes:
 | Line | Function | Purpose |
 |---:|---|---|
 | 5 | `brandMark()` | Helper used by this module. |
-| 7 | `topbar()` | Helper used by this module. |
+| n/a | `topbarTierBanner(P, checkingAccount)` | Resolves the active Resident tier's cropped horizontal topbar banner (`assets/profile-frames/topbar-banner-*.png`). |
+| 7 | `topbar()` | Renders the top bar, replacing the `Active · {Tier name}` pill with the cropped tier banner image when an active Resident tier exists. |
 | 21 | `bottomnav(active)` | Coordinates navigation or route rendering. |
 | 25 | `sidenav(active)` | Coordinates navigation or route rendering. |
 | 29 | `announcement()` | Helper used by this module. |
@@ -404,7 +405,7 @@ Recent reader notification/profile changes:
 |---|---|
 | `membershipTier` / `membershipTierCards` | Map the four known tier names to decorative emblems and neutral tier previews; never determine access. |
 | `profileHasEvilTheme` | Apply the Resident Evil Profile skin only when current active entitlements include that tier, independent of the chosen decorative frame. |
-| `membershipProfileBanner` | Render entitlement-backed tier color and status within signed-in Profile, with distinct admin, unconnected, and connection-needs-attention states. |
+| `membershipProfileBanner` | Render the cropped tier banner image (`assets/profile-frames/tier-banner-*.png`) for active entitlements within signed-in Profile, with distinct admin, Free-override, unconnected, and connection-needs-attention states. |
 | `availableProfileFrames` / `selectedProfileFrame` / `shiftProfileFrame` | Offer only the current verified membership tier's and lower-tier portrait frames; default to the current tier and persist the selected art per user in local browser storage. |
 | `loadProfileFrameArt` / `renderProfileFrame` | Cache the original transparent PNGs and draw the selected portrait frame to a high-quality canvas at its displayed pixel size, avoiding CSS sprite downscale aliasing; CSS art remains a load/error fallback. |
 | `sheetMembershipJourney` | Render guest sign-in/create-account with a locked provider preview and guest choice. |

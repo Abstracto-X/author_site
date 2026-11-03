@@ -89,6 +89,9 @@ function persona(){
       since: best.created_at || ""
     };
   }
+  if ((authState.entitlements || []).some(e => e.source === "test_override" && e.tier_slug === "free")) {
+    return Object.assign({}, PERSONA_ACCESS["no-access"], { signedIn:true });
+  }
   if (store.grantedKey) return Object.assign({}, PERSONA_ACCESS["key-holder"], { signedIn:true });
   if (store.providerPending) return Object.assign({}, PERSONA_ACCESS.pending, { signedIn:true });
   return Object.assign({}, PERSONA_ACCESS["no-access"], { signedIn:true });
@@ -103,20 +106,10 @@ async function refreshEntitlements(){
     authState.entitlements = Array.isArray(data) ? data : [];
   } catch (err) {
     if (authState.user?.id !== userId) return [];
-    // A temporary outage must not turn a known membership into "no access".
-    if (!["PGRST202", "42883"].includes(err.code)) { authState.error = err; return authState.entitlements; }
-    try {
-      const data = await runBackendRequest("membership access", () => client.from("user_entitlements").select("*, reader_access_tiers(name, slug, tier_rank)").eq("user_id", userId), { retries:0 });
-      if (authState.user?.id !== userId) return [];
-      authState.entitlements = (data || []).map(row => ({
-        ...row,
-        tier_name: row.reader_access_tiers?.name || row.tier_name,
-        tier_slug: row.reader_access_tiers?.slug || row.tier_slug,
-        tier_rank: row.reader_access_tiers?.tier_rank || row.tier_rank
-      }));
-    } catch (fallbackErr) {
-      if (authState.user?.id === userId) authState.error = fallbackErr;
-    }
+    // Preserve known access during a transient error. Raw entitlement rows are
+    // not a safe fallback: the server RPC may intentionally mask them for an
+    // admin-selected test tier.
+    authState.error = err;
   }
   return authState.entitlements;
 }
@@ -585,7 +578,8 @@ async function refreshReaderAccessInBackground(){
       if (changed === null) return; // Library load is busy; retry next tick.
       readerAccessSignatures.set(userId, after);
       const readingLoadedText = typeof route !== "undefined" && route.name === "read" && typeof currentChapter !== "undefined" && currentChapter?.ch?.content && currentChapter.ch.can_read_backend;
-      if (authState.user?.id === userId && !readingLoadedText && (changed || route.name === "vault")) render({ preserveScroll:true });
+      if (authState.user?.id === userId && !readingLoadedText && (changed || before !== after || route.name === "vault")) render({ preserveScroll:true });
+      if (authState.user?.id === userId && typeof currentSheet !== "undefined" && currentSheet?.builder === sheetProfile) openSheet(sheetProfile);
     }
   })().catch(err => console.warn("Automatic reader access refresh unavailable", err.code || "reader_request_failed"))
     .finally(() => { readerAccessRefreshRequest = null; });

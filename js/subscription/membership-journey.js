@@ -4,10 +4,10 @@
 const MEMBERSHIP_WELCOME_KEY = "aether-membership-welcome-v1";
 let membershipEmailMode = "signin";
 const MEMBERSHIP_TIERS = [
-  { name:"Resident Licker", className:"licker", mark:"I", banner:"assets/profile-frames/tier-banner-licker.png" },
-  { name:"Resident Tyrant", className:"tyrant", mark:"II", banner:"assets/profile-frames/tier-banner-tyrant.png" },
-  { name:"Resident Nemesis", className:"nemesis", mark:"III", banner:"assets/profile-frames/tier-banner-nemesis.png" },
-  { name:"Resident Evil", className:"evil", mark:"IV", banner:"assets/profile-frames/tier-banner-evil.png" }
+  { name:"Resident Licker", className:"licker", mark:"I", banner:"assets/profile-frames/tier-banner-licker.png", topbarBanner:"assets/profile-frames/topbar-banner-licker.png" },
+  { name:"Resident Tyrant", className:"tyrant", mark:"II", banner:"assets/profile-frames/tier-banner-tyrant.png", topbarBanner:"assets/profile-frames/topbar-banner-tyrant.png" },
+  { name:"Resident Nemesis", className:"nemesis", mark:"III", banner:"assets/profile-frames/tier-banner-nemesis.png", topbarBanner:"assets/profile-frames/topbar-banner-nemesis.png" },
+  { name:"Resident Evil", className:"evil", mark:"IV", banner:"assets/profile-frames/tier-banner-evil.png", topbarBanner:"assets/profile-frames/topbar-banner-evil.png" }
 ];
 const PROFILE_FRAMES = [
   { id:"licker", label:"Resident Licker", tierIndex:0 },
@@ -107,6 +107,9 @@ function membershipProfileBanner(){
     return `<section class="profile-tier ${tier?.className || "member"}" aria-label="Membership status"><span class="profile-tier-state">Membership active</span><strong>${esc(name)}</strong><p>Connected through ${esc(source)}. Chapters included with your tier are available to read.</p><button class="profile-tier-link" data-nav="/vault">View your access ${I.chevR}</button></section>`;
   }
   if (isAdmin()) return `<section class="profile-tier admin" aria-label="Reading access"><span class="profile-tier-state">Reader access</span><strong>All published chapters</strong><p>Your account can read published chapters.</p></section>`;
+  if ((authState.entitlements || []).some(entitlement => entitlement.source === "test_override" && entitlement.tier_slug === "free")) {
+    return `<section class="profile-tier no-tier" aria-label="Membership status"><span class="profile-tier-state">Reading access</span><strong>Free access</strong><p>Free chapters are ready to read.</p><button class="profile-tier-link" data-nav="/vault">View your access ${I.chevR}</button></section>`;
+  }
   const connected = providerIsConnected("patreon") || providerIsConnected("boosty_discord");
   return `<section class="profile-tier no-tier" aria-label="Membership status"><span class="profile-tier-state">Membership</span><strong>${connected ? "Connection needs attention" : "No membership connected"}</strong><p>${connected ? "We could not confirm an active tier for this account." : "Free chapters are ready to read."}</p><button class="profile-tier-link" data-nav="/vault">${connected ? "Check your access" : "Connect a membership"} ${I.chevR}</button></section>`;
 }
