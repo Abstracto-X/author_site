@@ -263,6 +263,8 @@ function applyReactionRows(chapterId, rows){
   store.reactions[chapterId] = { picked, counts };
 }
 async function loadChapterCommunity(chapterId, options = {}){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || !chapterId) return false;
   if (!options.force && communityState.commentsLoaded[chapterId] && communityState.reactionsLoaded[chapterId]) return true;
@@ -278,6 +280,7 @@ async function loadChapterCommunity(chapterId, options = {}){
         .eq("chapter_id", chapterId)
     ]);
     if (commentError) throw commentError;
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return false;
     store.comments[chapterId] = (comments || []).map(normalizeBackendComment);
     communityState.commentsLoaded[chapterId] = true;
     if (!reactionResult.error) {
@@ -294,6 +297,8 @@ async function loadChapterCommunity(chapterId, options = {}){
   }
 }
 async function postChapterComment(chapterId, text, para){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || !authState.user) throw new Error("Sign in before posting a reader note.");
   const profile = authState.profile || {};
@@ -313,10 +318,13 @@ async function postChapterComment(chapterId, text, para){
     metadata
   });
   if (error) throw error;
+  if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return null;
   communityState.commentsLoaded[chapterId] = false;
   await loadChapterCommunity(chapterId, { force:true });
 }
 async function saveChapterReaction(chapterId, reaction){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || !authState.user) throw new Error("Sign in before reacting.");
   const current = store.reactions[chapterId]?.picked || null;
@@ -332,6 +340,7 @@ async function saveChapterReaction(chapterId, reaction){
     }, { onConflict:"user_id,chapter_id" });
     if (error) throw error;
   }
+  if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return null;
   communityState.reactionsLoaded[chapterId] = false;
   await loadChapterCommunity(chapterId, { force:true });
 }
@@ -537,6 +546,8 @@ function normalizeNotification(row){
   };
 }
 async function loadNotificationPreferences(){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || !authState.user) return null;
   try {
@@ -546,6 +557,7 @@ async function loadNotificationPreferences(){
       .eq("user_id", authState.user.id)
       .maybeSingle();
     if (error) throw error;
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return null;
     store.notificationPrefs = data || {
       user_id: authState.user.id,
       browser_enabled: !!store.settings.browserNotifications,
@@ -564,6 +576,8 @@ async function loadNotificationPreferences(){
   }
 }
 async function saveNotificationPreferences(prefs){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || !authState.user) throw new Error("Sign in before changing notification preferences.");
   const record = {
@@ -579,6 +593,7 @@ async function saveNotificationPreferences(prefs){
     .select()
     .single();
   if (error) throw error;
+  if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return null;
   store.notificationPrefs = data || record;
   store.settings.browserNotifications = !!record.browser_enabled;
   store.settings.emailNotifications = !!record.email_enabled;
@@ -587,6 +602,8 @@ async function saveNotificationPreferences(prefs){
   return store.notificationPrefs;
 }
 async function loadReaderNotifications(options = {}){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || !authState.user) return [];
   try {
@@ -597,6 +614,7 @@ async function loadReaderNotifications(options = {}){
       .order("created_at", { ascending:false })
       .limit(40);
     if (error) throw error;
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return [];
     const remote = (data || []).map(normalizeNotification).filter(n => !store.dismissedNotifs.includes(n.id));
     const local = (store.notifs || []).filter(n => !n.id || !String(n.id).match(/^[0-9a-f-]{36}$/i));
     store.notifs = [...remote, ...local].slice(0, 50);

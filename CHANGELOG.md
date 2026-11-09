@@ -1918,3 +1918,7 @@ Restored post-verification author UI preferences and added source-only private l
 ## 2026-11-09 — Reader account-local state
 
 Separated reader saved state by guest/account within existing site/backend scope. Auth user assignments switch records before account refresh. Added behavioral Alice/Bob/guest progress/private-state test. Files: state.js, auth.js, index.html cache versions, tests/reader-account-storage.test.js and overview/reader index/state/changelog. 124 tests plus state/auth syntax pass. No DB changes.
+
+## 2026-11-09 — Stale reader notification/community guards
+
+Guarded stale reader notification/community completions across account-local store changes; reset community loaded flags on account transition. Files: backend.js, state.js, index.html cache versions, tests/reader-stale-notifications.test.js and overview/reader index/state/changelog. 130 tests pass including six delayed preference/notification cases; no DB changes.

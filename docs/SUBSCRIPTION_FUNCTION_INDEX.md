@@ -564,3 +564,7 @@ getStore(): returns SiteStorage.local or in-memory fallback. SiteStorage.create(
 ## 2026-11-09 — Reader account-local state
 
 readerStoreKey(): selects guest versus account-specific state key. switchReaderAccount(userId): flush old local state and hydrate destination account state. loadStore/saveStore use that key. Auth assignment paths invoke account switching; server access remains backend authority.
+
+## 2026-11-09 — Stale reader notification/community guards
+
+loadNotificationPreferences/saveNotificationPreferences/loadReaderNotifications and loadChapterCommunity/postChapterComment/saveChapterReaction capture requestStore/requestUserId and reject stale application. switchReaderAccount resets community commentsLoaded/reactionsLoaded. Server writes are not cancelled by these guards.

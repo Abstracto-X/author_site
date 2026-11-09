@@ -394,3 +394,7 @@ After bindAuthor, Admin restores allowed view, character/story/chapter selection
 ## 2026-11-09 — Reader account-local state
 
 Reader state.js now chooses a guest legacy-compatible state key or reader-account:<encoded user id>:state-v1 inside the site/backend adapter. switchReaderAccount saves the previous record, changes key and loads the destination account record. Auth initialization, callback/token events, password login/signup/update and signout call it whenever authState.user is assigned. Guest records are not copied into signed-in records; no inference of ownership for old combined private state. Each account initially receives honest defaults pending normal backend refresh.
+
+## 2026-11-09 — Stale reader notification/community guards
+
+Notification preference reads/saves and notification list reads capture initiating user ID and store object; late results cannot mutate a replacement account store, including A→B→A. Community comment/reaction load and post-write refresh paths use the same capture guard. switchReaderAccount clears community loaded flags so another account does not reuse cached loaded status. These guards do not cancel or roll back server mutations already sent.

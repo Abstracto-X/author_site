@@ -56,6 +56,10 @@ function switchReaderAccount(userId){
   saveStore();
   readerStoreAccount = next;
   loadStore();
+  if (typeof communityState !== 'undefined') {
+    communityState.commentsLoaded = {};
+    communityState.reactionsLoaded = {};
+  }
 }
 function loadStore(){
   const defaults = defaultStore();
