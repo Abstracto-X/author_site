@@ -26,6 +26,7 @@ async function bootstrapReaderData(){
     }, 12000))
   ]);
   await loadBackendLibrary();
+  if (typeof loadPublicAccessTiers === "function") await loadPublicAccessTiers();
   if (typeof startReaderNotificationPolling === "function") startReaderNotificationPolling();
   startReaderAccessRefresh();
   saveStore();

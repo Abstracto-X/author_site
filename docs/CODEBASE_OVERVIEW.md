@@ -414,3 +414,7 @@ Removed chrome duplicate TOPBAR_TIER_BANNERS registry and tier-name fallback. to
 ## 2026-11-09 — Profile ID-based cosmetic eligibility
 
 membershipTier now accepts an entitlement object and resolves tier_id against CONFIG.tierPresentation. Profile banner keeps actual DB name, uses scoped artwork, and theme eligibility requires siteTheme:evil on its mapped active entitlement. Frame eligibility temporarily resolves the mapped class against the legacy frame list, no longer name-substring matching; frame definitions/order and guest tier preview remain legacy and require next migration.
+
+## 2026-11-09 — Membership portability batch
+
+Completed three related tasks: profileFrames are repository definitions with reviewed local art/sprite slice and cosmetic labels; tierPresentation.frameIds/defaultFrameId explicitly allow/default frames by mapped active entitlement (no array-position eligibility). Guest membershipTierCards renders D.ACCESS_TIERS real active backend names, escapes labels, supports any count and uses neutral provider-page guidance when unavailable. Removed MEMBERSHIP_TIERS bundled business names. Custom-theme control labels now say Member theme/eligible membership rather than a source tier name. Frame presentation never grants backend access. loadPublicAccessTiers runs after core library startup. Bootstrap forwards normalized profileFrames; resolver rejects duplicate IDs, invalid local assets and unknown allowed/default frame references. Existing source frame IDs retained for preference compatibility.

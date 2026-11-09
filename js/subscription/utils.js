@@ -5,7 +5,7 @@
 const THEMES = [
   { id:"dark", name:"Dark Mode", dot:"linear-gradient(135deg,#14161f,#d4b06a)" },
   { id:"light", name:"Light Mode", dot:"linear-gradient(135deg,#ffffff,#2563eb)" },
-  { id:"evil", name:"Resident Evil", dot:"linear-gradient(135deg,#000000,#e5192b)" }
+  { id:"evil", name:"Member theme", dot:"linear-gradient(135deg,#000000,#e5192b)" }
 ];
 function normalizeTheme(id) {
   return id === "light" || id === "evil" ? id : "dark";

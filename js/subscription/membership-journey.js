@@ -3,27 +3,9 @@
 
 const MEMBERSHIP_WELCOME_KEY = "aether-membership-welcome-v1";
 let membershipEmailMode = "signin";
-const MEMBERSHIP_TIERS = [
-  { name:"Resident Licker", className:"licker", mark:"I", banner:"assets/profile-frames/tier-banner-licker.png", topbarBanner:"assets/profile-frames/topbar-banner-licker.png" },
-  { name:"Resident Tyrant", className:"tyrant", mark:"II", banner:"assets/profile-frames/tier-banner-tyrant.png", topbarBanner:"assets/profile-frames/topbar-banner-tyrant.png" },
-  { name:"Resident Nemesis", className:"nemesis", mark:"III", banner:"assets/profile-frames/tier-banner-nemesis.png", topbarBanner:"assets/profile-frames/topbar-banner-nemesis.png" },
-  { name:"Resident Evil", className:"evil", mark:"IV", banner:"assets/profile-frames/tier-banner-evil.png", topbarBanner:"assets/profile-frames/topbar-banner-evil.png" }
-];
-const PROFILE_FRAMES = [
-  { id:"licker", label:"Resident Licker", tierIndex:0 },
-  { id:"tyrant", label:"Resident Tyrant", tierIndex:1 },
-  { id:"nemesis", label:"Resident Nemesis", tierIndex:2 },
-  { id:"evil-crimson", label:"Resident Evil · Crimson Crest", tierIndex:3 },
-  { id:"evil-haunting", label:"Resident Evil · Haunted Estate", tierIndex:3 }
-];
+const PROFILE_FRAMES = typeof CONFIG !== 'undefined' ? CONFIG.profileFrames || [] : [];
 const profileFrameImages = new Map();
-const PROFILE_FRAME_ART = {
-  licker:{ src:"assets/profile-frames/member-tiers.png", slice:0 },
-  tyrant:{ src:"assets/profile-frames/member-tiers.png", slice:1 },
-  nemesis:{ src:"assets/profile-frames/member-tiers.png", slice:2 },
-  "evil-crimson":{ src:"assets/profile-frames/resident-evil-crimson.png" },
-  "evil-haunting":{ src:"assets/profile-frames/resident-evil-haunting.png" }
-};
+const PROFILE_FRAME_ART = Object.fromEntries(PROFILE_FRAMES.map(frame => [frame.id, {src:frame.src, slice:frame.slice}]));
 
 function loadProfileFrameArt(src){
   if (!profileFrameImages.has(src)) {
@@ -70,19 +52,26 @@ function profileHasEvilTheme(){
   return activeEntitlements().some(entitlement => membershipTier(entitlement)?.siteTheme === 'evil');
 }
 function membershipTierCards(){
-  return MEMBERSHIP_TIERS.map(tier => `<div class="membership-tier ${tier.className}"><span class="membership-tier-art" aria-hidden="true">${tier.mark}</span><div><strong>${tier.name}</strong><small>Explore this tier on the membership page</small></div></div>`).join("");
+  const tiers = typeof D !== 'undefined' && Array.isArray(D.ACCESS_TIERS) ? D.ACCESS_TIERS : [];
+  if (!tiers.length) return '<p class="membership-provider-note">See the provider page for current membership options.</p>';
+  return tiers.filter(tier => tier.is_active !== false).map(tier => {
+    const visual = typeof CONFIG !== 'undefined' ? CONFIG.tierPresentation?.[tier.id] : null;
+    return `<div class="membership-tier ${esc(visual?.className || 'standard')}"><div><strong>${esc(tier.name || 'Member access')}</strong><small>Explore this tier on the membership page</small></div></div>`;
+  }).join('');
 }
+
 function availableProfileFrames(){
   if (!authState.user) return [];
-  const tierIndex = Math.max(-1, ...activeEntitlements().map(entitlement =>
-    MEMBERSHIP_TIERS.findIndex(tier => tier.className === membershipTier(entitlement)?.className)));
-  return tierIndex < 0 ? [] : PROFILE_FRAMES.filter(frame => frame.tierIndex <= tierIndex);
+  const allowed = new Set(activeEntitlements().flatMap(entitlement => membershipTier(entitlement)?.frameIds || []));
+  return PROFILE_FRAMES.filter(frame => allowed.has(frame.id));
 }
 function profileFrameStorageKey(){ return `aether-profile-frame-v1:${authState.user?.id || ""}`; }
 function selectedProfileFrame(frames = availableProfileFrames()){
   if (!frames.length) return null;
   const saved = LS.getItem(profileFrameStorageKey());
-  return frames.find(frame => frame.id === saved) || frames.find(frame => frame.tierIndex === frames[frames.length - 1].tierIndex) || frames[0];
+  const best = [...activeEntitlements()].sort((a,b)=>Number(b.tier_rank||0)-Number(a.tier_rank||0))[0];
+  const defaultId = membershipTier(best)?.defaultFrameId;
+  return frames.find(frame => frame.id === saved) || frames.find(frame => frame.id === defaultId) || frames[0];
 }
 function shiftProfileFrame(direction){
   const frames = availableProfileFrames();

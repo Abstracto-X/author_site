@@ -344,6 +344,17 @@ async function saveChapterReaction(chapterId, reaction){
   communityState.reactionsLoaded[chapterId] = false;
   await loadChapterCommunity(chapterId, { force:true });
 }
+async function loadPublicAccessTiers(){
+  const client = getSupabase();
+  D.ACCESS_TIERS = [];
+  if (!client) return [];
+  try {
+    const rows = await runBackendRequest('membership tier catalog', () => client.from('reader_access_tiers')
+      .select('id,name,tier_rank,is_active').eq('is_active',true).order('tier_rank',{ascending:true}), { retries:0 });
+    D.ACCESS_TIERS = (rows || []).filter(tier => tier.is_active === true);
+  } catch (err) { console.warn('Membership options unavailable; use configured provider page.', err); }
+  return D.ACCESS_TIERS;
+}
 async function loadSiteSettings(){
   const client = getSupabase();
   if (!client) return [];

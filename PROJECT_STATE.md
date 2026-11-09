@@ -2275,3 +2275,13 @@ Status: IN PROGRESS. Topbar banners now use active entitlement tier_id and curre
 ## 2026-11-09 — Profile ID-based cosmetic eligibility
 
 Status: IN PROGRESS. Profile banners/theme now ID-scoped, actual DB label preserved. availableProfileFrames entry eligibility no longer accepts name-only entitlements but still uses legacy class/order registry. 135 tests pass. Files: membership journey/settings/config, three HTML cache versions, membership tests and docs/changelog. Next mandatory: move frame definitions/art/eligibility out of legacy array; replace guest static MEMBERSHIP_TIERS preview with real DB tier catalog plus scoped presentation; generic theme labels must not appear on unrelated identity. Current remaining preview is known unfinished cross-brand surface, not production-ready multisite completion. Browser checks pending; no DB changes.
+
+## 2026-11-09 — Frame mapping work in progress; batch commit cadence
+
+Status: IN PROGRESS
+
+Owner requested commits every 2–3 related tasks rather than micro-commits. Current uncommitted task moves profile frame definitions/art and explicit per-tier allowed/default frame IDs into repo profiles, validates references/assets, forwards through bootstrap, and removes frame-array-index eligibility. Files: site-settings.js, site-config.js, site-bootstrap.js, membership-journey.js, three entrypoint cache versions, settings tests. 136 tests and settings/membership syntax pass. Not yet committed; formal overview/index/changelog update will accompany the batch. Next related task: replace static guest MEMBERSHIP_TIERS preview with real active DB tiers, then generic custom-theme labels. No DB writes or browser verification. Full plan remains active.
+
+## 2026-11-09 — Membership portability batch
+
+Status: IN PROGRESS. Frame mapping task and two followups now complete as one batch: repo frame art/explicit eligibility, real backend membership catalog, generic theme labels. 138 tests pass and public-read policy metadata verified through restricted SELECT; no DB writes. Files: shared settings/bootstrap/config, membership/backend/config/bootstrap app, theme UI modules, three entrypoints/tests/docs. Existing uncommitted frame-state entry is superseded by this batch. Manual: source all four tiers retain frames/default cycling; rename/add/disable tiers; verify guest >4-tier options and missing/failed catalog; second identity with no frame map shows neutral appearance. Actual anonymous browser read, visual checks and downgrades still unverified. Remaining full plan: Writer audience/test tooling, legacy entitlement summaries, story-specific decorations/defaults, OAuth URLs/async lifecycle audit, target backend compatibility/provisioning/deployment. Goal remains active.

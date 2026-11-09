@@ -584,3 +584,7 @@ topbarTierBanner(P,checkingAccount): uses highest current entitlement tier_id an
 ## 2026-11-09 — Profile ID-based cosmetic eligibility
 
 membershipTier(entitlement): ID-only scoped presentation lookup (changed from name argument). profileHasEvilTheme(): active mapped siteTheme cosmetic eligibility. membershipProfileBanner(): real tier label plus scoped ID artwork. availableProfileFrames(): mapped class check pending replacement of legacy frame-order registry.
+
+## 2026-11-09 — Membership portability batch
+
+loadPublicAccessTiers(): public active reader_access_tiers catalog, honest empty on failure. membershipTierCards(): real catalog labels and scoped decoration. availableProfileFrames()/selectedProfileFrame(): explicit mapped frameIds/defaultFrameId, not legacy tierIndex. PROFILE_FRAMES/PROFILE_FRAME_ART derive from normalized repository profileFrames; no hardcoded frame registry.

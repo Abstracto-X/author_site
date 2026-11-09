@@ -70,6 +70,14 @@
         if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
         appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
       }
+      var profileFrames = [];
+      if (profile.profileFrames !== undefined && !Array.isArray(profile.profileFrames)) return neutral('invalid_profile_frames');
+      var frameIds = new Set();
+      for (var frame of profile.profileFrames || []) {
+        if (!object(frame) || !/^[a-z0-9-]+$/i.test(frame.id || '') || frameIds.has(frame.id) || typeof frame.label !== 'string' || !/^assets\/[a-z0-9_/-]+\.(png|webp|jpg|svg)$/i.test(frame.src || '') || frame.src.includes('..') || (frame.slice !== undefined && ![0,1,2].includes(frame.slice))) return neutral('invalid_profile_frames');
+        frameIds.add(frame.id);
+        profileFrames.push({ id:frame.id, label:frame.label, src:frame.src, slice:frame.slice });
+      }
       var tierPresentation = {};
       if (profile.tierPresentation !== undefined && !object(profile.tierPresentation)) return neutral('invalid_tier_presentation');
       for (var id of Object.keys(profile.tierPresentation || {})) {
@@ -83,12 +91,19 @@
       }
       for (var tierId of Object.keys(tierPresentation)) {
         var original = profile.tierPresentation[tierId];
+        if (original.frameIds !== undefined) {
+          if (!Array.isArray(original.frameIds) || original.frameIds.some(function (id) { return !frameIds.has(id); })) return neutral('invalid_profile_frames');
+          tierPresentation[tierId].frameIds = original.frameIds.slice();
+          if (original.defaultFrameId !== undefined && !original.frameIds.includes(original.defaultFrameId)) return neutral('invalid_profile_frames');
+          tierPresentation[tierId].defaultFrameId = original.defaultFrameId || original.frameIds[0];
+        }
+
         if (original.siteTheme === 'evil') tierPresentation[tierId].siteTheme = 'evil';
         if (original.banner) tierPresentation[tierId].banner = original.banner;
         if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
         if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation };
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames };
     } catch (_) {
       return neutral('invalid_input');
     }

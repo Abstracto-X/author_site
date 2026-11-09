@@ -18,7 +18,7 @@ test('selects only explicit matching profile and normalizes a detached allowlist
   p.orchard.identity.role = 'admin'; p.orchard.links.script = 'https://evil.example/';
   p.orchard.serviceRoleKey = 'secret'; p.orchard.site_identity = { siteName: 'DB override' };
   const result = resolve(deployment(), p, { siteName: 'DB override' });
-  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {} });
+  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [] });
   result.identity.siteName = 'changed'; result.links.supportUrl = 'changed';
   assert.equal(p.orchard.identity.siteName, ' Orchard ');
   assert.equal(resolve(deployment(), p).identity.siteName, 'Orchard');
@@ -100,4 +100,11 @@ test('tier presentation resolver rejects CSS injection and strips unauthorized f
  const p=profiles();p.orchard.tierPresentation={'tier-id':{accent:'#123456',name:'Fake tier',can_read:true}};
  const result=resolve(deployment(),p);assert.equal(result.tierPresentation['tier-id'].rgb,'18, 52, 86');assert.equal(result.tierPresentation['tier-id'].can_read,undefined);
  p.orchard.tierPresentation['tier-id'].accent='red;display:none';assert.equal(resolve(deployment(),p).error,'invalid_tier_presentation');
+});
+test('profile frame rules are detached, site-scoped and reference only reviewed local art',()=>{
+ const p=profiles();p.orchard.profileFrames=[{id:'crest',label:'Local crest',src:'assets/crest.png'}];p.orchard.tierPresentation={'tier-id':{accent:'#123456',frameIds:['crest'],defaultFrameId:'crest'}};
+ const r=resolve(deployment(),p);assert.equal(r.profileFrames[0].id,'crest');p.orchard.profileFrames[0].label='mutated';assert.equal(r.profileFrames[0].label,'Local crest');r.tierPresentation['tier-id'].frameIds.push('other');assert.equal(p.orchard.tierPresentation['tier-id'].frameIds.length,1);
+ assert.equal(resolve(deployment('observatory','https://stars.supabase.co'),p).profileFrames.length,0);
+ p.orchard.profileFrames[0].src='https://unreviewed.example/frame.png';assert.equal(resolve(deployment(),p).error,'invalid_profile_frames');
+ p.orchard.profileFrames[0].src='assets/crest.png';p.orchard.tierPresentation['tier-id'].frameIds=['unknown'];assert.equal(resolve(deployment(),p).error,'invalid_profile_frames');
 });

@@ -22,6 +22,7 @@
     links: result.links,
     appearance: result.appearance,
     tierPresentation: result.tierPresentation,
+    profileFrames: result.profileFrames,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
     features: Object.assign({}, source.features)

@@ -290,7 +290,7 @@ test("site-wide Resident Evil theme wires transparent PNG UI ornaments and tier 
     assert.ok(fs.existsSync(path.join(root, "assets/profile-frames", banner)), `${banner} exists in assets/profile-frames`);
   }
   const settingsSource = fs.readFileSync(path.join(root, "js/subscription/views/reader-settings.js"), "utf8");
-  assert.match(settingsSource, /\["evil","Resident Evil"\]/);
+  assert.match(settingsSource, /\["evil","Member theme"\]/);
   assert.doesNotMatch(foundationCss, /:is\([^)]*\.sheet[^)]*\)\s*\{\s*position:\s*relative/);
 });
 
@@ -338,4 +338,13 @@ test('profile artwork/theme requires scoped entitlement IDs rather than names or
  assert.match(c.membershipProfileBanner(),/Renamed Captain/);assert.match(c.membershipProfileBanner(),/tier-banner-evil.png/);assert.equal(c.profileHasEvilTheme(),true);
  c.activeEntitlements=()=>[{tier_id:'unmapped',tier_name:'Resident Evil',tier_rank:999}];assert.equal(c.profileHasEvilTheme(),false);assert.doesNotMatch(c.membershipProfileBanner(),/tier-banner-/);assert.equal(c.availableProfileFrames().length,0);
  c.CONFIG={tierPresentation:{}};c.activeEntitlements=()=>[{tier_id:'0fc1b064-415e-4425-b6f6-558e941c1a10',tier_name:'Resident Evil',tier_rank:40}];assert.equal(c.profileHasEvilTheme(),false);assert.doesNotMatch(c.membershipProfileBanner(),/tier-banner-/);
+});
+test('guest membership choices use real backend names including unmapped additional tiers',()=>{
+ const c=journey();c.D={ACCESS_TIERS:Array.from({length:6},(_,i)=>({id:'other-'+i,name:i===0?'<Space & Sea>':'Crew '+i,is_active:true}))};
+ const html=c.membershipTierCards();assert.match(html,/&lt;Space &amp; Sea>/);assert.match(html,/Crew 5/);assert.doesNotMatch(html,/Resident/);
+ c.D.ACCESS_TIERS=[];assert.match(c.membershipTierCards(),/provider page/);assert.doesNotMatch(c.membershipTierCards(),/Resident/);
+});
+test('membership catalog reads active backend rows with an honest empty failure',async()=>{
+ const code=fs.readFileSync(path.join(root,'js/subscription/backend.js'),'utf8');const from=code.indexOf('async function loadPublicAccessTiers('),to=code.indexOf('async function loadSiteSettings(',from);
+ const c={D:{},getSupabase:()=>({}),runBackendRequest:async()=>[{id:'real',name:'Crew',is_active:true},{id:'disabled',is_active:false}],console:{warn(){}}};vm.createContext(c);vm.runInContext(code.slice(from,to),c);await c.loadPublicAccessTiers();assert.equal(c.D.ACCESS_TIERS.length,1);assert.equal(c.D.ACCESS_TIERS[0].name,'Crew');c.runBackendRequest=async()=>{throw Error('offline')};await c.loadPublicAccessTiers();assert.equal(c.D.ACCESS_TIERS.length,0);
 });

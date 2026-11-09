@@ -213,7 +213,7 @@ function updateSiteThemeControls(){
   const theme=effectiveSiteTheme();
   document.querySelectorAll('[data-act="toggle-site-theme"]').forEach(btn=>{
     btn.innerHTML=theme==="evil"?I.evil:theme==="light"?I.moon:I.sun;
-    btn.setAttribute("aria-label",`Switch site theme (current: ${theme==="evil"?"Resident Evil":theme==="light"?"light":"dark"})`);
+    btn.setAttribute("aria-label",`Switch site theme (current: ${theme==="evil"?"Member theme":theme==="light"?"light":"dark"})`);
   });
 }
 function updateReaderBar(){ const bar=document.getElementById("rbar"); if(!bar) return; const f=currentChapter; const bk=store.bookmarks.find(b=>b.chapterId===f.ch.id); const btn=bar.querySelector('[data-act="reader-bookmark"]'); if(btn){ btn.innerHTML=bk?I.bookmarkFill:I.bookmark; btn.classList.toggle("active",!!bk); } }
@@ -551,7 +551,7 @@ function handleAct(act, el){
       document.querySelector('[data-act="reader-nav-toggle"]')?.focus({preventScroll:true});
       if(typeof setupHomeArchive==="function") setupHomeArchive(); break;
     case "choose-site-theme":
-      if (el.dataset.theme==="evil" && !canUseEvilSiteTheme()) { toast("Resident Evil theme", "Resident Evil tier access is needed to use this theme.", {icon:"lock"}); break; }
+      if (el.dataset.theme==="evil" && !canUseEvilSiteTheme()) { toast("Member theme theme", "An eligible active membership is needed to use this theme.", {icon:"lock"}); break; }
       setTheme(el.dataset.theme); render({preserveScroll:true});
       document.querySelector(`[data-act="choose-site-theme"][data-theme="${store.theme}"]`)?.focus({preventScroll:true}); break;
     case "toggle-site-theme": toggleSiteTheme(); updateSiteThemeControls(); if(route.name==="settings") render({preserveScroll:true}); break;

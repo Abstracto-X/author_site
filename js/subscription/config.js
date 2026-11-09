@@ -23,6 +23,7 @@ const READER_BEHAVIOR = {
 };
 const DEFAULT_DATA = {
   STORIES: [],
+  ACCESS_TIERS: [],
   UPDATES: [],
   CHARACTERS: [],
   GALLERY_IMAGES: [],

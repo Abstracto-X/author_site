@@ -1216,3 +1216,7 @@ The Resident Evil story (`a-zombie-tale`) has a seeded Version 1 structure and a
 - The role password is not present in migrations. Ordinary agents receive only `SUPABASE_AI_DB_URL`; owner, Supabase access-token, and service-role credentials are DPAPI-encrypted outside the repository.
 - Destructive or existing-schema changes must be written as timestamped migrations for manual owner review/execution.
 - Operational backup details and restore boundaries are documented in `docs/DATABASE_SAFETY.md`.
+
+## 2026-11-09 — Membership portability batch
+
+Reader now SELECTs id,name,tier_rank,is_active from public.reader_access_tiers filtered is_active=true sorted tier_rank, for membership choices. Restricted read-only pg_policies inspection confirmed reader_access_tiers_public_read SELECT for public with qual is_active=true, plus existing admin_all policy. No schema changes. This verifies policy metadata, not an end-to-end anonymous browser request.
