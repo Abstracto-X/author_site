@@ -381,3 +381,7 @@ resolveAdminStoryId(stories,savedId): retain only current catalog ID, else first
 ## 2026-11-09 — Frontend key and Admin auth callback audit fixes
 
 Auth.init onAuthStateChange callback is synchronous; SIGNED_IN schedules guarded loadProfile after auth lock. loadProfile ignores stale success/error for another State.user.
+
+## 2026-11-09 — Two-identity integration and acceptance ledger
+
+Later Views.chapters override now normalizes selected story even for empty catalogs and clears editingChapterId when not new/not in selected story chapters. Gallery already validates selected character against current options.

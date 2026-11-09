@@ -466,3 +466,7 @@ Admin resolveAdminStoryId validates saved selection against each freshly loaded 
 ## 2026-11-09 — Frontend key and Admin auth callback audit fixes
 
 SiteSettings.publicKeyAllowed accepts publishable-key format or legacy JWT role anon, rejecting placeholders/secret/service-role formats. Bootstrap and offline preflight require it; this is format/role screening, not signature validation or credential authorization. Missing/invalid key clears brand/connection and activates setup recovery. Admin auth callback is synchronous and defers profile reads outside Supabase lock; deferred user and loadProfile error paths reject superseded identities.
+
+## 2026-11-09 — Two-identity integration and acceptance ledger
+
+Added actual-module two-identity VM integration coverage (same origin and account ID) and fixed later Admin chapter-view override to clear stale/empty story/chapter selections. Source restricted reader_behavior appearance query returned no row; no missing DB appearance data was silently migrated. See MULTI_SITE_ACCEPTANCE.md for explicit offline evidence versus unverified manual/deployment gates.

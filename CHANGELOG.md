@@ -1990,3 +1990,7 @@ Added isolated backup target parameters/no-operation validation while preserving
 ## 2026-11-09 — Frontend key and Admin auth callback audit fixes
 
 Fixed missing/privileged-key startup gap and Admin auth-lock/stale-user profile race. Files: settings/bootstrap, admin and three HTML cache versions, offline preflight, settings/bootstrap/admin tests, overview/indexes/state/changelog. 170 tests pass. No DB writes or credential values logged.
+
+## 2026-11-09 — Two-identity integration and acceptance ledger
+
+Added two-profile actual reader-module integration and source appearance parity evidence; fixed stale selection in late Admin chapter override; published full acceptance ledger. Files: admin.html, tests/multi-site-integration.test.js, docs/MULTI_SITE_ACCEPTANCE.md, overview/admin index/state/changelog. 171 tests and offline preflight pass. Source read-only reader_behavior query found no row. No DB writes/deployment.

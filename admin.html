@@ -5317,6 +5317,7 @@
         Views.chapters = async (container) => {
             const stories = await DB.getStories();
             State.stories = stories;
+            State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
             if (stories.length === 0) {
                 container.innerHTML = `<div class="page-header"><div><h1 class="page-title">Writer / Chapters</h1></div></div><div class="glass-card"><p style="text-align:center;color:#666">Create a story first to add chapters.</p></div>`;
                 return;
@@ -5327,6 +5328,7 @@
             const [chapters, tiers] = await Promise.all([DB.getChapters(State.selectedStoryId), DB.getAccessTiers().catch(() => [])]);
             const tierLookup = Object.fromEntries(tiers.map(t => [t.id, t]));
             const sortedChapters = [...chapters].sort((a,b) => (Number(b.chapter_order)||0) - (Number(a.chapter_order)||0));
+            if (State.editingChapterId !== 'new' && !chapters.some(chapter => chapter.id === State.editingChapterId)) State.editingChapterId = null;
             const editingId = State.editingChapterId || null;
             const chapter = editingId === 'new'
                 ? { title:'', content:'', chapter_order:(chapters.length + 1), is_published:false, story_id:State.selectedStoryId, required_tier_id:null, public_release_at:'', preview_text:'', is_nsfw:false, external_url:'' }
