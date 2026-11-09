@@ -70,7 +70,15 @@
         if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
         appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance };
+      var tierPresentation = {};
+      if (profile.tierPresentation !== undefined && !object(profile.tierPresentation)) return neutral('invalid_tier_presentation');
+      for (var id of Object.keys(profile.tierPresentation || {})) {
+        var visual = profile.tierPresentation[id];
+        if (!/^[a-z0-9-]+$/i.test(id) || !object(visual) || !/^#[0-9a-f]{6}$/i.test(visual.accent || '')) return neutral('invalid_tier_presentation');
+        var hex = visual.accent.slice(1);
+        tierPresentation[id] = { accent: visual.accent, rgb: [0,2,4].map(function (n) { return parseInt(hex.slice(n,n+2),16); }).join(', '), lockClass: ['tier-licker','tier-tyrant','tier-standard'].includes(visual.lockClass) ? visual.lockClass : 'tier-standard' };
+      }
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation };
     } catch (_) {
       return neutral('invalid_input');
     }

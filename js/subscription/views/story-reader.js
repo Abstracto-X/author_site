@@ -170,30 +170,13 @@ VIEWS.chapters = function(){
 
 
 function getLockTierClass(ch) {
-  const t = String(ch.tier || ch.required_tier_name || "").toLowerCase().trim();
-  if (t.includes("tyrant")) return "tier-tyrant";
-  if (t.includes("licker")) return "tier-licker";
-  return "tier-standard";
+  return CONFIG.tierPresentation?.[ch.required_tier_id]?.lockClass || 'tier-standard';
 }
-
-function getLockColor(ch) {
-  return chapterTierVisual(ch).accent;
-}
-
+function getLockColor(ch) { return chapterTierVisual(ch).accent; }
 function chapterTierVisual(ch) {
-  if (!ch.required_tier_id) return { rgb:"16, 185, 129", accent:"#34d399", label:"Free Access" };
-  const name = String(ch.required_tier_name || ch.tier || "").toLowerCase();
-  if (name.includes("licker")) return { rgb:"217, 119, 6", accent:"#fbbf24", label:ch.required_tier_name || ch.tier };
-  if (name.includes("tyrant")) return { rgb:"147, 51, 234", accent:"#c084fc", label:ch.required_tier_name || ch.tier };
-  if (name.includes("nemesis")) return { rgb:"225, 29, 72", accent:"#fb7185", label:ch.required_tier_name || ch.tier };
-  if (name.includes("evil")) return { rgb:"14, 165, 233", accent:"#38bdf8", label:ch.required_tier_name || ch.tier };
-  const palette = [
-    { rgb:"99, 102, 241", accent:"#818cf8" },
-    { rgb:"236, 72, 153", accent:"#f472b6" },
-    { rgb:"20, 184, 166", accent:"#2dd4bf" }
-  ];
-  const seed = String(ch.required_tier_id || name).split("").reduce((sum, char)=>sum+char.charCodeAt(0),0);
-  return { ...palette[seed % palette.length], label:ch.required_tier_name || ch.tier || "Member Access" };
+  if (!ch.required_tier_id) return { rgb:'16, 185, 129', accent:'#34d399', label:'Free Access' };
+  const visual = CONFIG.tierPresentation?.[ch.required_tier_id];
+  return { rgb:visual?.rgb || '148, 163, 184', accent:visual?.accent || '#94a3b8', label:ch.required_tier_name || ch.tier || 'Member Access' };
 }
 
 

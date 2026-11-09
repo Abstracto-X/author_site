@@ -18,7 +18,7 @@ test('selects only explicit matching profile and normalizes a detached allowlist
   p.orchard.identity.role = 'admin'; p.orchard.links.script = 'https://evil.example/';
   p.orchard.serviceRoleKey = 'secret'; p.orchard.site_identity = { siteName: 'DB override' };
   const result = resolve(deployment(), p, { siteName: 'DB override' });
-  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 } });
+  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {} });
   result.identity.siteName = 'changed'; result.links.supportUrl = 'changed';
   assert.equal(p.orchard.identity.siteName, ' Orchard ');
   assert.equal(resolve(deployment(), p).identity.siteName, 'Orchard');
@@ -86,4 +86,18 @@ test('appearance is site-scoped, validated, detached and neutral for an unmapped
  p.orchard.appearance.enableOrnateSystemDialog=false;assert.equal(r.appearance.enableOrnateSystemDialog,true);
  assert.equal(resolve(deployment('observatory','https://stars.supabase.co'),p).appearance.enableOrnateSystemDialog,false);
  for(const a of [null,[],{enableOrnateSystemDialog:'true'},{ornateSystemDialogAfterChapter:-1},{ornateSystemDialogAfterChapter:0.5},{appBackgroundUrl:'javascript:alert(1)'}]) {p.orchard.appearance=a; assert.equal(resolve(deployment(),p).error,'invalid_appearance');}
+});
+test('tier colors follow stable scoped IDs, not names, rank or apparent membership',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../js/subscription/views/story-reader.js'),'utf8');
+ const c={CONFIG:{tierPresentation:{'stable-id':{accent:'#123456',rgb:'18, 52, 86',lockClass:'tier-tyrant'}}}};vm.createContext(c);vm.runInContext(source.slice(source.indexOf('function getLockTierClass('),source.indexOf('function chapterTierStyle(')),c);
+ const visual=ch=>{c.ch=ch;return vm.runInContext('chapterTierVisual(ch)',c);};
+ assert.equal(visual({required_tier_id:'stable-id',required_tier_name:'Renamed Space Pilot'}).accent,'#123456');
+ assert.equal(visual({required_tier_id:'unknown',required_tier_name:'Resident Tyrant'}).accent,'#94a3b8');
+ c.CONFIG.tierPresentation={};assert.equal(visual({required_tier_id:'stable-id',required_tier_name:'Another Author'}).accent,'#94a3b8');
+ assert.equal(visual({}).label,'Free Access');
+});
+test('tier presentation resolver rejects CSS injection and strips unauthorized fields',()=>{
+ const p=profiles();p.orchard.tierPresentation={'tier-id':{accent:'#123456',name:'Fake tier',can_read:true}};
+ const result=resolve(deployment(),p);assert.equal(result.tierPresentation['tier-id'].rgb,'18, 52, 86');assert.equal(result.tierPresentation['tier-id'].can_read,undefined);
+ p.orchard.tierPresentation['tier-id'].accent='red;display:none';assert.equal(resolve(deployment(),p).error,'invalid_tier_presentation');
 });

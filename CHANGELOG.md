@@ -1926,3 +1926,7 @@ Guarded stale reader notification/community completions across account-local sto
 ## 2026-11-09 — Library and gallery account response isolation
 
 Prevented old-account library catalogs/errors applying after store transition, queued pending force reloads, and guarded gallery personal-vote responses. Files: backend.js, state.js, index.html cache versions, stale notification/library tests and overview/reader index/state/changelog. 131 tests and backend syntax pass. No DB changes.
+
+## 2026-11-09 — Tier-ID chapter presentation
+
+Replaced chapter color/lock tier-name matching with validated repository tier-ID mappings. Verified source tier IDs with restricted read-only query; no writes. Files: site-settings.js, site-bootstrap.js, site-config.js, views/story-reader.js, three HTML cache versions, settings tests and overview/index/state/changelog. 133 tests and resolver/story-reader syntax pass. No access grants or schema changes.

@@ -402,3 +402,7 @@ Notification preference reads/saves and notification list reads capture initiati
 ## 2026-11-09 — Library and gallery account response isolation
 
 loadBackendLibrary captures initiating store/user, discards stale success/error and schedules one current-account force reload after finishing if an account transition or queued force request occurred. A force request during loading sets backendReloadRequested instead of disappearing. Gallery vote reads/writes reject stale store/user completion; switchReaderAccount clears imageVotes. This does not cancel already submitted writes.
+
+## 2026-11-09 — Tier-ID chapter presentation
+
+Repository profiles support tierPresentation keyed by stable backend tier ID, with validated hex accent and allowlisted lockClass; RGB is derived. Bootstrap forwards normalized mappings. chapterTierVisual/getLockTierClass now use only the current profile ID mapping, never tier-name substrings; unknown paid tiers use neutral gray and actual DB label. Free retains green. Source four tier IDs were verified via restricted SELECT on 2026-11-09; generic Member is intentionally unmapped. Membership banner/frame/theme mappings remain for subsequent work.

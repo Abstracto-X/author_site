@@ -21,6 +21,7 @@
     supabase: { url: result.backendUrl, anonKey: source.supabase.anonKey },
     links: result.links,
     appearance: result.appearance,
+    tierPresentation: result.tierPresentation,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
     features: Object.assign({}, source.features)

@@ -572,3 +572,7 @@ loadNotificationPreferences/saveNotificationPreferences/loadReaderNotifications 
 ## 2026-11-09 — Library and gallery account response isolation
 
 loadBackendLibrary(options): coalesces forced reload during loading and guards stale catalogs/errors before shared-data application. fetchGalleryVotes/submitGalleryVote: guard captured account/store; switchReaderAccount clears personal vote cache.
+
+## 2026-11-09 — Tier-ID chapter presentation
+
+chapterTierVisual(ch)/getLockTierClass(ch): use CONFIG.tierPresentation[ch.required_tier_id], neutral fallback without name matching. SiteSettings.resolve validates scoped tier color mappings and strips names/access fields.
