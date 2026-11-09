@@ -1934,3 +1934,7 @@ Replaced chapter color/lock tier-name matching with validated repository tier-ID
 ## 2026-11-09 — Scoped topbar membership artwork
 
 Moved topbar banner registry into site-scoped tier-ID presentation mappings; real entitlement names remain display labels. Added local asset validation and renamed/unknown/cross-profile tests. Files: site-settings.js, site-config.js, chrome.js, three HTML cache versions, membership tests and overview/index/state/changelog. 134 tests plus chrome/settings syntax pass. No DB/access changes.
+
+## 2026-11-09 — Profile ID-based cosmetic eligibility
+
+Replaced profile banner/theme and frame-entry eligibility tier-name matching with scoped entitlement IDs; custom theme explicitly enabled in source ID mapping. Added renamed/name-spoof/other-profile coverage. Files: membership-journey.js, site-settings.js, site-config.js, HTML cache versions, membership tests and overview/reader index/state/changelog. 135 tests and membership syntax pass. No DB/access changes.

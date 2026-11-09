@@ -83,6 +83,7 @@
       }
       for (var tierId of Object.keys(tierPresentation)) {
         var original = profile.tierPresentation[tierId];
+        if (original.siteTheme === 'evil') tierPresentation[tierId].siteTheme = 'evil';
         if (original.banner) tierPresentation[tierId].banner = original.banner;
         if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
         if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;

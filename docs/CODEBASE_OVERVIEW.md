@@ -410,3 +410,7 @@ Repository profiles support tierPresentation keyed by stable backend tier ID, wi
 ## 2026-11-09 — Scoped topbar membership artwork
 
 Removed chrome duplicate TOPBAR_TIER_BANNERS registry and tier-name fallback. topbarTierBanner selects highest active entitlement and resolves tier_id only against current CONFIG.tierPresentation. Labels come from actual entitlement, not local artwork metadata. Resolver supports reviewed local assets/ paths for banner/topbarBanner and allowlisted className, stripping arbitrary fields. Source profile contains four verified ID artwork mappings. Profile sheet/frame/theme still use old registry pending follow-up.
+
+## 2026-11-09 — Profile ID-based cosmetic eligibility
+
+membershipTier now accepts an entitlement object and resolves tier_id against CONFIG.tierPresentation. Profile banner keeps actual DB name, uses scoped artwork, and theme eligibility requires siteTheme:evil on its mapped active entitlement. Frame eligibility temporarily resolves the mapped class against the legacy frame list, no longer name-substring matching; frame definitions/order and guest tier preview remain legacy and require next migration.

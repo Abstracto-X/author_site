@@ -62,13 +62,12 @@ async function renderProfileFrame(canvas, frameId){
   } catch (_) { /* The CSS image remains as a fallback if canvas rendering fails. */ }
 }
 
-function membershipTier(name){
-  const value = String(name || "").toLowerCase();
-  return MEMBERSHIP_TIERS.find(tier => value.includes(tier.name.toLowerCase())) || null;
+function membershipTier(entitlement){
+  if (!entitlement || typeof entitlement !== 'object' || typeof CONFIG === 'undefined') return null;
+  return CONFIG.tierPresentation?.[entitlement.tier_id] || null;
 }
 function profileHasEvilTheme(){
-  return activeEntitlements().some(entitlement =>
-    membershipTier(entitlement.tier_name || entitlement.name || entitlement.tier)?.className === "evil");
+  return activeEntitlements().some(entitlement => membershipTier(entitlement)?.siteTheme === 'evil');
 }
 function membershipTierCards(){
   return MEMBERSHIP_TIERS.map(tier => `<div class="membership-tier ${tier.className}"><span class="membership-tier-art" aria-hidden="true">${tier.mark}</span><div><strong>${tier.name}</strong><small>Explore this tier on the membership page</small></div></div>`).join("");
@@ -76,7 +75,7 @@ function membershipTierCards(){
 function availableProfileFrames(){
   if (!authState.user) return [];
   const tierIndex = Math.max(-1, ...activeEntitlements().map(entitlement =>
-    MEMBERSHIP_TIERS.indexOf(membershipTier(entitlement.tier_name || entitlement.name || entitlement.tier))));
+    MEMBERSHIP_TIERS.findIndex(tier => tier.className === membershipTier(entitlement)?.className)));
   return tierIndex < 0 ? [] : PROFILE_FRAMES.filter(frame => frame.tierIndex <= tierIndex);
 }
 function profileFrameStorageKey(){ return `aether-profile-frame-v1:${authState.user?.id || ""}`; }
@@ -98,7 +97,7 @@ function membershipProfileBanner(){
   const best = [...activeEntitlements()].sort((a,b)=>Number(b.tier_rank||0)-Number(a.tier_rank||0))[0];
   if (best) {
     const name = best.tier_name || best.name || "Member access";
-    const tier = membershipTier(name);
+    const tier = membershipTier(best);
     if (tier?.banner) {
       return `<section class="profile-tier ${tier.className} profile-tier-banner" aria-label="Membership active: ${esc(name)}"><img src="${esc(tier.banner)}" alt="${esc(name)}"></section>`;
     }

@@ -74,7 +74,7 @@ test("Evil Profile skin follows verified access, not the selected portrait frame
   const user = { id:"reader-1", email:"reader@example.com" };
   const evil = journey({ user, entitlements:[{ tier_name:"Resident Evil", tier_rank:40 }] });
   assert.equal(evil.profileHasEvilTheme(),true);
-  evil.activeEntitlements = () => [{ tier_name:"Resident Nemesis", tier_rank:30 }];
+  evil.activeEntitlements = () => [{ tier_id:"f8bfcbae-7ea3-407b-b0db-87808b3c547e", tier_name:"Resident Nemesis", tier_rank:30 }];
   assert.equal(evil.profileHasEvilTheme(),false);
   const sheets = fs.readFileSync(path.join(root, "js/subscription/sheets.js"), "utf8");
   assert.match(sheets, /const evilTheme = profileHasEvilTheme\(\)/);
@@ -332,4 +332,10 @@ test('topbar uses entitlement tier IDs, keeps real renamed label and never guess
  assert.equal(c.topbarTierBanner({signedIn:true},false).name,'Star Pilot');
  c.activeEntitlements=()=>[{tier_id:'unknown',tier_name:'Resident Tyrant',tier_rank:20}];assert.equal(c.topbarTierBanner({signedIn:true},false),null);
  c.activeEntitlements=()=>[{tier_id:'b592c08d-3f00-42c0-8b53-f551efe01074',tier_name:'Star Pilot'}];c.CONFIG={tierPresentation:{}};assert.equal(c.topbarTierBanner({signedIn:true},false),null);
+});
+test('profile artwork/theme requires scoped entitlement IDs rather than names or class labels',()=>{
+ const c=journey({user:{id:'reader'},entitlements:[{tier_id:'0fc1b064-415e-4425-b6f6-558e941c1a10',tier_name:'Renamed Captain',tier_rank:40}]});
+ assert.match(c.membershipProfileBanner(),/Renamed Captain/);assert.match(c.membershipProfileBanner(),/tier-banner-evil.png/);assert.equal(c.profileHasEvilTheme(),true);
+ c.activeEntitlements=()=>[{tier_id:'unmapped',tier_name:'Resident Evil',tier_rank:999}];assert.equal(c.profileHasEvilTheme(),false);assert.doesNotMatch(c.membershipProfileBanner(),/tier-banner-/);assert.equal(c.availableProfileFrames().length,0);
+ c.CONFIG={tierPresentation:{}};c.activeEntitlements=()=>[{tier_id:'0fc1b064-415e-4425-b6f6-558e941c1a10',tier_name:'Resident Evil',tier_rank:40}];assert.equal(c.profileHasEvilTheme(),false);assert.doesNotMatch(c.membershipProfileBanner(),/tier-banner-/);
 });

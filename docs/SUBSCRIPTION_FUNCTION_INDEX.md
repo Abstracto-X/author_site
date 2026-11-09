@@ -580,3 +580,7 @@ chapterTierVisual(ch)/getLockTierClass(ch): use CONFIG.tierPresentation[ch.requi
 ## 2026-11-09 — Scoped topbar membership artwork
 
 topbarTierBanner(P,checkingAccount): uses highest current entitlement tier_id and site-scoped artwork; unknown/other-profile IDs return null, allowing normal textual state. No name matching or duplicate registry. SiteSettings.resolve validates optional local banner paths.
+
+## 2026-11-09 — Profile ID-based cosmetic eligibility
+
+membershipTier(entitlement): ID-only scoped presentation lookup (changed from name argument). profileHasEvilTheme(): active mapped siteTheme cosmetic eligibility. membershipProfileBanner(): real tier label plus scoped ID artwork. availableProfileFrames(): mapped class check pending replacement of legacy frame-order registry.
