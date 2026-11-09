@@ -61,6 +61,10 @@
         if (a[flag] !== undefined && typeof a[flag] !== 'boolean') return neutral('invalid_appearance');
         if (a[flag] !== undefined) appearance[flag] = a[flag];
       }
+      if (a.ornateStoryIds !== undefined) {
+        if (!Array.isArray(a.ornateStoryIds) || a.ornateStoryIds.some(function (id) { return typeof id !== 'string' || !/^[a-z0-9-]+$/i.test(id); })) return neutral('invalid_appearance');
+        appearance.ornateStoryIds = a.ornateStoryIds.slice();
+      }
       if (a.appBackgroundUrl !== undefined) {
         var background = link(a.appBackgroundUrl);
         if (background === null) return neutral('invalid_appearance');

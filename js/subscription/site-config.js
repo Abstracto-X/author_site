@@ -12,7 +12,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
         "f8bfcbae-7ea3-407b-b0db-87808b3c547e": { frameIds: ["licker", "tyrant", "nemesis"], defaultFrameId: "nemesis", className: "nemesis", banner: "assets/profile-frames/tier-banner-nemesis.png", topbarBanner: "assets/profile-frames/topbar-banner-nemesis.png", accent: "#fb7185" },
         "0fc1b064-415e-4425-b6f6-558e941c1a10": { frameIds: ["licker", "tyrant", "nemesis", "evil-crimson", "evil-haunting"], defaultFrameId: "evil-crimson", siteTheme: "evil", className: "evil", banner: "assets/profile-frames/tier-banner-evil.png", topbarBanner: "assets/profile-frames/topbar-banner-evil.png", accent: "#38bdf8" }
       },
-      appearance: { enableAppBackground: true, appBackgroundUrl: "", enableOrnateSystemDialog: true, ornateSystemDialogAfterChapter: 70 },
+      appearance: { ornateStoryIds: ["d8c87bf8-94c9-4c6e-8826-d6f3be25d419"], enableAppBackground: true, appBackgroundUrl: "", enableOrnateSystemDialog: true, ornateSystemDialogAfterChapter: 70 },
       links: {
         patreonUrl: "https://www.patreon.com/cw/HornyShitler",
         boostyUrl: "https://boosty.to/hornyshitler"

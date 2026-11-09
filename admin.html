@@ -1170,9 +1170,9 @@
     </div>
 
     <!-- SITE CONFIG + SUPABASE SDK -->
-    <script src="js/subscription/site-config.js?v=20261109.19"></script>
-    <script src="js/subscription/site-settings.js?v=20261109.19"></script>
-    <script src="js/subscription/site-bootstrap.js?v=20261109.19"></script>
+    <script src="js/subscription/site-config.js?v=20261109.21"></script>
+    <script src="js/subscription/site-settings.js?v=20261109.21"></script>
+    <script src="js/subscription/site-bootstrap.js?v=20261109.21"></script>
     <script src="js/subscription/site-storage.js?v=20261109.9"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -2768,7 +2768,7 @@
 
             // STORY FORM
             storyForm: async (id = null) => {
-                let story = { title: '', slug: '', short_description: '', synopsis: '', genre: '', status: '', cover_image_url: '', background_image_url: '', theme_color: '#ffd700', world_title: '', is_published: false, loader_theme: 'lightsaber' };
+                let story = { title: '', slug: '', short_description: '', synopsis: '', genre: '', status: '', cover_image_url: '', background_image_url: '', theme_color: '#ffd700', world_title: '', is_published: false, loader_theme: 'primary' };
                 
                 if (id) {
                     story = await DB.getStory(id) || story;
@@ -2813,8 +2813,8 @@
                         <div class="form-group">
                             <label class="form-label">Loader Theme</label>
                             <select class="form-input" id="f-loader_theme" style="height:45px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0 10px;">
-                                <option value="lightsaber" ${(story.loader_theme || 'lightsaber') === 'lightsaber' ? 'selected' : ''}>Lightsaber (Default)</option>
-                                <option value="primary" ${story.loader_theme === 'primary' ? 'selected' : ''}>Primary Monogram</option>
+                                <option value="lightsaber" ${(story.loader_theme || 'primary') === 'lightsaber' ? 'selected' : ''}>Lightsaber</option>
+                                <option value="primary" ${(story.loader_theme || 'primary') === 'primary' ? 'selected' : ''}>Primary Monogram (Default)</option>
                                 <option value="anomaly_flesh" ${story.loader_theme === 'anomaly_flesh' ? 'selected' : ''}>SCP-610: Sarkic Tendrils (Organic)</option>
                                 <option value="anomaly_hex" ${story.loader_theme === 'anomaly_hex' ? 'selected' : ''}>SCP-3333: Hex-Lattice Trace (Geometric)</option>
                                 <option value="anomaly_cyber" ${story.loader_theme === 'anomaly_cyber' ? 'selected' : ''}>SCP-079: Data Corruption (Circuit)</option>

@@ -1950,3 +1950,7 @@ Removed Writer source-slug audience exception, name-derived entitlement summary 
 ## 2026-11-09 — Source tool isolation and legacy access cleanup
 
 Isolated source Writer test-account controls behind explicit validated profile opt-in; moved fixed identity/options out of shared HTML/controller. Removed legacy name-based local chapter access inference and fabricated persona display dates. Files: settings/bootstrap/config, utils/state, three entrypoints/Writer, settings/writer-safety/authority tests, overview/indexes/state/changelog. 143 tests and settings/utils syntax pass; no DB changes or migration execution.
+
+## 2026-11-09 — Scoped story decoration and neutral author defaults
+
+Scoped ornate chapter rendering to explicit profile story IDs and changed new-story loader default to generic monogram. Files: settings/config/story-reader, admin.html, three HTML cache versions, new story-presentation test, overview/indexes/state/changelog. 144 tests and settings/story-reader syntax pass. Story ID verified by restricted SELECT; no DB writes.

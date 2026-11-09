@@ -336,8 +336,10 @@ function systemDialogChapterNumber(chapter){
 }
 function renderBlocks(blocks, chId, chapter){
   const behavior = typeof readerBehavior === "function" ? readerBehavior() : {};
-  const ornateAfter = Number(behavior.ornateSystemDialogAfterChapter ?? 70);
-  const useOrnateSystemDialog = behavior.enableOrnateSystemDialog !== false && systemDialogChapterNumber(chapter) > ornateAfter;
+  const ornateAfter = Number(behavior.ornateSystemDialogAfterChapter ?? 0);
+  const storyId = chapter?.story_id || (typeof byId === 'function' ? byId(chId)?.story?.id : null);
+  const scopedStories = typeof CONFIG !== 'undefined' ? CONFIG.appearance?.ornateStoryIds || [] : [];
+  const useOrnateSystemDialog = behavior.enableOrnateSystemDialog === true && scopedStories.includes(storyId) && systemDialogChapterNumber(chapter) > ornateAfter;
   return blocks.map((b,i)=>{
     if(b.t==="scene") return `<div class="scene" role="separator" aria-label="Scene break"><span aria-hidden="true">✦</span></div>`;
     if(b.t==="system"){

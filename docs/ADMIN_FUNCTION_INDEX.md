@@ -357,3 +357,7 @@ Writer chapterAccessListEntries(): cumulative audience wording derives from real
 ## 2026-11-09 — Source tool isolation and legacy access cleanup
 
 Writer TestAccount controller: opt-in CONFIG.writerTestAccount; labels/account identity from normalized profile, safe DOM option creation, load/change refuse disabled/unlisted choices; server RPC remains authority. Menu hidden until configured verified startup.
+
+## 2026-11-09 — Scoped story decoration and neutral author defaults
+
+Forms.storyForm(): new/unspecified loader defaults to primary monogram. Legacy lightsaber/other saved choices remain available and unchanged.

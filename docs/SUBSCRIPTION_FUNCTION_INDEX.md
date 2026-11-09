@@ -596,3 +596,7 @@ entitlementLevel(): maximum active backend tier_rank; no Archivist name matching
 ## 2026-11-09 — Source tool isolation and legacy access cleanup
 
 chapterResolved(): backend catalog still authoritative; nonbackend paid rows without explicit positive required_tier_rank cannot infer access from names. Persona display scaffold no longer contains fabricated dates or Archivist display label.
+
+## 2026-11-09 — Scoped story decoration and neutral author defaults
+
+renderBlocks(blocks,chId,chapter): source ornate design now requires site-scoped story-ID allowlist plus enabled flag/cutoff. SiteSettings.resolve validates/clones appearance.ornateStoryIds.

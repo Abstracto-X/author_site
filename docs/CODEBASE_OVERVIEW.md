@@ -426,3 +426,7 @@ Writer access-list audiences say the actual required tier name and higher tiers 
 ## 2026-11-09 — Source tool isolation and legacy access cleanup
 
 writerTestAccount is an explicit repository-profile opt-in, disabled by default. Resolver validates/copies account display/email and slug-label choices; Writer menu starts hidden, becomes available after verified startup only when configured. Controller open/load/change all check opt-in before RPC; configured expected account verifies RPC responses. Source-specific names/email/options moved out of shared HTML/controller into source profile. Existing SQL test RPC remains server-guarded and historical unapplied fixed-account migration is not portable setup. Removed fabricated persona dates; nonbackend chapter resolver requires explicit positive rank rather than Archivist name inference.
+
+## 2026-11-09 — Scoped story decoration and neutral author defaults
+
+Ornate renderBlocks requires current CONFIG.appearance.ornateStoryIds to include chapter.story_id (or catalog-resolved story ID), explicit enabled flag and cutoff. No configured story IDs means no ornate source decoration. Source a-zombie-tale story ID d8c87bf8-94c9-4c6e-8826-d6f3be25d419 verified through restricted SELECT; only it retains source cutoff 70. New Admin stories default to primary monogram loader, not lightsaber; saved story loaders remain unchanged.
