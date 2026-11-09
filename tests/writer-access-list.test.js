@@ -17,10 +17,10 @@ const format = (chapters, tiers) => {
 
 test('selected chapters copy as descending linked unlock lines using real tier names', () => {
     const tiers = [
-        { id: 'l', slug: 'resident-licker', name: 'Resident Licker' },
-        { id: 't', slug: 'resident-tyrant', name: 'Resident Tyrant' },
-        { id: 'n', slug: 'resident-nemesis', name: 'Resident Nemesis' },
-        { id: 'e', slug: 'resident-evil', name: 'Resident Evil' }
+        { id: 'l', slug: 'resident-licker', name: 'Resident Licker', tier_rank:10 },
+        { id: 't', slug: 'resident-tyrant', name: 'Resident Tyrant', tier_rank:20 },
+        { id: 'n', slug: 'resident-nemesis', name: 'Resident Nemesis', tier_rank:30 },
+        { id: 'e', slug: 'resident-evil', name: 'Resident Evil', tier_rank:40 }
     ];
     const chapters = [
         { id: 'licker-id', chapter_order: 78, title: 'Oral Complications I (R18)', required_tier_id: 'l' },
@@ -28,9 +28,9 @@ test('selected chapters copy as descending linked unlock lines using real tier n
         { id: 'tyrant-id', chapter_order: 81, title: 'Chapter 81: Legendary Pull', required_tier_id: 't' }
     ];
     assert.equal(format(chapters, tiers), [
-        '[Chapter 83: A Way Out](https://cornyshitler.pages.dev/index.html#/read/nemesis-id) unlocked for Resident Nemesis and Resident Evil',
-        '[Chapter 81: Legendary Pull](https://cornyshitler.pages.dev/index.html#/read/tyrant-id) unlocked for Resident Tyrant',
-        '[Chapter 78: Oral Complications I (R18)](https://cornyshitler.pages.dev/index.html#/read/licker-id) unlocked for Resident Licker'
+        '[Chapter 83: A Way Out](https://cornyshitler.pages.dev/index.html#/read/nemesis-id) unlocked for Resident Nemesis and higher tiers',
+        '[Chapter 81: Legendary Pull](https://cornyshitler.pages.dev/index.html#/read/tyrant-id) unlocked for Resident Tyrant and higher tiers',
+        '[Chapter 78: Oral Complications I (R18)](https://cornyshitler.pages.dev/index.html#/read/licker-id) unlocked for Resident Licker and higher tiers'
     ].join('\n'));
 });
 
@@ -41,7 +41,7 @@ test('free chapters and Markdown-sensitive titles remain copyable', () => {
 
 test('rich clipboard HTML contains actual safe anchor links, not literal Markdown', () => {
     const chapters = [{ id: 'chapter-id', chapter_order: 80, title: 'Symbiotic <Bonding>', required_tier_id: 'l' }];
-    const tiers = [{ id: 'l', slug: 'resident-licker', name: 'Resident Licker' }];
+    const tiers = [{ id: 'l', slug: 'resident-licker', name: 'Resident Licker', tier_rank:10 }];
     const context = vm.createContext({ URL, chapters, tiers, baseUrl: 'https://cornyshitler.pages.dev/index.html' });
     vm.runInContext(formatterSource, context);
     const result = vm.runInContext('chapterAccessListHtml(chapterAccessListEntries(chapters, tiers, baseUrl))', context);
@@ -73,7 +73,7 @@ test('Copy access list writes rich links for only checked published chapters', a
                 { id: 'draft', story_id: 'story', is_published: false, chapter_order: 4, title: 'Draft', required_tier_id: 't' },
                 { id: 'other', story_id: 'other', is_published: true, chapter_order: 5, title: 'Other Story', required_tier_id: 't' }
             ],
-            tiers: [{ id: 't', slug: 'resident-tyrant', name: 'Resident Tyrant' }]
+            tiers: [{ id: 't', slug: 'resident-tyrant', name: 'Resident Tyrant', tier_rank:20 }]
         },
         Dashboard: { updateAccessListButton() {} },
         UI: { showToast() {} },
@@ -93,4 +93,11 @@ test('Copy access list writes rich links for only checked published chapters', a
         '[Chapter 3: A Way Out](https://second.example/fiction/index.html#/read/live) unlocked for Resident Tyrant');
     assert.equal(await data['text/html'].text(),
         '<p><a href="https://second.example/fiction/index.html#/read/live">[Chapter 3: A Way Out]</a> unlocked for Resident Tyrant</p>');
+});
+test('audience copy follows real tier rank rather than source slugs or array position',()=>{
+ const chapters=[{id:'x',chapter_order:1,title:'Start',required_tier_id:'pilot'}];
+ const tiers=[{id:'captain',name:'Sky Captain',tier_rank:50},{id:'pilot',name:'Star Pilot',tier_rank:5}];
+ assert.match(format(chapters,tiers),/Star Pilot and higher tiers$/);
+ tiers[0].is_active=false;assert.match(format(chapters,tiers),/unlocked for Star Pilot$/);
+ tiers[1].name='Renamed Crew';assert.match(format(chapters,tiers),/unlocked for Renamed Crew$/);
 });

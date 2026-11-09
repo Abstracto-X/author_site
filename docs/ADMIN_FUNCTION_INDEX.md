@@ -349,3 +349,7 @@ Auth.loadProfile captures requested user, rejects stale user response, verifies 
 ## 2026-11-09 — Author preference hydration and legacy recovery
 
 Forms.exportLegacyDrafts(): downloads SiteStorage.legacyDrafts() as private JSON, catches setup errors, revokes object URL. Settings explains unowned draft preservation/manual review. Auth.loadProfile restores allowed saved view and account-local panel selections after storage binding.
+
+## 2026-11-09 — Generic audiences and trusted entitlement summaries
+
+Writer chapterAccessListEntries(): cumulative audience wording derives from real active tier ranks, not source slugs. Existing clipboard publication and selected-story bounds remain unchanged.

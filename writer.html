@@ -2484,7 +2484,6 @@
         function rankOf(tier) { return Number(tier?.tier_rank ?? tier?.rank ?? 0); }
         function chapterAccessListEntries(chapters, tiers, readerBaseUrl) {
             const tierById = new Map(tiers.map(tier => [tier.id, tier]));
-            const evilTier = tiers.find(tier => tier.slug === 'resident-evil');
             return chapters
                 .slice()
                 .sort((a, b) => Number(b.chapter_order || 0) - Number(a.chapter_order || 0))
@@ -2498,8 +2497,8 @@
                     const url = new URL(readerBaseUrl);
                     url.hash = `/read/${encodeURIComponent(chapter.id)}`;
                     const audience = !tier ? 'everyone'
-                        : tier.slug === 'resident-nemesis' && evilTier
-                            ? `${tier.name} and ${evilTier.name}`
+                        : tiers.some(other => other.is_active !== false && Number(other.tier_rank ?? other.rank) > Number(tier.tier_rank ?? tier.rank))
+                            ? `${tier.name} and higher tiers`
                             : tier.name;
                     return { title: displayTitle, url: url.href, audience };
                 });

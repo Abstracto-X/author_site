@@ -25,9 +25,7 @@ function activeEntitlements(){
 function entitlementLevel(){
   const active = activeEntitlements();
   if (!active.length) return 0;
-  const names = active.map(e => String(e.tier_name || e.name || e.tier || e.required_tier_name || "").toLowerCase());
-  if (names.some(n => n.includes("archivist"))) return 2;
-  return 1;
+  return Math.max(1, ...active.map(e => Number(e.tier_rank) || 0));
 }
 function accountLabel(){
   return authState.profile?.display_name || authState.profile?.username || authState.user?.email || store.email || "Guest";
@@ -37,7 +35,7 @@ function profileAvatar(){
 }
 function isAdmin(){
   const profileRole = String(authState.profile?.role || "").trim().toLowerCase();
-  const metadataRole = String(authState.user?.app_metadata?.role || authState.user?.user_metadata?.role || "").trim().toLowerCase();
+  const metadataRole = String(authState.user?.app_metadata?.role || "").trim().toLowerCase();
   return profileRole === "admin" || metadataRole === "admin";
 }
 async function refreshProfile(){

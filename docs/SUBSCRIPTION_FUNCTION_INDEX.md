@@ -588,3 +588,7 @@ membershipTier(entitlement): ID-only scoped presentation lookup (changed from na
 ## 2026-11-09 — Membership portability batch
 
 loadPublicAccessTiers(): public active reader_access_tiers catalog, honest empty on failure. membershipTierCards(): real catalog labels and scoped decoration. availableProfileFrames()/selectedProfileFrame(): explicit mapped frameIds/defaultFrameId, not legacy tierIndex. PROFILE_FRAMES/PROFILE_FRAME_ART derive from normalized repository profileFrames; no hardcoded frame registry.
+
+## 2026-11-09 — Generic audiences and trusted entitlement summaries
+
+entitlementLevel(): maximum active backend tier_rank; no Archivist name matching. isAdmin(): trusted profile/app_metadata only, never user-editable user_metadata. No backend grant logic changed.
