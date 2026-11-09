@@ -1962,3 +1962,7 @@ Added normalized primary/featured story selection and configured same-origin aut
 ## 2026-11-09 — Chapter guards and offline deployment gates
 
 Hardened chapter request store/revision guards, added offline deployment preflight and Abstracto placeholder/runbook. Files: backend.js, auth.js, reader-access-refresh/stale tests, scripts/check-site-config.js, site-config.abstracto.template.js, tests/site-preflight.test.js, deployment/plan/overview/index/state/changelog docs. 148 tests and preflight pass; target placeholder rejects as intended. No target DB access or writes.
+
+## 2026-11-09 — Continuation recovery and deployment audit
+
+Fixed provider continuation loss across reader account-store switch, neutralized email-worker brand fallback, completed Edge environment template names and added progress audit. Files: state/auth, index cache versions, email Edge function, ENV.example, account/env tests and docs/audits/2026-11-09-multi-site-progress.md plus overview/index/state/changelog. 150 tests pass; Edge not deployed, no DB changes.

@@ -358,7 +358,7 @@ async function initAuth(){
       setTimeout(() => pendingAction === "connect-patreon" ? connectPatreonGo() : connectBoostyDiscordGo(), 450);
     }
     client.auth.onAuthStateChange((event, session) => {
-      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+      if ((event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") && session?.user?.id === authState.user?.id) {
         authState.session = session || authState.session;
         authState.user = authState.session?.user || null;
         if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
@@ -482,7 +482,7 @@ async function signInWithGoogle(nextAction = ""){
   if (!googleEnabled()) throw new Error("Google sign-in is disabled for this site.");
   const client = getSupabase();
   if (!client) throw new Error("Supabase client unavailable.");
-  if (nextAction) store.pendingAuthAction = nextAction;
+  if (nextAction) { store.pendingAuthAction = nextAction; store.pendingAuthActionAt = Date.now(); }
   store.pendingAuthReturn = "subscription";
   const redirectTo = subscriptionRedirectTo();
   saveStore();

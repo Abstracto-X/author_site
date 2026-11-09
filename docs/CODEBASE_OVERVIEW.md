@@ -438,3 +438,7 @@ Repository profile library.primaryStoryId and optional featuredStoryIds are norm
 ## 2026-11-09 — Chapter guards and offline deployment gates
 
 Chapter catalog/text guards now capture reader store identity as well as user, with per-chapter contentRevision invalidated on auth account transitions. Stale errors/finalizers cannot overwrite a newer chapter request. scripts/check-site-config.js provides offline public config/asset/order preflight; site-config.abstracto.template.js is intentionally unconfigured and rejects deployment preflight. See MULTI_SITE_DEPLOYMENT.md for separate backend/operations/browser gates; owner deferred live Abstracto checks.
+
+## 2026-11-09 — Continuation recovery and deployment audit
+
+switchReaderAccount transfers only a recent (under 10 minutes) allowlisted guest-requested provider continuation to the first signed-in account and clears guest continuation before saving; private guest state is not copied. Token/initial auth events use lightweight branch only for the same user, otherwise full reset. Email worker missing-brand fallback is neutral Reader; ENV.example now documents email/AI settings with supported summary default. See progress audit for remaining requirements.

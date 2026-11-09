@@ -11,7 +11,7 @@ type QueueRow = {
 const sendWithResend = async (row: QueueRow) => {
   const apiKey = requireEnv('RESEND_API_KEY');
   const from = requireEnv('READER_EMAIL_FROM');
-  const siteName = optionalEnv('READER_EMAIL_SITE_NAME', 'EvilArchives');
+  const siteName = optionalEnv('READER_EMAIL_SITE_NAME', 'Reader');
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {

@@ -53,9 +53,15 @@ function readerStoreKey(){
 function switchReaderAccount(userId){
   const next = typeof userId === 'string' && userId ? userId : null;
   if (next === readerStoreAccount) return;
+  // Carry only a recent guest-requested provider continuation, never private guest data.
+  const action = !readerStoreAccount && next && ['connect-patreon','connect-boosty-discord'].includes(store.pendingAuthAction)
+    && Date.now() - Number(store.pendingAuthActionAt || 0) >= 0 && Date.now() - Number(store.pendingAuthActionAt || 0) < 600000
+    ? store.pendingAuthAction : '';
+  if (!readerStoreAccount) { store.pendingAuthAction = ''; store.pendingAuthActionAt = 0; }
   saveStore();
   readerStoreAccount = next;
   loadStore();
+  if (action) { store.pendingAuthAction = action; store.pendingAuthActionAt = Date.now(); saveStore(); }
   if (typeof State !== 'undefined') State.imageVotes = {};
   if (typeof communityState !== 'undefined') {
     communityState.commentsLoaded = {};

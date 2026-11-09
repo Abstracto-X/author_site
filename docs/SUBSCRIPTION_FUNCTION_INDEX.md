@@ -608,3 +608,7 @@ SiteSettings.selectLibrary(stories,settings): resolves primary/featured IDs agai
 ## 2026-11-09 — Chapter guards and offline deployment gates
 
 refreshBackendChapterAccess/loadReaderChapterFromBackend also guard captured store identity. Secure text uses contentRevision; auth account reset invalidates revision and clears loading. New offline script checks reviewed public config without printing keys or contacting backend.
+
+## 2026-11-09 — Continuation recovery and deployment audit
+
+switchReaderAccount(): recent allowlisted provider continuation transferred once from guest, never private state. signInWithGoogle stores pendingAuthActionAt; differing-user initial/token events use full account reset.
