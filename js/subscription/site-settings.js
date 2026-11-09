@@ -75,8 +75,17 @@
       for (var id of Object.keys(profile.tierPresentation || {})) {
         var visual = profile.tierPresentation[id];
         if (!/^[a-z0-9-]+$/i.test(id) || !object(visual) || !/^#[0-9a-f]{6}$/i.test(visual.accent || '')) return neutral('invalid_tier_presentation');
+        for (var assetField of ['banner', 'topbarBanner']) {
+          if (visual[assetField] !== undefined && (typeof visual[assetField] !== 'string' || !/^assets\/[a-z0-9_/-]+\.(png|webp|jpg|svg)$/i.test(visual[assetField]) || visual[assetField].includes('..'))) return neutral('invalid_tier_presentation');
+        }
         var hex = visual.accent.slice(1);
         tierPresentation[id] = { accent: visual.accent, rgb: [0,2,4].map(function (n) { return parseInt(hex.slice(n,n+2),16); }).join(', '), lockClass: ['tier-licker','tier-tyrant','tier-standard'].includes(visual.lockClass) ? visual.lockClass : 'tier-standard' };
+      }
+      for (var tierId of Object.keys(tierPresentation)) {
+        var original = profile.tierPresentation[tierId];
+        if (original.banner) tierPresentation[tierId].banner = original.banner;
+        if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
+        if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;
       }
       return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation };
     } catch (_) {

@@ -1930,3 +1930,7 @@ Prevented old-account library catalogs/errors applying after store transition, q
 ## 2026-11-09 — Tier-ID chapter presentation
 
 Replaced chapter color/lock tier-name matching with validated repository tier-ID mappings. Verified source tier IDs with restricted read-only query; no writes. Files: site-settings.js, site-bootstrap.js, site-config.js, views/story-reader.js, three HTML cache versions, settings tests and overview/index/state/changelog. 133 tests and resolver/story-reader syntax pass. No access grants or schema changes.
+
+## 2026-11-09 — Scoped topbar membership artwork
+
+Moved topbar banner registry into site-scoped tier-ID presentation mappings; real entitlement names remain display labels. Added local asset validation and renamed/unknown/cross-profile tests. Files: site-settings.js, site-config.js, chrome.js, three HTML cache versions, membership tests and overview/index/state/changelog. 134 tests plus chrome/settings syntax pass. No DB/access changes.

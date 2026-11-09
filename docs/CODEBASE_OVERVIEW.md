@@ -406,3 +406,7 @@ loadBackendLibrary captures initiating store/user, discards stale success/error 
 ## 2026-11-09 — Tier-ID chapter presentation
 
 Repository profiles support tierPresentation keyed by stable backend tier ID, with validated hex accent and allowlisted lockClass; RGB is derived. Bootstrap forwards normalized mappings. chapterTierVisual/getLockTierClass now use only the current profile ID mapping, never tier-name substrings; unknown paid tiers use neutral gray and actual DB label. Free retains green. Source four tier IDs were verified via restricted SELECT on 2026-11-09; generic Member is intentionally unmapped. Membership banner/frame/theme mappings remain for subsequent work.
+
+## 2026-11-09 — Scoped topbar membership artwork
+
+Removed chrome duplicate TOPBAR_TIER_BANNERS registry and tier-name fallback. topbarTierBanner selects highest active entitlement and resolves tier_id only against current CONFIG.tierPresentation. Labels come from actual entitlement, not local artwork metadata. Resolver supports reviewed local assets/ paths for banner/topbarBanner and allowlisted className, stripping arbitrary fields. Source profile contains four verified ID artwork mappings. Profile sheet/frame/theme still use old registry pending follow-up.

@@ -7,7 +7,13 @@ const vm = require("node:vm");
 const root = path.join(__dirname, "..");
 const source = fs.readFileSync(path.join(root, "js/subscription/membership-journey.js"), "utf8");
 function journey({ user = null, entitlements = [], connected = false } = {}) {
+  const configContext = { window:{} };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'js/subscription/site-config.js'), 'utf8'), configContext);
+  const config = configContext.window.SUBSCRIPTION_SITE_CONFIG.siteProfiles.evilarchives;
+  const fixtureIds = { 'Resident Licker':'ba1a06fd-ae33-4d24-9659-302d219bcc22', 'Resident Tyrant':'b592c08d-3f00-42c0-8b53-f551efe01074', 'Resident Nemesis':'f8bfcbae-7ea3-407b-b0db-87808b3c547e', 'Resident Evil':'0fc1b064-415e-4425-b6f6-558e941c1a10' };
+  entitlements = entitlements.map(e => ({...e, tier_id:e.tier_id || fixtureIds[e.tier_name]}));
   const context = {
+    CONFIG: config,
     authState: { user, profile: null, entitlements, passwordRecovery: false, ready:true, authPending:false },
     activeEntitlements: () => entitlements.filter(item => item.status !== "inactive"),
     providerIsConnected: () => connected,
@@ -321,3 +327,9 @@ test("topbar replaces Active · {Tier} text pill with cropped tier banner artwor
   assert.match(guestHtml, /<span class="pulse"><\/span>Not signed in/);
 });
 
+test('topbar uses entitlement tier IDs, keeps real renamed label and never guesses from brand names',()=>{
+ const code=fs.readFileSync(path.join(root,'js/subscription/chrome.js'),'utf8');const c=journey({user:{id:'reader'},entitlements:[{tier_id:'b592c08d-3f00-42c0-8b53-f551efe01074',tier_name:'Star Pilot',tier_rank:20}]});vm.runInContext(code,c);
+ assert.equal(c.topbarTierBanner({signedIn:true},false).name,'Star Pilot');
+ c.activeEntitlements=()=>[{tier_id:'unknown',tier_name:'Resident Tyrant',tier_rank:20}];assert.equal(c.topbarTierBanner({signedIn:true},false),null);
+ c.activeEntitlements=()=>[{tier_id:'b592c08d-3f00-42c0-8b53-f551efe01074',tier_name:'Star Pilot'}];c.CONFIG={tierPresentation:{}};assert.equal(c.topbarTierBanner({signedIn:true},false),null);
+});

@@ -576,3 +576,7 @@ loadBackendLibrary(options): coalesces forced reload during loading and guards s
 ## 2026-11-09 — Tier-ID chapter presentation
 
 chapterTierVisual(ch)/getLockTierClass(ch): use CONFIG.tierPresentation[ch.required_tier_id], neutral fallback without name matching. SiteSettings.resolve validates scoped tier color mappings and strips names/access fields.
+
+## 2026-11-09 — Scoped topbar membership artwork
+
+topbarTierBanner(P,checkingAccount): uses highest current entitlement tier_id and site-scoped artwork; unknown/other-profile IDs return null, allowing normal textual state. No name matching or duplicate registry. SiteSettings.resolve validates optional local banner paths.
