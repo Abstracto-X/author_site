@@ -434,3 +434,7 @@ Ornate renderBlocks requires current CONFIG.appearance.ornateStoryIds to include
 ## 2026-11-09 — Library selection and auth return boundaries
 
 Repository profile library.primaryStoryId and optional featuredStoryIds are normalized. selectLibrary resolves only loaded real published stories: missing primary falls back to first fetched (newest-created) published story; omitted featured defaults first two, explicit [] none, unknown/duplicate IDs ignored. Empty/error library clears stale selection slugs. Source primary ID pinned explicitly. authReturnUrl derives canonical configured reader root and rejects cross-origin destination (PKCE/session browser state cannot be assumed shared). authRedirectUrl/password email and Google callback use it; provider Edge return allowlists remain independent operational configuration.
+
+## 2026-11-09 — Chapter guards and offline deployment gates
+
+Chapter catalog/text guards now capture reader store identity as well as user, with per-chapter contentRevision invalidated on auth account transitions. Stale errors/finalizers cannot overwrite a newer chapter request. scripts/check-site-config.js provides offline public config/asset/order preflight; site-config.abstracto.template.js is intentionally unconfigured and rejects deployment preflight. See MULTI_SITE_DEPLOYMENT.md for separate backend/operations/browser gates; owner deferred live Abstracto checks.

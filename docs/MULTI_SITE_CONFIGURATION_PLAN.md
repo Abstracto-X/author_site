@@ -1,7 +1,7 @@
 # Multi-site configuration survey and implementation plan
 
 Survey: 2026-11-07. Revised: 2026-11-09 Asia/Kolkata.
-Status: PLAN READY FOR OWNER REVIEW / not implemented. No application, SQL, policy or deployment changes made.
+Status: IMPLEMENTATION IN PROGRESS. Application changes are landing in staged commits; no schema, policy or deployment changes made. Target live checks deferred by owner; see PROJECT_STATE.md and docs/MULTI_SITE_DEPLOYMENT.md.
 Companion: `docs/audits/2026-11-07-multi-site-inventory.json` is the original static evidence snapshot, not a regenerated live/deployed inventory.
 
 ## 1. Plain-English goal and agreed boundaries
@@ -208,6 +208,6 @@ Success means: one application implementation, separate real content/accounts/ac
 
 ## 9. Current status and remaining work
 
-Plan revised November 9 to reflect ownership decisions; implementation has not started. No more broad product questions are required to approve this direction. Actual deployment URLs, second-identity artwork and tier mappings can be supplied/verified during staged implementation; missing values use neutral same-site defaults, not guessed source data.
+Plan revised November 9 to reflect ownership decisions; staged implementation is underway. No more broad product questions are required to approve this direction. Actual deployment URLs, second-identity artwork and tier mappings can be supplied/verified during staged implementation; missing values use neutral same-site defaults, not guessed source data.
 
 Current architecture/function/database docs describe implemented behavior and were not rewritten to claim this plan exists at runtime. `PROJECT_STATE.md` records the revision and supersedes earlier DB-first appearance recommendations. Original audit inventory remains historical evidence. No changelog entry for this planning-only revision. Runtime/database/browser verification remains pending as specified above.

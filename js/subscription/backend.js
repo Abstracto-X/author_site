@@ -723,13 +723,14 @@ async function requestBrowserNotifications(){
 }
 
 async function refreshBackendChapterAccess(){
+  const requestStore = store;
   const client = getSupabase();
   const userId = authState.user?.id || null;
   if (!client || backendState.loading) return null;
   const stories = D.STORIES || [];
   // Fetch all catalogs before changing any state; a network error is not a lock.
   const catalogs = await Promise.all(stories.map(story => runBackendRequest("chapter access", () => client.rpc("get_chapter_catalog", { target_story_id:story.id }), { timeoutMs:10000, retries:0 })));
-  if ((authState.user?.id || null) !== userId || D.STORIES !== stories) return false;
+  if (store !== requestStore || (authState.user?.id || null) !== userId || D.STORIES !== stories) return false;
   let changed = false;
   stories.forEach((story, index) => {
     const rows = new Map((catalogs[index] || []).map(row => [row.id, row]));
@@ -746,10 +747,13 @@ async function refreshBackendChapterAccess(){
   return changed;
 }
 async function loadReaderChapterFromBackend(chapterId){
+  const requestStore = store;
   const client = getSupabase();
   const found = byId(chapterId);
   if (!client || !found || !found.ch.backend) return false;
   if (found.ch.content || found.ch.contentLoading) return !!found.ch.content;
+  const contentRevision = (found.ch.contentRevision || 0) + 1;
+  found.ch.contentRevision = contentRevision;
   found.ch.contentLoading = true;
   found.ch.contentError = null;
   found.ch.contentErrorCode = null;
@@ -767,7 +771,7 @@ async function loadReaderChapterFromBackend(chapterId){
         row = Array.isArray(data) ? data[0] : data;
       }
     }
-    if ((authState.user?.id || null) !== userId) return false;
+    if (store !== requestStore || found.ch.contentRevision !== contentRevision || (authState.user?.id || null) !== userId) return false;
     if (!row || !row.can_read) {
       found.ch.can_read_backend = false;
       found.ch.access_state_backend = row?.access_state || "unavailable";
@@ -789,13 +793,14 @@ async function loadReaderChapterFromBackend(chapterId){
     found.ch.can_read_backend = true;
     return true;
   } catch (err) {
+    if (store !== requestStore || found.ch.contentRevision !== contentRevision || (authState.user?.id || null) !== userId) return false;
     const friendly = backendFriendlyError(err, "secure chapter text");
     const message = friendly.message || "Unable to load chapter content.";
     found.ch.contentError = message;
     found.ch.contentErrorCode = friendly.code || "reader_request_failed";
     return false;
   } finally {
-    found.ch.contentLoading = false;
+    if (found.ch.contentRevision === contentRevision) found.ch.contentLoading = false;
   }
 }
 

@@ -604,3 +604,7 @@ renderBlocks(blocks,chId,chapter): source ornate design now requires site-scoped
 ## 2026-11-09 — Library selection and auth return boundaries
 
 SiteSettings.selectLibrary(stories,settings): resolves primary/featured IDs against actual catalog. SiteSettings.authReturnUrl(base,pageUrl): safe same-origin reader callback URL without route/query/token. authRedirectUrl/subscriptionRedirectTo consume it. loadBackendLibrary clears stale primary/featured slugs on empty/error.
+
+## 2026-11-09 — Chapter guards and offline deployment gates
+
+refreshBackendChapterAccess/loadReaderChapterFromBackend also guard captured store identity. Secure text uses contentRevision; auth account reset invalidates revision and clears loading. New offline script checks reviewed public config without printing keys or contacting backend.

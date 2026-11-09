@@ -16,3 +16,9 @@ test('library drops obsolete catalogs and queues one latest-account reload inste
  c.store={};c.authState.user={id:'bob'};release([]);await pending;
  assert.deepEqual(c.D.STORIES,['current']);assert.equal(c.backendState.loading,false);assert.equal(queued.length,1);
 });
+test('secure chapter text ignores an away-and-back account result despite matching user ID',async()=>{
+ let release;const wait=new Promise(r=>release=r);const chapter={backend:true,id:'chapter'};
+ const c={store:{},authState:{user:{id:'alice'},entitlements:[]},byId:()=>({ch:chapter}),getSupabase:()=>({rpc(){}}),runBackendRequest:()=>wait,textToBlocks:x=>[x],backendFriendlyError:e=>e};vm.createContext(c);
+ const start=source.indexOf('async function loadReaderChapterFromBackend('),end=source.indexOf('async function incrementChapterViews',start);vm.runInContext(source.slice(start,end),c);
+ const pending=c.loadReaderChapterFromBackend('chapter');c.store={};release({can_read:true,content:'private chapter',access_state:'unlocked'});assert.equal(await pending,false);assert.equal(chapter.content,undefined);
+});

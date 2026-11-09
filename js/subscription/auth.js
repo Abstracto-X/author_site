@@ -378,6 +378,8 @@ async function initAuth(){
         authState.providerConnections = [];
         if (typeof D !== "undefined") (D.STORIES || []).forEach(story => story.chapters.forEach(ch => {
           if (!ch.backend) return;
+          ch.contentRevision = (ch.contentRevision || 0) + 1;
+          ch.contentLoading = false;
           ch.content = null;
           ch.contentError = null;
           ch.can_read_backend = ch.access_state_backend === "free";

@@ -155,7 +155,7 @@ test('catalog access refresh preserves readable chapter text and clears newly de
   const chapter = { id:'chapter', state:'unlocked', can_read_backend:true, content:['loaded text'] };
   const story = { id:'story', chapters:[chapter] };
   let granted = true;
-  const context = { authState:{ user:{id:'reader'} }, backendState:{loading:false}, D:{STORIES:[story]},
+  const context = { store:{}, authState:{ user:{id:'reader'} }, backendState:{loading:false}, D:{STORIES:[story]},
     getSupabase:() => ({}), runBackendRequest:async () => [{ id:'chapter', can_read:granted }],
     normalizeBackendChapter:row => ({ state:row.can_read?'unlocked':'locked', can_read_backend:row.can_read }), buildBackendUpdates:() => [] };
   vm.createContext(context);

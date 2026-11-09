@@ -1958,3 +1958,7 @@ Scoped ornate chapter rendering to explicit profile story IDs and changed new-st
 ## 2026-11-09 — Library selection and auth return boundaries
 
 Added normalized primary/featured story selection and configured same-origin auth return URLs. Files: settings/bootstrap/config, backend.js, auth.js, three HTML cache versions, settings tests and overview/reader index/state/changelog. 146 tests plus settings/auth/backend syntax pass. No DB writes; deployment Auth allowlists still require verification.
+
+## 2026-11-09 — Chapter guards and offline deployment gates
+
+Hardened chapter request store/revision guards, added offline deployment preflight and Abstracto placeholder/runbook. Files: backend.js, auth.js, reader-access-refresh/stale tests, scripts/check-site-config.js, site-config.abstracto.template.js, tests/site-preflight.test.js, deployment/plan/overview/index/state/changelog docs. 148 tests and preflight pass; target placeholder rejects as intended. No target DB access or writes.
