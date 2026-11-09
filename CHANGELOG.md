@@ -1877,3 +1877,7 @@ Files changed:
 - `docs/DATABASE_CONTEXT.md`
 - `CHANGELOG.md`
 - `PROJECT_STATE.md`
+
+## 2026-11-09 — Multi-site deployment URL foundation
+
+Added tested publicRoot/readerUrl helpers to js/subscription/site-settings.js and tests/site-settings.test.js. Supports subdirectories and explicit destination readers without deriving published links from the authoring origin. Helpers are not yet wired. Updated overview/function index/state. Node tests and syntax checks passed; no browser/DB changes.

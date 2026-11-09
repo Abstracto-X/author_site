@@ -540,3 +540,5 @@ Recent reader notification/profile changes:
 - The subscription reader does not load a persistent structured-system panel yet. The initial reader prototype was detached pending approval of the standalone SVG designs.
 - `js/subscription/system-panel.js` and `js/system-core.js` are inactive implementation references, not runtime modules in `index.html`.
 - Existing narrative system-message rendering remains unchanged while the new persistent widget is redesigned.
+
+SiteSettings.publicRoot(base, pageUrl) validates a public deployment directory; SiteSettings.readerUrl(base, pageUrl, chapterId) builds encoded destination-reader links. Both remain unwired pending startup integration.

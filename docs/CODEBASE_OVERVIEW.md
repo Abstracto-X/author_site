@@ -356,3 +356,5 @@ Manual verification is preferred over automated browser testing unless explicitl
 - Overall Settings owns site artwork/story backdrops and notification delivery. Aa opens a dedicated Reader Preferences right rail on desktop or bottom drawer on smaller screens; it never adds a scrim, blur, or scroll lock and applies changes directly without rebuilding chapter content.
 - Reader Preferences contains page color, automatic custom-color contrast, background brightness, text size, line spacing, text width, and a single Dyslexia mode. Legacy presets and content-visibility/focus toggles are migrated away without leaving reader content hidden.
 - Chapter prose retains its Georgia-first stack with reliable italics. System/caption dialogue boxes consume reader-scoped semantic colors across all built-in and custom backgrounds.
+
+The standalone settings foundation also exposes publicRoot/readerUrl for explicit cross-origin or subdirectory reader destinations. HTTP is restricted to loopback development hosts; credentials, query/hash roots and unsafe protocols are rejected. Existing consumers are not switched yet.

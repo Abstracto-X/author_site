@@ -59,5 +59,27 @@
       return neutral('invalid_input');
     }
   }
-  window.SiteSettings = { resolve: resolve };
+  // Resolve a deployment directory, not a route or an untrusted redirect.
+  function publicRoot(base, pageUrl) {
+    if (typeof base !== 'string' || !base.trim()) throw new Error('missing_public_root');
+    var page = new URL(pageUrl);
+    var root = new URL(base.trim(), page);
+    if (!/^https?:$/.test(root.protocol) || root.username || root.password || root.search || root.hash) {
+      throw new Error('invalid_public_root');
+    }
+    if (root.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(root.hostname)) {
+      throw new Error('insecure_public_root');
+    }
+    if (!root.pathname.endsWith('/')) root.pathname += '/';
+    return root.href;
+  }
+  function readerUrl(base, pageUrl, chapterId) {
+    var url = new URL('index.html', publicRoot(base, pageUrl));
+    if (chapterId !== undefined && chapterId !== null) {
+      if (typeof chapterId !== 'string' || !chapterId.trim()) throw new Error('invalid_chapter_id');
+      url.hash = '/read/' + encodeURIComponent(chapterId.trim());
+    }
+    return url.href;
+  }
+  window.SiteSettings = { resolve: resolve, publicRoot: publicRoot, readerUrl: readerUrl };
 }());

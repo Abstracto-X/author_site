@@ -67,3 +67,15 @@ test('allows only safe absolute HTTPS links', () => {
   assert.equal(resolve(deployment(), p).links.supportUrl, 'https://example.com/a?x=1#part');
   p.orchard.links.supportUrl = ' '; assert.equal(resolve(deployment(), p).links.supportUrl, '');
 });
+
+
+test('deployment roots retain subdirectories and chapter links target the configured reader', () => {
+  const api = context.window.SiteSettings;
+  assert.equal(api.publicRoot('./', 'https://author.example/books/writer.html'), 'https://author.example/books/');
+  assert.equal(api.readerUrl('https://other.example/library', 'https://author.example/writer.html', 'chapter/one'), 'https://other.example/library/index.html#/read/chapter%2Fone');
+  assert.equal(api.readerUrl('./', 'http://localhost:8080/sub/admin.html'), 'http://localhost:8080/sub/index.html');
+  for (const root of ['', 'javascript:alert(1)', 'https://user:pass@example.com', 'https://example.com/?x=1', 'https://example.com/#foo', 'http://example.com']) {
+    assert.throws(() => api.publicRoot(root, 'https://author.example/admin.html'), undefined, root);
+  }
+  assert.throws(() => api.readerUrl('./', 'https://author.example/admin.html', ' '));
+});

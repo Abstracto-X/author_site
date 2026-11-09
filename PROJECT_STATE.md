@@ -2205,3 +2205,9 @@ Verification needed:
 - Complete owner-led QA above; previous redesign visual notes still leave later masonry/NSFW changes awaiting verification.
 
 Follow-up completed 2026-10-10 20:49 Asia/Kolkata: Front-page Home Artwork now promotes up to four published mature images for eligible readers without changing guest filtering; 24 fixture tests pass. Browser/entitlement visual QA is still pending and remains tracked in the redesign QA notes.
+
+## 2026-11-09 — Direct implementation started
+
+Status: IN PROGRESS
+
+Pilot/plan checkpoint committed. Added standalone deployment-root and chapter URL helpers with unsafe URL rejection and subdirectory/destination tests. Files: js/subscription/site-settings.js, tests/site-settings.test.js, overview/function index/changelog/state. Remaining: wire normalized settings before clients across all three surfaces, then scoped state and tier presentation; full plan gates including second backend remain outstanding. Verification: Node tests/syntax; owner browser and real-backend verification still pending. No DB changes.
