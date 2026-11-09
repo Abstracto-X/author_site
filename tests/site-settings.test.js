@@ -1,0 +1,69 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const context = { window: {}, URL };
+vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/subscription/site-settings.js'), 'utf8'), context);
+const resolve = context.window.SiteSettings.resolve;
+const plain = value => JSON.parse(JSON.stringify(value));
+const profiles = () => ({
+  orchard: { backendUrl: 'https://orchard.supabase.co/', identity: { siteName: ' Orchard ', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { supportUrl: 'https://example.org/help?q=1#top' } },
+  observatory: { backendUrl: 'https://stars.supabase.co', identity: { siteName: 'Observatory', siteTagline: 'Stars' }, links: { discordUrl: 'https://chat.example.net/invite' } }
+});
+const deployment = (siteKey = 'orchard', backendUrl = 'https://orchard.supabase.co') => ({ siteKey, backendUrl });
+
+test('selects only explicit matching profile and normalizes a detached allowlisted snapshot', () => {
+  const p = profiles();
+  p.orchard.identity.role = 'admin'; p.orchard.links.script = 'https://evil.example/';
+  p.orchard.serviceRoleKey = 'secret'; p.orchard.site_identity = { siteName: 'DB override' };
+  const result = resolve(deployment(), p, { siteName: 'DB override' });
+  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' } });
+  result.identity.siteName = 'changed'; result.links.supportUrl = 'changed';
+  assert.equal(p.orchard.identity.siteName, ' Orchard ');
+  assert.equal(resolve(deployment(), p).identity.siteName, 'Orchard');
+  assert.equal(resolve(deployment('observatory', 'https://stars.supabase.co/'), p).identity.siteName, 'Observatory');
+});
+
+test('fails neutrally on unknown or mismatched deployments', () => {
+  for (const [d, code] of [[deployment('unknown'), 'unknown_site'], [deployment('orchard', 'https://stars.supabase.co'), 'backend_mismatch'], [deployment(''), 'invalid_site_key']]) {
+    const result = plain(resolve(d, profiles()));
+    assert.equal(result.error, code); assert.equal(result.ok, false);
+    assert.deepEqual(result.identity, { siteName: 'Reader', siteTagline: '', metaDescription: '' });
+    assert.deepEqual(Object.values(result.links), ['', '', '', '', '']);
+  }
+});
+
+test('validates canonical Supabase origin for both inputs', () => {
+  for (const url of ['http://orchard.supabase.co', 'https://user@orchard.supabase.co', 'https://orchard.supabase.co/path', 'https://orchard.supabase.co?x=1', 'https://orchard.supabase.co#x', 'https://orchard.supabase.co:443', 'https://supabase.co', 'https://orchard.supabase.co.evil.test']) {
+    assert.equal(resolve(deployment('orchard', url), profiles()).error, 'invalid_backend_url', url);
+    const p = profiles(); p.orchard.backendUrl = url;
+    assert.equal(resolve(deployment(), p).error, 'invalid_backend_url', url);
+  }
+});
+
+test('rejects malformed structures and provided fields, but permits missing optional values', () => {
+  assert.equal(resolve(null, {}).error, 'invalid_root');
+  assert.equal(resolve(deployment(), []).error, 'invalid_root');
+  assert.equal(resolve(deployment(), { orchard: [] }).error, 'invalid_profile');
+  for (const value of [null, [], 'x', 5]) {
+    const p = profiles(); p.orchard.identity = value; assert.equal(resolve(deployment(), p).error, 'invalid_identity');
+    p.orchard.identity = {}; p.orchard.links = value; assert.equal(resolve(deployment(), p).error, 'invalid_links');
+  }
+  const p = profiles(); p.orchard.identity = { siteName: '  ', siteTagline: 1 };
+  assert.equal(resolve(deployment(), p).error, 'invalid_identity');
+  p.orchard.identity = { siteName: '  ' }; delete p.orchard.links;
+  assert.equal(resolve(deployment(), p).identity.siteName, 'Reader');
+  delete p.orchard.identity; assert.equal(resolve(deployment(), p).ok, true);
+  assert.equal(resolve(deployment('__proto__'), {}).error, 'unknown_site');
+});
+
+test('allows only safe absolute HTTPS links', () => {
+  for (const value of ['javascript:alert(1)', 'data:text/html,x', 'http://example.com', '/relative', 'https://user:pass@example.com', 5, null]) {
+    const p = profiles(); p.orchard.links.supportUrl = value;
+    assert.equal(resolve(deployment(), p).error, 'invalid_links', String(value));
+  }
+  const p = profiles(); p.orchard.links.supportUrl = '  https://example.com/a?x=1#part  ';
+  assert.equal(resolve(deployment(), p).links.supportUrl, 'https://example.com/a?x=1#part');
+  p.orchard.links.supportUrl = ' '; assert.equal(resolve(deployment(), p).links.supportUrl, '');
+});

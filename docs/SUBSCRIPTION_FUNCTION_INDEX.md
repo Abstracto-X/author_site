@@ -1,5 +1,13 @@
 # Subscription Reader Function Index
 
+## 2026-11-09 — Multi-site pilot
+
+| File | Function | Purpose |
+|---|---|---|
+| `site-settings.js` (not loaded yet) | `window.SiteSettings.resolve(deployment, profiles)` | Validate explicit site/backend pair; return detached allowlisted identity/HTTPS links or neutral failure. No backend clients, DB merge, or access decisions. |
+| `auth.js` | `showBoostyCallbackResult(result)` | Boosty callback detail uses runtime site name as plain toast text. |
+| `sheets.js` / `views/help-support.js` | `sheetConnectBoosty()` / `VIEWS.wrongAccount()` | Site-aware Boosty support copy with neutral fallback and escaped HTML names. |
+
 Generated from the current codebase. One-line descriptions are intentionally concise so agents can quickly locate ownership before editing.
 
 ## 2026-10-29 — Stage 0–4 reader workspace redesign

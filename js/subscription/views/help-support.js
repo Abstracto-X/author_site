@@ -55,7 +55,8 @@ VIEWS.checkAccess = function(){
     <a class="reader-text-link" href="#/support/wrong-account" data-nav="/support/wrong-account">Not seeing your membership? ${I.chevR}</a></div>`;
 };
 VIEWS.wrongAccount = function(){
-  const steps=["Are you signed into the same reader account you used before? Check your email in the Vault.","For Patreon, connect the Patreon account that owns the membership.","For Boosty, connect the same Discord account in both Boosty and EvilArchives, and confirm Boosty assigned its subscriber role.","Access keys are tied to the account that redeemed them. Check that account before trying a different one.","Still stuck? Copy your access details and share them privately with the author."];
+  const siteName = typeof SITE_NAME !== "undefined" && String(SITE_NAME || "").trim() ? String(SITE_NAME).trim() : "this site";
+  const steps=["Are you signed into the same reader account you used before? Check your email in the Vault.","For Patreon, connect the Patreon account that owns the membership.",`For Boosty, connect the same Discord account in both Boosty and ${esc(siteName)}, and confirm Boosty assigned its subscriber role.`,"Access keys are tied to the account that redeemed them. Check that account before trying a different one.","Still stuck? Copy your access details and share them privately with the author."];
   return `<div class="reader-workspace">
     <nav class="reader-subnav" aria-label="Support navigation">
       <a class="reader-back-link" href="#/help" data-nav="/help">${I.chevL}<span>Help Center</span></a>

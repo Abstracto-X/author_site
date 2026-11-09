@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-09 13:50 Asia/Kolkata — Bounded multi-site configuration pilot
+
+Area: reader / shared configuration
+
+- Added standalone, not-yet-wired SiteSettings resolver with explicit site/backend validation, neutral failure, allowlisted detached identity/link settings and five tests.
+- Replaced four hardcoded support-copy brand mentions with current runtime identity, neutral fallback and context-appropriate escaping; added two behavioral tests. Existing DB identity precedence remains unchanged.
+- Bumped three affected reader script cache versions; no client/auth/schema/provider behavior changed.
+- Files: js/subscription/site-settings.js, js/subscription/auth.js, js/subscription/sheets.js, js/subscription/views/help-support.js, index.html, tests/site-settings.test.js, tests/reader-site-copy.test.js, docs/CODEBASE_OVERVIEW.md, docs/SUBSCRIPTION_FUNCTION_INDEX.md, docs/audits/2026-11-09-delegation-pilot.md, PROJECT_STATE.md, CHANGELOG.md.
+- Validation: baseline 101 tests; final 108 passing, four JS syntax checks, independent parent probes and whitespace check. Browser/DB not tested. See pilot report for delegation limits; Stage 1 is not complete.
+
 ## 2026-11-03 06:50 Asia/Kolkata — Fix Home masonry tile gap and add 50/50 NSFW/normal randomizer to Home & Gallery
 
 Area: subscription reader / Home & Visual Archive gallery

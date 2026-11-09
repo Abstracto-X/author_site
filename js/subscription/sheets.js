@@ -234,8 +234,9 @@ function sheetConnectProvider(){
   <div class="col-flex" style="gap:9px">${choices||`<div class="card"><p class="faint" style="margin:0">No membership providers are enabled.</p></div>`}<button class="btn ghost block" data-sheet="redeem">${I.key}I have an access key</button></div>`;
 }
 function sheetConnectBoosty(){
-  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Activate with Boosty</h2><p class="sheet-sub">Boosty assigns your subscriber role in Discord; EvilArchives verifies that role without reading your messages.</p>
-  <div class="card" style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:6px">Before connecting</div><ol class="faint" style="font-size:.78rem;line-height:1.65;margin:0;padding-left:20px"><li>Subscribe to the matching tier on Boosty.</li><li>Connect the same Discord account in Boosty Connected Apps.</li><li>Join the EvilArchives Discord server and wait for the subscriber role.</li></ol></div>
+  const siteName = typeof SITE_NAME !== "undefined" && String(SITE_NAME || "").trim() ? String(SITE_NAME).trim() : "this site";
+  return `<button type="button" class="close-x" data-act="close-sheet" aria-label="Close">${I.x}</button><h2>Activate with Boosty</h2><p class="sheet-sub">Boosty assigns your subscriber role in Discord; ${esc(siteName)} verifies that role without reading your messages.</p>
+  <div class="card" style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:6px">Before connecting</div><ol class="faint" style="font-size:.78rem;line-height:1.65;margin:0;padding-left:20px"><li>Subscribe to the matching tier on Boosty.</li><li>Connect the same Discord account in Boosty Connected Apps.</li><li>Join the ${esc(siteName)} Discord server and wait for the subscriber role.</li></ol></div>
   <div class="col-flex" style="gap:9px">
     ${BOOSTY_URL?`<button class="btn ghost block" data-act="open-boosty">${I.external}Open the Boosty page</button>`:""}
     ${authState.user?`<button class="btn story block" data-act="connect-boosty-go">${I.msg}Verify my Discord role</button>`:`<button class="btn story block" data-act="google-then-boosty">${I.external}Continue with Google, then Discord</button><button class="btn ghost block" data-sheet="persona">${I.user}Use email instead</button>`}

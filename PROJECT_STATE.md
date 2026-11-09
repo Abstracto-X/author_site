@@ -1,5 +1,166 @@
 # Project State
 
+## 2026-11-09 13:50 Asia/Kolkata — Luna/Terra implementation pilot
+
+Status: IN PROGRESS (two pilot tasks accepted; full plan incomplete)
+
+Area:
+- shared / reader / docs
+
+Files touched:
+- js/subscription/site-settings.js; tests/site-settings.test.js
+- js/subscription/auth.js; js/subscription/sheets.js; js/subscription/views/help-support.js; tests/reader-site-copy.test.js; index.html
+- docs/CODEBASE_OVERVIEW.md; docs/SUBSCRIPTION_FUNCTION_INDEX.md; docs/audits/2026-11-09-delegation-pilot.md; CHANGELOG.md; PROJECT_STATE.md
+
+Summary:
+- User authorized real bounded model trials. GPT-6.1 Terra created a standalone settings resolver; GPT-6 Luna removed four hardcoded support-brand mentions. Both accepted without runtime rewrite or repair rounds. Parent corrected own mistaken function name, reviewed code/tests, ran independent probes, bumped cache versions and consolidated documentation.
+- Resolver is intentionally unwired. Existing identity settings/DB precedence are unchanged; this is not completed multi-site isolation. Report documents overhead and measurement limits; no defensible cost/speed savings claim or model ranking from unequal single-task samples.
+
+Remaining work:
+- Continue staged plan only in bounded tasks. Integrate validated settings before clients/data work, classify field ownership, scope URLs/storage, replace tier-name assumptions, align Admin, verify second backend compatibility.
+- For next delegation trial record preparation/execution/review boundaries and compare similarly sized work; no auth/state safety inference from this pilot.
+
+Verification needed:
+- Passed baseline 101 and final 108 Node tests, four JS syntax checks, independent mutation/pairing/undeclared-name probes and whitespace checks.
+- Owner manual check: open Boosty connection sheet and wrong-account help, confirm correct name, links/buttons and readable copy. Callback check when naturally available; no real provider action required just for this copy change.
+- No automated browser, live DB, migrations or deployment. Existing pre-task edits preserved.
+
+## 2026-11-09 12:40 Asia/Kolkata — Finalize ownership direction for multi-site plan
+
+Status: NEEDS REVIEW (plan revised; no implementation)
+
+Area:
+- shared / reader / admin / writer / docs
+
+Files touched:
+- `docs/MULTI_SITE_CONFIGURATION_PLAN.md`
+- `PROJECT_STATE.md` (pre-existing changes preserved)
+
+Summary:
+- Owner clarified the goal is one application usable across separate author identities/stories without name/content/state leakage, not database-driven everything or local profiles as an architectural end in themselves. Website appearance is always repo-managed. Admin remains the existing content/publishing/access tool.
+- Reworked all 30 survey recommendations and implementation stages accordingly. Supersedes earlier DB-managed appearance bundles, tier-presentation tables, CSS publication/editor recommendations and automatic adoption of an ID-keyed profile as the whole architecture.
+- Proposed a normalized settings interface backed by repository files initially; backend/site pairing validates selection, not authorization. A future source adapter is possible only for legitimately source-switchable settings, not a universal local/remote accounts/content/access switch. No local database server, production content fixtures or new config schema are prerequisites for the first presentation refactor.
+- Tier names/ranks and actual memberships remain connected-DB facts, editable in Admin; repository maps stable site-scoped tier IDs to optional appearance/perks. A new real tier without artwork must display its real name neutrally. Appearance cannot confer chapter/admin access.
+- Rechecked Admin story/chapter/tier/rolling-policy patterns: these are substantially already generic by story ID/current backend. Exceptions are identity defaults, existing Site Settings appearance controls, story loader/accent defaults and unscoped local selections/drafts. Preserve author content-media workflows; mark conflicting appearance controls explicitly repo-managed/read-only or retire deliberately without silently ignoring saves or deleting rows. Fixed test-account tooling is in Writer, not the normal Admin tier manager.
+- Plan now starts local/code-side and defers target DB reconciliation to when real backend compatibility is needed. Separate Supabase projects remain the recommended baseline; no conversion, deployment or migration approved/executed.
+
+Remaining work:
+- Owner review/approval of revised plan, then staged implementation. Final deployment paths and second-site artwork/tier IDs are implementation inputs, not reasons to re-open the agreed Admin-vs-repo boundary.
+- Implement settings consumers, source-specific UI cleanup, URL/state isolation, generic tier handling and source compatibility tests before target backend rollout. Update actual architecture/function/database docs and changelog only as durable changes land.
+
+Verification needed:
+- Completed: 30 findings and nine sections validated; all 135 files in original survey inventory still match their hashes; plan whitespace check produced no whitespace diagnostics. No application files changed.
+- Pending: plan acceptance and its future two-identity/multi-story/manual/secure-access matrix. No browser tests, live DB access, code execution tests or deployments for this documentation-only revision.
+
+## 2026-11-07 11:45 Asia/Kolkata — Whole-runtime multi-site survey and DB configuration plan
+
+Status: SUPERSEDED (survey evidence retained; DB-first appearance recommendation replaced by 2026-11-09 ownership plan)
+
+Area:
+- shared / reader / admin / writer / database / operations
+
+Files touched:
+- `docs/MULTI_SITE_CONFIGURATION_PLAN.md` (new, explicitly proposed design)
+- `docs/audits/2026-11-07-multi-site-inventory.json` (new, static evidence inventory)
+- `PROJECT_STATE.md` (existing changes preserved)
+
+Summary:
+- User requested an entire portability survey and plan for database-fetched site-specific behavior/presentation, including whether DB-stored code/CSS is viable.
+- Surveyed 30 active HTML/JS/CSS files, 12 Edge TypeScript sources, 54 overlapping SQL files, seven test files, two operational scripts, deployment templates/config, 18 brand assets, two vendor entry dependencies and seven inactive/template JS files. Inventory contains 135 paths/hashes and navigation anchors; vendor internals/archived prototypes/secrets were not audited.
+- Recorded 30 prioritized findings with evidence and proposed destinations, configuration/data/security boundaries, bootstrap/public-config contracts, five implementation stages, rollback rules and a future automated/manual verification matrix. Added deeper findings: chapter tier-color name matching, legacy Archivist level summaries, brand-specific instructions, source-story system seeds, production backup targeting and reader UI role inference from user-editable metadata (not proof of backend bypass).
+- Recommended DB-managed identity/tier presentation/cosmetic perks/tokens/settings, minimal local site/backend bootstrap, server-only secrets/operational targets and repository-versioned application/access code. DB-fetched CSS is viable but not yet implemented; begin with validated tokens, then optional restricted owner-published styles with versioning, preview, kill switch and explicit policy. General DB JavaScript execution is technically possible but not proposed for branding; it gives publisher/session-level code execution and undermines shared-version guarantees.
+- No application code, SQL, credentials, backend data, deployments or existing architecture contracts changed. No changelog entry for investigative/planning work.
+
+Remaining work:
+- Owner review of plan, particularly target domains/subpaths, tier-perk semantics, public configuration publication and whether raw CSS is needed beyond tokens.
+- Then Stage 0 live contract inventory and owner-reviewed migration/provisioning design before implementation. Keep source-specific seeds and the unapplied fixed test-account migration out of generic rollout; do not edit historical applied migrations.
+- On implementation, update overview/function indexes/database context and changelog for actual completed changes, not proposed APIs. Follow existing restricted AI DB and manual existing-schema review boundaries.
+
+Risks / notes:
+- Whole-runtime static survey is not a line-by-line security audit or deployment certification. Pattern anchors are not automatically confirmed findings. Current deployed headers/policies/platform settings were not inspected.
+- Earlier preservation recommendations were superseded by the owner's homepage-plus-shared-product direction, but nothing authorizes deleting legacy content or converting to a shared multi-tenant backend.
+
+Verification needed:
+- Completed: inventory JSON parse; all 135 paths/hashes validated; 30 sequential unique findings verified; documentation whitespace checks returned no whitespace diagnostics.
+- Pending: owner decisions and the plan's two-site guest/free/paid/expired/admin, callbacks, state/draft isolation, layout, configuration/CSS recovery and backend RLS/provisioning matrix. No browser/live DB/runtime tests run for this documentation-only task.
+
+## 2026-11-07 11:23 Asia/Kolkata — Multi-brand readiness audit and direction clarification
+
+Status: DEFERRED (assessment only; no implementation requested)
+
+Area:
+- shared / reader / admin / writer / database
+
+Files touched:
+- `PROJECT_STATE.md` only; pre-existing changes preserved.
+
+Summary:
+- Owner clarified that Abstracto Tales is a legacy free-story experience, not an actively developed parallel product. Preferred direction is preserving its homepage while adopting the author-site application; earlier advice to preserve all public surfaces and the binder Writer as active products is superseded by this clarification, not an approved deletion request.
+- Discussed one repository/two branded deployments with separate Supabase projects as the simpler isolation option. A shared backend remains a separate multi-tenancy decision, not a prerequisite for shared source. No implementation choice has been executed.
+- Reader, Admin and Writer all load `js/subscription/site-config.js` for Supabase URL/public key. It also supplies identity defaults, provider flags and external links; `site_settings.site_identity` and `reader_behavior` supply additional reader identity/behavior. Actual stories and core secure access are backend-driven.
+- Not yet a configuration-only multi-brand product: static titles/login/sidebar/fallbacks and Boosty help copy retain EvilArchives; membership/chrome arrays, frame assets, CSS ornaments and premium-theme checks encode the four Resident tiers. `membershipTier()` matches names, and frame availability follows the hardcoded tier order. Writer access-list copy special-cases Resident Nemesis/Evil slugs.
+- Writer includes Divine Devil test-account controls and fixed tier choices; its staged SQL targets a specific account UUID and remains unapplied. Existing tier/provider seed migrations contain Resident tier names and actual Patreon campaign/tier/Discord role IDs. They must be separated from reusable schema migrations, not replayed for another identity.
+- Edge Functions use environment variables for provider credentials, campaign, callback/return URLs, email sender/name and AI settings. Changing the frontend DB configuration does not configure these or target Auth URLs, storage, RLS/RPCs and scheduling.
+- Reader persistence uses a fixed v2-realdb browser key and other fixed prefixes. Two paths on the same origin would share local storage; add a stable site namespace with compatibility migration if supporting that layout. `publicBaseUrl` is declared but no active consumer was found; Writer constructs reader URLs relative to sibling `index.html`, so path layout needs explicit verification.
+
+Remaining work:
+- If approved, centralize branding/tier presentation/perks and optional tools in site configuration consumed by all three surfaces; keep secrets server-side. Add per-site browser-state namespaces and a repeatable two-target deployment process without a new frontend framework/build requirement.
+- Establish reusable schema provisioning versus per-site seed/configuration data and track migration application independently. Choose the actual domains/path layout before URL changes.
+
+Verification needed:
+- Static/source inspection only; no browser sessions, live DB queries, secrets inspection, deployment or runtime tests. A second configured deployment must verify no source-brand copy/assets/provider destinations, independent local state, target Auth/provider callbacks and free/paid/admin access.
+
+## 2026-11-07 09:26 Asia/Kolkata — Abstracto Tales carry-back assessment
+
+Status: DEFERRED (investigation complete; implementation not requested)
+
+Area:
+- reader / admin / writer / database
+
+Files touched:
+- `PROJECT_STATE.md` only; existing uncommitted work preserved.
+
+Summary:
+- Compared this repository with sibling `../abstracto_tales` using both projects' instructions, architecture/state docs, active entry points, reader boot/auth/state/router code, admin/writer touchpoints, and SQL/Edge Function inventories. No browser automation, live database access, deployment, or product-code edits.
+- Target retains a separate public ES-module reader (`index.html`, root `styles.css`, `js/main.js`), subscription bridge (`subscription.html`, `subscription.css`, two classic scripts), binder-based Writer (`writer_nodes`), and Cartographer. Preserve these distinct surfaces rather than overwriting root reader files or replacing its Writer wholesale.
+- Source subscription implementation is modular, has empty runtime content defaults, richer reading/gallery/account UX, notifications, access-refresh reliability work, and a chapter-focused Writer with Context/AI. Target disables story/catalog fixture fallback, but still loads its fixture data file and renders seeded collections; do not describe it as having no real backend or having removed all fixture UX.
+- The two baseline subscription/provider-token SQL files are byte-identical, but configured Supabase projects differ. Later contracts need per-feature schema/RPC/RLS verification in the target; baseline file parity is not proof of live database parity.
+- Existing target handoff `handoff_packages/author_site-sync-context.md` dates from July and is no longer a current inventory: source now has separate site/reader appearance, newer membership/profile styling, access lifecycle hardening, and an unapplied test-account override migration. Source branding includes hardcoded Resident tiers/artwork and theme eligibility, not just site-config values.
+
+Remaining work:
+- If approved, prepare a feature/dependency inventory and port the reader foundation into the target subscription namespace first; preserve legacy chapter links, auth callbacks, and migrate compatible browser-local reading state (target v1 key differs from source v2-realdb key).
+- Keep target public reader/maps/Cartographer intact. Adapt admin workflows selectively; decide separately whether to add source chapter publishing alongside the target binder Writer. Keep each identity's Supabase data, provider mappings, credentials, and brand assets separate.
+- Review source known QA/reliability gaps before choosing a release baseline. Exclude inactive story-system experiments and source-specific test-account tooling by default.
+
+Risks / notes:
+- Both repositories already had uncommitted changes before assessment; target was not modified. Target Writer architecture docs claim no explicit client auth check, but current Writer boot checks session and admin profile, illustrating why code must be checked against older docs.
+- A cross-site copy is an adapted subsystem migration, not a wholesale repository replacement or blind migration replay.
+
+Verification needed:
+- Future implementation: verify target schema/RPC/RLS and owner-led guest/free/entitled/expired/admin access, OAuth/recovery/provider return URLs, old/new chapter links, local progress migration, desktop/mobile layout, and no regressions in public gallery/lore/maps/Cartographer.
+
+## 2026-11-04 — Firefox Profile-frame downscale investigation
+
+Status: NEEDS REVIEW
+
+Area:
+- reader / Profile rendering
+
+Files touched:
+- `PROJECT_STATE.md` (investigation only)
+
+Summary:
+- Profile frames are large transparent PNGs downscaled to about 128–148 CSS pixels by `renderProfileFrame()` on canvas with `imageSmoothingQuality = "high"`; a CSS background remains as fallback. Mozilla documents the smoothing-quality setting as limited-availability. The source sprite contains semi-transparent near-white edge pixels, so browser downsampling/alpha-compositing differences, zoom/DPR, or Firefox showing the CSS fallback may expose pale speckles.
+
+Remaining work:
+- In Firefox, verify whether `.reader-profile-frame-art` has `data-rendered`, compare canvas pixel size with CSS size and `devicePixelRatio`, and retry the same frame after a hard reload at 100% zoom. If canvas itself differs, use a browser-independent pre-rendered asset or controlled downsample instead of relying on smoothing-quality hints.
+
+Risks / notes:
+- No runtime files or frame art changed; browser-specific root cause remains unconfirmed.
+
+Verification needed:
+- Firefox screenshot and DevTools canvas/fallback observations for the affected frame.
+
 ## 2026-11-03 06:50 Asia/Kolkata — Home masonry tile fix and 50/50 NSFW/normal gallery randomizer
 
 Status: NEEDS REVIEW

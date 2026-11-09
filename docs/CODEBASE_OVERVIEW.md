@@ -1,5 +1,9 @@
 # Codebase Overview
 
+## 2026-11-09 — Bounded multi-site pilot
+
+Boosty connection/recovery support copy now uses current runtime SITE_NAME with neutral missing-name fallback and sink-appropriate escaping. Existing identity-loading precedence is otherwise unchanged. js/subscription/site-settings.js introduces window.SiteSettings.resolve(deployment, profiles), a standalone allowlisted repository-settings resolver with explicit HTTPS Supabase pairing and neutral failures. It is deliberately NOT referenced by any entrypoint yet; current CONFIG/DB settings still drive the applications. See docs/audits/2026-11-09-delegation-pilot.md for scope and verification; the full multi-site plan remains unfinished.
+
 This repo is a static Supabase-backed author/reader site with three active browser surfaces and no frontend build step. It is intentionally small at runtime: browser HTML/CSS/JavaScript, a pinned local Supabase JS browser bundle, Supabase PostgreSQL/Auth/Storage, and SQL files for setup/rebuild documentation.
 
 The active implementation is the source of truth. Anything under `deleted/` is archived historical/reference material and is not needed for the site to run.

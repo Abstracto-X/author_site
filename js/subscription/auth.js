@@ -189,10 +189,11 @@ function cleanBoostyCallbackUrl(){
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
 }
 function showBoostyCallbackResult(result){
+  const siteName = typeof SITE_NAME !== "undefined" && String(SITE_NAME || "").trim() ? String(SITE_NAME).trim() : "this site";
   const messages = {
     linked: ["Boosty access connected", "Your Discord subscription role was verified and your reader access was updated."],
     no_matching_role: ["Discord connected", "Your Boosty membership has not appeared here yet. Check that Boosty is linked to this Discord account, then try again."],
-    not_in_server: ["Discord connected", "Join the EvilArchives Discord server and wait for your Boosty subscriber role, then check again."],
+    not_in_server: ["Discord connected", `Join the Discord server for ${siteName} and wait for your Boosty subscriber role, then check again.`],
     cancelled: ["Boosty connection cancelled", "No changes were made. You can try again whenever you are ready."],
     expired_state: ["Discord session expired", "Please start the Boosty connection again from the Vault."],
     invalid_state: ["Discord connection could not be verified", "Please start the Boosty connection again from the Vault."],
