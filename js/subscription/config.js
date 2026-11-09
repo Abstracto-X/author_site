@@ -41,7 +41,7 @@ const DEFAULT_DATA = {
     { id:"anon", label:"Anonymous visitor" },
     { id:"no-access", label:"Signed in, no access" },
     { id:"patron", label:"Active supporter" },
-    { id:"archivist", label:"Archivist supporter" },
+    { id:"archivist", label:"Higher-tier supporter" },
     { id:"key-holder", label:"Access-key holder" },
     { id:"lapsed", label:"Expired / lapsed supporter" },
     { id:"pending", label:"Provider sync pending" },

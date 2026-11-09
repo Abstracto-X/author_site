@@ -353,3 +353,7 @@ Forms.exportLegacyDrafts(): downloads SiteStorage.legacyDrafts() as private JSON
 ## 2026-11-09 — Generic audiences and trusted entitlement summaries
 
 Writer chapterAccessListEntries(): cumulative audience wording derives from real active tier ranks, not source slugs. Existing clipboard publication and selected-story bounds remain unchanged.
+
+## 2026-11-09 — Source tool isolation and legacy access cleanup
+
+Writer TestAccount controller: opt-in CONFIG.writerTestAccount; labels/account identity from normalized profile, safe DOM option creation, load/change refuse disabled/unlisted choices; server RPC remains authority. Menu hidden until configured verified startup.

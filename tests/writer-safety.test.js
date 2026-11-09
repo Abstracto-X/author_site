@@ -587,7 +587,7 @@ test('Writer test account control saves a selected tier and restores normal acce
         'test-account-current', 'test-account-normal', 'test-account-tier',
         'test-account-save', 'test-account-restore', 'test-account-status',
         'writer-main-menu-toggle'
-    ].map(id => [id, { value: '', textContent: '', disabled: false, classList: { toggle() {} }, focus() {} }]));
+    ].map(id => [id, { value: '', textContent: '', disabled: false, replaceChildren() {}, classList: { toggle() {} }, focus() {} }]));
     const makeState = (override = null) => ({
         account_email: 'divinedevil101@gmail.com',
         override_active: override !== null,
@@ -597,7 +597,8 @@ test('Writer test account control saves a selected tier and restores normal acce
     });
     let state = makeState();
     const context = {
-        document: { getElementById: id => elements[id] },
+        CONFIG: {writerTestAccount:{enabled:true,accountEmail:'divinedevil101@gmail.com',tiers:{free:'Free','resident-licker':'Resident Licker','resident-tyrant':'Resident Tyrant','resident-nemesis':'Resident Nemesis','resident-evil':'Resident Evil'}}},
+        document: { getElementById: id => elements[id], createElement:()=>({}) },
         UI: { closeWriterMenu() {}, openModal() {}, closeModal() {} },
         supabaseClient: { rpc: (name, args) => {
             calls.push({ name, args });
@@ -643,4 +644,9 @@ test('test account migration masks grants in all access paths and scopes writes 
     assert.match(migration, /BEGIN;\s+CREATE TABLE IF NOT EXISTS/);
     assert.match(migration, /NOTIFY pgrst, 'reload schema';\s+COMMIT;\s*$/);
     assert.match(migration, /\(t\.is_active = true AND ue\.status = 'active' AND ue\.valid_from <= now\(\)/);
+});
+test('unconfigured Writer cannot open or call source test-account RPCs',async()=>{
+ const match=html.match(/const TestAccount = (\{[\s\S]*?\n        \});/);let calls=0;
+ const c={CONFIG:{},UI:{showToast(){}},supabaseClient:{rpc(){calls++;throw Error('must not call');}}};vm.createContext(c);vm.runInContext(`this.tool = ${match[1]}`,c);
+ await c.tool.open();await c.tool.load();c.tool.data={};await c.tool.change('free');assert.equal(calls,0);
 });

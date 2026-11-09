@@ -1946,3 +1946,7 @@ Completed three related tasks: profileFrames are repository definitions with rev
 ## 2026-11-09 — Generic audiences and trusted entitlement summaries
 
 Removed Writer source-slug audience exception, name-derived entitlement summary and user-editable metadata admin inference. Added unrelated-tier rank/rename/inactive cases and trusted-role tests. Files: writer.html, auth.js, index.html cache version, writer access-list tests, new reader-authority tests, overview/indexes/state/changelog. 141 tests plus auth syntax pass; no DB changes.
+
+## 2026-11-09 — Source tool isolation and legacy access cleanup
+
+Isolated source Writer test-account controls behind explicit validated profile opt-in; moved fixed identity/options out of shared HTML/controller. Removed legacy name-based local chapter access inference and fabricated persona display dates. Files: settings/bootstrap/config, utils/state, three entrypoints/Writer, settings/writer-safety/authority tests, overview/indexes/state/changelog. 143 tests and settings/utils syntax pass; no DB changes or migration execution.

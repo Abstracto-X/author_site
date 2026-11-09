@@ -23,6 +23,7 @@
     appearance: result.appearance,
     tierPresentation: result.tierPresentation,
     profileFrames: result.profileFrames,
+    writerTestAccount: result.writerTestAccount,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
     features: Object.assign({}, source.features)

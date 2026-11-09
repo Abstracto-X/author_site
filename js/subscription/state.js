@@ -5,8 +5,8 @@
 const PERSONA_ACCESS = {
   anon:       { level:0, signedIn:false },
   "no-access":{ level:0, signedIn:true },
-  patron:     { level:1, signedIn:true, provider:"Patreon", tier:"Member access", since:"2025-03-12" },
-  archivist:  { level:2, signedIn:true, provider:"Patreon", tier:"Archivist Tier", since:"2024-11-02" },
+  patron:     { level:1, signedIn:true, provider:"Patreon", tier:"Member access" },
+  archivist:  { level:2, signedIn:true, provider:"Patreon", tier:"Higher membership tier" },
   "key-holder":{ level:0, signedIn:true, hasKey:true },
   lapsed:     { level:0, signedIn:true, provider:"Patreon", tier:"Member access", expired:true, prevLevel:1 },
   pending:    { level:0, signedIn:true, provider:"Patreon", pending:true, pendingLevel:1 },

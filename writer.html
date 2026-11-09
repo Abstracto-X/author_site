@@ -48,9 +48,9 @@
     >
 
     <!-- Site Config + Supabase -->
-    <script src="js/subscription/site-config.js?v=20261109.17"></script>
-    <script src="js/subscription/site-settings.js?v=20261109.17"></script>
-    <script src="js/subscription/site-bootstrap.js?v=20261109.17"></script>
+    <script src="js/subscription/site-config.js?v=20261109.19"></script>
+    <script src="js/subscription/site-settings.js?v=20261109.19"></script>
+    <script src="js/subscription/site-bootstrap.js?v=20261109.19"></script>
     <script src="js/subscription/site-storage.js?v=20261109.9"></script>
     <script src="vendor/supabase/supabase-2.111.0.min.js"></script>
     <link rel="stylesheet" href="styles/writer-ai-chat.css">
@@ -1685,7 +1685,7 @@
     </div>
 
     <div id="writer-main-menu" class="hidden" role="menu" aria-label="Writer menu">
-        <button type="button" role="menuitem" onclick="TestAccount.open()"><i class="fa-solid fa-user-gear w-4 text-center text-indigo-300"></i>Manage test account</button>
+        <button type="button" role="menuitem" id="writer-test-account-menu" hidden onclick="TestAccount.open()"><i class="fa-solid fa-user-gear w-4 text-center text-indigo-300"></i>Manage test account</button>
     </div>
 
     <div id="modal-test-account" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/75 p-4" onclick="if (event.target === this) TestAccount.close()">
@@ -1699,8 +1699,8 @@
             </header>
             <div class="space-y-5 px-6 py-5">
                 <div class="border-l-2 border-indigo-400 pl-3">
-                    <p class="text-xs font-semibold text-zinc-200">Divine Devil</p>
-                    <p class="mt-0.5 break-all text-xs text-zinc-500">divinedevil101@gmail.com</p>
+                    <p id="test-account-label" class="text-xs font-semibold text-zinc-200">Configured test account</p>
+                    <p id="test-account-email" class="mt-0.5 break-all text-xs text-zinc-500"></p>
                 </div>
                 <div class="grid grid-cols-2 gap-3 text-xs">
                     <div class="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3"><span class="block text-zinc-500">Current tier</span><strong id="test-account-current" class="mt-1 block text-sm text-zinc-100">Loading…</strong></div>
@@ -1708,11 +1708,11 @@
                 </div>
                 <label for="test-account-tier" class="block text-xs font-semibold text-zinc-300">Set test tier
                     <select id="test-account-tier" class="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 outline-none">
-                        <option value="free">Free</option>
-                        <option value="resident-licker">Resident Licker</option>
-                        <option value="resident-tyrant">Resident Tyrant</option>
-                        <option value="resident-nemesis">Resident Nemesis</option>
-                        <option value="resident-evil">Resident Evil</option>
+
+
+
+
+
                     </select>
                 </label>
                 <p class="text-xs leading-relaxed text-zinc-500">This changes the test account's reading access and Profile tier. Its existing memberships remain intact. Keep the admin and reader signed in through separate browser profiles.</p>
@@ -2991,6 +2991,7 @@
                 try {
                     document.getElementById('writer-init-retry')?.remove();
                     await DB.requireAdmin();
+                    document.getElementById('writer-test-account-menu').hidden = !CONFIG.writerTestAccount?.enabled;
                     await DB.loadWorkspace(State.activeStoryId);
                     App.initCensorship();
                     this.populateDropdowns();
@@ -3365,15 +3366,18 @@
             data: null,
             busy: false,
             loadFailed: false,
-            labels: {
-                free: 'Free',
-                'resident-licker': 'Resident Licker',
-                'resident-tyrant': 'Resident Tyrant',
-                'resident-nemesis': 'Resident Nemesis',
-                'resident-evil': 'Resident Evil'
-            },
+            labels: CONFIG.writerTestAccount?.tiers || {},
 
             async open() {
+                if (!CONFIG.writerTestAccount?.enabled) return UI.showToast('Test account tools are not enabled for this site.', 'info');
+                const label = document.getElementById('test-account-label');
+                if (label) label.textContent = CONFIG.writerTestAccount.label;
+                const email = document.getElementById('test-account-email');
+                if (email) email.textContent = CONFIG.writerTestAccount.accountEmail;
+                const select = document.getElementById('test-account-tier');
+                select.replaceChildren(...Object.entries(this.labels).map(([slug, name]) => {
+                    const option = document.createElement('option'); option.value = slug; option.textContent = name; return option;
+                }));
                 UI.closeWriterMenu();
                 document.getElementById('writer-main-menu-toggle')?.focus();
                 UI.openModal('modal-test-account');
@@ -3410,6 +3414,7 @@
             },
 
             async load() {
+                if (!CONFIG.writerTestAccount?.enabled) return;
                 this.busy = true;
                 this.render();
                 this.setStatus('Checking current access…');
@@ -3417,7 +3422,7 @@
                     const { data, error } = await withWriterDeadline(
                         supabaseClient.rpc('get_writer_test_account_tier'), 'Test account access');
                     if (error) throw error;
-                    if (!data || data.account_email !== 'divinedevil101@gmail.com') throw new Error('Testing account verification failed.');
+                    if (!data || data.account_email !== CONFIG.writerTestAccount.accountEmail) throw new Error('Testing account verification failed.');
                     this.data = data;
                     this.setStatus(data.override_active ? 'Test tier is active.' : 'Using existing membership access.');
                 } catch (error) {
@@ -3433,6 +3438,7 @@
             },
 
             async change(slug) {
+                if (!CONFIG.writerTestAccount?.enabled || (slug !== null && !Object.prototype.hasOwnProperty.call(this.labels, slug))) return;
                 if (this.busy || !this.data) return;
                 this.busy = true;
                 this.render();
@@ -3442,7 +3448,7 @@
                         supabaseClient.rpc('set_writer_test_account_tier', { selected_slug: slug }),
                         'Test account tier change');
                     if (error) throw error;
-                    if (!data || data.account_email !== 'divinedevil101@gmail.com') throw new Error('Testing account verification failed.');
+                    if (!data || data.account_email !== CONFIG.writerTestAccount.accountEmail) throw new Error('Testing account verification failed.');
                     this.data = data;
                     this.setStatus('Saved. Refresh the reader tab to see the change immediately.');
                 } catch (error) {

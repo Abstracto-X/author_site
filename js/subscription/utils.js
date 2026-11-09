@@ -86,8 +86,9 @@ function chapterResolved(ch) {
   if (ch.state === "unavailable") return { state:"unavailable" };
   if (P.admin) return { state:"unlocked", isEarly: ch.state==="early", admin:true };
   if (ch.state === "key") return { state: (P.hasKey || store.grantedKey) ? "unlocked" : "key", isEarly:false };
-  const isArch = ch.tier === "Archivist Tier";
-  const need = isArch ? 2 : 1;
+  const need = Number(ch.required_tier_rank);
+  // Unverified legacy/local rows must not infer paid access from a business name.
+  if (!Number.isFinite(need) || need <= 0) return { state:gateDisplay(ch), isEarly:ch.state === 'early' };
   // active access covers it
   if (P.level >= need) return { state:"unlocked", isEarly: ch.state==="early" };
   // sync pending (will unlock member-tier content)

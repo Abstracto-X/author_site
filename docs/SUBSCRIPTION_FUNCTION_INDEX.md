@@ -592,3 +592,7 @@ loadPublicAccessTiers(): public active reader_access_tiers catalog, honest empty
 ## 2026-11-09 — Generic audiences and trusted entitlement summaries
 
 entitlementLevel(): maximum active backend tier_rank; no Archivist name matching. isAdmin(): trusted profile/app_metadata only, never user-editable user_metadata. No backend grant logic changed.
+
+## 2026-11-09 — Source tool isolation and legacy access cleanup
+
+chapterResolved(): backend catalog still authoritative; nonbackend paid rows without explicit positive required_tier_rank cannot infer access from names. Persona display scaffold no longer contains fabricated dates or Archivist display label.

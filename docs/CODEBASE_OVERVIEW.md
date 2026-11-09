@@ -422,3 +422,7 @@ Completed three related tasks: profileFrames are repository definitions with rev
 ## 2026-11-09 — Generic audiences and trusted entitlement summaries
 
 Writer access-list audiences say the actual required tier name and higher tiers when another active catalog tier has greater real tier_rank/rank; no resident-nemesis/resident-evil exception. entitlementLevel returns maximum active backend rank (membership fallback 1), not name-derived levels. Reader isAdmin ignores user_metadata.role, accepting trusted profile/app_metadata only; backend RLS remains authoritative. Source test-account tooling and inactive fixture scaffold still need isolation.
+
+## 2026-11-09 — Source tool isolation and legacy access cleanup
+
+writerTestAccount is an explicit repository-profile opt-in, disabled by default. Resolver validates/copies account display/email and slug-label choices; Writer menu starts hidden, becomes available after verified startup only when configured. Controller open/load/change all check opt-in before RPC; configured expected account verifies RPC responses. Source-specific names/email/options moved out of shared HTML/controller into source profile. Existing SQL test RPC remains server-guarded and historical unapplied fixed-account migration is not portable setup. Removed fabricated persona dates; nonbackend chapter resolver requires explicit positive rank rather than Archivist name inference.

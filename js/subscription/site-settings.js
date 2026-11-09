@@ -70,6 +70,20 @@
         if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
         appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
       }
+      var writerTestAccount = { enabled:false };
+      if (profile.writerTestAccount !== undefined) {
+        var tool = profile.writerTestAccount;
+        if (!object(tool) || typeof tool.enabled !== 'boolean') return neutral('invalid_writer_test_account');
+        if (tool.enabled) {
+          if (typeof tool.accountEmail !== 'string' || !tool.accountEmail.includes('@') || typeof tool.label !== 'string' || !object(tool.tiers)) return neutral('invalid_writer_test_account');
+          var labels = {};
+          for (var slug of Object.keys(tool.tiers)) {
+            if (!/^[a-z0-9-]+$/.test(slug) || typeof tool.tiers[slug] !== 'string') return neutral('invalid_writer_test_account');
+            labels[slug] = tool.tiers[slug];
+          }
+          writerTestAccount = {enabled:true,accountEmail:tool.accountEmail,label:tool.label,tiers:labels};
+        }
+      }
       var profileFrames = [];
       if (profile.profileFrames !== undefined && !Array.isArray(profile.profileFrames)) return neutral('invalid_profile_frames');
       var frameIds = new Set();
@@ -103,7 +117,7 @@
         if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
         if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames };
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount };
     } catch (_) {
       return neutral('invalid_input');
     }

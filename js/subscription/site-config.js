@@ -4,6 +4,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     "evilarchives": {
       backendUrl: "https://cqgrulawpwkrdvxagzez.supabase.co",
       identity: { siteName: "EvilArchives", siteTagline: "Premium serial fiction archive" },
+      writerTestAccount: {"enabled": true, "accountEmail": "divinedevil101@gmail.com", "label": "Divine Devil", "tiers": {"free": "Free", "resident-licker": "Resident Licker", "resident-tyrant": "Resident Tyrant", "resident-nemesis": "Resident Nemesis", "resident-evil": "Resident Evil"}},
       profileFrames: [{"id": "licker", "label": "Bronze Crest", "src": "assets/profile-frames/member-tiers.png", "slice": 0}, {"id": "tyrant", "label": "Violet Crest", "src": "assets/profile-frames/member-tiers.png", "slice": 1}, {"id": "nemesis", "label": "Crimson Crest", "src": "assets/profile-frames/member-tiers.png", "slice": 2}, {"id": "evil-crimson", "label": "Crimson Estate", "src": "assets/profile-frames/resident-evil-crimson.png"}, {"id": "evil-haunting", "label": "Haunted Estate", "src": "assets/profile-frames/resident-evil-haunting.png"}],
       tierPresentation: {
         "ba1a06fd-ae33-4d24-9659-302d219bcc22": { frameIds: ["licker"], defaultFrameId: "licker", className: "licker", banner: "assets/profile-frames/tier-banner-licker.png", topbarBanner: "assets/profile-frames/topbar-banner-licker.png", accent: "#fbbf24", lockClass: "tier-licker" },

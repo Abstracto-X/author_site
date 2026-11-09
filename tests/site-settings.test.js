@@ -18,7 +18,7 @@ test('selects only explicit matching profile and normalizes a detached allowlist
   p.orchard.identity.role = 'admin'; p.orchard.links.script = 'https://evil.example/';
   p.orchard.serviceRoleKey = 'secret'; p.orchard.site_identity = { siteName: 'DB override' };
   const result = resolve(deployment(), p, { siteName: 'DB override' });
-  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [] });
+  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [], writerTestAccount: {enabled:false} });
   result.identity.siteName = 'changed'; result.links.supportUrl = 'changed';
   assert.equal(p.orchard.identity.siteName, ' Orchard ');
   assert.equal(resolve(deployment(), p).identity.siteName, 'Orchard');
