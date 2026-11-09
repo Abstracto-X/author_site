@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-const context = { window: {}, URL };
+const context = { window: {}, URL, atob };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/subscription/site-settings.js'), 'utf8'), context);
 const resolve = context.window.SiteSettings.resolve;
 const plain = value => JSON.parse(JSON.stringify(value));
@@ -128,4 +128,9 @@ test('site stylesheets are reviewed local files only and copied without mutation
 });
 test('story presentation validates supported colors/loaders and keeps content fields out',()=>{
  const p=profiles();p.orchard.storyPresentation={story:{accent:'#123456',loaderTheme:'primary',title:'Must not override content'}};const r=resolve(deployment(),p);assert.equal(r.storyPresentation.story.title,undefined);assert.equal(r.storyPresentation.story.accent,'#123456');p.orchard.storyPresentation.story.loaderTheme='remote-plugin';assert.equal(resolve(deployment(),p).error,'invalid_story_presentation');
+});
+test('frontend accepts publishable/anon keys only, not privileged keys or placeholders',()=>{
+ const allowed=context.window.SiteSettings.publicKeyAllowed;
+ assert.equal(allowed('sb_publishable_test'),true);assert.equal(allowed('sb_secret_private'),false);assert.equal(allowed('YOUR_SUPABASE_KEY'),false);
+ const jwt=role=>'header.'+Buffer.from(JSON.stringify({role})).toString('base64url')+'.signature';assert.equal(allowed(jwt('anon')),true);assert.equal(allowed(jwt('service_role')),false);
 });

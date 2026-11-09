@@ -182,10 +182,19 @@
       : rows.slice(0,2);
     return { primarySlug:primary ? primary.slug : '', featuredSlugs:[...new Set(featured.map(function (story) { return story.slug; }))] };
   }
+  function publicKeyAllowed(value) {
+    if (typeof value !== 'string') return false;
+    if (/^sb_publishable_[a-z0-9_-]+$/i.test(value)) return true;
+    try {
+      var parts = value.split('.');
+      if (parts.length !== 3 || typeof atob !== 'function') return false;
+      return JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/'))).role === 'anon';
+    } catch (_) { return false; }
+  }
   function authReturnUrl(base, pageUrl) {
     var url = new URL(readerUrl(base,pageUrl));
     if (url.origin !== new URL(pageUrl).origin) throw new Error('auth_return_origin_mismatch');
     return url.href;
   }
-  window.SiteSettings = { selectLibrary: selectLibrary, authReturnUrl: authReturnUrl, resolve: resolve, publicRoot: publicRoot, readerUrl: readerUrl };
+  window.SiteSettings = { publicKeyAllowed: publicKeyAllowed, selectLibrary: selectLibrary, authReturnUrl: authReturnUrl, resolve: resolve, publicRoot: publicRoot, readerUrl: readerUrl };
 }());

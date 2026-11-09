@@ -1170,10 +1170,10 @@
     </div>
 
     <!-- SITE CONFIG + SUPABASE SDK -->
-    <script src="js/subscription/site-config.js?v=20261109.27"></script>
-    <script src="js/subscription/site-settings.js?v=20261109.27"></script>
-    <script src="js/subscription/site-bootstrap.js?v=20261109.27"></script>
-    <script src="js/subscription/site-storage.js?v=20261109.27"></script>
+    <script src="js/subscription/site-config.js?v=20261109.28"></script>
+    <script src="js/subscription/site-settings.js?v=20261109.28"></script>
+    <script src="js/subscription/site-bootstrap.js?v=20261109.28"></script>
+    <script src="js/subscription/site-storage.js?v=20261109.28"></script>
     <script src="js/author-session.js?v=20261109.26"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -2009,7 +2009,7 @@
                     Auth.showLoginView();
                 }
 
-                supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                supabaseClient.auth.onAuthStateChange((event, session) => {
                     if (State.profile && session?.user?.id !== State.user?.id) {
                         window.AuthorSession.invalidate();
                         window.location.reload();
@@ -2017,7 +2017,10 @@
                     }
                     if (event === 'SIGNED_IN' && session) {
                         State.user = session.user;
-                        await Auth.loadProfile();
+                        const userId = session.user.id;
+                        window.setTimeout(() => {
+                            if (State.user?.id === userId) Auth.loadProfile();
+                        }, 0);
                     } else if (event === 'SIGNED_OUT') {
                         State.user = null;
                         State.profile = null;
@@ -2064,6 +2067,7 @@
                     return true;
 
                 } catch (err) {
+                    if (State.user?.id !== requestedUserId) return false;
                     console.error("Profile Error:", err);
                     State.profile = null;
                     document.getElementById('login-error').textContent = err.message;

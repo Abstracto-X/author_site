@@ -1986,3 +1986,7 @@ Completed story appearance ownership across normalized config/reader and Admin f
 ## 2026-11-09 — Independent backup targets and Admin selection validation
 
 Added isolated backup target parameters/no-operation validation while preserving scheduled-source defaults; normalized stale Admin story selection against current real catalog. Files: scripts/database/backup-supabase.ps1, admin.html, backup/admin selection tests, database safety/deployment/overview/admin index/state/changelog. 167 tests pass including PowerShell validation-only cases; no backup/credential/network operations or DB changes.
+
+## 2026-11-09 — Frontend key and Admin auth callback audit fixes
+
+Fixed missing/privileged-key startup gap and Admin auth-lock/stale-user profile race. Files: settings/bootstrap, admin and three HTML cache versions, offline preflight, settings/bootstrap/admin tests, overview/indexes/state/changelog. 170 tests pass. No DB writes or credential values logged.

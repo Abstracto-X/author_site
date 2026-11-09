@@ -377,3 +377,7 @@ Forms.storyForm(): disabled repo-managed color/loader display from storyPresenta
 ## 2026-11-09 — Independent backup targets and Admin selection validation
 
 resolveAdminStoryId(stories,savedId): retain only current catalog ID, else first real story/null. All State.stories assignment paths normalize selection, including empty catalogs; no stale truthy ID fallback.
+
+## 2026-11-09 — Frontend key and Admin auth callback audit fixes
+
+Auth.init onAuthStateChange callback is synchronous; SIGNED_IN schedules guarded loadProfile after auth lock. loadProfile ignores stale success/error for another State.user.

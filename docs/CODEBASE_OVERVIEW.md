@@ -462,3 +462,7 @@ Repository storyPresentation keyed by real story ID owns accent/accent2 and supp
 ## 2026-11-09 — Independent backup targets and Admin selection validation
 
 Admin resolveAdminStoryId validates saved selection against each freshly loaded story catalog, falling back to first actual story or null. Backup helper now accepts independently isolated operational targets; source schedule defaults preserved, with no-operation ValidateOnly. See database safety/deployment docs.
+
+## 2026-11-09 — Frontend key and Admin auth callback audit fixes
+
+SiteSettings.publicKeyAllowed accepts publishable-key format or legacy JWT role anon, rejecting placeholders/secret/service-role formats. Bootstrap and offline preflight require it; this is format/role screening, not signature validation or credential authorization. Missing/invalid key clears brand/connection and activates setup recovery. Admin auth callback is synchronous and defers profile reads outside Supabase lock; deferred user and loadProfile error paths reject superseded identities.

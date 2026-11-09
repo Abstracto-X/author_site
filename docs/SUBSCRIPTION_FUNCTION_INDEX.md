@@ -624,3 +624,7 @@ SiteSettings.resolve validates optional stylesheets; bootstrap schedules CSS aft
 ## 2026-11-09 — Story appearance ownership completed
 
 colorPair(row,index): repo storyPresentation accent/accent2 or shared palette, not legacy DB theme_color/secondary_color. Resolver validates supported story styles and strips content fields.
+
+## 2026-11-09 — Frontend key and Admin auth callback audit fixes
+
+SiteSettings.publicKeyAllowed(value): public frontend key shape/legacy anon-role screening; backend validates actual credentials. Bootstrap invalid_public_key stops unconfigured connection/branding.

@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const configFile = path.resolve(process.argv[2] || path.join(root, 'js/subscription/site-config.js'));
-const c = { window:{}, URL };
+const c = { window:{}, URL, atob };
 try {
   vm.createContext(c);
   vm.runInContext(fs.readFileSync(configFile,'utf8'), c, {timeout:1000});
@@ -12,7 +12,7 @@ try {
   const config = c.window.SUBSCRIPTION_SITE_CONFIG;
   const result = c.window.SiteSettings.resolve({siteKey:config.siteKey,backendUrl:config.supabase?.url}, config.siteProfiles);
   if (!result.ok) throw new Error(result.error);
-  if (typeof config.supabase.anonKey !== 'string' || !config.supabase.anonKey.trim() || /YOUR_|CHANGE_ME/.test(config.supabase.anonKey)) throw new Error('missing_public_key');
+  if (!c.window.SiteSettings.publicKeyAllowed(config.supabase.anonKey)) throw new Error('invalid_public_key');
   c.window.SiteSettings.publicRoot(config.publicBaseUrl,'https://preview.invalid/sub/index.html');
   const assets = new Set([...result.stylesheets, ...result.profileFrames.map(frame=>frame.src)]);
   for (const visual of Object.values(result.tierPresentation)) for (const field of ['banner','topbarBanner']) if (visual[field]) assets.add(visual[field]);

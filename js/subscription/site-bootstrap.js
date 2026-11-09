@@ -5,6 +5,7 @@
   var result = window.SiteSettings ? window.SiteSettings.resolve({
     siteKey: source.siteKey, backendUrl: source.supabase && source.supabase.url
   }, source.siteProfiles) : { ok: false, error: 'missing_settings_module' };
+  if (result.ok && !window.SiteSettings.publicKeyAllowed(source.supabase?.anonKey)) result = {ok:false,error:'invalid_public_key'};
   var root = '';
   if (result.ok) {
     try { root = window.SiteSettings.publicRoot(source.publicBaseUrl, window.location.href); }
