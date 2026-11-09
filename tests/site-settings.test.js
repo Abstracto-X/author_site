@@ -18,7 +18,7 @@ test('selects only explicit matching profile and normalizes a detached allowlist
   p.orchard.identity.role = 'admin'; p.orchard.links.script = 'https://evil.example/';
   p.orchard.serviceRoleKey = 'secret'; p.orchard.site_identity = { siteName: 'DB override' };
   const result = resolve(deployment(), p, { siteName: 'DB override' });
-  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [], writerTestAccount: {enabled:false} });
+  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [], writerTestAccount: {enabled:false}, library:{primaryStoryId:'',featuredStoryIds:null} });
   result.identity.siteName = 'changed'; result.links.supportUrl = 'changed';
   assert.equal(p.orchard.identity.siteName, ' Orchard ');
   assert.equal(resolve(deployment(), p).identity.siteName, 'Orchard');
@@ -107,4 +107,18 @@ test('profile frame rules are detached, site-scoped and reference only reviewed 
  assert.equal(resolve(deployment('observatory','https://stars.supabase.co'),p).profileFrames.length,0);
  p.orchard.profileFrames[0].src='https://unreviewed.example/frame.png';assert.equal(resolve(deployment(),p).error,'invalid_profile_frames');
  p.orchard.profileFrames[0].src='assets/crest.png';p.orchard.tierPresentation['tier-id'].frameIds=['unknown'];assert.equal(resolve(deployment(),p).error,'invalid_profile_frames');
+});
+test('library selections resolve only current real stories, tolerate deleted IDs and support no featured stories',()=>{
+ const api=context.window.SiteSettings;const stories=[{id:'new',slug:'new-story'},{id:'old',slug:'old-story'}];
+ assert.equal(api.selectLibrary(stories,{primaryStoryId:'old'}).primarySlug,'old-story');
+ assert.equal(api.selectLibrary(stories,{primaryStoryId:'deleted'}).primarySlug,'new-story');
+ assert.deepEqual(plain(api.selectLibrary(stories,{featuredStoryIds:['old','missing','old']})).featuredSlugs,['old-story']);
+ assert.deepEqual(plain(api.selectLibrary(stories,{featuredStoryIds:[]})).featuredSlugs,[]);
+ assert.equal(api.selectLibrary([],{primaryStoryId:'old'}).primarySlug,'');
+});
+test('auth return targets configured reader subdirectory without tokens/query and refuses cross-origin PKCE callbacks',()=>{
+ const api=context.window.SiteSettings;
+ assert.equal(api.authReturnUrl('/library/','https://author.example/preview/index.html?token=private#/vault'),'https://author.example/library/index.html');
+ assert.throws(()=>api.authReturnUrl('https://other.example/','https://author.example/index.html'),/auth_return_origin_mismatch/);
+ assert.equal(api.authReturnUrl('./','http://localhost:8000/sub/index.html'),'http://localhost:8000/sub/index.html');
 });

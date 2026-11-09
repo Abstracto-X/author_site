@@ -74,6 +74,17 @@
         if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
         appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
       }
+      var library = { primaryStoryId:'', featuredStoryIds:null };
+      if (profile.library !== undefined) {
+        if (!object(profile.library)) return neutral('invalid_library');
+        var l = profile.library;
+        if (l.primaryStoryId !== undefined && (typeof l.primaryStoryId !== 'string' || !/^[a-z0-9-]*$/i.test(l.primaryStoryId))) return neutral('invalid_library');
+        library.primaryStoryId = l.primaryStoryId || '';
+        if (l.featuredStoryIds !== undefined) {
+          if (!Array.isArray(l.featuredStoryIds) || l.featuredStoryIds.some(function (id) { return typeof id !== 'string' || !/^[a-z0-9-]+$/i.test(id); })) return neutral('invalid_library');
+          library.featuredStoryIds = [...new Set(l.featuredStoryIds)];
+        }
+      }
       var writerTestAccount = { enabled:false };
       if (profile.writerTestAccount !== undefined) {
         var tool = profile.writerTestAccount;
@@ -121,7 +132,7 @@
         if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
         if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount };
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount, library: library };
     } catch (_) {
       return neutral('invalid_input');
     }
@@ -148,5 +159,19 @@
     }
     return url.href;
   }
-  window.SiteSettings = { resolve: resolve, publicRoot: publicRoot, readerUrl: readerUrl };
+  function selectLibrary(stories, settings) {
+    var rows = Array.isArray(stories) ? stories : [];
+    var options = settings || {};
+    var primary = rows.find(function (story) { return story.id === options.primaryStoryId; }) || rows[0];
+    var featured = Array.isArray(options.featuredStoryIds)
+      ? options.featuredStoryIds.map(function (id) { return rows.find(function (story) { return story.id === id; }); }).filter(Boolean)
+      : rows.slice(0,2);
+    return { primarySlug:primary ? primary.slug : '', featuredSlugs:[...new Set(featured.map(function (story) { return story.slug; }))] };
+  }
+  function authReturnUrl(base, pageUrl) {
+    var url = new URL(readerUrl(base,pageUrl));
+    if (url.origin !== new URL(pageUrl).origin) throw new Error('auth_return_origin_mismatch');
+    return url.href;
+  }
+  window.SiteSettings = { selectLibrary: selectLibrary, authReturnUrl: authReturnUrl, resolve: resolve, publicRoot: publicRoot, readerUrl: readerUrl };
 }());

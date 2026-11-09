@@ -430,3 +430,7 @@ writerTestAccount is an explicit repository-profile opt-in, disabled by default.
 ## 2026-11-09 — Scoped story decoration and neutral author defaults
 
 Ornate renderBlocks requires current CONFIG.appearance.ornateStoryIds to include chapter.story_id (or catalog-resolved story ID), explicit enabled flag and cutoff. No configured story IDs means no ornate source decoration. Source a-zombie-tale story ID d8c87bf8-94c9-4c6e-8826-d6f3be25d419 verified through restricted SELECT; only it retains source cutoff 70. New Admin stories default to primary monogram loader, not lightsaber; saved story loaders remain unchanged.
+
+## 2026-11-09 — Library selection and auth return boundaries
+
+Repository profile library.primaryStoryId and optional featuredStoryIds are normalized. selectLibrary resolves only loaded real published stories: missing primary falls back to first fetched (newest-created) published story; omitted featured defaults first two, explicit [] none, unknown/duplicate IDs ignored. Empty/error library clears stale selection slugs. Source primary ID pinned explicitly. authReturnUrl derives canonical configured reader root and rejects cross-origin destination (PKCE/session browser state cannot be assumed shared). authRedirectUrl/password email and Google callback use it; provider Edge return allowlists remain independent operational configuration.

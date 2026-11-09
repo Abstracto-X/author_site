@@ -245,10 +245,7 @@ const OAUTH_URL_KEYS = [
   "access_token", "refresh_token", "expires_at", "expires_in", "provider_token", "provider_refresh_token", "token_type"
 ];
 function authRedirectUrl(){
-  const url = new URL(window.location.href);
-  url.hash = "";
-  url.search = "";
-  return url.toString();
+  return window.SiteSettings.authReturnUrl(CONFIG.publicBaseUrl, window.location.href);
 }
 function mergeOAuthParams(target, raw){
   if (!raw) return;
@@ -474,13 +471,7 @@ function subscriptionRedirectTo(){
   if (!window.location.origin || window.location.origin === "null" || window.location.protocol === "file:") {
     throw new Error("Google sign-in needs the page served over http/https, not opened as a file.");
   }
-  const url = new URL(window.location.href);
-  url.hash = "";
-  url.search = "";
-  if (!/\/index\.html$/i.test(url.pathname) && !url.pathname.endsWith("/")) {
-    const base = url.pathname.endsWith("/") ? url.pathname : url.pathname.replace(/\/[^/]*$/, "/");
-    url.pathname = `${base}index.html`;
-  }
+  const url = new URL(authRedirectUrl());
   url.searchParams.set("sub_auth", "google");
   url.searchParams.set("sub_route", AUTH_CONFIG.oauthReturnRoute || "vault");
   return url.toString();

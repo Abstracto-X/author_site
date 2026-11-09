@@ -600,3 +600,7 @@ chapterResolved(): backend catalog still authoritative; nonbackend paid rows wit
 ## 2026-11-09 — Scoped story decoration and neutral author defaults
 
 renderBlocks(blocks,chId,chapter): source ornate design now requires site-scoped story-ID allowlist plus enabled flag/cutoff. SiteSettings.resolve validates/clones appearance.ornateStoryIds.
+
+## 2026-11-09 — Library selection and auth return boundaries
+
+SiteSettings.selectLibrary(stories,settings): resolves primary/featured IDs against actual catalog. SiteSettings.authReturnUrl(base,pageUrl): safe same-origin reader callback URL without route/query/token. authRedirectUrl/subscriptionRedirectTo consume it. loadBackendLibrary clears stale primary/featured slugs on empty/error.

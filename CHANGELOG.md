@@ -1954,3 +1954,7 @@ Isolated source Writer test-account controls behind explicit validated profile o
 ## 2026-11-09 — Scoped story decoration and neutral author defaults
 
 Scoped ornate chapter rendering to explicit profile story IDs and changed new-story loader default to generic monogram. Files: settings/config/story-reader, admin.html, three HTML cache versions, new story-presentation test, overview/indexes/state/changelog. 144 tests and settings/story-reader syntax pass. Story ID verified by restricted SELECT; no DB writes.
+
+## 2026-11-09 — Library selection and auth return boundaries
+
+Added normalized primary/featured story selection and configured same-origin auth return URLs. Files: settings/bootstrap/config, backend.js, auth.js, three HTML cache versions, settings tests and overview/reader index/state/changelog. 146 tests plus settings/auth/backend syntax pass. No DB writes; deployment Auth allowlists still require verification.

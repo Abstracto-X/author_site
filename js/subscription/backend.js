@@ -514,8 +514,9 @@ async function loadBackendLibrary(options = {}){
         sort_order: Number(row.sort_order || 0),
         blur_for_guests: row.blur_for_guests !== false
       })).filter(row => row.image_url);
-      D.PRIMARY_SLUG = stories[0].slug;
-      D.FEATURED_SLUGS = stories.slice(0, 2).map(story => story.slug);
+      const selection = window.SiteSettings.selectLibrary(stories, CONFIG.library);
+      D.PRIMARY_SLUG = selection.primarySlug;
+      D.FEATURED_SLUGS = selection.featuredSlugs;
       backendState.usingFixtures = false;
       backendState.loaded = true;
       backendState.error = stories.some(story => story.chapters.length) ? null : new Error("Published stories were found, but no published chapters exist yet.");
@@ -523,6 +524,8 @@ async function loadBackendLibrary(options = {}){
     } else {
       backendState.error = new Error("No published backend stories were found.");
       backendState.usingFixtures = false;
+      D.PRIMARY_SLUG = "";
+      D.FEATURED_SLUGS = [];
       D.STORIES = [];
       D.UPDATES = [];
       D.CHARACTERS = [];
@@ -536,6 +539,8 @@ async function loadBackendLibrary(options = {}){
     backendState.error = err;
     console.error("Subscription backend library load failed; no local content fallback will be used.", err);
     backendState.usingFixtures = false;
+    D.PRIMARY_SLUG = "";
+    D.FEATURED_SLUGS = [];
     D.STORIES = [];
     D.UPDATES = [];
     D.CHARACTERS = [];

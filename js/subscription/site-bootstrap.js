@@ -24,6 +24,7 @@
     tierPresentation: result.tierPresentation,
     profileFrames: result.profileFrames,
     writerTestAccount: result.writerTestAccount,
+    library: result.library,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
     features: Object.assign({}, source.features)
