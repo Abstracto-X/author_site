@@ -1974,3 +1974,7 @@ Added strict validation gates and dependency-free neutral setup recovery in all 
 ## 2026-11-09 — Local identity CSS and cosmetic preference migration
 
 Added reviewed optional local identity CSS loading/preflight and source first-login cosmetic preference preservation. Files: settings/bootstrap/state, three entrypoint cache versions, preflight, settings/bootstrap/account tests, styles/sites/README.md and overview/index/state/changelog. 157 tests, source preflight and settings/bootstrap/state syntax pass. No DB changes.
+
+## 2026-11-09 — Author request lifetime boundaries
+
+Added author request-lifetime guard and integrated both authoring clients/account-change callbacks, AI/summary cancellation and setup/preflight checks. Files: js/author-session.js, admin.html, writer.html, scripts/check-site-config.js, author-session/setup tests and overview/admin index/state/changelog. 160 tests, helper syntax and offline preflight pass. No DB changes.

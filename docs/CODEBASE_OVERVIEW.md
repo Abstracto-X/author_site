@@ -450,3 +450,7 @@ All HTML entrypoints include a dependency-free DOMContentLoaded setup guard afte
 ## 2026-11-09 — Local identity CSS and cosmetic preference migration
 
 Optional repository profile stylesheets accepts only styles/sites/<safe-name>.css; normalized list is detached, bootstrap appends reviewed files after DOM parsing, and failed files are removed while shared base remains. Offline preflight verifies their existence. No DB/remote CSS loader. First signed-in source account record may inherit only allowlisted guest typography/background appearance settings; private data and notification preferences are excluded, existing account records never overwritten. Target identities do not import source appearance.
+
+## 2026-11-09 — Author request lifetime boundaries
+
+Admin/Writer load js/author-session.js shared request-lifetime primitive after site storage. Supabase clients use AuthorSession.fetch, which links caller abort signals, tracks requests and rejects results after invalidation. Verified profile binds one account; a changed session invalidates/aborts before reload and stops Writer AI/summary controllers. New requests are refused after invalidation; already submitted writes remain uncertain (writer_save_uncertain), not rolled back. Missing helper participates in neutral setup recovery. This guards browser lifetime, not RLS or server transaction rollback.

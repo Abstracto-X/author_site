@@ -20,6 +20,7 @@ try {
   for (const file of ['index.html','admin.html','writer.html']) {
     const html=fs.readFileSync(path.join(root,file),'utf8');
     const scripts=['site-config.js','site-settings.js','site-bootstrap.js','site-storage.js'];
+    if (file !== 'index.html' && !html.includes('js/author-session.js')) throw new Error('missing_author_request_guard');
     let previous=-1;
     for (const script of scripts) {const index=html.indexOf('js/subscription/'+script);if(index<=previous)throw new Error('invalid_script_order:'+file);previous=index;}
   }

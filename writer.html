@@ -52,9 +52,10 @@
     <script src="js/subscription/site-settings.js?v=20261109.25"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.25"></script>
     <script src="js/subscription/site-storage.js?v=20261109.25"></script>
+    <script src="js/author-session.js?v=20261109.26"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-      if (window.SITE_CONFIGURATION_STATUS?.ok === true && window.SiteStorage) return;
+      if (window.SITE_CONFIGURATION_STATUS?.ok === true && window.SiteStorage && window.AuthorSession) return;
       const panel = document.createElement('main');
       panel.setAttribute('role', 'alert');
       panel.style.cssText = 'padding:40px;max-width:680px;margin:40px auto;font:18px system-ui;color:#111;background:#fff;border-radius:12px';
@@ -2488,8 +2489,8 @@
         const CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
         const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || '';
         const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || '';
-        const CONFIGURED_SUPABASE = window.SITE_CONFIGURATION_STATUS?.ok === true && SUPABASE_URL && SUPABASE_ANON_KEY && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME/i.test(`${SUPABASE_URL} ${SUPABASE_ANON_KEY}`);
-        const supabaseClient = CONFIGURED_SUPABASE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        const CONFIGURED_SUPABASE = !!window.AuthorSession && window.SITE_CONFIGURATION_STATUS?.ok === true && SUPABASE_URL && SUPABASE_ANON_KEY && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME/i.test(`${SUPABASE_URL} ${SUPABASE_ANON_KEY}`);
+        const supabaseClient = CONFIGURED_SUPABASE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: window.AuthorSession.fetch } }) : null;
 
         const MockDB = { tiers: [], stories: [], chapters: [], scratchpads: [] };
 
@@ -2725,9 +2726,15 @@
                 const { data, error } = await withWriterDeadline(supabaseClient.from('profiles').select('id, role, display_name, username').eq('id', session.user.id).single(), 'Admin profile');
                 if (error) throw error;
                 if (data.role !== 'admin') throw new Error('Access denied. Admin privileges required.');
+                window.AuthorSession.bind(session.user.id);
                 window.SiteStorage.bindAuthor(session.user.id);
                 supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
-                    if (nextSession?.user?.id !== session.user.id) window.location.reload();
+                    if (nextSession?.user?.id !== session.user.id) {
+                        window.AuthorSession.invalidate();
+                        if (typeof AIChat !== 'undefined') AIChat.abortController?.abort();
+                        if (typeof SummaryManager !== 'undefined') SummaryManager.generationAbortController?.abort();
+                        window.location.reload();
+                    }
                 });
                 State.activeStoryId = AppStorage.getItem('ea-admin-last-story-id') || '';
                 const savedView = AppStorage.getItem('ea-writer-current-view');

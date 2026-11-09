@@ -365,3 +365,7 @@ Forms.storyForm(): new/unspecified loader defaults to primary monogram. Legacy l
 ## 2026-11-09 — Neutral setup recovery and provider-aware guidance
 
 Admin/Writer CONFIGURED_SUPABASE requires successful shared validation. Dependency-free entrypoint fallback renders neutral setup when config/bootstrap/storage fails; no client is created from raw unvalidated config.
+
+## 2026-11-09 — Author request lifetime boundaries
+
+Admin/Writer createClient global.fetch is AuthorSession.fetch. Auth.loadProfile/Writer DB.requireAdmin bind verified account; auth-change callbacks invalidate guard before reload. Writer stops AI/summary controllers. runWriterMutation preserves uncertain-write code from guarded fetch.
