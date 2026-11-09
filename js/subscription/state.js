@@ -59,8 +59,16 @@ function switchReaderAccount(userId){
     ? store.pendingAuthAction : '';
   if (!readerStoreAccount) { store.pendingAuthAction = ''; store.pendingAuthActionAt = 0; }
   saveStore();
+  const visualKeys = ['readerTheme','readerCustomBg','readerBrightness','dyslexiaMode','fontScale','lineHeight','margin','appBackground','readerWidth'];
+  const sourceIdentity = typeof CONFIG !== 'undefined' && CONFIG.siteKey === 'evilarchives' && CONFIG.supabase?.url === 'https://cqgrulawpwkrdvxagzez.supabase.co';
+  const guestAppearance = sourceIdentity && !readerStoreAccount && next ? Object.fromEntries(visualKeys.map(key => [key, store.settings[key]])) : null;
   readerStoreAccount = next;
+  const hasAccountRecord = !!LS.getItem(readerStoreKey());
   loadStore();
+  if (guestAppearance && !hasAccountRecord) {
+    Object.assign(store.settings, guestAppearance);
+    saveStore();
+  }
   if (action) { store.pendingAuthAction = action; store.pendingAuthActionAt = Date.now(); saveStore(); }
   if (typeof State !== 'undefined') State.imageVotes = {};
   if (typeof communityState !== 'undefined') {

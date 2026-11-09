@@ -1,0 +1,3 @@
+# Optional repository-owned identity styles
+
+Add a reviewed <site-key>.css here and list styles/sites/<site-key>.css in that repository profile's stylesheets array. No database CSS, remote URLs, query strings, traversal, JavaScript or plugin execution is supported. Shared base styles always remain. Files load after DOM parsing so they follow all three surfaces' existing styles; scope selectors deliberately (reader versus Admin/Writer) and preserve accessible base/reduced-motion/reader custom colors. A missing file is removed and leaves base styling, not another identity. No extra stylesheet is required for a neutral deployment. Run offline preflight to catch missing files before release. New fonts/dependencies still require explicit approval.

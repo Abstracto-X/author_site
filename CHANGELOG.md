@@ -1970,3 +1970,7 @@ Fixed provider continuation loss across reader account-store switch, neutralized
 ## 2026-11-09 — Neutral setup recovery and provider-aware guidance
 
 Added strict validation gates and dependency-free neutral setup recovery in all entrypoints; composed membership/help guidance from enabled providers and hid disabled provider links. Files: three HTML entries, auth/aether-app/config/help-support/onboarding/membership-journey modules, membership/recovery tests and overview/indexes/state/changelog. 154 tests pass. No DB changes.
+
+## 2026-11-09 — Local identity CSS and cosmetic preference migration
+
+Added reviewed optional local identity CSS loading/preflight and source first-login cosmetic preference preservation. Files: settings/bootstrap/state, three entrypoint cache versions, preflight, settings/bootstrap/account tests, styles/sites/README.md and overview/index/state/changelog. 157 tests, source preflight and settings/bootstrap/state syntax pass. No DB changes.

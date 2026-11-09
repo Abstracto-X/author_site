@@ -15,3 +15,8 @@ test('account isolation carries only a recent explicit guest provider continuati
  run('store.notes.secret="private guest";store.pendingAuthAction="connect-patreon";store.pendingAuthActionAt=Date.now();switchReaderAccount("alice")');assert.equal(run('store.pendingAuthAction'),'connect-patreon');assert.equal(run('store.notes.secret'),undefined);
  run('switchReaderAccount(null);switchReaderAccount("bob")');assert.notEqual(run('store.pendingAuthAction'),'connect-patreon');run('switchReaderAccount(null);store.pendingAuthAction="connect-boosty-discord";store.pendingAuthActionAt=Date.now()-700000;switchReaderAccount("carol")');assert.notEqual(run('store.pendingAuthAction'),'connect-boosty-discord');
 });
+test('known source cosmetic migration preserves appearance but not private guest content',()=>{
+ const data=new Map();const c={CONFIG:{siteKey:'evilarchives',supabase:{url:'https://cqgrulawpwkrdvxagzez.supabase.co'}},LS:{getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)}};vm.createContext(c);vm.runInContext(source.slice(0,source.indexOf('/* ============ global UI state')),c);const run=s=>vm.runInContext(s,c);
+ run('store.settings.readerTheme="parchment";store.settings.readerWidth=60;store.settings.emailNotifications=false;store.notes.private="secret";switchReaderAccount("alice")');assert.equal(run('store.settings.readerTheme'),'parchment');assert.equal(run('store.settings.readerWidth'),60);assert.equal(run('store.settings.emailNotifications'),true);assert.equal(run('store.notes.private'),undefined);
+ run('store.settings.readerWidth=50;switchReaderAccount(null);store.settings.readerWidth=70;switchReaderAccount("alice")');assert.equal(run('store.settings.readerWidth'),50);
+});

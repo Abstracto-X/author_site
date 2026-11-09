@@ -25,6 +25,7 @@
     profileFrames: result.profileFrames,
     writerTestAccount: result.writerTestAccount,
     library: result.library,
+    stylesheets: result.stylesheets,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
     features: Object.assign({}, source.features)
@@ -40,6 +41,17 @@
     document.title = name + (page === 'admin.html' ? ' Admin' : page === 'writer.html' ? ' | Writer Studio' : '');
     var meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', window.SUBSCRIPTION_SITE_CONFIG.metaDescription || '');
+  }
+  if (result.ok && result.stylesheets.length && typeof document !== 'undefined') {
+    var loadStyles = function () {
+      result.stylesheets.forEach(function (file) {
+        var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = file;
+        link.setAttribute('data-site-style', result.siteKey);
+        link.onerror = function () { link.remove(); console.warn('Optional site stylesheet unavailable; retaining shared base styles.'); };
+        document.head.appendChild(link);
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadStyles); else loadStyles();
   }
   if (!result.ok && window.console) console.error('Site setup required: ' + result.error);
 }());

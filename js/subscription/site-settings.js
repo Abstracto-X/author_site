@@ -74,6 +74,11 @@
         if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
         appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
       }
+      var stylesheets = [];
+      if (profile.stylesheets !== undefined) {
+        if (!Array.isArray(profile.stylesheets) || profile.stylesheets.some(function (file) { return typeof file !== 'string' || !/^styles\/sites\/[a-z0-9_-]+\.css$/i.test(file); })) return neutral('invalid_stylesheets');
+        stylesheets = [...new Set(profile.stylesheets)];
+      }
       var library = { primaryStoryId:'', featuredStoryIds:null };
       if (profile.library !== undefined) {
         if (!object(profile.library)) return neutral('invalid_library');
@@ -132,7 +137,7 @@
         if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
         if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount, library: library };
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount, library: library, stylesheets: stylesheets };
     } catch (_) {
       return neutral('invalid_input');
     }

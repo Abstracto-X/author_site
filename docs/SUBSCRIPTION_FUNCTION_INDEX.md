@@ -616,3 +616,7 @@ switchReaderAccount(): recent allowlisted provider continuation transferred once
 ## 2026-11-09 — Neutral setup recovery and provider-aware guidance
 
 providerSyncCopy(): plain supported-provider help text from actual feature gates, neutral when none. Reader getSupabase/init now require validated bootstrap status; HTML guard recovers independently of settings/bootstrap resource loading. Membership subscribe/wrong-account copy filters disabled providers.
+
+## 2026-11-09 — Local identity CSS and cosmetic preference migration
+
+SiteSettings.resolve validates optional stylesheets; bootstrap schedules CSS after DOM parsing with base fallback. switchReaderAccount preserves allowlisted source guest appearance for a new account record only; no private guest fields copied.

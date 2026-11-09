@@ -446,3 +446,7 @@ switchReaderAccount transfers only a recent (under 10 minutes) allowlisted guest
 ## 2026-11-09 — Neutral setup recovery and provider-aware guidance
 
 All HTML entrypoints include a dependency-free DOMContentLoaded setup guard after configuration scripts; missing/invalid bootstrap status or storage replaces the page with neutral setup/reload text using DOM textContent. Reader/Admin/Writer client creation requires SITE_CONFIGURATION_STATUS.ok exactly true; reader init stops before data/delegation on invalid setup. providerSyncCopy composes supported enabled providers; Help/subscribe use it, wrong-account steps filter unavailable providers, onboarding refers to enabled connections, and provider page buttons respect enabled features as well as URLs.
+
+## 2026-11-09 — Local identity CSS and cosmetic preference migration
+
+Optional repository profile stylesheets accepts only styles/sites/<safe-name>.css; normalized list is detached, bootstrap appends reviewed files after DOM parsing, and failed files are removed while shared base remains. Offline preflight verifies their existence. No DB/remote CSS loader. First signed-in source account record may inherit only allowlisted guest typography/background appearance settings; private data and notification preferences are excluded, existing account records never overwritten. Target identities do not import source appearance.

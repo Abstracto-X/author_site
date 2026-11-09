@@ -14,7 +14,7 @@ try {
   if (!result.ok) throw new Error(result.error);
   if (typeof config.supabase.anonKey !== 'string' || !config.supabase.anonKey.trim() || /YOUR_|CHANGE_ME/.test(config.supabase.anonKey)) throw new Error('missing_public_key');
   c.window.SiteSettings.publicRoot(config.publicBaseUrl,'https://preview.invalid/sub/index.html');
-  const assets = new Set(result.profileFrames.map(frame=>frame.src));
+  const assets = new Set([...result.stylesheets, ...result.profileFrames.map(frame=>frame.src)]);
   for (const visual of Object.values(result.tierPresentation)) for (const field of ['banner','topbarBanner']) if (visual[field]) assets.add(visual[field]);
   for (const asset of assets) if (!fs.statSync(path.join(root,asset)).isFile()) throw new Error('missing_local_asset');
   for (const file of ['index.html','admin.html','writer.html']) {
