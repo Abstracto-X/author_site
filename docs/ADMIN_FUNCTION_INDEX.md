@@ -323,3 +323,5 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `SummaryManager.generate()` calls the authenticated `writer-generate-summary` Edge Function with the selected Gemma model, exact source IDs, separate style reference, range, and instructions. It does not write a summary or chapter.
 - `SummaryManager.saveDraft()`, `accept()`, `archive()`, and `setRecordStatus()` persist review lifecycle metadata. Only explicit acceptance exposes a summary to reusable Context; accepted edits create a new draft instead of silently overwriting the accepted row.
 - `ContextWorkspace.load(storyId)` joins summary lifecycle state and includes legacy or accepted summaries while excluding managed drafts and archived summaries.
+
+2026-11-09: Admin now runs shared site-bootstrap.js before its inline SUPABASE CLIENT section; invalid pairing clears connection config so existing setup-required handling prevents client creation. No CMS write behavior changed.

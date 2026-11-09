@@ -1,6 +1,15 @@
 window.SUBSCRIPTION_SITE_CONFIG = {
-  siteName: "EvilArchives",
-  siteTagline: "Premium serial fiction archive",
+  siteKey: "evilarchives",
+  siteProfiles: {
+    "evilarchives": {
+      backendUrl: "https://cqgrulawpwkrdvxagzez.supabase.co",
+      identity: { siteName: "EvilArchives", siteTagline: "Premium serial fiction archive" },
+      links: {
+        patreonUrl: "https://www.patreon.com/cw/HornyShitler",
+        boostyUrl: "https://boosty.to/hornyshitler"
+      }
+    }
+  },
   publicBaseUrl: "./",
 
   supabase: {
@@ -22,13 +31,6 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     discord: false
   },
 
-  links: {
-    mainArchiveUrl: null,
-    patreonUrl: "https://www.patreon.com/cw/HornyShitler",
-    supportUrl: null,
-    discordUrl: null,
-    boostyUrl: "https://boosty.to/hornyshitler"
-  },
 
   features: {
     enableMainArchiveLinks: false,

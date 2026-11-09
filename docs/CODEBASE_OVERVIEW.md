@@ -358,3 +358,7 @@ Manual verification is preferred over automated browser testing unless explicitl
 - Chapter prose retains its Georgia-first stack with reliable italics. System/caption dialogue boxes consume reader-scoped semantic colors across all built-in and custom backgrounds.
 
 The standalone settings foundation also exposes publicRoot/readerUrl for explicit cross-origin or subdirectory reader destinations. HTTP is restricted to loopback development hosts; credentials, query/hash roots and unsafe protocols are rejected. Existing consumers are not switched yet.
+
+## 2026-11-09 — Shared configuration bootstrap connected
+
+All three entrypoints now load site-config, site-settings, then site-bootstrap before creating clients. site-config defines explicit siteKey/siteProfiles with independently specified expected backendUrl, repository identity and links. Bootstrap publishes a normalized compatibility SUBSCRIPTION_SITE_CONFIG snapshot; invalid/missing pairs or roots remove connection settings and use neutral identity. SITE_CONFIGURATION_STATUS records setup errors. The resolver is no longer unwired. Existing DB identity/appearance overrides still require the next ownership migration; static titles, browser state and tier UI are not yet isolated. Templates must configure both connection and expected profile backend deliberately.

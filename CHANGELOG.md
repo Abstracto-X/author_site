@@ -1881,3 +1881,7 @@ Files changed:
 ## 2026-11-09 — Multi-site deployment URL foundation
 
 Added tested publicRoot/readerUrl helpers to js/subscription/site-settings.js and tests/site-settings.test.js. Supports subdirectories and explicit destination readers without deriving published links from the authoring origin. Helpers are not yet wired. Updated overview/function index/state. Node tests and syntax checks passed; no browser/DB changes.
+
+## 2026-11-09 — Connect validated multi-site bootstrap
+
+Reader, Admin and Writer now load site-settings/site-bootstrap before clients. Repository site profiles own normalized identity/links; explicit backend pairing and public-root validation fail neutrally without a usable connection. Updated real configuration and template; added three bootstrap tests. Files: three HTML entrypoints, js/subscription/site-config.js, site-config.template.js, site-bootstrap.js, tests/site-bootstrap.test.js and overview/function indexes/state/changelog. 112 Node tests pass, including inline Writer syntax; bootstrap syntax checked. No DB/session changes. DB appearance overrides remain for subsequent ownership work.

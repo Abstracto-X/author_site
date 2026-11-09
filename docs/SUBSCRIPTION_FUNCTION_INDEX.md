@@ -542,3 +542,5 @@ Recent reader notification/profile changes:
 - Existing narrative system-message rendering remains unchanged while the new persistent widget is redesigned.
 
 SiteSettings.publicRoot(base, pageUrl) validates a public deployment directory; SiteSettings.readerUrl(base, pageUrl, chapterId) builds encoded destination-reader links. Both remain unwired pending startup integration.
+
+site-bootstrap.js (startup IIFE): resolve repository profile/pair, validate public root, publish normalized compatibility config and SITE_CONFIGURATION_STATUS before clients. No database operations.

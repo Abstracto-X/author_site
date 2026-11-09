@@ -1,6 +1,13 @@
 window.SUBSCRIPTION_SITE_CONFIG = {
-  siteName: "Member Fiction Reader",
-  siteTagline: "Premium serial fiction member library",
+  siteKey: "your-site",
+  siteProfiles: {
+    "your-site": {
+      backendUrl: "https://YOUR_PROJECT_REF.supabase.co",
+      identity: { siteName: "Member Fiction Reader", siteTagline: "Premium serial fiction archive" },
+      links: {
+      }
+    }
+  },
   publicBaseUrl: "./",
 
   supabase: {
@@ -22,13 +29,6 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     discord: false
   },
 
-  links: {
-    mainArchiveUrl: null,
-    patreonUrl: null,
-    supportUrl: null,
-    discordUrl: null,
-    boostyUrl: null
-  },
 
   features: {
     enableMainArchiveLinks: false,

@@ -2211,3 +2211,14 @@ Follow-up completed 2026-10-10 20:49 Asia/Kolkata: Front-page Home Artwork now p
 Status: IN PROGRESS
 
 Pilot/plan checkpoint committed. Added standalone deployment-root and chapter URL helpers with unsafe URL rejection and subdirectory/destination tests. Files: js/subscription/site-settings.js, tests/site-settings.test.js, overview/function index/changelog/state. Remaining: wire normalized settings before clients across all three surfaces, then scoped state and tier presentation; full plan gates including second backend remain outstanding. Verification: Node tests/syntax; owner browser and real-backend verification still pending. No DB changes.
+
+## 2026-11-09 — Configuration bootstrap wired across all surfaces
+
+Status: IN PROGRESS
+
+Area: shared / reader / admin / writer
+Files touched: index.html, admin.html, writer.html; js/subscription/site-config.js, site-config.template.js, site-bootstrap.js; tests/site-bootstrap.test.js; overview, reader/admin indexes, changelog/state.
+
+Summary: normalized repository profile resolved before client creation; mismatched/missing site/backend removes connection and source-brand fallback. Public roots validated. Real config/template use siteKey and siteProfiles. No DB or auth-session migration.
+Remaining: enforce repo appearance against DB overrides and align Admin appearance controls; neutral static startup copy, destination links, scoped browser state, tier mapping/perks and remaining full-plan stages. Existing historical 'unwired' pilot notes describe that checkpoint only.
+Verification: 112/112 Node tests and bootstrap syntax pass. During editing, Writer mixed line endings initially broke 11 source-extraction tests; preserving original bytes outside script tags restored all tests without weakening them. Owner manual startup verification across all surfaces and missing/mismatched config still pending. Full plan not complete.
