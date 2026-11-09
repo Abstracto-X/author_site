@@ -1894,3 +1894,7 @@ Reader identity ownership: removed DB branding overrides, changed missing-name f
 
 Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty), enableAppBackground, enableOrnateSystemDialog and ornateSystemDialogAfterChapter. Resolver validates and detaches these fields; missing profile appearance defaults to no ornate decoration. Existing source profile explicitly retains ornate cutoff 70. Bootstrap forwards appearance; config initializes from it and ignores DB appearance aliases. Story background/content upload workflows are unchanged. Admin disables appearance controls with repo-ownership labels; saveReaderBehavior updates only guides/external URL/provider note and preserves legacy/unknown stored values. Generic JSON editor explains ignored presentation values.
 Files: site-settings.js, site-bootstrap.js, site-config.js/template, config.js, three HTML entrypoints (cache versions/Admin), settings/ownership tests, overview/indexes/state/changelog. Validation: 115 tests and settings/config syntax pass; no schema change.
+
+## 2026-11-09 — Neutral startup and destination reader links
+
+Removed hardcoded brand from all entrypoint startup surfaces; bootstrap sets repo title/meta before network. Reader/Writer copied chapter links now resolve configured destination public root. Files: index.html, admin.html, writer.html, site-bootstrap.js, events.js, bootstrap/Writer clipboard tests, overview/indexes/state/changelog. 116 Node tests pass; bootstrap/events syntax pass. No DB changes.

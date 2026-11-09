@@ -333,3 +333,7 @@ Forms.saveSiteIdentity(): retired write path, now explains repo ownership withou
 ## 2026-11-09 — Repository appearance boundary
 
 Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty), enableAppBackground, enableOrnateSystemDialog and ornateSystemDialogAfterChapter. Resolver validates and detaches these fields; missing profile appearance defaults to no ornate decoration. Existing source profile explicitly retains ornate cutoff 70. Bootstrap forwards appearance; config initializes from it and ignores DB appearance aliases. Story background/content upload workflows are unchanged. Admin disables appearance controls with repo-ownership labels; saveReaderBehavior updates only guides/external URL/provider note and preserves legacy/unknown stored values. Generic JSON editor explains ignored presentation values.
+
+## 2026-11-09 — Neutral startup and destination reader links
+
+Admin static login/sidebar/title are neutral Reader until repository identity loads; bootstrap assigns identity Admin title immediately. No CMS persistence changed.

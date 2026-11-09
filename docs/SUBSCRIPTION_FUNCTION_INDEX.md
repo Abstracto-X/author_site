@@ -552,3 +552,7 @@ applySiteSettings(rows): ignores DB identity keys, applies operational reader be
 ## 2026-11-09 — Repository appearance boundary
 
 Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty), enableAppBackground, enableOrnateSystemDialog and ornateSystemDialogAfterChapter. Resolver validates and detaches these fields; missing profile appearance defaults to no ornate decoration. Existing source profile explicitly retains ornate cutoff 70. Bootstrap forwards appearance; config initializes from it and ignores DB appearance aliases. Story background/content upload workflows are unchanged. Admin disables appearance controls with repo-ownership labels; saveReaderBehavior updates only guides/external URL/provider note and preserves legacy/unknown stored values. Generic JSON editor explains ignored presentation values.
+
+## 2026-11-09 — Neutral startup and destination reader links
+
+chapterDirectUrl(chapterId) now targets configured publicBaseUrl via SiteSettings.readerUrl. Bootstrap also updates title/meta before network. Neutral static HTML no longer embeds source author branding.

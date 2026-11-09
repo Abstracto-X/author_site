@@ -29,5 +29,13 @@
     supabase: {}, links: {}, auth: { googleEnabled: false, emailPasswordEnabled: false },
     providers: {}, features: {}
   };
+  // Metadata is ready before auth/network; authoring pages retain a neutral surface suffix.
+  if (typeof document !== 'undefined') {
+    var name = window.SUBSCRIPTION_SITE_CONFIG.siteName;
+    var page = new URL(window.location.href).pathname.split('/').pop();
+    document.title = name + (page === 'admin.html' ? ' Admin' : page === 'writer.html' ? ' | Writer Studio' : '');
+    var meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', window.SUBSCRIPTION_SITE_CONFIG.metaDescription || '');
+  }
   if (!result.ok && window.console) console.error('Site setup required: ' + result.error);
 }());

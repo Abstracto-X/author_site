@@ -147,9 +147,7 @@ async function copyText(text){
 }
 
 function chapterDirectUrl(chapterId){
-  const url = new URL(window.location.href);
-  url.hash = `/read/${chapterId}`;
-  return url.href;
+  return window.SiteSettings.readerUrl(CONFIG.publicBaseUrl, window.location.href, String(chapterId));
 }
 function openReaderNotification(id, chapterId, notificationUrl){
   const item=(store.notifs||[]).find(n=>String(n.id)===String(id));

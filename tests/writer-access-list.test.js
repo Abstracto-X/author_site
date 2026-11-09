@@ -65,6 +65,7 @@ test('Copy access list writes rich links for only checked published chapters', a
     }
     const context = vm.createContext({
         URL,
+        CONFIG: { publicBaseUrl: 'https://second.example/fiction/' },
         State: { activeStoryId: 'story', accessListChapterIds: new Set(['live', 'draft', 'other']), tierUpdateInFlight: false },
         MockDB: {
             chapters: [
@@ -81,6 +82,7 @@ test('Copy access list writes rich links for only checked published chapters', a
         navigator: { clipboard: { async write(items) { writes.push(items); } } },
         window: { ClipboardItem: ClipboardItemStub, location: { href: 'https://cornyshitler.pages.dev/writer.html' } }
     });
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/subscription/site-settings.js'), 'utf8'), context);
     vm.runInContext(formatterSource, context);
     vm.runInContext(`const App = { ${html.slice(start, end)} async deleteChapter() {} };`, context);
     await vm.runInContext('App.copyAccessList()', context);
@@ -88,7 +90,7 @@ test('Copy access list writes rich links for only checked published chapters', a
     assert.equal(writes[0].length, 1);
     const data = writes[0][0].data;
     assert.equal(await data['text/plain'].text(),
-        '[Chapter 3: A Way Out](https://cornyshitler.pages.dev/index.html#/read/live) unlocked for Resident Tyrant');
+        '[Chapter 3: A Way Out](https://second.example/fiction/index.html#/read/live) unlocked for Resident Tyrant');
     assert.equal(await data['text/html'].text(),
-        '<p><a href="https://cornyshitler.pages.dev/index.html#/read/live">[Chapter 3: A Way Out]</a> unlocked for Resident Tyrant</p>');
+        '<p><a href="https://second.example/fiction/index.html#/read/live">[Chapter 3: A Way Out]</a> unlocked for Resident Tyrant</p>');
 });

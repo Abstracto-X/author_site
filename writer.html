@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Writer Studio | EvilArchives</title>
+    <title>Writer Studio | Reader</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,7 +50,7 @@
     <!-- Site Config + Supabase -->
     <script src="js/subscription/site-config.js?v=20261109.4"></script>
     <script src="js/subscription/site-settings.js?v=20261109.4"></script>
-    <script src="js/subscription/site-bootstrap.js?v=20261109.4"></script>
+    <script src="js/subscription/site-bootstrap.js?v=20261109.5"></script>
     <script src="vendor/supabase/supabase-2.111.0.min.js"></script>
     <link rel="stylesheet" href="styles/writer-ai-chat.css">
     <link rel="stylesheet" href="styles/writer-summary-manager.css">
@@ -5232,8 +5232,7 @@
             async copyChapterLink(id) {
                 const chapter = MockDB.chapters.find(item => item.id === id);
                 if (!chapter) return UI.showToast('Chapter not found.', 'error');
-                const url = new URL('index.html', window.location.href);
-                url.hash = `/read/${encodeURIComponent(id)}`;
+                const url = new URL(window.SiteSettings.readerUrl(CONFIG.publicBaseUrl, window.location.href, String(id)));
                 try {
                     await navigator.clipboard.writeText(url.href);
                     UI.showToast(chapter.is_published ? 'Chapter link copied.' : 'Chapter link copied. Readers can open it after publication.', 'success');
@@ -5252,7 +5251,7 @@
                     return UI.showToast('Select at least one published chapter.', 'info');
                 }
                 try {
-                    const readerUrl = new URL('index.html', window.location.href);
+                    const readerUrl = new URL(window.SiteSettings.readerUrl(CONFIG.publicBaseUrl, window.location.href));
                     const entries = chapterAccessListEntries(selected, MockDB.tiers, readerUrl.href);
                     const text = chapterAccessListText(entries);
                     if (navigator.clipboard?.write && window.ClipboardItem) {
