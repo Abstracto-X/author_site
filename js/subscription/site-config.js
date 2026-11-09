@@ -4,6 +4,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     "evilarchives": {
       backendUrl: "https://cqgrulawpwkrdvxagzez.supabase.co",
       identity: { siteName: "EvilArchives", siteTagline: "Premium serial fiction archive" },
+      storyPresentation: { "d8c87bf8-94c9-4c6e-8826-d6f3be25d419": { accent: "#ffd700", loaderTheme: "lightsaber" } },
       library: { primaryStoryId: "d8c87bf8-94c9-4c6e-8826-d6f3be25d419" },
       writerTestAccount: {"enabled": true, "accountEmail": "divinedevil101@gmail.com", "label": "Divine Devil", "tiers": {"free": "Free", "resident-licker": "Resident Licker", "resident-tyrant": "Resident Tyrant", "resident-nemesis": "Resident Nemesis", "resident-evil": "Resident Evil"}},
       profileFrames: [{"id": "licker", "label": "Bronze Crest", "src": "assets/profile-frames/member-tiers.png", "slice": 0}, {"id": "tyrant", "label": "Violet Crest", "src": "assets/profile-frames/member-tiers.png", "slice": 1}, {"id": "nemesis", "label": "Crimson Crest", "src": "assets/profile-frames/member-tiers.png", "slice": 2}, {"id": "evil-crimson", "label": "Crimson Estate", "src": "assets/profile-frames/resident-evil-crimson.png"}, {"id": "evil-haunting", "label": "Haunted Estate", "src": "assets/profile-frames/resident-evil-haunting.png"}],

@@ -1170,10 +1170,10 @@
     </div>
 
     <!-- SITE CONFIG + SUPABASE SDK -->
-    <script src="js/subscription/site-config.js?v=20261109.25"></script>
-    <script src="js/subscription/site-settings.js?v=20261109.25"></script>
-    <script src="js/subscription/site-bootstrap.js?v=20261109.25"></script>
-    <script src="js/subscription/site-storage.js?v=20261109.25"></script>
+    <script src="js/subscription/site-config.js?v=20261109.27"></script>
+    <script src="js/subscription/site-settings.js?v=20261109.27"></script>
+    <script src="js/subscription/site-bootstrap.js?v=20261109.27"></script>
+    <script src="js/subscription/site-storage.js?v=20261109.27"></script>
     <script src="js/author-session.js?v=20261109.26"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -2789,6 +2789,9 @@
                     story = await DB.getStory(id) || story;
                 }
 
+                const presentation = ADMIN_SITE_CONFIG.storyPresentation?.[id] || {};
+                story.theme_color = presentation.accent || '#d4b06a';
+                story.loader_theme = presentation.loaderTheme || 'primary';
                 const html = `
                     <div class="form-group">
                         <label class="form-label">Title *</label>
@@ -2822,12 +2825,12 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Theme Color</label>
-                            <input type="color" class="form-input" id="f-theme_color" value="${story.theme_color || '#ffd700'}" style="height:45px">
+                            <label class="form-label">Theme Color (repository-managed)</label>
+                            <input type="color" class="form-input" disabled title="Repository-managed storyPresentation" id="f-theme_color" value="${story.theme_color || '#ffd700'}" style="height:45px">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Loader Theme</label>
-                            <select class="form-input" id="f-loader_theme" style="height:45px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0 10px;">
+                            <label class="form-label">Loader Theme (repository-managed)</label>
+                            <select class="form-input" disabled title="Repository-managed storyPresentation" id="f-loader_theme" style="height:45px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0 10px;">
                                 <option value="lightsaber" ${(story.loader_theme || 'primary') === 'lightsaber' ? 'selected' : ''}>Lightsaber</option>
                                 <option value="primary" ${(story.loader_theme || 'primary') === 'primary' ? 'selected' : ''}>Primary Monogram (Default)</option>
                                 <option value="anomaly_flesh" ${story.loader_theme === 'anomaly_flesh' ? 'selected' : ''}>SCP-610: Sarkic Tendrils (Organic)</option>
@@ -2887,8 +2890,6 @@
                         status: document.getElementById('f-status').value,
                         cover_image_url: coverUrl,
                         background_image_url: bgUrl,
-                        theme_color: document.getElementById('f-theme_color').value,
-                        loader_theme: document.getElementById('f-loader_theme').value,
                         world_title: document.getElementById('f-world_title').value,
                         is_published: document.getElementById('f-is_published').checked
                     };

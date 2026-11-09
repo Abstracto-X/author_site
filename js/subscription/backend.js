@@ -66,8 +66,9 @@ function estimateReadTime(row){
 }
 function colorPair(row, index){
   const accents = ["#c75b6b", "#d4b06a", "#5bb8c9", "#9a7ed1", "#8fb98a", "#e08a4a"];
-  const accent = row.theme_color || row.accent_color || row.accent || accents[index % accents.length];
-  return { accent, accent2: row.secondary_color || row.accent2 || accent };
+  const local = CONFIG.storyPresentation?.[row.id];
+  const accent = local?.accent || accents[index % accents.length];
+  return { accent, accent2: local?.accent2 || accent };
 }
 function normalizeBackendStory(row, index){
   const colors = colorPair(row, index);

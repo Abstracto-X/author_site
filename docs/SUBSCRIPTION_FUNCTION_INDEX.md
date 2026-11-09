@@ -620,3 +620,7 @@ providerSyncCopy(): plain supported-provider help text from actual feature gates
 ## 2026-11-09 — Local identity CSS and cosmetic preference migration
 
 SiteSettings.resolve validates optional stylesheets; bootstrap schedules CSS after DOM parsing with base fallback. switchReaderAccount preserves allowlisted source guest appearance for a new account record only; no private guest fields copied.
+
+## 2026-11-09 — Story appearance ownership completed
+
+colorPair(row,index): repo storyPresentation accent/accent2 or shared palette, not legacy DB theme_color/secondary_color. Resolver validates supported story styles and strips content fields.

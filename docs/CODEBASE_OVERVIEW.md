@@ -454,3 +454,7 @@ Optional repository profile stylesheets accepts only styles/sites/<safe-name>.cs
 ## 2026-11-09 — Author request lifetime boundaries
 
 Admin/Writer load js/author-session.js shared request-lifetime primitive after site storage. Supabase clients use AuthorSession.fetch, which links caller abort signals, tracks requests and rejects results after invalidation. Verified profile binds one account; a changed session invalidates/aborts before reload and stops Writer AI/summary controllers. New requests are refused after invalidation; already submitted writes remain uncertain (writer_save_uncertain), not rolled back. Missing helper participates in neutral setup recovery. This guards browser lifetime, not RLS or server transaction rollback.
+
+## 2026-11-09 — Story appearance ownership completed
+
+Repository storyPresentation keyed by real story ID owns accent/accent2 and supported loaderTheme. colorPair ignores legacy DB styling columns and uses current profile mapping or shared palette. Admin storyForm displays repo appearance disabled/labelled; story content saves omit theme_color/loader_theme, preserving stored legacy values and cover/background/media workflows. Source mapping preserves verified #ffd700/lightsaber; new/unknown stories remain generic.

@@ -1978,3 +1978,7 @@ Added reviewed optional local identity CSS loading/preflight and source first-lo
 ## 2026-11-09 — Author request lifetime boundaries
 
 Added author request-lifetime guard and integrated both authoring clients/account-change callbacks, AI/summary cancellation and setup/preflight checks. Files: js/author-session.js, admin.html, writer.html, scripts/check-site-config.js, author-session/setup tests and overview/admin index/state/changelog. 160 tests, helper syntax and offline preflight pass. No DB changes.
+
+## 2026-11-09 — Story appearance ownership completed
+
+Completed story appearance ownership across normalized config/reader and Admin forms/writes. Files: settings/bootstrap/config/backend, admin and three HTML cache versions, story/settings tests, overview/indexes/state/changelog. 162 tests, settings/backend syntax and source preflight pass. Source appearance verified by restricted SELECT only; no DB writes.

@@ -74,6 +74,15 @@
         if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
         appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
       }
+      var storyPresentation = {};
+      if (profile.storyPresentation !== undefined && !object(profile.storyPresentation)) return neutral('invalid_story_presentation');
+      for (var storyId of Object.keys(profile.storyPresentation || {})) {
+        var storyVisual = profile.storyPresentation[storyId];
+        if (!/^[a-z0-9-]+$/i.test(storyId) || !object(storyVisual) || !/^#[0-9a-f]{6}$/i.test(storyVisual.accent || '')) return neutral('invalid_story_presentation');
+        if (storyVisual.accent2 !== undefined && !/^#[0-9a-f]{6}$/i.test(storyVisual.accent2)) return neutral('invalid_story_presentation');
+        if (storyVisual.loaderTheme !== undefined && !['primary','lightsaber','anomaly_flesh','anomaly_hex','anomaly_cyber','anomaly_kinetic','anomaly_crystal'].includes(storyVisual.loaderTheme)) return neutral('invalid_story_presentation');
+        storyPresentation[storyId] = {accent:storyVisual.accent,accent2:storyVisual.accent2 || storyVisual.accent,loaderTheme:storyVisual.loaderTheme || 'primary'};
+      }
       var stylesheets = [];
       if (profile.stylesheets !== undefined) {
         if (!Array.isArray(profile.stylesheets) || profile.stylesheets.some(function (file) { return typeof file !== 'string' || !/^styles\/sites\/[a-z0-9_-]+\.css$/i.test(file); })) return neutral('invalid_stylesheets');
@@ -137,7 +146,7 @@
         if (original.topbarBanner) tierPresentation[tierId].topbarBanner = original.topbarBanner;
         if (['licker','tyrant','nemesis','evil'].includes(original.className)) tierPresentation[tierId].className = original.className;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount, library: library, stylesheets: stylesheets };
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance, tierPresentation: tierPresentation, profileFrames: profileFrames, writerTestAccount: writerTestAccount, library: library, stylesheets: stylesheets, storyPresentation: storyPresentation };
     } catch (_) {
       return neutral('invalid_input');
     }

@@ -18,7 +18,7 @@ test('selects only explicit matching profile and normalizes a detached allowlist
   p.orchard.identity.role = 'admin'; p.orchard.links.script = 'https://evil.example/';
   p.orchard.serviceRoleKey = 'secret'; p.orchard.site_identity = { siteName: 'DB override' };
   const result = resolve(deployment(), p, { siteName: 'DB override' });
-  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [], writerTestAccount: {enabled:false}, library:{primaryStoryId:'',featuredStoryIds:null}, stylesheets:[] });
+  assert.deepEqual(plain(result), { ok: true, siteKey: 'orchard', backendUrl: 'https://orchard.supabase.co', identity: { siteName: 'Orchard', siteTagline: 'Trees', metaDescription: 'Fruit' }, links: { mainArchiveUrl: '', patreonUrl: '', supportUrl: 'https://example.org/help?q=1#top', discordUrl: '', boostyUrl: '' }, appearance: { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 }, tierPresentation: {}, profileFrames: [], writerTestAccount: {enabled:false}, library:{primaryStoryId:'',featuredStoryIds:null}, stylesheets:[], storyPresentation:{} });
   result.identity.siteName = 'changed'; result.links.supportUrl = 'changed';
   assert.equal(p.orchard.identity.siteName, ' Orchard ');
   assert.equal(resolve(deployment(), p).identity.siteName, 'Orchard');
@@ -125,4 +125,7 @@ test('auth return targets configured reader subdirectory without tokens/query an
 test('site stylesheets are reviewed local files only and copied without mutation',()=>{
  const p=profiles();p.orchard.stylesheets=['styles/sites/orchard.css'];const r=resolve(deployment(),p);r.stylesheets.push('styles/sites/other.css');assert.equal(p.orchard.stylesheets.length,1);
  for(const path of ['https://remote.example/style.css','styles/sites/../other.css','styles/sites/x.css?x=1','javascript:alert(1)']){p.orchard.stylesheets=[path];assert.equal(resolve(deployment(),p).error,'invalid_stylesheets');}
+});
+test('story presentation validates supported colors/loaders and keeps content fields out',()=>{
+ const p=profiles();p.orchard.storyPresentation={story:{accent:'#123456',loaderTheme:'primary',title:'Must not override content'}};const r=resolve(deployment(),p);assert.equal(r.storyPresentation.story.title,undefined);assert.equal(r.storyPresentation.story.accent,'#123456');p.orchard.storyPresentation.story.loaderTheme='remote-plugin';assert.equal(resolve(deployment(),p).error,'invalid_story_presentation');
 });

@@ -369,3 +369,7 @@ Admin/Writer CONFIGURED_SUPABASE requires successful shared validation. Dependen
 ## 2026-11-09 — Author request lifetime boundaries
 
 Admin/Writer createClient global.fetch is AuthorSession.fetch. Auth.loadProfile/Writer DB.requireAdmin bind verified account; auth-change callbacks invalidate guard before reload. Writer stops AI/summary controllers. runWriterMutation preserves uncertain-write code from guarded fetch.
+
+## 2026-11-09 — Story appearance ownership completed
+
+Forms.storyForm(): disabled repo-managed color/loader display from storyPresentation; content save omits legacy appearance columns. Covers/background uploads and content/publication remain unchanged.

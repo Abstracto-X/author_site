@@ -25,6 +25,7 @@
     profileFrames: result.profileFrames,
     writerTestAccount: result.writerTestAccount,
     library: result.library,
+    storyPresentation: result.storyPresentation,
     stylesheets: result.stylesheets,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
