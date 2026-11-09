@@ -34,11 +34,23 @@
     <script src="js/subscription/site-settings.js?v=20261109.22"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.22"></script>
     <script src="js/subscription/site-storage.js?v=20261109.22"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.SITE_CONFIGURATION_STATUS?.ok === true && window.SiteStorage) return;
+      const panel = document.createElement('main');
+      panel.setAttribute('role', 'alert');
+      panel.style.cssText = 'padding:40px;max-width:680px;margin:40px auto;font:18px system-ui;color:#111;background:#fff;border-radius:12px';
+      const heading = document.createElement('h1'); heading.textContent = 'Site setup required';
+      const detail = document.createElement('p'); detail.textContent = 'Configuration is missing, invalid, or did not load. Check this deployment’s site profile and resource files, then reload.';
+      const retry = document.createElement('button'); retry.textContent = 'Reload'; retry.onclick = () => window.location.reload();
+      panel.append(heading, detail, retry); document.body.replaceChildren(panel);
+    });
+    </script>
   <!-- Self-hosted and version-pinned so reader startup does not depend on a third-party CDN. -->
   <script src="vendor/supabase/supabase-2.111.0.min.js?v=20260915.3"></script>
-  <script src="js/subscription/config.js?v=20261109.22"></script>
+  <script src="js/subscription/config.js?v=20261109.24"></script>
   <script src="js/subscription/state.js?v=20261109.23"></script>
-  <script src="js/subscription/auth.js?v=20261109.23"></script>
+  <script src="js/subscription/auth.js?v=20261109.24"></script>
   <script src="js/subscription/backend.js?v=20261109.22"></script>
   <script src="js/subscription/utils.js?v=20261109.22"></script>
   <script src="js/subscription/chrome.js?v=20261109.22"></script>
@@ -46,13 +58,13 @@
   <script src="js/subscription/views/home-library.js?v=20261109.22"></script>
   <script src="js/subscription/views/story-reader.js?v=20261109.22"></script>
   <script src="js/subscription/views/account-access.js?v=20261109.22"></script>
-  <script src="js/subscription/views/help-support.js?v=20261109.22"></script>
+  <script src="js/subscription/views/help-support.js?v=20261109.24"></script>
   <script src="js/subscription/views/gallery.js?v=20261109.22"></script>
   <script src="js/subscription/sheets.js?v=20261109.22"></script>
-  <script src="js/subscription/membership-journey.js?v=20261109.22"></script>
+  <script src="js/subscription/membership-journey.js?v=20261109.24"></script>
   <script src="js/subscription/views/reader-settings.js?v=20261109.22"></script>
   <script src="js/subscription/events.js?v=20261109.22"></script>
-  <script src="js/subscription/onboarding.js?v=20261109.22"></script>
-  <script src="js/subscription/aether-app.js?v=20261109.22"></script>
+  <script src="js/subscription/onboarding.js?v=20261109.24"></script>
+  <script src="js/subscription/aether-app.js?v=20261109.24"></script>
 </body>
 </html>

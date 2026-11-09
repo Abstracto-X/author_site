@@ -8,6 +8,7 @@ let sbClient = null;
 const authState = { user:null, session:null, profile:null, entitlements:[], providerConnections:[], ready:false, error:null, passwordRecovery:false };
 function getSupabase(){
   if (sbClient) return sbClient;
+  if (window.SITE_CONFIGURATION_STATUS?.ok !== true) return null;
   if (!configuredSupabase()) return null;
   if (!window.supabase || !window.supabase.createClient) return null;
   sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

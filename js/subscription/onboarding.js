@@ -9,7 +9,7 @@
       routes: ["home","library","vault"],
       selector: ".access-chip, .bottomnav [data-nav='/vault'], .sidenav [data-nav='/vault']",
       title: "Check your access here",
-      body: "Sign in, connect Patreon or Boosty through Discord, or redeem a key from the Vault when a chapter asks for access."
+      body: "Sign in and use the enabled membership connections or access keys in the Vault when a chapter asks for access."
     },
     {
       id: "library",

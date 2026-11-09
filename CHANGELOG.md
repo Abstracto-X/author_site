@@ -1966,3 +1966,7 @@ Hardened chapter request store/revision guards, added offline deployment preflig
 ## 2026-11-09 — Continuation recovery and deployment audit
 
 Fixed provider continuation loss across reader account-store switch, neutralized email-worker brand fallback, completed Edge environment template names and added progress audit. Files: state/auth, index cache versions, email Edge function, ENV.example, account/env tests and docs/audits/2026-11-09-multi-site-progress.md plus overview/index/state/changelog. 150 tests pass; Edge not deployed, no DB changes.
+
+## 2026-11-09 — Neutral setup recovery and provider-aware guidance
+
+Added strict validation gates and dependency-free neutral setup recovery in all entrypoints; composed membership/help guidance from enabled providers and hid disabled provider links. Files: three HTML entries, auth/aether-app/config/help-support/onboarding/membership-journey modules, membership/recovery tests and overview/indexes/state/changelog. 154 tests pass. No DB changes.

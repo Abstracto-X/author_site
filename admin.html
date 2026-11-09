@@ -1174,6 +1174,18 @@
     <script src="js/subscription/site-settings.js?v=20261109.22"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.22"></script>
     <script src="js/subscription/site-storage.js?v=20261109.22"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.SITE_CONFIGURATION_STATUS?.ok === true && window.SiteStorage) return;
+      const panel = document.createElement('main');
+      panel.setAttribute('role', 'alert');
+      panel.style.cssText = 'padding:40px;max-width:680px;margin:40px auto;font:18px system-ui;color:#111;background:#fff;border-radius:12px';
+      const heading = document.createElement('h1'); heading.textContent = 'Site setup required';
+      const detail = document.createElement('p'); detail.textContent = 'Configuration is missing, invalid, or did not load. Check this deployment’s site profile and resource files, then reload.';
+      const retry = document.createElement('button'); retry.textContent = 'Reload'; retry.onclick = () => window.location.reload();
+      panel.append(heading, detail, retry); document.body.replaceChildren(panel);
+    });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -1184,7 +1196,7 @@
         const ADMIN_SITE_CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
         const SUPABASE_URL = (ADMIN_SITE_CONFIG.supabase && ADMIN_SITE_CONFIG.supabase.url) || '';
         const SUPABASE_ANON_KEY = (ADMIN_SITE_CONFIG.supabase && ADMIN_SITE_CONFIG.supabase.anonKey) || '';
-        const CONFIGURED_SUPABASE = SUPABASE_URL && SUPABASE_ANON_KEY && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME/i.test(SUPABASE_URL + ' ' + SUPABASE_ANON_KEY);
+        const CONFIGURED_SUPABASE = window.SITE_CONFIGURATION_STATUS?.ok === true && SUPABASE_URL && SUPABASE_ANON_KEY && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME/i.test(SUPABASE_URL + ' ' + SUPABASE_ANON_KEY);
         if (!CONFIGURED_SUPABASE) {
             console.error('Admin setup required: set supabase.url and supabase.anonKey in js/subscription/site-config.js.');
         }

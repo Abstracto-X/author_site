@@ -442,3 +442,7 @@ Chapter catalog/text guards now capture reader store identity as well as user, w
 ## 2026-11-09 — Continuation recovery and deployment audit
 
 switchReaderAccount transfers only a recent (under 10 minutes) allowlisted guest-requested provider continuation to the first signed-in account and clears guest continuation before saving; private guest state is not copied. Token/initial auth events use lightweight branch only for the same user, otherwise full reset. Email worker missing-brand fallback is neutral Reader; ENV.example now documents email/AI settings with supported summary default. See progress audit for remaining requirements.
+
+## 2026-11-09 — Neutral setup recovery and provider-aware guidance
+
+All HTML entrypoints include a dependency-free DOMContentLoaded setup guard after configuration scripts; missing/invalid bootstrap status or storage replaces the page with neutral setup/reload text using DOM textContent. Reader/Admin/Writer client creation requires SITE_CONFIGURATION_STATUS.ok exactly true; reader init stops before data/delegation on invalid setup. providerSyncCopy composes supported enabled providers; Help/subscribe use it, wrong-account steps filter unavailable providers, onboarding refers to enabled connections, and provider page buttons respect enabled features as well as URLs.

@@ -268,7 +268,7 @@ test("subscription choices use configured provider links", () => {
   const html = journey().sheetMembershipSubscribe();
   assert.match(html, /Explore on Patreon/);
   assert.match(html, /Explore on Boosty/);
-  assert.match(html, /payment options are unavailable/);
+  assert.match(html, /Choose an enabled provider/);
 });
 
 test("membership sheet has one vertical anchor on desktop and mobile", () => {

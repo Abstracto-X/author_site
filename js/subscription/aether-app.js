@@ -45,6 +45,7 @@ async function bootstrapReaderData(){
   }
 }
 function init(){
+  if (window.SITE_CONFIGURATION_STATUS?.ok !== true) return;
   // containers
   if(!document.querySelector(".scrim")){ const d=document.createElement("div"); d.className="scrim"; document.body.appendChild(d); }
   if(!document.querySelector(".toasts")){ const d=document.createElement("div"); d.className="toasts"; document.body.appendChild(d); }

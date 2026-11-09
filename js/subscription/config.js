@@ -107,6 +107,12 @@ function patreonEnabled(){ return providerEnabled("patreon") && feature("enableP
 function boostyDiscordEnabled(){ return providerEnabled("boosty") && feature("enableBoostyDiscordConnect", false); }
 function accessKeysEnabled(){ return feature("enableAccessKeys", true); }
 function mainArchiveEnabled(){ return feature("enableMainArchiveLinks", false) && !!MAIN_ARCHIVE_URL; }
+function providerSyncCopy(){
+  const parts = [];
+  if (patreonEnabled()) parts.push('Patreon verifies membership directly.');
+  if (boostyDiscordEnabled()) parts.push('Boosty access is verified through the subscriber role assigned to your connected Discord account.');
+  return parts.join(' ') || 'No membership provider connection is enabled on this site. Contact the author if access is missing.';
+}
 function configuredSupabase(){ const cfg=CONFIG.supabase||{}; const joined=`${cfg.url||""} ${cfg.anonKey||""}`; return !!cfg.url && !!cfg.anonKey && !/YOUR_PROJECT_REF|YOUR_SUPABASE|CHANGE_ME|YOUR_DOMAIN/i.test(joined); }
 const byId = (id) => { for (const s of D.STORIES){ const c = s.chapters.find(c=>c.id===id); if (c) return { ch:c, story:s, index:s.chapters.indexOf(c) }; } return null; };
 const bySlug = slug => D.STORIES.find(s=>s.slug===slug) || D.STORIES.find(s=>s.id===slug);

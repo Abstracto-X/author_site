@@ -612,3 +612,7 @@ refreshBackendChapterAccess/loadReaderChapterFromBackend also guard captured sto
 ## 2026-11-09 — Continuation recovery and deployment audit
 
 switchReaderAccount(): recent allowlisted provider continuation transferred once from guest, never private state. signInWithGoogle stores pendingAuthActionAt; differing-user initial/token events use full account reset.
+
+## 2026-11-09 — Neutral setup recovery and provider-aware guidance
+
+providerSyncCopy(): plain supported-provider help text from actual feature gates, neutral when none. Reader getSupabase/init now require validated bootstrap status; HTML guard recovers independently of settings/bootstrap resource loading. Membership subscribe/wrong-account copy filters disabled providers.

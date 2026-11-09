@@ -361,3 +361,7 @@ Writer TestAccount controller: opt-in CONFIG.writerTestAccount; labels/account i
 ## 2026-11-09 — Scoped story decoration and neutral author defaults
 
 Forms.storyForm(): new/unspecified loader defaults to primary monogram. Legacy lightsaber/other saved choices remain available and unchanged.
+
+## 2026-11-09 — Neutral setup recovery and provider-aware guidance
+
+Admin/Writer CONFIGURED_SUPABASE requires successful shared validation. Dependency-free entrypoint fallback renders neutral setup when config/bootstrap/storage fails; no client is created from raw unvalidated config.
