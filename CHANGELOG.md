@@ -1885,3 +1885,7 @@ Added tested publicRoot/readerUrl helpers to js/subscription/site-settings.js an
 ## 2026-11-09 — Connect validated multi-site bootstrap
 
 Reader, Admin and Writer now load site-settings/site-bootstrap before clients. Repository site profiles own normalized identity/links; explicit backend pairing and public-root validation fail neutrally without a usable connection. Updated real configuration and template; added three bootstrap tests. Files: three HTML entrypoints, js/subscription/site-config.js, site-config.template.js, site-bootstrap.js, tests/site-bootstrap.test.js and overview/function indexes/state/changelog. 112 Node tests pass, including inline Writer syntax; bootstrap syntax checked. No DB/session changes. DB appearance overrides remain for subsequent ownership work.
+
+## 2026-11-09 — Repository identity authority
+
+Reader identity ownership: removed DB branding overrides, changed missing-name fallback to Reader, and made Admin identity fields explicitly repo-managed/read-only with a no-write legacy action. Files: js/subscription/config.js, admin.html, index.html (config cache version), tests/site-identity-ownership.test.js, overview/function indexes/state/changelog. 114 tests pass and config syntax check passes. No schema changes or deletion of stored identity rows.

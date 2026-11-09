@@ -60,7 +60,7 @@ const DEFAULT_DATA = {
 };
 const D = window.DATA && typeof window.DATA === "object" ? Object.assign(DEFAULT_DATA, window.DATA) : DEFAULT_DATA;
 window.DATA = D;
-let SITE_NAME = CONFIG.siteName || "EvilArchives";
+let SITE_NAME = CONFIG.siteName || "Reader";
 let SITE_TAGLINE = CONFIG.siteTagline || "Premium serial fiction member library";
 let SITE_META_DESCRIPTION = CONFIG.metaDescription || "Premium member fiction reader. Read serial fiction, manage access, and continue across the member library.";
 const MAIN_ARCHIVE_URL = LINKS.mainArchiveUrl || "";
@@ -77,11 +77,7 @@ function settingText(value, fallback){
 function applySiteSettings(rows){
   const byKey = {};
   (Array.isArray(rows) ? rows : []).forEach(row => { if (row && row.setting_key) byKey[row.setting_key] = row.setting_value; });
-  const identity = byKey.site_identity && typeof byKey.site_identity === "object" ? byKey.site_identity : {};
   const readerBehavior = byKey.reader_behavior && typeof byKey.reader_behavior === "object" ? byKey.reader_behavior : {};
-  SITE_NAME = settingText(identity.siteName || identity.site_name || byKey.site_name, SITE_NAME);
-  SITE_TAGLINE = settingText(identity.siteTagline || identity.site_tagline || byKey.site_tagline, SITE_TAGLINE);
-  SITE_META_DESCRIPTION = settingText(identity.metaDescription || identity.meta_description || byKey.meta_description, SITE_META_DESCRIPTION);
   if (Object.prototype.hasOwnProperty.call(readerBehavior, "enableReaderGuides")) {
     READER_BEHAVIOR.enableReaderGuides = !!readerBehavior.enableReaderGuides;
     FEATURES.enableReaderGuides = READER_BEHAVIOR.enableReaderGuides;
@@ -96,7 +92,7 @@ function applySiteSettings(rows){
   const ornateAfter = Number(readerBehavior.ornateSystemDialogAfterChapter ?? readerBehavior.ornate_system_dialog_after_chapter);
   if (Number.isFinite(ornateAfter) && ornateAfter >= 0) READER_BEHAVIOR.ornateSystemDialogAfterChapter = Math.floor(ornateAfter);
   applyAppBackground();
-  document.title = settingText(identity.pageTitle || identity.page_title, SITE_NAME);
+  document.title = SITE_NAME;
   const meta = document.querySelector('meta[name="description"]');
   if (meta) meta.setAttribute("content", SITE_META_DESCRIPTION);
 }

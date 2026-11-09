@@ -325,3 +325,7 @@ Generated from the current codebase. One-line descriptions are intentionally con
 - `ContextWorkspace.load(storyId)` joins summary lifecycle state and includes legacy or accepted summaries while excluding managed drafts and archived summaries.
 
 2026-11-09: Admin now runs shared site-bootstrap.js before its inline SUPABASE CLIENT section; invalid pairing clears connection config so existing setup-required handling prevents client creation. No CMS write behavior changed.
+
+## 2026-11-09 — Repository identity authority
+
+Forms.saveSiteIdentity(): retired write path, now explains repo ownership without database mutation. Views.settings identity card renders repository values read-only; existing generic settings table remains legacy/operational JSON management.

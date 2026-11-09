@@ -362,3 +362,7 @@ The standalone settings foundation also exposes publicRoot/readerUrl for explici
 ## 2026-11-09 — Shared configuration bootstrap connected
 
 All three entrypoints now load site-config, site-settings, then site-bootstrap before creating clients. site-config defines explicit siteKey/siteProfiles with independently specified expected backendUrl, repository identity and links. Bootstrap publishes a normalized compatibility SUBSCRIPTION_SITE_CONFIG snapshot; invalid/missing pairs or roots remove connection settings and use neutral identity. SITE_CONFIGURATION_STATUS records setup errors. The resolver is no longer unwired. Existing DB identity/appearance overrides still require the next ownership migration; static titles, browser state and tier UI are not yet isolated. Templates must configure both connection and expected profile backend deliberately.
+
+## 2026-11-09 — Repository identity authority
+
+Reader applySiteSettings no longer applies site_identity/site_name/site_tagline/meta_description or pageTitle from Supabase. Repository identity is authoritative. Operational reader_behavior remains applied, including existing presentation behavior fields pending the next classification pass. Admin identity card is read-only, displays repository config and explains deployment editing; legacy saveSiteIdentity only reports ownership, never writes. Legacy DB identity rows remain untouched.
