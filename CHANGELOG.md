@@ -1982,3 +1982,7 @@ Added author request-lifetime guard and integrated both authoring clients/accoun
 ## 2026-11-09 — Story appearance ownership completed
 
 Completed story appearance ownership across normalized config/reader and Admin forms/writes. Files: settings/bootstrap/config/backend, admin and three HTML cache versions, story/settings tests, overview/indexes/state/changelog. 162 tests, settings/backend syntax and source preflight pass. Source appearance verified by restricted SELECT only; no DB writes.
+
+## 2026-11-09 — Independent backup targets and Admin selection validation
+
+Added isolated backup target parameters/no-operation validation while preserving scheduled-source defaults; normalized stale Admin story selection against current real catalog. Files: scripts/database/backup-supabase.ps1, admin.html, backup/admin selection tests, database safety/deployment/overview/admin index/state/changelog. 167 tests pass including PowerShell validation-only cases; no backup/credential/network operations or DB changes.

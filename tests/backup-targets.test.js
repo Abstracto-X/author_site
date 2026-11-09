@@ -1,0 +1,7 @@
+const test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),{spawnSync}=require('node:child_process');
+const root=path.join(__dirname,'..');const script=path.join(root,'scripts/database/backup-supabase.ps1');
+function validate(extra=[]){return spawnSync('powershell',['-NoProfile','-ExecutionPolicy','Bypass','-File',script,'-ValidateOnly',...extra],{encoding:'utf8'});}
+test('backup validation preserves scheduled-source defaults without reading credentials or making backups',()=>{const r=validate();assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/No filesystem, credentials or database accessed/);});
+test('additional projects cannot accidentally inherit source credentials or backup roots',()=>{const r=validate(['-ProjectRef','aaaaaaaaaaaaaaaaaaaa']);assert.notEqual(r.status,0);assert.match(r.stderr,/explicit DatabaseHost/);});
+test('explicit isolated target validates without network or filesystem mutation',()=>{const ref='aaaaaaaaaaaaaaaaaaaa';const r=validate(['-ProjectRef',ref,'-DatabaseHost','aws-1-ap-south-1.pooler.supabase.com','-CredentialPath',`C:\\Private\\${ref}.xml`,'-DestinationRoots',`C:\\Backups\\${ref}`]);assert.equal(r.status,0,r.stderr);});
+test('backup validation rejects a drive root before any real operations',()=>{const r=validate(['-DestinationRoots','C:\\']);assert.notEqual(r.status,0);assert.match(r.stderr,/not a backup destination/);});

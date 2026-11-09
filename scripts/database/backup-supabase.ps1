@@ -1,25 +1,44 @@
 [CmdletBinding()]
 param(
+    [ValidatePattern('^[a-z0-9]{20}$')][string]$ProjectRef = "cqgrulawpwkrdvxagzez",
+    [ValidatePattern('^[a-z0-9.-]+$')][string]$DatabaseHost = "aws-1-ap-south-1.pooler.supabase.com",
+    [ValidateRange(1,65535)][int]$DatabasePort = 5432,
+    [switch]$ValidateOnly,
     [string]$CredentialPath = "$env:LOCALAPPDATA\AuthorSiteSafeguards\supabase-backup.credential.xml",
     [string[]]$DestinationRoots = @(
         "A:\Author Site Backups",
         "G:\My Drive\Author Site Backups"
     ),
-    [int]$RetentionDays = 30,
+    [ValidateRange(1,3650)][int]$RetentionDays = 30,
     [string]$PostgresBin = "$env:USERPROFILE\scoop\apps\postgresql\current\bin"
 )
 
 $ErrorActionPreference = "Stop"
-$projectRef = "cqgrulawpwkrdvxagzez"
-$databaseHost = "aws-1-ap-south-1.pooler.supabase.com"
-$databasePort = 5432
+# Keep existing scheduled-source defaults; additional targets must be explicit and isolated.
+$sourceProjectRef = "cqgrulawpwkrdvxagzez"
+if ($ProjectRef -ne $sourceProjectRef) {
+    foreach ($parameter in @('DatabaseHost', 'CredentialPath', 'DestinationRoots')) {
+        if (-not $PSBoundParameters.ContainsKey($parameter)) { throw "Additional projects require explicit $parameter." }
+    }
+    if (-not $CredentialPath.Contains($ProjectRef)) { throw 'Target credential path must include its project reference.' }
+}
+if (-not $DestinationRoots -or $DestinationRoots.Count -eq 0) { throw 'At least one dedicated backup destination is required.' }
+foreach ($root in $DestinationRoots) {
+    if (-not [System.IO.Path]::IsPathRooted($root)) { throw 'Backup destinations must be absolute.' }
+    $fullRoot = [System.IO.Path]::GetFullPath($root).TrimEnd('\')
+    if ($fullRoot -eq [System.IO.Path]::GetPathRoot($fullRoot).TrimEnd('\')) { throw 'A drive/share root is not a backup destination.' }
+    if ($ProjectRef -ne $sourceProjectRef -and [System.IO.Path]::GetFileName($fullRoot) -ne $ProjectRef) {
+        throw 'Additional-project destination leaf must equal its project reference.'
+    }
+}
+if ($ValidateOnly) { Write-Output 'Backup target configuration validated. No filesystem, credentials or database accessed.'; return }
 $databaseName = "postgres"
 $databaseUser = "postgres.$projectRef"
 $runName = Get-Date -Format "yyyy-MM-dd_HHmmss"
-$workingRoot = Join-Path $env:TEMP "AuthorSiteSupabaseBackup"
+$workingRoot = Join-Path $env:TEMP "AuthorSiteSupabaseBackup\$ProjectRef"
 $workingDirectory = Join-Path $workingRoot $runName
 $logPath = Join-Path $workingDirectory "backup.log"
-$persistentLogRoot = Join-Path $env:LOCALAPPDATA "AuthorSiteSafeguards\logs"
+$persistentLogRoot = if ($ProjectRef -eq $sourceProjectRef) { Join-Path $env:LOCALAPPDATA "AuthorSiteSafeguards\logs" } else { Join-Path $env:LOCALAPPDATA "AuthorSiteSafeguards\$ProjectRef\logs" }
 $persistentLogPath = Join-Path $persistentLogRoot "backup-job.log"
 
 function Write-BackupLog {

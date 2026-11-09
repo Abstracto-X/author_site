@@ -458,3 +458,7 @@ Admin/Writer load js/author-session.js shared request-lifetime primitive after s
 ## 2026-11-09 — Story appearance ownership completed
 
 Repository storyPresentation keyed by real story ID owns accent/accent2 and supported loaderTheme. colorPair ignores legacy DB styling columns and uses current profile mapping or shared palette. Admin storyForm displays repo appearance disabled/labelled; story content saves omit theme_color/loader_theme, preserving stored legacy values and cover/background/media workflows. Source mapping preserves verified #ffd700/lightsaber; new/unknown stories remain generic.
+
+## 2026-11-09 — Independent backup targets and Admin selection validation
+
+Admin resolveAdminStoryId validates saved selection against each freshly loaded story catalog, falling back to first actual story or null. Backup helper now accepts independently isolated operational targets; source schedule defaults preserved, with no-operation ValidateOnly. See database safety/deployment docs.

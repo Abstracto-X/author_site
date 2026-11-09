@@ -80,3 +80,7 @@ roots and that `manifest.json` lists three validated archives.
 Do not restore directly over production. Restore into a new/local Supabase
 project first using `pg_restore`, verify row counts and authentication data, and
 only then decide whether a production recovery is necessary.
+
+## 2026-11-09 — Independent backup targets and Admin selection validation
+
+Backup script supports ProjectRef/DatabaseHost/DatabasePort and ValidateOnly. Existing source schedule defaults stay intact. Any non-source target must explicitly supply host, credential path containing its project ref, and destination roots whose final directory equals that ref. Drive/share root destinations are rejected. Temp and additional-target logs are namespaced; source persistent log location unchanged. ValidateOnly returns before directory creation, credential import, database connection or retention. AI may run validation only, not privileged backup credential workflows.

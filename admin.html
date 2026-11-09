@@ -1206,6 +1206,9 @@
         // ==============================================
         // STATE
         // ==============================================
+        function resolveAdminStoryId(stories, savedId) {
+            return stories.find(story => story.id === savedId)?.id || stories[0]?.id || null;
+        }
         const ADMIN_VIEW_NAMES = new Set(['dashboard', 'stories', 'chapters', 'rollingAccess', 'readers', 'community', 'storyExtras', 'characters', 'gallery', 'wallpapers', 'lore', 'timeline', 'maps', 'mapRequests', 'access', 'settings', 'profile']);
         const requestedAdminView = new URLSearchParams(window.location.search).get('view');
 
@@ -4215,6 +4218,7 @@
             stories: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 container.innerHTML = `
                     <div class="page-header">
@@ -4265,6 +4269,7 @@
             chapters: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4274,7 +4279,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const [chapters, tiers] = await Promise.all([
                     DB.getChapters(State.selectedStoryId),
                     DB.getAccessTiers().catch(() => [])
@@ -4337,6 +4342,7 @@
             characters: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4346,7 +4352,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const characters = await DB.getCharacters(State.selectedStoryId);
 
                 container.innerHTML = `
@@ -4399,6 +4405,7 @@
             gallery: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4408,7 +4415,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const characters = await DB.getCharacters(State.selectedStoryId);
                 State.characters = characters;
 
@@ -4629,6 +4636,7 @@
             wallpapers: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4638,7 +4646,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const wallpapers = await DB.getWallpapers(State.selectedStoryId);
 
                 container.innerHTML = `
@@ -4678,6 +4686,7 @@
             lore: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4687,7 +4696,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const entries = await DB.getLoreEntries(State.selectedStoryId);
 
                 container.innerHTML = `
@@ -4740,6 +4749,7 @@
             timeline: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4749,7 +4759,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const events = await DB.getTimelineEvents(State.selectedStoryId);
 
                 container.innerHTML = `
@@ -4802,6 +4812,7 @@
             maps: async (container) => {
                 const stories = await DB.getStories();
                 State.stories = stories;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
 
                 if (stories.length === 0) {
                     container.innerHTML = `
@@ -4811,7 +4822,7 @@
                     return;
                 }
 
-                State.selectedStoryId = State.selectedStoryId || stories[0].id;
+                State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
                 const maps = await DB.getMaps(State.selectedStoryId);
 
                 container.innerHTML = `
@@ -5306,7 +5317,7 @@
                 container.innerHTML = `<div class="page-header"><div><h1 class="page-title">Writer / Chapters</h1></div></div><div class="glass-card"><p style="text-align:center;color:#666">Create a story first to add chapters.</p></div>`;
                 return;
             }
-            State.selectedStoryId = State.selectedStoryId || stories[0].id;
+            State.selectedStoryId = resolveAdminStoryId(stories, State.selectedStoryId);
             State.writerPanel = State.writerPanel || 'write';
             if (State.writerPanel === 'details') State.writerPanel = 'write';
             const [chapters, tiers] = await Promise.all([DB.getChapters(State.selectedStoryId), DB.getAccessTiers().catch(() => [])]);

@@ -27,3 +27,7 @@ Owner-led QA: both identities, guest/free/paid/expired/admin; renamed/new/disabl
 Old unscoped author drafts are retained, not assigned an account automatically. Source Admin Settings can download their private JSON backup for owner review/manual restoration; never publish an export automatically. Guest legacy reader state is not claimed by a signed-in account. Confirm account preferences and synced backend progress before rollout.
 
 Deploy a reviewed release plus the intended public config and retain previous release/config for rollback. Do not roll back or delete content/DB rows as an application rollback. Only cut over Abstracto routing/homepage after its explicit verification and owner review.
+
+## 2026-11-09 — Independent backup targets and Admin selection validation
+
+Additional backup validation: pass -ProjectRef <20-character-ref> -DatabaseHost <pooler-host> -CredentialPath <absolute-private-path-containing-ref> -DestinationRoots <dedicated-path-ending-in-ref> -ValidateOnly to scripts/database/backup-supabase.ps1. Owner configures credentials/scheduler separately. Do not remove ValidateOnly during AI setup checks. No second project is configured automatically.

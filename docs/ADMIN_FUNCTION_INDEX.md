@@ -373,3 +373,7 @@ Admin/Writer createClient global.fetch is AuthorSession.fetch. Auth.loadProfile/
 ## 2026-11-09 — Story appearance ownership completed
 
 Forms.storyForm(): disabled repo-managed color/loader display from storyPresentation; content save omits legacy appearance columns. Covers/background uploads and content/publication remain unchanged.
+
+## 2026-11-09 — Independent backup targets and Admin selection validation
+
+resolveAdminStoryId(stories,savedId): retain only current catalog ID, else first real story/null. All State.stories assignment paths normalize selection, including empty catalogs; no stale truthy ID fallback.
