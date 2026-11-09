@@ -1922,3 +1922,7 @@ Separated reader saved state by guest/account within existing site/backend scope
 ## 2026-11-09 — Stale reader notification/community guards
 
 Guarded stale reader notification/community completions across account-local store changes; reset community loaded flags on account transition. Files: backend.js, state.js, index.html cache versions, tests/reader-stale-notifications.test.js and overview/reader index/state/changelog. 130 tests pass including six delayed preference/notification cases; no DB changes.
+
+## 2026-11-09 — Library and gallery account response isolation
+
+Prevented old-account library catalogs/errors applying after store transition, queued pending force reloads, and guarded gallery personal-vote responses. Files: backend.js, state.js, index.html cache versions, stale notification/library tests and overview/reader index/state/changelog. 131 tests and backend syntax pass. No DB changes.

@@ -367,9 +367,13 @@ async function loadOptionalBackendRows(label, requestFactory){
     return [];
   }
 }
+let backendReloadRequested = false;
 async function loadBackendLibrary(options = {}){
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   const client = getSupabase();
   if (!client || backendState.loading) {
+    if (client && options.force) backendReloadRequested = true;
     if (!client) {
       backendState.error = new Error(configuredSupabase() && (!window.supabase || !window.supabase.createClient)
         ? "The local Supabase reader dependency did not load. Reload the page or verify vendor/supabase on the deployed site."
@@ -458,6 +462,7 @@ async function loadBackendLibrary(options = {}){
         .filter(w => w.story_id === story.id)
         .map(w => ({ id: w.id, image_url: w.image_url, name: w.label || "" }));
     }));
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return false;
     if (stories.length) {
       D.STORIES = stories;
       D.UPDATES = buildBackendUpdates(stories);
@@ -516,6 +521,7 @@ async function loadBackendLibrary(options = {}){
       return false;
     }
   } catch (err) {
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return false;
     backendState.error = err;
     console.error("Subscription backend library load failed; no local content fallback will be used.", err);
     backendState.usingFixtures = false;
@@ -528,6 +534,12 @@ async function loadBackendLibrary(options = {}){
     return false;
   } finally {
     backendState.loading = false;
+    if (backendReloadRequested || store !== requestStore || (authState.user?.id || null) !== requestUserId) {
+      backendReloadRequested = false;
+      window.setTimeout(() => loadBackendLibrary({ force:true }).then(() => {
+        if (typeof render === 'function') render({ preserveScroll:true });
+      }).catch(err => console.warn('Deferred library refresh failed', err)), 0);
+    }
   }
 }
 
@@ -783,6 +795,8 @@ async function incrementChapterViews(chapterId) {
 
 /* ============ Gallery & Voting Bridge ============ */
 async function fetchGalleryVotes(imageIds) {
+  const requestStore = store;
+  const requestUserId = authState.user?.id || null;
   if (!imageIds || !imageIds.length) return {};
   const client = getSupabase();
   if (!client) return {};
@@ -792,6 +806,7 @@ async function fetchGalleryVotes(imageIds) {
       .select("image_id, user_id, vote_value")
       .in("image_id", imageIds);
     if (error) throw error;
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return {};
     const voteMap = {};
     const uid = authState.user ? authState.user.id : null;
     (data || []).forEach(row => {
@@ -813,6 +828,7 @@ async function fetchGalleryVotes(imageIds) {
 }
 
 async function submitGalleryVote(imageId, value) {
+  const requestStore = store;
   const client = getSupabase();
   if (!client || !authState.user) {
     throw new Error("Please sign in to vote on artwork.");
@@ -838,7 +854,9 @@ async function submitGalleryVote(imageId, value) {
         );
       if (error) throw error;
     }
+    if (store !== requestStore || authState.user?.id !== uid) return null;
     await fetchGalleryVotes([imageId]);
+    if (store !== requestStore || authState.user?.id !== uid) return null;
     return State.imageVotes[imageId];
   } catch (err) {
     console.error("Failed to submit vote:", err);

@@ -568,3 +568,7 @@ readerStoreKey(): selects guest versus account-specific state key. switchReaderA
 ## 2026-11-09 — Stale reader notification/community guards
 
 loadNotificationPreferences/saveNotificationPreferences/loadReaderNotifications and loadChapterCommunity/postChapterComment/saveChapterReaction capture requestStore/requestUserId and reject stale application. switchReaderAccount resets community commentsLoaded/reactionsLoaded. Server writes are not cancelled by these guards.
+
+## 2026-11-09 — Library and gallery account response isolation
+
+loadBackendLibrary(options): coalesces forced reload during loading and guards stale catalogs/errors before shared-data application. fetchGalleryVotes/submitGalleryVote: guard captured account/store; switchReaderAccount clears personal vote cache.

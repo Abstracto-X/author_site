@@ -8,3 +8,11 @@ for(const name of ['loadNotificationPreferences','saveNotificationPreferences','
  const pending=vm.runInContext(`${name}({browser_enabled:true,email_enabled:true})`,c);c.authState.user={id:nextId};c.store=fresh();release({data:name==='loadReaderNotifications'?[{id:'old'}]:{browser_enabled:true},error:null});await pending;
  assert.equal(c.store.notificationPrefs,null);assert.deepEqual(c.store.notifs,[]);assert.equal(saves,0);
 });
+test('library drops obsolete catalogs and queues one latest-account reload instead of overwriting current data',async()=>{
+ let release;const wait=new Promise(r=>release=r);const queued=[];
+ const c={store:{},authState:{user:{id:'alice'}},backendState:{loading:false},D:{STORIES:['current']},getSupabase:()=>({}),loadSiteSettings:async()=>{},loadOptionalBackendRows:async()=>[],runBackendRequest:()=>wait,normalizeBackendStory:x=>x,console,window:{setTimeout:fn=>queued.push(fn)}};vm.createContext(c);
+ const start=source.indexOf('let backendReloadRequested =');const end=source.indexOf('\nfunction normalizeNotification',start);vm.runInContext(source.slice(start,end),c);
+ const pending=vm.runInContext('loadBackendLibrary()',c);await vm.runInContext('loadBackendLibrary({force:true})',c);
+ c.store={};c.authState.user={id:'bob'};release([]);await pending;
+ assert.deepEqual(c.D.STORIES,['current']);assert.equal(c.backendState.loading,false);assert.equal(queued.length,1);
+});

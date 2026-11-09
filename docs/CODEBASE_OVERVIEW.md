@@ -398,3 +398,7 @@ Reader state.js now chooses a guest legacy-compatible state key or reader-accoun
 ## 2026-11-09 — Stale reader notification/community guards
 
 Notification preference reads/saves and notification list reads capture initiating user ID and store object; late results cannot mutate a replacement account store, including A→B→A. Community comment/reaction load and post-write refresh paths use the same capture guard. switchReaderAccount clears community loaded flags so another account does not reuse cached loaded status. These guards do not cancel or roll back server mutations already sent.
+
+## 2026-11-09 — Library and gallery account response isolation
+
+loadBackendLibrary captures initiating store/user, discards stale success/error and schedules one current-account force reload after finishing if an account transition or queued force request occurred. A force request during loading sets backendReloadRequested instead of disappearing. Gallery vote reads/writes reject stale store/user completion; switchReaderAccount clears imageVotes. This does not cancel already submitted writes.

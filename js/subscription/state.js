@@ -56,6 +56,7 @@ function switchReaderAccount(userId){
   saveStore();
   readerStoreAccount = next;
   loadStore();
+  if (typeof State !== 'undefined') State.imageVotes = {};
   if (typeof communityState !== 'undefined') {
     communityState.commentsLoaded = {};
     communityState.reactionsLoaded = {};
