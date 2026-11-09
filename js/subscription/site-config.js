@@ -4,6 +4,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     "evilarchives": {
       backendUrl: "https://cqgrulawpwkrdvxagzez.supabase.co",
       identity: { siteName: "EvilArchives", siteTagline: "Premium serial fiction archive" },
+      appearance: { enableAppBackground: true, appBackgroundUrl: "", enableOrnateSystemDialog: true, ornateSystemDialogAfterChapter: 70 },
       links: {
         patreonUrl: "https://www.patreon.com/cw/HornyShitler",
         boostyUrl: "https://boosty.to/hornyshitler"

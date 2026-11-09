@@ -54,7 +54,23 @@
         if (normalized === null) return neutral('invalid_links');
         links[key] = normalized;
       }
-      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links };
+      var appearance = { appBackgroundUrl: '', enableAppBackground: true, enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 };
+      if (profile.appearance !== undefined && !object(profile.appearance)) return neutral('invalid_appearance');
+      var a = profile.appearance || {};
+      for (var flag of ['enableAppBackground', 'enableOrnateSystemDialog']) {
+        if (a[flag] !== undefined && typeof a[flag] !== 'boolean') return neutral('invalid_appearance');
+        if (a[flag] !== undefined) appearance[flag] = a[flag];
+      }
+      if (a.appBackgroundUrl !== undefined) {
+        var background = link(a.appBackgroundUrl);
+        if (background === null) return neutral('invalid_appearance');
+        appearance.appBackgroundUrl = background;
+      }
+      if (a.ornateSystemDialogAfterChapter !== undefined) {
+        if (!Number.isInteger(a.ornateSystemDialogAfterChapter) || a.ornateSystemDialogAfterChapter < 0) return neutral('invalid_appearance');
+        appearance.ornateSystemDialogAfterChapter = a.ornateSystemDialogAfterChapter;
+      }
+      return { ok: true, siteKey: siteKey, backendUrl: backendUrl, identity: identity, links: links, appearance: appearance };
     } catch (_) {
       return neutral('invalid_input');
     }

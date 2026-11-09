@@ -1170,9 +1170,9 @@
     </div>
 
     <!-- SITE CONFIG + SUPABASE SDK -->
-    <script src="js/subscription/site-config.js?v=20261109.2"></script>
-    <script src="js/subscription/site-settings.js?v=20261109.2"></script>
-    <script src="js/subscription/site-bootstrap.js?v=20261109.2"></script>
+    <script src="js/subscription/site-config.js?v=20261109.4"></script>
+    <script src="js/subscription/site-settings.js?v=20261109.4"></script>
+    <script src="js/subscription/site-bootstrap.js?v=20261109.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -3882,7 +3882,7 @@
                         <input type="text" class="form-input" id="f-setting_key" value="${Utils.escapeAttr(setting.setting_key)}" placeholder="e.g., site_title">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Setting Value (JSON) *</label>
+                        <p>Identity and appearance values in legacy settings are not used by the reader. Edit siteProfiles in the repository for those fields. reader_behavior only controls guides, external fallback URL and provider note.</p><label class="form-label">Setting Value (JSON) *</label>
                         <textarea class="form-textarea" id="f-setting_value" style="font-family:monospace; min-height:200px;">${Utils.escapeHtml(JSON.stringify(setting.setting_value, null, 2))}</textarea>
                     </div>
                 `;
@@ -3930,14 +3930,13 @@
                     UI.showLoading();
                     const behavior = {
                         enableReaderGuides: document.getElementById('f-enable-reader-guides').checked,
-                        enableOrnateSystemDialog: document.getElementById('f-enable-ornate-system-dialog').checked,
-                        ornateSystemDialogAfterChapter: Math.max(0, parseInt(document.getElementById('f-ornate-system-dialog-after').value, 10) || 0),
+
                         globalExternalUrl: document.getElementById('f-global-external-url').value.trim(),
                         providerNote: document.getElementById('f-provider-note').value.trim(),
-                        enableAppBackground: document.getElementById('f-enable-app-background').checked,
-                        appBackgroundUrl: document.getElementById('f-app-background-url').value.trim()
+
                     };
-                    await DB.upsertSettingByKey('reader_behavior', behavior);
+                    const existing = (await DB.getSettings()).find(row => row.setting_key === 'reader_behavior')?.setting_value;
+                    await DB.upsertSettingByKey('reader_behavior', Object.assign({}, existing && typeof existing === 'object' ? existing : {}, behavior));
                     UI.showToast('Reader behavior defaults saved.');
                     Views.render('settings');
                 } catch (err) {
@@ -4988,7 +4987,7 @@
                 const siteTagline = ADMIN_SITE_CONFIG.siteTagline || '';
                 const pageTitle = siteName;
                 const metaDescription = ADMIN_SITE_CONFIG.metaDescription || '';
-                const behavior = settings.find(s => s.setting_key === 'reader_behavior')?.setting_value || {};
+                const behavior = Object.assign({}, settings.find(s => s.setting_key === 'reader_behavior')?.setting_value || {}, ADMIN_SITE_CONFIG.appearance || {});
                 const ornateDialogAfter = Number.isFinite(Number(behavior.ornateSystemDialogAfterChapter))
                     ? Math.max(0, Math.floor(Number(behavior.ornateSystemDialogAfterChapter)))
                     : 70;
@@ -5030,7 +5029,7 @@
                     </div>
                     <div class="glass-card" style="margin-bottom:1.5rem;">
                         <div class="card-header">
-                            <h3 class="card-title">Subscription Behavior Defaults</h3>
+                            <h3 class="card-title">Subscription Behavior Defaults</h3><p>Disabled appearance fields are repository-managed in siteProfiles; saving changes only operational fields.</p>
                             <span style="color:#777;font-size:0.78rem;">Backed by <code>site_settings.reader_behavior</code></span>
                         </div>
                         <div class="form-row">
@@ -5048,13 +5047,13 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-checkbox">
-                                    <input type="checkbox" id="f-enable-app-background" ${behavior.enableAppBackground !== false ? 'checked' : ''}>
+                                    <input type="checkbox" disabled title="Repository-managed appearance: edit siteProfiles" id="f-enable-app-background" ${behavior.enableAppBackground !== false ? 'checked' : ''}>
                                     Enable reader background image
                                 </label>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Reader background image URL</label>
-                                <input class="form-input" id="f-app-background-url" value="${Utils.escapeAttr(behavior.appBackgroundUrl || '')}" placeholder="https://...">
+                                <input class="form-input" disabled title="Repository-managed appearance: edit siteProfiles" id="f-app-background-url" value="${Utils.escapeAttr(behavior.appBackgroundUrl || '')}" placeholder="https://...">
                             </div>
                         </div>
                         <div class="form-group">
@@ -5064,14 +5063,14 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-checkbox">
-                                    <input type="checkbox" id="f-enable-ornate-system-dialog" ${behavior.enableOrnateSystemDialog !== false ? 'checked' : ''}>
+                                    <input type="checkbox" disabled title="Repository-managed appearance: edit siteProfiles" id="f-enable-ornate-system-dialog" ${behavior.enableOrnateSystemDialog !== false ? 'checked' : ''}>
                                     Enable ornate system dialogue after the cutoff
                                 </label>
                                 <small style="color:#777">Earlier chapters keep the current system-message artwork.</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Use ornate dialogue after chapter</label>
-                                <input class="form-input" id="f-ornate-system-dialog-after" type="number" min="0" step="1" value="${ornateDialogAfter}">
+                                <input class="form-input" disabled title="Repository-managed appearance: edit siteProfiles" id="f-ornate-system-dialog-after" type="number" min="0" step="1" value="${ornateDialogAfter}">
                                 <small style="color:#777">With 70, Chapters 1–70 use the current design; Chapter 71 onward uses the ornate frame.</small>
                             </div>
                         </div>

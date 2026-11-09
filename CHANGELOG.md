@@ -1889,3 +1889,8 @@ Reader, Admin and Writer now load site-settings/site-bootstrap before clients. R
 ## 2026-11-09 — Repository identity authority
 
 Reader identity ownership: removed DB branding overrides, changed missing-name fallback to Reader, and made Admin identity fields explicitly repo-managed/read-only with a no-write legacy action. Files: js/subscription/config.js, admin.html, index.html (config cache version), tests/site-identity-ownership.test.js, overview/function indexes/state/changelog. 114 tests pass and config syntax check passes. No schema changes or deletion of stored identity rows.
+
+## 2026-11-09 — Repository appearance boundary
+
+Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty), enableAppBackground, enableOrnateSystemDialog and ornateSystemDialogAfterChapter. Resolver validates and detaches these fields; missing profile appearance defaults to no ornate decoration. Existing source profile explicitly retains ornate cutoff 70. Bootstrap forwards appearance; config initializes from it and ignores DB appearance aliases. Story background/content upload workflows are unchanged. Admin disables appearance controls with repo-ownership labels; saveReaderBehavior updates only guides/external URL/provider note and preserves legacy/unknown stored values. Generic JSON editor explains ignored presentation values.
+Files: site-settings.js, site-bootstrap.js, site-config.js/template, config.js, three HTML entrypoints (cache versions/Admin), settings/ownership tests, overview/indexes/state/changelog. Validation: 115 tests and settings/config syntax pass; no schema change.

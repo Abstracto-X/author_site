@@ -16,10 +16,10 @@ const READER_BEHAVIOR = {
   enableReaderGuides: Object.prototype.hasOwnProperty.call(FEATURES, "enableReaderGuides") ? !!FEATURES.enableReaderGuides : true,
   globalExternalUrl: "",
   providerNote: "",
-  appBackgroundUrl: "",
-  enableAppBackground: true,
-  enableOrnateSystemDialog: true,
-  ornateSystemDialogAfterChapter: 70
+  appBackgroundUrl: CONFIG.appearance?.appBackgroundUrl || "",
+  enableAppBackground: CONFIG.appearance?.enableAppBackground !== false,
+  enableOrnateSystemDialog: CONFIG.appearance?.enableOrnateSystemDialog === true,
+  ornateSystemDialogAfterChapter: CONFIG.appearance?.ornateSystemDialogAfterChapter ?? 0
 };
 const DEFAULT_DATA = {
   STORIES: [],
@@ -84,13 +84,6 @@ function applySiteSettings(rows){
   }
   READER_BEHAVIOR.globalExternalUrl = settingText(readerBehavior.globalExternalUrl || readerBehavior.global_external_url, READER_BEHAVIOR.globalExternalUrl);
   READER_BEHAVIOR.providerNote = settingText(readerBehavior.providerNote || readerBehavior.provider_note, READER_BEHAVIOR.providerNote);
-  READER_BEHAVIOR.appBackgroundUrl = settingText(readerBehavior.appBackgroundUrl || readerBehavior.app_background_url, READER_BEHAVIOR.appBackgroundUrl);
-  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enableAppBackground")) READER_BEHAVIOR.enableAppBackground = !!readerBehavior.enableAppBackground;
-  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enable_app_background")) READER_BEHAVIOR.enableAppBackground = !!readerBehavior.enable_app_background;
-  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enableOrnateSystemDialog")) READER_BEHAVIOR.enableOrnateSystemDialog = !!readerBehavior.enableOrnateSystemDialog;
-  if (Object.prototype.hasOwnProperty.call(readerBehavior, "enable_ornate_system_dialog")) READER_BEHAVIOR.enableOrnateSystemDialog = !!readerBehavior.enable_ornate_system_dialog;
-  const ornateAfter = Number(readerBehavior.ornateSystemDialogAfterChapter ?? readerBehavior.ornate_system_dialog_after_chapter);
-  if (Number.isFinite(ornateAfter) && ornateAfter >= 0) READER_BEHAVIOR.ornateSystemDialogAfterChapter = Math.floor(ornateAfter);
   applyAppBackground();
   document.title = SITE_NAME;
   const meta = document.querySelector('meta[name="description"]');

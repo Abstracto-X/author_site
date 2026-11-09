@@ -4,6 +4,7 @@ window.SUBSCRIPTION_SITE_CONFIG = {
     "your-site": {
       backendUrl: "https://YOUR_PROJECT_REF.supabase.co",
       identity: { siteName: "Member Fiction Reader", siteTagline: "Premium serial fiction archive" },
+      appearance: { enableAppBackground: true, appBackgroundUrl: "", enableOrnateSystemDialog: false, ornateSystemDialogAfterChapter: 0 },
       links: {
       }
     }

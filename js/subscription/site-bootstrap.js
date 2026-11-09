@@ -20,6 +20,7 @@
     publicBaseUrl: root,
     supabase: { url: result.backendUrl, anonKey: source.supabase.anonKey },
     links: result.links,
+    appearance: result.appearance,
     auth: Object.assign({}, source.auth),
     providers: Object.assign({}, source.providers),
     features: Object.assign({}, source.features)

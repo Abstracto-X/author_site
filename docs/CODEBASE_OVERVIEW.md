@@ -366,3 +366,7 @@ All three entrypoints now load site-config, site-settings, then site-bootstrap b
 ## 2026-11-09 — Repository identity authority
 
 Reader applySiteSettings no longer applies site_identity/site_name/site_tagline/meta_description or pageTitle from Supabase. Repository identity is authoritative. Operational reader_behavior remains applied, including existing presentation behavior fields pending the next classification pass. Admin identity card is read-only, displays repository config and explains deployment editing; legacy saveSiteIdentity only reports ownership, never writes. Legacy DB identity rows remain untouched.
+
+## 2026-11-09 — Repository appearance boundary
+
+Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty), enableAppBackground, enableOrnateSystemDialog and ornateSystemDialogAfterChapter. Resolver validates and detaches these fields; missing profile appearance defaults to no ornate decoration. Existing source profile explicitly retains ornate cutoff 70. Bootstrap forwards appearance; config initializes from it and ignores DB appearance aliases. Story background/content upload workflows are unchanged. Admin disables appearance controls with repo-ownership labels; saveReaderBehavior updates only guides/external URL/provider note and preserves legacy/unknown stored values. Generic JSON editor explains ignored presentation values.
