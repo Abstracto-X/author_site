@@ -337,3 +337,7 @@ Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty
 ## 2026-11-09 — Neutral startup and destination reader links
 
 Admin static login/sidebar/title are neutral Reader until repository identity loads; bootstrap assigns identity Admin title immediately. No CMS persistence changed.
+
+## 2026-11-09 — Authoring site storage namespaces
+
+Admin State selection persistence, chapter draft buffers and UI background use AppStorage (site/backend-scoped adapter). Admin draft access is not yet account-scoped. Old unscoped buffers remain untouched and need explicit recovery, not silent import.

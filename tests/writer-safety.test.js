@@ -367,7 +367,7 @@ test('context block edits made during a save stay open and unsaved', async () =>
         runWriterMutation: () => new Promise(resolve => { resolveSave = resolve; }),
         document: { getElementById: id => elements[id] || null },
         UI: { showToast() {} }, Editor: { markSaveFailed() {} },
-        localStorage: { getItem: () => null }
+        AppStorage: { getItem: () => null }
     };
     vm.createContext(context);
     vm.runInContext(`${source}\nthis.workspace = ContextWorkspace;`, context);
@@ -398,7 +398,7 @@ test('definite preset RPC failure leaves the old displayed selection untouched',
             return { data: null, error: new Error('Invalid item') };
         },
         UI: { showToast() {} }, Editor: { markSaveFailed() {} },
-        localStorage: { getItem: () => null }
+        AppStorage: { getItem: () => null }
     };
     vm.createContext(context);
     vm.runInContext(`${source}\nthis.workspace = ContextWorkspace;`, context);
@@ -428,7 +428,7 @@ function presetRpcHarness({ refreshAvailable = true } = {}) {
         runWriterMutation: async () => ({ data: { id: 'new-preset' }, error: null }),
         UI: { showToast: message => messages.push(message) },
         Editor: { markSaveFailed() {} },
-        localStorage: { getItem: () => null },
+        AppStorage: { getItem: () => null },
         prompt: () => 'Preset Copy'
     };
     vm.createContext(context);
@@ -527,7 +527,7 @@ test('Context chapter Open stays in Context and chapter Copy uses original conte
     const context = {
         State: { activeStoryId: 'story' },
         MockDB: { chapters: [{ id: 'chapter', title: 'Chapter 7', content: '<p>Original text</p>', chapter_order: 7 }], tiers: [], scratchpads: [] },
-        localStorage: { getItem: () => null },
+        AppStorage: { getItem: () => null },
         App: { openEditorForChapter() { throw new Error('Context Open must not navigate to Writer'); } }
     };
     vm.createContext(context);
@@ -548,7 +548,7 @@ test('Context item inventory defers Markdown conversion until content is opened'
     const context = {
         State: { activeStoryId: 'story' },
         MockDB: { chapters: [{ id: 'chapter', title: 'Chapter 7', content: '<p>Original text</p>', chapter_order: 7, word_count: 2 }], tiers: [], scratchpads: [] },
-        localStorage: { getItem: () => null }
+        AppStorage: { getItem: () => null }
     };
     vm.createContext(context);
     vm.runInContext(`${source}\nthis.workspace = ContextWorkspace;`, context);

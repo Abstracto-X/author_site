@@ -2472,6 +2472,7 @@
         // ==========================================
         // SUPABASE DATABASE & STATE
         // ==========================================
+        const AppStorage = window.SiteStorage.local;
         const CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
         const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || '';
         const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || '';
@@ -2724,9 +2725,9 @@
                 if (tiersError) throw tiersError;
                 MockDB.stories = stories || [];
                 MockDB.tiers = (tiers || []).map(t => ({ ...t, rank: rankOf(t), color: tierColor(rankOf(t)) }));
-                State.activeStoryId = storyId || localStorage.getItem('ea-admin-last-story-id') || MockDB.stories[0]?.id || '';
+                State.activeStoryId = storyId || AppStorage.getItem('ea-admin-last-story-id') || MockDB.stories[0]?.id || '';
                 if (!MockDB.stories.some(story => story.id === State.activeStoryId)) State.activeStoryId = MockDB.stories[0]?.id || '';
-                if (State.activeStoryId) localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
+                if (State.activeStoryId) AppStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                 await this.loadChapters(State.activeStoryId);
             },
             async loadChapters(storyId) {
@@ -2795,9 +2796,9 @@
 
         const initialCompactLayout = window.matchMedia('(max-width: 900px)').matches;
         const State = {
-            activeStoryId: localStorage.getItem('ea-admin-last-story-id') || '',
-            currentView: ['dashboard', 'editor', 'context'].includes(localStorage.getItem('ea-writer-current-view'))
-                ? localStorage.getItem('ea-writer-current-view')
+            activeStoryId: AppStorage.getItem('ea-admin-last-story-id') || '',
+            currentView: ['dashboard', 'editor', 'context'].includes(AppStorage.getItem('ea-writer-current-view'))
+                ? AppStorage.getItem('ea-writer-current-view')
                 : 'dashboard',
             activeChapterId: null,
             activeScratchpadId: null,
@@ -2820,11 +2821,11 @@
             openChapterIds: [],
             openScratchpadIds: [],
             editorPositions: {},
-            dashboardSort: localStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
+            dashboardSort: AppStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc',
             accessListChapterIds: new Set(),
-            primarySidebarCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true',
-            editorSettingsCollapsed: initialCompactLayout || localStorage.getItem('ea-writer-editor-settings-collapsed') === 'true',
-            systemMessageRenderingEnabled: localStorage.getItem('ea-writer-system-message-rendering') !== 'false'
+            primarySidebarCollapsed: initialCompactLayout || AppStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true',
+            editorSettingsCollapsed: initialCompactLayout || AppStorage.getItem('ea-writer-editor-settings-collapsed') === 'true',
+            systemMessageRenderingEnabled: AppStorage.getItem('ea-writer-system-message-rendering') !== 'false'
         };
 
         // ==========================================
@@ -2897,7 +2898,7 @@
 
         function persistEditorSession() {
             if (!State.activeStoryId) return;
-            localStorage.setItem(editorSessionKey(), JSON.stringify({
+            AppStorage.setItem(editorSessionKey(), JSON.stringify({
                 activeChapterId: State.activeChapterId,
                 openChapterIds: State.openChapterIds,
                 activeTabType: State.activeTabType
@@ -2907,9 +2908,9 @@
         async function restoreEditorSession() {
             let saved = null;
             try {
-                saved = JSON.parse(localStorage.getItem(editorSessionKey()) || 'null');
+                saved = JSON.parse(AppStorage.getItem(editorSessionKey()) || 'null');
             } catch (_) {
-                localStorage.removeItem(editorSessionKey());
+                AppStorage.removeItem(editorSessionKey());
             }
 
             const validIds = new Set(
@@ -2944,7 +2945,7 @@
                 if (!['dashboard', 'editor', 'context'].includes(view)) view = 'dashboard';
                 if (!options.fromHistory && location.hash !== `#${view}`) history.pushState({ writerView: view }, '', `#${view}`);
                 State.currentView = view;
-                localStorage.setItem('ea-writer-current-view', view);
+                AppStorage.setItem('ea-writer-current-view', view);
                 document.querySelectorAll('.active-nav').forEach(el => {
                     el.classList.remove('active-nav', 'bg-zinc-900', 'text-zinc-100');
                     el.classList.add('text-zinc-400');
@@ -3070,7 +3071,7 @@
 
             togglePrimarySidebar() {
                 State.primarySidebarCollapsed = !State.primarySidebarCollapsed;
-                localStorage.setItem('ea-writer-primary-sidebar-collapsed', String(State.primarySidebarCollapsed));
+                AppStorage.setItem('ea-writer-primary-sidebar-collapsed', String(State.primarySidebarCollapsed));
                 this.syncPanelState();
             },
 
@@ -3078,7 +3079,7 @@
                 State.editorSettingsCollapsed = typeof open === 'boolean'
                     ? !open
                     : !State.editorSettingsCollapsed;
-                localStorage.setItem('ea-writer-editor-settings-collapsed', String(State.editorSettingsCollapsed));
+                AppStorage.setItem('ea-writer-editor-settings-collapsed', String(State.editorSettingsCollapsed));
                 this.syncPanelState();
             },
 
@@ -3115,7 +3116,7 @@
                     }
                     const loadRevision = ++State.storyLoadRevision;
                     State.activeStoryId = nextStoryId;
-                    localStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
+                    AppStorage.setItem('ea-admin-last-story-id', State.activeStoryId);
                     State.activeChapterId = null;
                     State.openChapterIds = [];
                     clearTimeout(State.autosaveTimer);
@@ -3138,7 +3139,7 @@
                     catch (error) {
                         State.activeStoryId = previousStoryId;
                         event.target.value = previousStoryId;
-                        localStorage.setItem('ea-admin-last-story-id', previousStoryId);
+                        AppStorage.setItem('ea-admin-last-story-id', previousStoryId);
                         try {
                             await DB.loadWorkspace(previousStoryId);
                             await Promise.all([ContextWorkspace.load(previousStoryId), AIChat.loadStory(previousStoryId), SummaryManager.loadStory(previousStoryId)]);
@@ -3158,7 +3159,7 @@
 
                 document.getElementById('dash-sort').addEventListener('change', event => {
                     State.dashboardSort = event.target.value;
-                    localStorage.setItem('ea-writer-chapter-sort', State.dashboardSort);
+                    AppStorage.setItem('ea-writer-chapter-sort', State.dashboardSort);
                     Dashboard.render();
                 });
 
@@ -4164,7 +4165,7 @@
 
             toggleSystemMessageRendering() {
                 State.systemMessageRenderingEnabled = !State.systemMessageRenderingEnabled;
-                localStorage.setItem(
+                AppStorage.setItem(
                     'ea-writer-system-message-rendering',
                     String(State.systemMessageRenderingEnabled)
                 );
@@ -5737,7 +5738,7 @@
                 ];
                 const DEFAULT_PRESETS = ['lvl 1', 'lvl 2'];
 
-                let storedDict = localStorage.getItem('ea-censor-dictionary');
+                let storedDict = AppStorage.getItem('ea-censor-dictionary');
                 if (storedDict) {
                     try {
                         State.censorDictionary = JSON.parse(storedDict);
@@ -5746,10 +5747,10 @@
                     }
                 } else {
                     State.censorDictionary = DEFAULT_DICTIONARY;
-                    localStorage.setItem('ea-censor-dictionary', JSON.stringify(DEFAULT_DICTIONARY));
+                    AppStorage.setItem('ea-censor-dictionary', JSON.stringify(DEFAULT_DICTIONARY));
                 }
 
-                let storedPresets = localStorage.getItem('ea-censor-presets');
+                let storedPresets = AppStorage.getItem('ea-censor-presets');
                 if (storedPresets) {
                     try {
                         State.censorPresets = JSON.parse(storedPresets);
@@ -5758,10 +5759,10 @@
                     }
                 } else {
                     State.censorPresets = DEFAULT_PRESETS;
-                    localStorage.setItem('ea-censor-presets', JSON.stringify(DEFAULT_PRESETS));
+                    AppStorage.setItem('ea-censor-presets', JSON.stringify(DEFAULT_PRESETS));
                 }
 
-                State.activePreset = localStorage.getItem('ea-censor-active-preset') || 'None';
+                State.activePreset = AppStorage.getItem('ea-censor-active-preset') || 'None';
                 this.updateCensorDropdownAndStatus();
             },
 
@@ -5790,7 +5791,7 @@
 
             changeCensorPreset(value) {
                 State.activePreset = value;
-                localStorage.setItem('ea-censor-active-preset', value);
+                AppStorage.setItem('ea-censor-active-preset', value);
                 this.updateCensorDropdownAndStatus();
             },
 
@@ -5844,7 +5845,7 @@
                     return;
                 }
                 State.censorPresets.push(name);
-                localStorage.setItem('ea-censor-presets', JSON.stringify(State.censorPresets));
+                AppStorage.setItem('ea-censor-presets', JSON.stringify(State.censorPresets));
                 
                 input.value = '';
                 this.renderCensorPresets();
@@ -5857,16 +5858,16 @@
                 if (!confirm(`Are you sure you want to delete the preset "${name}"? This will unassign all words from it.`)) return;
 
                 State.censorPresets = State.censorPresets.filter(p => p !== name);
-                localStorage.setItem('ea-censor-presets', JSON.stringify(State.censorPresets));
+                AppStorage.setItem('ea-censor-presets', JSON.stringify(State.censorPresets));
 
                 for (const entry of State.censorDictionary) {
                     entry.presets = entry.presets.filter(p => p !== name);
                 }
-                localStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
+                AppStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
 
                 if (State.activePreset === name) {
                     State.activePreset = 'None';
-                    localStorage.setItem('ea-censor-active-preset', 'None');
+                    AppStorage.setItem('ea-censor-active-preset', 'None');
                 }
 
                 this.renderCensorPresets();
@@ -5944,7 +5945,7 @@
                 const presets = Array.from(checkedCheckboxes).map(cb => cb.value);
 
                 State.censorDictionary.push({ word, replacement, presets });
-                localStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
+                AppStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
 
                 wordInput.value = '';
                 replacementInput.value = '';
@@ -5958,7 +5959,7 @@
                 if (!entry) return;
 
                 State.censorDictionary.splice(index, 1);
-                localStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
+                AppStorage.setItem('ea-censor-dictionary', JSON.stringify(State.censorDictionary));
 
                 this.renderCensorDictionary();
                 UI.showToast(`Removed "${entry.word}" from dictionary.`, 'info');
@@ -6227,7 +6228,7 @@
             tokenBudget: 32000,
             available: true,
             error: '',
-            activeSection: localStorage.getItem('ea-writer-context-active-section') || 'writing_style',
+            activeSection: AppStorage.getItem('ea-writer-context-active-section') || 'writing_style',
             searchQuery: '',
             libraryScroll: {},
             previewScroll: 0,
@@ -6257,7 +6258,7 @@
                 this.activeItemKey = '';
                 this.blockEditorOpen = false;
                 try {
-                    const savedOrder = JSON.parse(localStorage.getItem('ea-writer-context-dock-order') || 'null');
+                    const savedOrder = JSON.parse(AppStorage.getItem('ea-writer-context-dock-order') || 'null');
                     if (Array.isArray(savedOrder) && savedOrder.length === this.sectionOrder.length && this.sectionOrder.every(section => savedOrder.includes(section))) {
                         this.sectionOrder = savedOrder;
                     }
@@ -6272,7 +6273,7 @@
                 this.tokenBudget = 32000;
                 this.available = true;
                 this.error = '';
-                this.activeSection = localStorage.getItem('ea-writer-context-active-section') || 'writing_style';
+                this.activeSection = AppStorage.getItem('ea-writer-context-active-section') || 'writing_style';
                 this.searchQuery = '';
                 this.libraryScroll = {};
                 this.previewScroll = 0;
@@ -6326,7 +6327,7 @@
 
             restoreState(storyId) {
                 try {
-                    const saved = JSON.parse(localStorage.getItem(this.stateKey(storyId)) || 'null');
+                    const saved = JSON.parse(AppStorage.getItem(this.stateKey(storyId)) || 'null');
                     if (!saved || typeof saved !== 'object') return;
                     const availableKeys = new Set(this.allItems().map(item => item.key));
                     if (saved.mode === 'advanced' || saved.mode === 'simple') this.mode = saved.mode;
@@ -6350,7 +6351,7 @@
 
             persistState() {
                 try {
-                    localStorage.setItem(this.stateKey(), JSON.stringify({
+                    AppStorage.setItem(this.stateKey(), JSON.stringify({
                         mode: this.mode,
                         activeSection: this.activeSection,
                         sectionOrder: this.sectionOrder,
@@ -6695,7 +6696,7 @@
             setActiveSection(section) {
                 if (!this.sectionOrder.includes(section)) return;
                 this.activeSection = section;
-                localStorage.setItem('ea-writer-context-active-section', section);
+                AppStorage.setItem('ea-writer-context-active-section', section);
                 this.persistState();
                 this.renderSectionTabs();
                 this.renderLibrary();
@@ -6965,7 +6966,7 @@
                 const next = index + delta;
                 if (next < 0 || next >= this.sectionOrder.length) return;
                 [this.sectionOrder[index], this.sectionOrder[next]] = [this.sectionOrder[next], this.sectionOrder[index]];
-                localStorage.setItem('ea-writer-context-dock-order', JSON.stringify(this.sectionOrder));
+                AppStorage.setItem('ea-writer-context-dock-order', JSON.stringify(this.sectionOrder));
                 this.render();
             },
 
@@ -7118,7 +7119,7 @@
                 this.tokenBudget = Number(preset.token_budget) || 32000;
                 if (this.sectionOrder.includes(preset.active_section)) {
                     this.activeSection = preset.active_section;
-                    localStorage.setItem('ea-writer-context-active-section', this.activeSection);
+                    AppStorage.setItem('ea-writer-context-active-section', this.activeSection);
                 }
                 this.render();
             },
@@ -7454,7 +7455,7 @@
             UI.init().catch(error => UI.showToast(error.message || 'Writer failed to start.', 'error'));
         });
     </script>
-    <script src="js/writer-ai-chat.js"></script>
+    <script src="js/writer-ai-chat.js?v=20261109.7"></script>
     <script src="js/writer-summary-manager.js"></script>
 </body>
 </html>

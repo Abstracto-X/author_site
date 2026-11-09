@@ -378,3 +378,7 @@ HTML titles/login/sidebar/noscript use neutral Reader copy. site-bootstrap appli
 ## 2026-11-09 — Reader storage isolation foundation
 
 site-storage.js loads after bootstrap in all surfaces and exposes SiteStorage.create(config, storage, legacyKeys) and SiteStorage.local. Reader getStore now returns the scoped adapter, not raw localStorage. Keys include explicit siteKey and backend URL. Invalid setup uses memory only; blocked persistence degrades to memory. Only known source backend/site may import the named legacy reader state key; originals are retained, with removal tombstones preventing re-import on reload. Supabase auth storage is never wrapped. Authoring modules and account-specific state are not migrated yet.
+
+## 2026-11-09 — Authoring site storage namespaces
+
+Admin and inline Writer use const AppStorage = window.SiteStorage.local for all existing application get/set/remove calls. Writer AI drawer/thread/model-cache helper uses window.SiteStorage.local directly. Browser localStorage and Supabase SDK/auth store are not shadowed or modified. All these keys are now site/backend-scoped, NOT yet account-scoped. Existing unowned authoring keys remain in raw localStorage for deliberate owner-reviewed recovery; they are not automatically imported.

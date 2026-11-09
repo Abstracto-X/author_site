@@ -1902,3 +1902,7 @@ Removed hardcoded brand from all entrypoint startup surfaces; bootstrap sets rep
 ## 2026-11-09 — Reader storage isolation foundation
 
 Added site/backend-scoped storage adapter and connected reader LS. Explicit source reader-state migration preserves originals and prevents removed values reappearing. No auth storage changes. Files: site-storage.js, config.js, three HTML script lists, tests/site-storage.test.js, overview/reader index/changelog/state. 119 Node tests and adapter syntax pass.
+
+## 2026-11-09 — Authoring site storage namespaces
+
+Scoped Admin/Writer application persistence and Writer AI helper to SiteStorage.local without shadowing browser auth storage. Updated extraction harness AppStorage mocks and added no-raw-storage/legacy-preservation coverage. Files: admin.html, writer.html, js/writer-ai-chat.js, tests/writer-safety.test.js, tests/site-storage.test.js, overview/admin index/state/changelog. 120 tests and AI helper syntax pass. No DB changes.

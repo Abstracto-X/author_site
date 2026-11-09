@@ -1180,6 +1180,7 @@
         // ==============================================
         // SUPABASE CLIENT
         // ==============================================
+        const AppStorage = window.SiteStorage.local;
         const ADMIN_SITE_CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
         const SUPABASE_URL = (ADMIN_SITE_CONFIG.supabase && ADMIN_SITE_CONFIG.supabase.url) || '';
         const SUPABASE_ANON_KEY = (ADMIN_SITE_CONFIG.supabase && ADMIN_SITE_CONFIG.supabase.anonKey) || '';
@@ -1198,20 +1199,20 @@
         const _State = {
             user: null,
             profile: null,
-            currentView: ADMIN_VIEW_NAMES.has(requestedAdminView) ? requestedAdminView : (localStorage.getItem('ea-admin-last-view') || 'dashboard'),
+            currentView: ADMIN_VIEW_NAMES.has(requestedAdminView) ? requestedAdminView : (AppStorage.getItem('ea-admin-last-view') || 'dashboard'),
             stories: [],
             characters: [],
-            selectedStoryId: localStorage.getItem('ea-admin-last-story-id') || null,
-            selectedCharacterId: localStorage.getItem('ea-admin-last-character-id') || null,
+            selectedStoryId: AppStorage.getItem('ea-admin-last-story-id') || null,
+            selectedCharacterId: AppStorage.getItem('ea-admin-last-character-id') || null,
             gallerySearch: '',
             galleryVisibilityFilter: 'published',
             accessTiers: [],
             accessKeys: [],
             entitlements: [],
             providerMappings: [],
-            editingChapterId: localStorage.getItem('ea-admin-last-chapter-id') || null,
-            writerPanel: localStorage.getItem('ea-admin-last-writer-panel') || 'write',
-            writerSidebarCollapsed: localStorage.getItem('ea-admin-writer-sidebar-collapsed') === 'true',
+            editingChapterId: AppStorage.getItem('ea-admin-last-chapter-id') || null,
+            writerPanel: AppStorage.getItem('ea-admin-last-writer-panel') || 'write',
+            writerSidebarCollapsed: AppStorage.getItem('ea-admin-writer-sidebar-collapsed') === 'true',
             readerSearch: '',
             readerCrmTab: 'readers'
         };
@@ -1220,22 +1221,22 @@
             set(target, prop, value) {
                 target[prop] = value;
                 if (prop === 'currentView') {
-                    if (value) localStorage.setItem('ea-admin-last-view', value);
-                    else localStorage.removeItem('ea-admin-last-view');
+                    if (value) AppStorage.setItem('ea-admin-last-view', value);
+                    else AppStorage.removeItem('ea-admin-last-view');
                 } else if (prop === 'selectedStoryId') {
-                    if (value) localStorage.setItem('ea-admin-last-story-id', value);
-                    else localStorage.removeItem('ea-admin-last-story-id');
+                    if (value) AppStorage.setItem('ea-admin-last-story-id', value);
+                    else AppStorage.removeItem('ea-admin-last-story-id');
                 } else if (prop === 'selectedCharacterId') {
-                    if (value) localStorage.setItem('ea-admin-last-character-id', value);
-                    else localStorage.removeItem('ea-admin-last-character-id');
+                    if (value) AppStorage.setItem('ea-admin-last-character-id', value);
+                    else AppStorage.removeItem('ea-admin-last-character-id');
                 } else if (prop === 'editingChapterId') {
-                    if (value) localStorage.setItem('ea-admin-last-chapter-id', value);
-                    else localStorage.removeItem('ea-admin-last-chapter-id');
+                    if (value) AppStorage.setItem('ea-admin-last-chapter-id', value);
+                    else AppStorage.removeItem('ea-admin-last-chapter-id');
                 } else if (prop === 'writerPanel') {
-                    if (value) localStorage.setItem('ea-admin-last-writer-panel', value);
-                    else localStorage.removeItem('ea-admin-last-writer-panel');
+                    if (value) AppStorage.setItem('ea-admin-last-writer-panel', value);
+                    else AppStorage.removeItem('ea-admin-last-writer-panel');
                 } else if (prop === 'writerSidebarCollapsed') {
-                    localStorage.setItem('ea-admin-writer-sidebar-collapsed', value ? 'true' : 'false');
+                    AppStorage.setItem('ea-admin-writer-sidebar-collapsed', value ? 'true' : 'false');
                 }
                 return true;
             },
@@ -1912,13 +1913,13 @@
             },
             
             setAdminWallpaper: (url) => {
-                localStorage.setItem('adminBackground', url);
+                AppStorage.setItem('adminBackground', url);
                 UI.applyAdminWallpaper();
                 UI.showToast('Admin background updated!');
             },
             
             applyAdminWallpaper: () => {
-                const bgUrl = localStorage.getItem('adminBackground');
+                const bgUrl = AppStorage.getItem('adminBackground');
                 if (bgUrl) {
                     const bgLayer = document.querySelector('.background-layer');
                     if (bgLayer && bgLayer.dataset.imageUrl !== bgUrl) {
@@ -2995,8 +2996,8 @@
                     const count = plain.split(/\s+/).filter(Boolean).length;
                     document.getElementById('editor-word-count').textContent = `${count} words`;
                     const draftKey = `ea-chapter-draft:${id || 'new'}:${chapter.story_id || State.selectedStoryId}`;
-                    if (plain) localStorage.setItem(draftKey, editor.innerHTML);
-                    else localStorage.removeItem(draftKey);
+                    if (plain) AppStorage.setItem(draftKey, editor.innerHTML);
+                    else AppStorage.removeItem(draftKey);
                 };
                 editor.addEventListener('paste', Forms.handleEditorPaste);
                 editor.addEventListener('input', updateCount);
@@ -3072,7 +3073,7 @@
                         external_url: externalUrl
                     };
                     await DB.saveChapter(id || null, record);
-                    localStorage.removeItem(`ea-chapter-draft:${id || 'new'}:${State.selectedStoryId}`);
+                    AppStorage.removeItem(`ea-chapter-draft:${id || 'new'}:${State.selectedStoryId}`);
                     Modal.close();
                     UI.showToast(record.is_published ? 'Chapter saved and rolling access recalculated!' : 'Chapter draft saved!');
                     Views.render('chapters');
@@ -5363,17 +5364,17 @@
             const editor = document.getElementById('f-content');
             if (editor) {
                 const draftKey = `ea-chapter-draft:${editingId || 'new'}:${State.selectedStoryId}`;
-                const draft = localStorage.getItem(draftKey);
+                const draft = AppStorage.getItem(draftKey);
                 if (draft && editingId !== null && Forms.isMeaningfulEditorHtml(draft)) {
                     editor.innerHTML = Utils.normalizeEditorHtml(draft);
                 } else if (draft && !Forms.isMeaningfulEditorHtml(draft)) {
-                    localStorage.removeItem(draftKey);
+                    AppStorage.removeItem(draftKey);
                 }
                 const updateCount = () => {
                     const plain = Utils.htmlToPlainText(editor.innerHTML).replace(/\u00a0/g, ' ').trim();
                     document.getElementById('editor-word-count').textContent = `${plain.split(/\s+/).filter(Boolean).length} words`;
-                    if (plain) localStorage.setItem(draftKey, editor.innerHTML);
-                    else localStorage.removeItem(draftKey);
+                    if (plain) AppStorage.setItem(draftKey, editor.innerHTML);
+                    else AppStorage.removeItem(draftKey);
                 };
                 editor.addEventListener('paste', Forms.handleEditorPaste);
                 editor.addEventListener('input', updateCount); updateCount();
@@ -5410,7 +5411,7 @@
                     external_url: externalUrl
                 };
                 const saved = await DB.saveChapter(id || null, record);
-                localStorage.removeItem(`ea-chapter-draft:${id || 'new'}:${State.selectedStoryId}`);
+                AppStorage.removeItem(`ea-chapter-draft:${id || 'new'}:${State.selectedStoryId}`);
                 State.editingChapterId = saved.id;
                 UI.showToast(record.is_published ? 'Chapter saved and rolling access recalculated.' : 'Chapter draft saved.');
                 Views.render('chapters');
