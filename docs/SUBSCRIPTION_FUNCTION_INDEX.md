@@ -556,3 +556,7 @@ Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty
 ## 2026-11-09 — Neutral startup and destination reader links
 
 chapterDirectUrl(chapterId) now targets configured publicBaseUrl via SiteSettings.readerUrl. Bootstrap also updates title/meta before network. Neutral static HTML no longer embeds source author branding.
+
+## 2026-11-09 — Reader storage isolation foundation
+
+getStore(): returns SiteStorage.local or in-memory fallback. SiteStorage.create(): scoped getItem/setItem/removeItem adapter with explicit non-destructive legacy import, removal tombstone and memory fallback. No account scoping yet.

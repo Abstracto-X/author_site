@@ -374,3 +374,7 @@ Repository profiles now own appearance.appBackgroundUrl (absolute HTTPS or empty
 ## 2026-11-09 — Neutral startup and destination reader links
 
 HTML titles/login/sidebar/noscript use neutral Reader copy. site-bootstrap applies repository title/meta immediately before network initialization, retaining Admin/Writer suffixes. Reader chapterDirectUrl and Writer copyChapterLink/copyAccessList use SiteSettings.readerUrl with CONFIG.publicBaseUrl rather than authoring origin. Provider callback URLs and authoring-navigation paths remain separate future work.
+
+## 2026-11-09 — Reader storage isolation foundation
+
+site-storage.js loads after bootstrap in all surfaces and exposes SiteStorage.create(config, storage, legacyKeys) and SiteStorage.local. Reader getStore now returns the scoped adapter, not raw localStorage. Keys include explicit siteKey and backend URL. Invalid setup uses memory only; blocked persistence degrades to memory. Only known source backend/site may import the named legacy reader state key; originals are retained, with removal tombstones preventing re-import on reload. Supabase auth storage is never wrapped. Authoring modules and account-specific state are not migrated yet.

@@ -3,7 +3,7 @@
 
 /* ============ safe storage (sandbox-proof) ============ */
 const MemStore = (() => { const m = new Map(); return { getItem:k=>m.has(k)?m[k.slice?k:k]:undefined, setItem:(k,v)=>{m.set(k,v)}, removeItem:k=>m.delete(k) }; })();
-function getStore(){ try { if (window.localStorage) return window.localStorage; } catch(e){} return MemStore; }
+function getStore(){ return window.SiteStorage ? window.SiteStorage.local : MemStore; }
 const LS = getStore();
 
 /* ============ site config / data refs ============ */

@@ -1898,3 +1898,7 @@ Files: site-settings.js, site-bootstrap.js, site-config.js/template, config.js, 
 ## 2026-11-09 — Neutral startup and destination reader links
 
 Removed hardcoded brand from all entrypoint startup surfaces; bootstrap sets repo title/meta before network. Reader/Writer copied chapter links now resolve configured destination public root. Files: index.html, admin.html, writer.html, site-bootstrap.js, events.js, bootstrap/Writer clipboard tests, overview/indexes/state/changelog. 116 Node tests pass; bootstrap/events syntax pass. No DB changes.
+
+## 2026-11-09 — Reader storage isolation foundation
+
+Added site/backend-scoped storage adapter and connected reader LS. Explicit source reader-state migration preserves originals and prevents removed values reappearing. No auth storage changes. Files: site-storage.js, config.js, three HTML script lists, tests/site-storage.test.js, overview/reader index/changelog/state. 119 Node tests and adapter syntax pass.
