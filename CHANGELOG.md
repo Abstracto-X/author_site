@@ -1906,3 +1906,7 @@ Added site/backend-scoped storage adapter and connected reader LS. Explicit sour
 ## 2026-11-09 — Authoring site storage namespaces
 
 Scoped Admin/Writer application persistence and Writer AI helper to SiteStorage.local without shadowing browser auth storage. Updated extraction harness AppStorage mocks and added no-raw-storage/legacy-preservation coverage. Files: admin.html, writer.html, js/writer-ai-chat.js, tests/writer-safety.test.js, tests/site-storage.test.js, overview/admin index/state/changelog. 120 tests and AI helper syntax pass. No DB changes.
+
+## 2026-11-09 — Verified author account storage
+
+Bound author application storage to verified account with memory-only pre-auth state and reload-required account changes. Added account namespace/facade tests and stale Admin profile guard. Files: site-storage.js, admin.html, writer.html, writer-ai-chat.js, three entrypoint cache versions, storage tests and overview/admin index/state/changelog. 122 tests and storage/AI syntax pass; no DB changes.

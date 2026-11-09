@@ -1173,14 +1173,14 @@
     <script src="js/subscription/site-config.js?v=20261109.4"></script>
     <script src="js/subscription/site-settings.js?v=20261109.4"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.5"></script>
-    <script src="js/subscription/site-storage.js?v=20261109.6"></script>
+    <script src="js/subscription/site-storage.js?v=20261109.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         // ==============================================
         // SUPABASE CLIENT
         // ==============================================
-        const AppStorage = window.SiteStorage.local;
+        const AppStorage = window.SiteStorage.author;
         const ADMIN_SITE_CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
         const SUPABASE_URL = (ADMIN_SITE_CONFIG.supabase && ADMIN_SITE_CONFIG.supabase.url) || '';
         const SUPABASE_ANON_KEY = (ADMIN_SITE_CONFIG.supabase && ADMIN_SITE_CONFIG.supabase.anonKey) || '';
@@ -1994,6 +1994,10 @@
                 }
 
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                    if (State.profile && session?.user?.id !== State.user?.id) {
+                        window.location.reload();
+                        return;
+                    }
                     if (event === 'SIGNED_IN' && session) {
                         State.user = session.user;
                         await Auth.loadProfile();
@@ -2006,11 +2010,12 @@
             },
 
             loadProfile: async () => {
+                const requestedUserId = State.user?.id;
                 try {
                     let { data, error } = await supabaseClient
                         .from('profiles')
                         .select('*')
-                        .eq('id', State.user.id)
+                        .eq('id', requestedUserId)
                         .single();
                     
                     
@@ -2020,10 +2025,14 @@
                         throw error;
                     }
 
+                    if (State.user?.id !== requestedUserId) return false;
                     if (data.role !== 'admin') {
                         throw new Error('Access denied. Admin privileges required.');
                     }
 
+                    window.SiteStorage.bindAuthor(State.user.id);
+                    State.selectedStoryId = AppStorage.getItem('ea-admin-last-story-id') || null;
+                    State.editingChapterId = AppStorage.getItem('ea-admin-last-chapter-id') || null;
                     State.profile = data;
                     document.getElementById('user-name').textContent = data.display_name || 'Admin';
                     document.getElementById('user-avatar').textContent = (data.display_name || 'A')[0].toUpperCase();

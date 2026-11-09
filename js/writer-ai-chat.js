@@ -109,7 +109,7 @@ const AIChat = {
 
     restoreDrawerState() {
         try {
-            const saved = JSON.parse(window.SiteStorage.local.getItem(this.drawerStateKey) || '{}');
+            const saved = JSON.parse(window.SiteStorage.author.getItem(this.drawerStateKey) || '{}');
             const width = Math.max(420, Math.min(window.innerWidth - 80, Number(saved.width) || 760));
             if (window.innerWidth > 760) {
                 document.documentElement.style.setProperty('--writer-ai-drawer-width', `${width}px`);
@@ -120,13 +120,13 @@ const AIChat = {
                 document.getElementById('writer-ai-toggle')?.setAttribute('aria-expanded', 'true');
             }
         } catch (_error) {
-            window.SiteStorage.local.removeItem(this.drawerStateKey);
+            window.SiteStorage.author.removeItem(this.drawerStateKey);
         }
     },
 
     persistDrawerState() {
         const drawer = document.getElementById('writer-ai-drawer');
-        window.SiteStorage.local.setItem(this.drawerStateKey, JSON.stringify({
+        window.SiteStorage.author.setItem(this.drawerStateKey, JSON.stringify({
             open: this.isOpen(),
             width: drawer?.getBoundingClientRect().width || 760
         }));
@@ -165,7 +165,7 @@ const AIChat = {
             this.threads = data || [];
             this.renderThreads();
 
-            const savedId = window.SiteStorage.local.getItem(this.activeThreadKey());
+            const savedId = window.SiteStorage.author.getItem(this.activeThreadKey());
             const target = this.threads.find(thread => thread.id === savedId) || this.threads[0];
             if (target) {
                 await this.openThread(target.id);
@@ -213,7 +213,7 @@ const AIChat = {
         const loadRevision = this.threadLoadRevision = (this.threadLoadRevision || 0) + 1;
 
         this.activeThreadId = id;
-        window.SiteStorage.local.setItem(this.activeThreadKey(), id);
+        window.SiteStorage.author.setItem(this.activeThreadKey(), id);
         this.renderThreads();
         this.renderHeader();
         this.setStatus('Loading conversation…');
@@ -271,7 +271,7 @@ const AIChat = {
             if (id === this.activeThreadId) {
                 this.activeThreadId = '';
                 this.messages = [];
-                window.SiteStorage.local.removeItem(this.activeThreadKey());
+                window.SiteStorage.author.removeItem(this.activeThreadKey());
                 this.destroyChat();
                 const next = this.threads[0];
                 if (next) await this.openThread(next.id);
@@ -358,7 +358,7 @@ const AIChat = {
     async loadModels() {
         let models = [];
         try {
-            const cached = JSON.parse(window.SiteStorage.local.getItem(this.modelCacheKey) || 'null');
+            const cached = JSON.parse(window.SiteStorage.author.getItem(this.modelCacheKey) || 'null');
             if (cached?.savedAt > Date.now() - 24 * 60 * 60 * 1000 && Array.isArray(cached.models)) {
                 models = cached.models;
             } else {
@@ -369,7 +369,7 @@ const AIChat = {
                     .filter(model => model?.id)
                     .map(model => ({ id: model.id, name: model.name || model.id }))
                     .sort((a, b) => a.name.localeCompare(b.name));
-                window.SiteStorage.local.setItem(this.modelCacheKey, JSON.stringify({ savedAt: Date.now(), models }));
+                window.SiteStorage.author.setItem(this.modelCacheKey, JSON.stringify({ savedAt: Date.now(), models }));
             }
         } catch (_error) {
             models = [

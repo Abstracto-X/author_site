@@ -382,3 +382,7 @@ site-storage.js loads after bootstrap in all surfaces and exposes SiteStorage.cr
 ## 2026-11-09 — Authoring site storage namespaces
 
 Admin and inline Writer use const AppStorage = window.SiteStorage.local for all existing application get/set/remove calls. Writer AI drawer/thread/model-cache helper uses window.SiteStorage.local directly. Browser localStorage and Supabase SDK/auth store are not shadowed or modified. All these keys are now site/backend-scoped, NOT yet account-scoped. Existing unowned authoring keys remain in raw localStorage for deliberate owner-reviewed recovery; they are not automatically imported.
+
+## 2026-11-09 — Verified author account storage
+
+SiteStorage.author is a stable facade backed by temporary memory until bindAuthor(verifiedUserId). Its persistent keys include site/backend/account. bindAuthor is idempotent for one account and rejects hot swaps. Admin loadProfile binds after trusted profile role check and rejects a stale user response; Writer requireAdmin binds after profile verification. Admin/Writer reload on subsequent session-user change/sign-out. Writer AI uses the same author facade. Account storage is not encryption/security against local browser inspection. Auth token storage remains unchanged.

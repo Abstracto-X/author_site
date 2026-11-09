@@ -341,3 +341,7 @@ Admin static login/sidebar/title are neutral Reader until repository identity lo
 ## 2026-11-09 — Authoring site storage namespaces
 
 Admin State selection persistence, chapter draft buffers and UI background use AppStorage (site/backend-scoped adapter). Admin draft access is not yet account-scoped. Old unscoped buffers remain untouched and need explicit recovery, not silent import.
+
+## 2026-11-09 — Verified author account storage
+
+Auth.loadProfile captures requested user, rejects stale user response, verifies role then binds SiteStorage.author and restores story/chapter selections. Existing onAuthStateChange reloads when a verified workspace changes session user. Other pre-auth UI preferences still require explicit post-auth hydration.

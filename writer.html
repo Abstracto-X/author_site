@@ -51,7 +51,7 @@
     <script src="js/subscription/site-config.js?v=20261109.4"></script>
     <script src="js/subscription/site-settings.js?v=20261109.4"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.5"></script>
-    <script src="js/subscription/site-storage.js?v=20261109.6"></script>
+    <script src="js/subscription/site-storage.js?v=20261109.8"></script>
     <script src="vendor/supabase/supabase-2.111.0.min.js"></script>
     <link rel="stylesheet" href="styles/writer-ai-chat.css">
     <link rel="stylesheet" href="styles/writer-summary-manager.css">
@@ -2472,7 +2472,7 @@
         // ==========================================
         // SUPABASE DATABASE & STATE
         // ==========================================
-        const AppStorage = window.SiteStorage.local;
+        const AppStorage = window.SiteStorage.author;
         const CONFIG = window.SUBSCRIPTION_SITE_CONFIG || {};
         const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || '';
         const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || '';
@@ -2714,6 +2714,11 @@
                 const { data, error } = await withWriterDeadline(supabaseClient.from('profiles').select('id, role, display_name, username').eq('id', session.user.id).single(), 'Admin profile');
                 if (error) throw error;
                 if (data.role !== 'admin') throw new Error('Access denied. Admin privileges required.');
+                window.SiteStorage.bindAuthor(session.user.id);
+                supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
+                    if (nextSession?.user?.id !== session.user.id) window.location.reload();
+                });
+                State.activeStoryId = AppStorage.getItem('ea-admin-last-story-id') || '';
                 return data;
             },
             async loadWorkspace(storyId = null) {
@@ -7455,7 +7460,7 @@
             UI.init().catch(error => UI.showToast(error.message || 'Writer failed to start.', 'error'));
         });
     </script>
-    <script src="js/writer-ai-chat.js?v=20261109.7"></script>
+    <script src="js/writer-ai-chat.js?v=20261109.8"></script>
     <script src="js/writer-summary-manager.js"></script>
 </body>
 </html>
