@@ -31,3 +31,12 @@ test('author facade starts ephemeral, binds once and refuses account hot swaps',
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/subscription/site-storage.js'),'utf8'),{window:w,Map});
  const a=w.SiteStorage.author;a.setItem('draft','pre-auth');w.SiteStorage.bindAuthor('author-a');assert.equal(a.getItem('draft'),null);a.setItem('draft','verified');w.SiteStorage.bindAuthor('author-a');assert.equal(a.getItem('draft'),'verified');assert.throws(()=>w.SiteStorage.bindAuthor('author-b'));assert.throws(()=>w.SiteStorage.bindAuthor(''));
 });
+const legacySource=fs.readFileSync(path.join(__dirname,'../js/subscription/site-storage.js'),'utf8');
+test('legacy recovery requires verified source admin and exports only old draft keys without mutation',()=>{
+ const m=new Map([['ea-chapter-draft:new:story','<p>private</p>'],['sb-auth-token','secret'],['ea-writer-ai-history','private chat']]);
+ const db={get length(){return m.size;},key:i=>Array.from(m.keys())[i],getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)};
+ const w={SUBSCRIPTION_SITE_CONFIG:config('evilarchives','https://cqgrulawpwkrdvxagzez.supabase.co'),localStorage:db};
+ vm.runInNewContext(legacySource,{window:w,Map});assert.throws(()=>w.SiteStorage.legacyDrafts());w.SiteStorage.bindAuthor('verified');
+ const result=w.SiteStorage.legacyDrafts();assert.equal(result.drafts.length,1);assert.equal(result.drafts[0].html,'<p>private</p>');assert.equal(m.size,3);
+ const other={SUBSCRIPTION_SITE_CONFIG:config('two'),localStorage:db};vm.runInNewContext(legacySource,{window:other,Map});other.SiteStorage.bindAuthor('verified');assert.throws(()=>other.SiteStorage.legacyDrafts());
+});

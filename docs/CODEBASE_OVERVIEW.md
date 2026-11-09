@@ -386,3 +386,7 @@ Admin and inline Writer use const AppStorage = window.SiteStorage.local for all 
 ## 2026-11-09 — Verified author account storage
 
 SiteStorage.author is a stable facade backed by temporary memory until bindAuthor(verifiedUserId). Its persistent keys include site/backend/account. bindAuthor is idempotent for one account and rejects hot swaps. Admin loadProfile binds after trusted profile role check and rejects a stale user response; Writer requireAdmin binds after profile verification. Admin/Writer reload on subsequent session-user change/sign-out. Writer AI uses the same author facade. Account storage is not encryption/security against local browser inspection. Auth token storage remains unchanged.
+
+## 2026-11-09 — Author preference hydration and legacy recovery
+
+After bindAuthor, Admin restores allowed view, character/story/chapter selection and writer-panel preferences; Writer restores view/sort/rails/system-rendering preferences before workspace initialization. SiteStorage.legacyDrafts() permits the known source identity after author binding to export only raw or pre-account site-scoped ea-chapter-draft keys. Admin Settings downloads a private JSON backup; no HTML is rendered or imported, nothing is published/deleted, auth/chat data is excluded. Ownership must be reviewed manually; there is deliberately no automatic claim/import of unowned drafts.

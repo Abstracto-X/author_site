@@ -57,6 +57,18 @@
       authorStore = create(config, storage, [], accountId);
     }
   }
-  window.SiteStorage = { create: create, local: create(config, storage, legacy), author: author, bindAuthor: bindAuthor };
+  function legacyDrafts() {
+    if (!authorAccount || !legacy.length) throw new Error('source_admin_verification_required');
+    var drafts = [];
+    var oldPrefix = 'author-site:v1:' + encodeURIComponent(config.siteKey) + ':' + encodeURIComponent(config.supabase.url) + ':';
+    for (var i = 0; storage && i < storage.length; i++) {
+      var key = storage.key(i);
+      if (key && (key.startsWith('ea-chapter-draft:') || key.startsWith(oldPrefix + 'ea-chapter-draft:'))) {
+        drafts.push({ key: key, html: storage.getItem(key) });
+      }
+    }
+    return { warning: 'Unverified legacy ownership. Private local backup only. Review before manually restoring; never publish automatically.', drafts: drafts };
+  }
+  window.SiteStorage = { create: create, local: create(config, storage, legacy), author: author, bindAuthor: bindAuthor, legacyDrafts: legacyDrafts };
 
 }());

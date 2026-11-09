@@ -345,3 +345,7 @@ Admin State selection persistence, chapter draft buffers and UI background use A
 ## 2026-11-09 — Verified author account storage
 
 Auth.loadProfile captures requested user, rejects stale user response, verifies role then binds SiteStorage.author and restores story/chapter selections. Existing onAuthStateChange reloads when a verified workspace changes session user. Other pre-auth UI preferences still require explicit post-auth hydration.
+
+## 2026-11-09 — Author preference hydration and legacy recovery
+
+Forms.exportLegacyDrafts(): downloads SiteStorage.legacyDrafts() as private JSON, catches setup errors, revokes object URL. Settings explains unowned draft preservation/manual review. Auth.loadProfile restores allowed saved view and account-local panel selections after storage binding.

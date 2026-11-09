@@ -1910,3 +1910,7 @@ Scoped Admin/Writer application persistence and Writer AI helper to SiteStorage.
 ## 2026-11-09 — Verified author account storage
 
 Bound author application storage to verified account with memory-only pre-auth state and reload-required account changes. Added account namespace/facade tests and stale Admin profile guard. Files: site-storage.js, admin.html, writer.html, writer-ai-chat.js, three entrypoint cache versions, storage tests and overview/admin index/state/changelog. 122 tests and storage/AI syntax pass; no DB changes.
+
+## 2026-11-09 — Author preference hydration and legacy recovery
+
+Restored post-verification author UI preferences and added source-only private legacy draft export in Admin Settings. Files: admin.html, writer.html, three entrypoint storage cache versions, site-storage.js, storage tests, overview/admin index/state/changelog. 123 Node tests and storage syntax pass. Original drafts remain untouched, no DB or import/publish operation.

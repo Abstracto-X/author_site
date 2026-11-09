@@ -1173,7 +1173,7 @@
     <script src="js/subscription/site-config.js?v=20261109.4"></script>
     <script src="js/subscription/site-settings.js?v=20261109.4"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.5"></script>
-    <script src="js/subscription/site-storage.js?v=20261109.8"></script>
+    <script src="js/subscription/site-storage.js?v=20261109.9"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -2033,6 +2033,11 @@
                     window.SiteStorage.bindAuthor(State.user.id);
                     State.selectedStoryId = AppStorage.getItem('ea-admin-last-story-id') || null;
                     State.editingChapterId = AppStorage.getItem('ea-admin-last-chapter-id') || null;
+                    const savedView = AppStorage.getItem('ea-admin-last-view');
+                    State.currentView = ADMIN_VIEW_NAMES.has(requestedAdminView) ? requestedAdminView : ADMIN_VIEW_NAMES.has(savedView) ? savedView : 'dashboard';
+                    State.selectedCharacterId = AppStorage.getItem('ea-admin-last-character-id') || null;
+                    State.writerPanel = AppStorage.getItem('ea-admin-last-writer-panel') || 'write';
+                    State.writerSidebarCollapsed = AppStorage.getItem('ea-admin-writer-sidebar-collapsed') === 'true';
                     State.profile = data;
                     document.getElementById('user-name').textContent = data.display_name || 'Admin';
                     document.getElementById('user-avatar').textContent = (data.display_name || 'A')[0].toUpperCase();
@@ -3932,6 +3937,17 @@
                 }
             },
 
+            exportLegacyDrafts: () => {
+                try {
+                    const backup = window.SiteStorage.legacyDrafts();
+                    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+                    const link = document.createElement('a');
+                    link.href = url; link.download = 'private-legacy-drafts.json'; link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    UI.showToast('Private backup downloaded. Review ownership before manually restoring drafts.');
+                } catch (err) { UI.showToast(err.message, 'error'); }
+            },
+
             saveSiteIdentity: async () => {
                 UI.showToast('Reader identity is repository-managed. Edit siteProfiles in js/subscription/site-config.js and deploy.', 'info');
             },
@@ -5006,7 +5022,7 @@
                 container.innerHTML = `
                     <div class="page-header">
                         <div>
-                            <h1 class="page-title">Site Settings</h1>
+                            <h1 class="page-title">Site Settings</h1><button class="btn btn-secondary" onclick="Forms.exportLegacyDrafts()">Download private legacy draft backup</button><p>Old unscoped drafts are not imported automatically. This source-site-only download preserves their text without publishing or deleting anything.</p>
                             <p class="page-subtitle">Production reader identity and global JSON configuration</p>
                         </div>
                         <button class="btn btn-primary" onclick="Forms.settingForm()">

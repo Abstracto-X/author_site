@@ -51,7 +51,7 @@
     <script src="js/subscription/site-config.js?v=20261109.4"></script>
     <script src="js/subscription/site-settings.js?v=20261109.4"></script>
     <script src="js/subscription/site-bootstrap.js?v=20261109.5"></script>
-    <script src="js/subscription/site-storage.js?v=20261109.8"></script>
+    <script src="js/subscription/site-storage.js?v=20261109.9"></script>
     <script src="vendor/supabase/supabase-2.111.0.min.js"></script>
     <link rel="stylesheet" href="styles/writer-ai-chat.css">
     <link rel="stylesheet" href="styles/writer-summary-manager.css">
@@ -2719,6 +2719,12 @@
                     if (nextSession?.user?.id !== session.user.id) window.location.reload();
                 });
                 State.activeStoryId = AppStorage.getItem('ea-admin-last-story-id') || '';
+                const savedView = AppStorage.getItem('ea-writer-current-view');
+                State.currentView = ['dashboard', 'editor', 'context'].includes(savedView) ? savedView : 'dashboard';
+                State.dashboardSort = AppStorage.getItem('ea-writer-chapter-sort') || 'chapter-asc';
+                State.primarySidebarCollapsed = initialCompactLayout || AppStorage.getItem('ea-writer-primary-sidebar-collapsed') === 'true';
+                State.editorSettingsCollapsed = initialCompactLayout || AppStorage.getItem('ea-writer-editor-settings-collapsed') === 'true';
+                State.systemMessageRenderingEnabled = AppStorage.getItem('ea-writer-system-message-rendering') !== 'false';
                 return data;
             },
             async loadWorkspace(storyId = null) {
