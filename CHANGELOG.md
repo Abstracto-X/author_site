@@ -1914,3 +1914,7 @@ Bound author application storage to verified account with memory-only pre-auth s
 ## 2026-11-09 — Author preference hydration and legacy recovery
 
 Restored post-verification author UI preferences and added source-only private legacy draft export in Admin Settings. Files: admin.html, writer.html, three entrypoint storage cache versions, site-storage.js, storage tests, overview/admin index/state/changelog. 123 Node tests and storage syntax pass. Original drafts remain untouched, no DB or import/publish operation.
+
+## 2026-11-09 — Reader account-local state
+
+Separated reader saved state by guest/account within existing site/backend scope. Auth user assignments switch records before account refresh. Added behavioral Alice/Bob/guest progress/private-state test. Files: state.js, auth.js, index.html cache versions, tests/reader-account-storage.test.js and overview/reader index/state/changelog. 124 tests plus state/auth syntax pass. No DB changes.

@@ -390,3 +390,7 @@ SiteStorage.author is a stable facade backed by temporary memory until bindAutho
 ## 2026-11-09 — Author preference hydration and legacy recovery
 
 After bindAuthor, Admin restores allowed view, character/story/chapter selection and writer-panel preferences; Writer restores view/sort/rails/system-rendering preferences before workspace initialization. SiteStorage.legacyDrafts() permits the known source identity after author binding to export only raw or pre-account site-scoped ea-chapter-draft keys. Admin Settings downloads a private JSON backup; no HTML is rendered or imported, nothing is published/deleted, auth/chat data is excluded. Ownership must be reviewed manually; there is deliberately no automatic claim/import of unowned drafts.
+
+## 2026-11-09 — Reader account-local state
+
+Reader state.js now chooses a guest legacy-compatible state key or reader-account:<encoded user id>:state-v1 inside the site/backend adapter. switchReaderAccount saves the previous record, changes key and loads the destination account record. Auth initialization, callback/token events, password login/signup/update and signout call it whenever authState.user is assigned. Guest records are not copied into signed-in records; no inference of ownership for old combined private state. Each account initially receives honest defaults pending normal backend refresh.

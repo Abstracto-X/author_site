@@ -46,10 +46,21 @@ const defaultStore = () => ({
   theme: "dark"
 });
 let store;
+let readerStoreAccount = null;
+function readerStoreKey(){
+  return readerStoreAccount ? 'reader-account:' + encodeURIComponent(readerStoreAccount) + ':state-v1' : 'aether-pages-prod-bridge-v2-realdb';
+}
+function switchReaderAccount(userId){
+  const next = typeof userId === 'string' && userId ? userId : null;
+  if (next === readerStoreAccount) return;
+  saveStore();
+  readerStoreAccount = next;
+  loadStore();
+}
 function loadStore(){
   const defaults = defaultStore();
   try {
-    const raw = LS.getItem("aether-pages-prod-bridge-v2-realdb");
+    const raw = LS.getItem(readerStoreKey());
     store = raw ? Object.assign(defaults, JSON.parse(raw)) : defaults;
   } catch(e){ store = defaults; }
   store.settings = Object.assign(defaultStore().settings, store.settings || {});
@@ -75,7 +86,7 @@ function loadStore(){
   store.settings.readerBg = false;
   if (!Array.isArray(store.dismissedNotifs)) store.dismissedNotifs = [];
 }
-function saveStore(){ try { LS.setItem("aether-pages-prod-bridge-v2-realdb", JSON.stringify(store)); } catch(e){} }
+function saveStore(){ try { LS.setItem(readerStoreKey(), JSON.stringify(store)); } catch(e){} }
 loadStore();
 
 /* ============ global UI state ============ */

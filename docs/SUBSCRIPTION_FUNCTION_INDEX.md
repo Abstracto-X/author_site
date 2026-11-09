@@ -560,3 +560,7 @@ chapterDirectUrl(chapterId) now targets configured publicBaseUrl via SiteSetting
 ## 2026-11-09 — Reader storage isolation foundation
 
 getStore(): returns SiteStorage.local or in-memory fallback. SiteStorage.create(): scoped getItem/setItem/removeItem adapter with explicit non-destructive legacy import, removal tombstone and memory fallback. No account scoping yet.
+
+## 2026-11-09 — Reader account-local state
+
+readerStoreKey(): selects guest versus account-specific state key. switchReaderAccount(userId): flush old local state and hydrate destination account state. loadStore/saveStore use that key. Auth assignment paths invoke account switching; server access remains backend authority.

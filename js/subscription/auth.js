@@ -336,6 +336,7 @@ async function initAuth(){
     if (error) throw error;
     authState.session = callbackSession || data?.session || null;
     authState.user = authState.session?.user || null;
+    if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
     if (!authState.user) authState.passwordRecovery = false;
     store.email = authState.user?.email || "";
     await refreshReaderAccountState();
@@ -365,6 +366,7 @@ async function initAuth(){
       if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
         authState.session = session || authState.session;
         authState.user = authState.session?.user || null;
+        if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
         store.email = authState.user?.email || "";
         return;
       }
@@ -374,6 +376,7 @@ async function initAuth(){
       const previousUserId = authState.user?.id;
       authState.session = session || null;
       authState.user = session?.user || null;
+      if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
       if (previousUserId !== authState.user?.id) {
         authState.profile = null;
         authState.entitlements = [];
@@ -424,6 +427,7 @@ async function signInWithPassword(email, password){
   if (error) throw error;
   authState.session = data?.session || null;
   authState.user = data?.user || authState.session?.user || null;
+  if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
   authState.passwordRecovery = false;
   store.email = authState.user?.email || email;
   await refreshReaderAccountState();
@@ -441,6 +445,7 @@ async function signUpWithPassword(email, password){
   // An unconfirmed email sign-up has a user record but no usable reader session.
   authState.session = data?.session || null;
   authState.user = authState.session?.user || null;
+  if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
   authState.passwordRecovery = false;
   store.email = email;
   saveStore();
@@ -461,6 +466,7 @@ async function updateReaderPassword(password){
   if (error) throw error;
   authState.passwordRecovery = false;
   authState.user = data?.user || authState.user;
+  if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
   await refreshProfile();
   await refreshEntitlements();
   saveStore();
@@ -511,6 +517,7 @@ async function signOutReader(){
   const { error } = await client.auth.signOut();
   if (error) throw error;
   authState.user = null;
+  if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
   authState.session = null;
   authState.entitlements = [];
   authState.providerConnections = [];
