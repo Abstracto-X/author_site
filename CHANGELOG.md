@@ -1994,3 +1994,7 @@ Fixed missing/privileged-key startup gap and Admin auth-lock/stale-user profile 
 ## 2026-11-09 — Two-identity integration and acceptance ledger
 
 Added two-profile actual reader-module integration and source appearance parity evidence; fixed stale selection in late Admin chapter override; published full acceptance ledger. Files: admin.html, tests/multi-site-integration.test.js, docs/MULTI_SITE_ACCEPTANCE.md, overview/admin index/state/changelog. 171 tests and offline preflight pass. Source read-only reader_behavior query found no row. No DB writes/deployment.
+
+## 2026-11-09 — Reconcile implementation and deferred acceptance handoff
+
+Updated plan/current acceptance ledger and labelled mid-implementation audit historical. Final offline revalidation: 171 tests, seven inline scripts, 25 active local application script syntax checks and source preflight pass. Owner deferred browser/live-target checks; no deployment readiness claim. Files: plan, acceptance ledger, progress audit, PROJECT_STATE.md, CHANGELOG.md.

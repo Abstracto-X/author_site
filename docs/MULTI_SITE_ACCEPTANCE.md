@@ -40,3 +40,7 @@ All changes are committed in batches. Do not remove legacy raw/local draft recor
 ## Next action
 
 Owner supplies final target public configuration and provisions restricted target access when ready, then the deferred compatibility/rollout gates can be completed. Owner-led browser QA may run first against the current source deployment preview. No target secrets should be pasted into chat. Remaining failures found by those gates must be fixed before final acceptance.
+
+## Final offline revalidation checkpoint
+
+171/171 Node tests pass. Independently enumerated entrypoint sources: all seven inline classic scripts parse (including Admin, not just Writer); all 25 directly referenced local application scripts pass node --check. Source preflight passes. Worktree was clean before this documentation reconciliation. The owner then explicitly chose to leave browser verification for later, in addition to the earlier live-target deferral. Thus remaining acceptance depends on external verification/configuration, not on starting hidden browser sessions or guessing target credentials. The goal remains unachieved.

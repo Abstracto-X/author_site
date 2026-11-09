@@ -1,6 +1,6 @@
 # Multi-site implementation progress audit
 
-Not a completion certificate. Reviewed current code, current 150-test suite and plan register on 2026-11-09. Live target checks explicitly deferred by owner; manual browser gates are not covered by Node tests.
+Historical mid-implementation checkpoint. Later commits resolved several gaps below; use docs/MULTI_SITE_ACCEPTANCE.md and latest PROJECT_STATE.md for current status. Not a completion certificate. Reviewed current code, current 150-test suite and plan register on 2026-11-09. Live target checks explicitly deferred by owner; manual browser gates are not covered by Node tests.
 
 | Plan findings | Current evidence / remaining work |
 |---|---|

@@ -2337,3 +2337,16 @@ Status: IN PROGRESS. Two-task static audit batch: frontend key shape/anon-role s
 ## 2026-11-09 — Two-identity integration and acceptance ledger
 
 Status: NEEDS REVIEW (code/offline checkpoint; full goal remains unaccepted). Two-task batch adds actual two-profile module integration plus source parity/acceptance audit, and repairs late Admin chapter override selection. 171 tests and source preflight pass. Source appearance query returned no reader_behavior row; source story/tier appearance mappings already verified. Files: admin.html, multi-site integration test, acceptance ledger and docs/changelog. Remaining authoritative gates are listed in docs/MULTI_SITE_ACCEPTANCE.md: real source browser workflows, target schema/RLS/RPC/Storage/Edge and per-deployment services, reviewed migrations only if needed, two actual deployments/network checks. User explicitly deferred live target access; no secrets requested again and no target connection attempted. No DB writes, backup execution or browser tests. Do not mark full plan complete from offline evidence.
+
+## 2026-11-09 — Offline checkpoint complete; live/browser acceptance deferred
+
+Status: BLOCKED (awaiting owner-deferred verification/configuration; objective not achieved)
+
+Area: shared / docs / deployment
+Files touched: docs/MULTI_SITE_CONFIGURATION_PLAN.md, docs/MULTI_SITE_ACCEPTANCE.md, docs/audits/2026-11-09-multi-site-progress.md, PROJECT_STATE.md, CHANGELOG.md.
+
+Summary: final independent verification passes 171 Node tests, seven entrypoint inline scripts and 25 active local application script syntax checks, plus source preflight. Reconciled stale planning/mid-implementation language with current implemented state. Source code changes remain committed in batches. Owner explicitly deferred live Abstracto checks/credentials and now explicitly chose browser verification later. Do not automate browser sessions or infer acceptance from offline checks.
+
+Remaining: owner performs/allows real source browser QA and supplies target settings/restricted access when ready; then validate target schema/RPC/RLS/Storage/Edge, review required migrations before execution, configure independent Auth/provider/email/AI/scheduler/backups and run two-deployment security/visual/network acceptance. Full objective is unachieved. Same outstanding external gates have been documented in at least three consecutive prior goal turns; no further independent code action identified by current audit without those gates. Resume with actual evidence/results, not another blind refactor.
+
+Verification: 171 tests, seven inline parses, 25 local script syntax checks, source offline preflight; no DB writes, target access, browser run, backup run, secret retrieval or deployment.
