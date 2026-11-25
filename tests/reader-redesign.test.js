@@ -17,10 +17,13 @@ function harness() {
       documentElement:{setAttribute(){},style:{setProperty(){}}}
     },
     location:{ hash:'' }, navigator:{onLine:true} });
-  for (const file of ['config.js','state.js','utils.js','router.js','chrome.js','sheets.js','views/home-library.js','views/story-reader.js','views/gallery.js','views/account-access.js','views/help-support.js','views/reader-settings.js']) {
+  vm.runInContext(read('js/shared/media-layout.js'),context);
+  for (const file of ['config.js','state.js','utils.js','router.js','chrome.js','sheets.js','views/home-library.js','views/story-reader.js','views/gallery.js','views/account-access.js','views/help-support.js','views/reader-settings.js','views/media-stream.js']) {
     vm.runInContext(read(`js/subscription/${file}`),context,{filename:file});
   }
   vm.runInContext(`
+    const buildHomeMediaPosts = window.buildHomeMediaPosts;
+    const homeMediaPostCard = window.homeMediaPostCard;
     let testEntitled = false;
     const authState = {user:null};
     function isAdmin(){ return false; }
@@ -64,7 +67,7 @@ test('split homepage preserves reading/follow/access actions and pagination',()=
   const h=harness(); const html=h.run('VIEWS.home()');
   assert.match(html,/rh-hero/); assert.match(html,/data-follow="s1"/);
   assert.match(html,/data-read="ch0"/); assert.match(html,/data-lock="ch31"/);
-  assert.match(html,/home-feed-load-more/); assert.match(html,/Open Gallery/);
+  assert.match(html,/home-feed-load-more/); assert.match(html,/data-nav="\/gallery\/story"/);
 });
 test('home retains curated split and mixed feed but ignores removed modes',()=>{
   const h=harness();
@@ -302,4 +305,10 @@ test('mobile story sidebar retains metadata, progress and Follow for populated a
   const mobile=read('styles/reader-foundation.css').split('@media (max-width: 920px)')[1].split('@media (max-width: 680px)')[0];
   assert.match(mobile,/\.story-workspace \.story-sidebar-meta,\s*\.story-workspace \.story-sidebar-progress \{ display: block; \}/);
   assert.match(mobile,/\.story-workspace \.story-sidebar-actions \{ display: flex; \}/);
+});
+
+test('the unified media stream includes posts beyond the primary story while home remains scoped',()=>{
+  const h=harness();
+  const result=h.run(`D.MEDIA_POSTS=[{id:'primary',story_id:'s1',title:'Primary',items:[{id:'one',media_url:'https://example.com/a.jpg'}]},{id:'secondary',story_id:'s2',title:'Secondary',items:[{id:'two',media_url:'https://example.com/b.jpg'}]}]; [window.buildHomeMediaPosts(D.STORIES[0]).length,window.buildHomeMediaPosts(null,true).length]`);
+  assert.deepEqual(Array.from(result),[1,2]);
 });

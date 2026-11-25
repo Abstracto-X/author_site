@@ -1,5 +1,147 @@
 # Project State
 
+## 2026-11-24 17:07 Asia/Kolkata ? Media-first Studio awaits staging acceptance
+
+Status: NEEDS REVIEW (implemented locally; do not deploy yet)
+
+Area: studio / reader / database
+
+Files touched: `studio.html`, `styles/studio.css`, `js/studio/`, `js/shared/media-*.js`, reader integration, the staged Studio migration, and test fixtures.
+
+Summary: Media is the only Studio section. The editor uses reader layout geometry, batch starting labels, visual multi-select, per-attachment audiences, safe pre-blurred teasers or blockers, draft/live actions, and explicit unpublish. Legacy rows stay with legacy Media Studio; Writer and Admin are not ported. The new storage policy does not make already-public legacy file URLs private.
+
+Remaining work: Owner review both pending Media Posts migrations in order and test on Supabase staging before a production apply. No access-code tiers, Writer/Admin port, automatic Gallery mirroring, or legacy asset migration. Fresh signing stops on unpublish, but a signed URL already in circulation can live until its ten-minute expiry. Unreferenced uploads remain private; a reviewed cleanup workflow is deferred.
+
+Verification completed: Fixture-only Chrome renders and interaction checks at 1440, 820, and 390 px verify All Posts, the populated canvas, header stickiness, selection, inspector and validation focus, file intake, and simulated sign-out. Fixture artwork is cropped from `reference/studio.png`; no writes or live Supabase calls.
+
+Verification needed: Signed-in staging browser check at desktop and phone sizes; create a mixed post, test drag and keyboard/touch selection, draft/live/unpublish, upload failure and retry, guest/anonymous-Auth/registered/paid HTTP and Storage behavior, actual image/video signing and renewal, and app sign-out. Disposable PostgreSQL fixtures passed previously; live verification remains outstanding.
+
+## 2026-11-24 05:33 Asia/Kolkata — Unified Studio direction
+
+Status: TODO (owner direction recorded; no Studio implementation in this pass)
+
+Area: admin / writer / media / design
+
+Files touched: `DESIGN.md`, `.impeccable/design.json`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+
+Summary: The owner considers the public reader largely good. The current target is one `studio.html` for Admin, Writer, and media upload workflows, with visual continuity from the reader. `DESIGN.md` documents the incumbent reader styles; the existing authoring pages remain separate implementations. `docs/STUDIO_REBUILD_PLAN.md` is prior planning context, not evidence that the new Studio has shipped.
+
+Remaining work: Reconcile the older plan with media upload scope and open Media Studio work. Keep current entrypoints intact during the parallel build.
+
+Verification needed before replacement: Signed-in workflow parity, including chapter draft and live-save behavior, media uploads and access rules, and admin authorization. No runtime changes or new browser checks in this documentation pass.
+
+## 2026-11-23 23:30 Asia/Kolkata — Media Posts SQL fixes verified locally; Studio changes still required
+
+Status: NEEDS REVIEW (supersedes the 23:14 SQL findings below; do not deploy yet)
+
+Area: database / reader / admin
+
+Files touched:
+- `supabase/migrations/20261123225500_media_posts_and_storage.sql`, `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- SQL now preserves a deleted item override as locked, only permits browser likes through the serialized RPC, and keeps raw media comments off the public table API. Media comment writes use trusted identity, metadata, and timestamps with published-target checks and a serialized rate limit. Public file URLs and pre-blurred previews are still the intended design.
+
+Remaining work:
+- Media Studio must generate independent cryptographic paths for teasers, posters, and originals; mirror only explicitly public items to Gallery; and retain the override marker when editing an item whose tier was removed. Its current delete/reinsert save path does not preserve that marker.
+- Reconcile reader script cache versions, homepage test dependencies, and guest-auth single-flight behavior. Discord synchronization remains deferred.
+
+Verification:
+- Disposable PostgreSQL 18.4: migration passed twice; fixture assertions passed for guest feed URL redaction, tier deletion and inheritance, guest like/unlike, comment projection/privacy, sixth-comment rate-limit rejection, draft comment rejection, and chapter comment read/edit compatibility.
+- Read-only production catalog reconfirmed schema dependencies and that the sampled migration objects are absent. No production writes or browser behavior changes. After Studio fixes, manually verify Storage listing denial, preview isolation, tier changes across a Studio resave, and guest engagement in staging before owner apply.
+
+## 2026-11-23 23:14 Asia/Kolkata — Media Posts Phase 2 guest engagement implemented; review found release blockers
+
+Status: NEEDS REVIEW (do not apply as written; follow-up fixes and staging QA required)
+
+Area:
+- reader / admin / database
+
+Files touched:
+- `supabase/migrations/20261123225500_media_posts_and_storage.sql`
+- `media-studio.html`
+- `js/subscription/auth.js`, `js/subscription/backend.js`, `js/subscription/views/media-stream.js`, `js/subscription/events.js`
+- `docs/DATABASE_CONTEXT.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Hardened `20261123225500_media_posts_and_storage.sql`: removed public `storage.objects` listing policy on `media-posts`, made `get_media_post_feed()` fail closed (only `public` is open to everyone; `blur_teaser`/`hard_lock` require an active non-null tier and non-anonymous `has_active_entitlement()`), kept raw `media_post_likes` private, serialized `toggle_media_post_like()` with `pg_advisory_xact_lock` on published posts only, and added restrictive `INSERT` RLS + validation/rate-limit trigger + safe `get_media_post_comments()` / `post_media_post_comment()` RPCs on `public.comments`.
+- Updated `media-studio.html` to use `crypto.randomUUID()` paths and block draft/hard-lock items from Gallery sync (auto-tagging `blur_teaser` stills as `nsfw`).
+- Added lazy `ensureMediaGuestSession()` in `auth.js` (`signInAnonymously()` only on first media like/comment, reused across reloads, keeping anonymous sessions on the Guest path across all other UI).
+
+Remaining work:
+- Keep publicly served known URLs by design, but use independent cryptographically random paths for teasers, originals and posters; do not mirror restricted originals to the Gallery under its broader entitlement check.
+- Preserve explicit item tier overrides when a referenced tier is removed; distinguish them from intentionally inherited tiers and fail closed.
+- Mediate media comment SELECT/INSERT/UPDATE at the database boundary while preserving other comment types. The current public `comments` policy still exposes raw guest IDs and draft comments, existing UPDATE bypasses insert-only checks, and the direct insert path accepts client metadata/timestamps. Use trusted author metadata and enforce the comment rate limit under concurrent writes.
+- Reconcile the reader homepage dependency/test harness and bump the changed reader scripts' cache versions together. Make lazy guest sign-in single-flight. Verify Auth abuse protection and existing `authenticated` policies before the owner enables anonymous sign-ins; then test the revised migration in staging before production owner apply.
+- Future: Discord <-> website two-way comment sync bot using `media_posts.discord_thread_id` and `comments.metadata`.
+
+Verification needed:
+- 23:16 review: disposable PostgreSQL 18.4 accepted the updated migration twice; guest preview redaction, sequential anonymous like/unlike, and a comment labeled Guest passed through the intended RPCs. Read-only production catalog checks confirmed the Auth/schema dependencies and existing comments grants/policies; the media table and comment RPC sampled were still absent. Storage and Auth delivery were not tested live.
+- Six reader JS syntax checks and the Media Studio inline JS parse passed. Working-tree Node suite: 167/171; four homepage tests fail with `homeMediaPostCard is not defined`. The committed `HEAD` reader-redesign suite passes 28/28. No SQL, runtime, changelog, or production changes by this verification pass.
+- Staging acceptance checks: verify guests can like, unlike, and comment without registering (displayed as `Guest`, no `user_id` exposed); likes persist after reload; draft/nonexistent posts reject likes & comments; guest/free/expired sessions cannot discover restricted URLs via UI, RPC, direct table reads, Storage `.list()`, or Gallery sync; eligible readers can play media; removing/deactivating a required tier leaves items locked.
+
+Status: IN PROGRESS (Phase 1 UI live in reader; Phase 2 DB schema & Media Studio pending)
+
+Area:
+- reader / admin / database
+
+Files touched:
+- `index.html`, `js/subscription/router.js`, `js/subscription/views/home-library.js`, `js/subscription/views/media-stream.js`, `js/subscription/events.js`, `styles/media-posts.css`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`
+
+Summary:
+- Integrated Media Posts into the Split Column (`#home-gallery-panel`) and `#/media` Unified Media Stream, auto-grouping existing `character_gallery_images` rows by character + 30-minute upload window.
+- Right-edge glassmorphic Heart/Comment dock and translucent Comment Drawer show honest WIP state until Phase 2 DB tables are deployed.
+
+Remaining work:
+- Phase 2: Design and apply `media_posts` / `media_post_items` / reactions / comments SQL migration + `media-posts` storage bucket (supporting MP4/WebM + images, tier gating starting at `resident-licker`).
+- Build dedicated standalone `media-studio.html` admin uploader/composer with drag-and-drop, auto-poster capture, and optional Gallery Archive sync.
+
+Verification needed:
+- Manual browser check of Home Split Column, `Expand Stream ↗`, `#/media` uncropped masonry click-to-expand, `← Back to Split` reverse de-transition, Comment Drawer WIP on desktop + mobile, and `Blur NSFW` toggle.
+
+## 2026-11-21 22:48 Asia/Kolkata — Evil Archive release and smoke checks
+
+Status: DONE (Evil Archive published at 23:06; production smoke checks passed)
+
+Area: deployment / reader / admin / Writer
+
+Files touched: PROJECT_STATE.md only.
+
+Summary: Evil Archive is the release gate; Abstracto readiness is not required. The documented public Pages URL returned HTTP 200 and still served an entrypoint without the new shared bootstrap. Local main at 8d03f13 contains the candidate. No hosting config is tracked on main; the separate Workers autoconfig branch is not evidence of active production settings.
+
+Remaining work: Broader production checks for preference migration, signed-in free/guest chapter denial, account-switch isolation, and provider callbacks were not reported. Restore the previous production version if a release-blocking regression appears. Abstracto rollout and full multi-site acceptance remain separate.
+
+Risks / notes: No Auth configuration changes, database migrations, Edge Function deployments, or database writes were made as part of publishing. The preview's separate origin does not prove production-origin session/local-storage upgrade or real-domain provider redirects. Do not change the production site URL or broaden redirect permissions for QA.
+
+Verification: Python static preview served a temporary archive of the committed runtime files on loopback only. Reader, Admin, Writer, and representative JS/CSS/image URLs returned HTTP 200; /.env and /.git/HEAD returned 404. After publishing, the public Reader, Admin, and Writer responses showed the candidate's bootstrap reference; the public bootstrap and storage scripts also loaded. This was an HTTP check, not a signed-in smoke test.
+
+Owner QA: The owner confirmed the localhost paid-chapter comparison (full chapter for paid; gated for signed-in free and guest), non-admin denial in Admin and Writer, and unpublished Writer draft edit persistence after reload. On production after publishing, the owner confirmed that their existing session stayed signed in, the test account could access chapters, and the admin account could open Admin.
+
+Cloudflare release: On explicit owner authorization, fast-forwarded GitHub main from 38aa361 to the exact local QA commit 8d03f13; Cloudflare then served the candidate on cornyshitler.pages.dev. The prior successful production release shown in the owner’s screenshot is 38aa361 at https://1d703ed5.cornyshitler.pages.dev/; use that exact entry as the restore target if needed. No rollback was performed. Uncommitted notes and reference files were not published.
+
+## 2026-11-21 22:37 Asia/Kolkata — Homepage visual posts concept
+
+Status: NEEDS REVIEW (design proposal only)
+
+Area:
+- reader / admin / database
+
+Files touched:
+- PROJECT_STATE.md
+
+Summary:
+- Proposed keeping the story hero and chapter panel, replacing the Split Archive artwork sampler with recent titled Visual Posts, and linking to a full-width, chronological feed in the same reader shell. Keep the character Gallery and its per-image votes as a separate archive.
+- Use the same post across Home, feed, and a shareable detail view. A post has a lead preview and ordered media; a still that is also a video's poster need not be shown twice.
+
+Remaining work:
+- Confirm layout, archive inclusion, and engagement scope before defining the post/item schema and author publishing workflow. Keep feed and archive presentation separate from asset access.
+
+Risks / notes:
+- Existing gallery blur is presentation, not storage security. Restricted post thumbnails, posters, originals, and videos need server-enforced access if that is the intended visibility model. No runtime or DB changes made.
+
+Verification needed:
+- Review a desktop/mobile card and feed prototype with video-led, still-only, and restricted examples before implementation.
+
 ## 2026-11-09 13:50 Asia/Kolkata — Luna/Terra implementation pilot
 
 Status: IN PROGRESS (two pilot tasks accepted; full plan incomplete)

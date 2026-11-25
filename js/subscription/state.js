@@ -63,6 +63,8 @@ function switchReaderAccount(userId){
   const sourceIdentity = typeof CONFIG !== 'undefined' && CONFIG.siteKey === 'evilarchives' && CONFIG.supabase?.url === 'https://cqgrulawpwkrdvxagzez.supabase.co';
   const guestAppearance = sourceIdentity && !readerStoreAccount && next ? Object.fromEntries(visualKeys.map(key => [key, store.settings[key]])) : null;
   readerStoreAccount = next;
+  if (typeof D !== "undefined") D.MEDIA_POSTS = [];
+  if (typeof window !== "undefined" && typeof window.resetMediaStreamData === "function") window.resetMediaStreamData(true);
   const hasAccountRecord = !!LS.getItem(readerStoreKey());
   loadStore();
   if (guestAppearance && !hasAccountRecord) {

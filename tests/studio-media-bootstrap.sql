@@ -1,0 +1,21 @@
+-- For a new, disposable PostgreSQL database only; not an application migration.
+CREATE ROLE anon;
+CREATE ROLE authenticated;
+CREATE SCHEMA auth;
+CREATE SCHEMA storage;
+CREATE TABLE auth.users(id uuid PRIMARY KEY,is_anonymous boolean DEFAULT false);
+CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('test.uid',true),'')::uuid $$;
+CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT jsonb_build_object('is_anonymous',current_setting('test.anon',true)='true') $$;
+CREATE TABLE public.profiles(id uuid PRIMARY KEY,username text,display_name text,role text);
+CREATE FUNCTION public.is_admin() RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT FROM public.profiles WHERE id=auth.uid() AND role='admin') $$;
+CREATE TABLE public.stories(id uuid PRIMARY KEY,is_published boolean);
+CREATE TABLE public.reader_access_tiers(id uuid PRIMARY KEY,slug text,name text,is_active boolean);
+CREATE FUNCTION public.has_active_entitlement(who uuid,tier uuid) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT who='00000000-0000-0000-0000-000000000003'::uuid $$;
+CREATE TABLE public.character_gallery_images(id uuid PRIMARY KEY);
+CREATE TABLE public.comments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid,target_type text,target_id uuid,content text,created_at timestamptz DEFAULT now(),metadata jsonb);
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+CREATE TABLE storage.objects(bucket_id text,name text);
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+GRANT USAGE ON SCHEMA auth,storage TO anon,authenticated;
+GRANT SELECT,INSERT,UPDATE,DELETE ON storage.objects TO anon,authenticated;

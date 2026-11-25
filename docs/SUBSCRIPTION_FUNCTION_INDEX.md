@@ -1,5 +1,20 @@
 # Subscription Reader Function Index
 
+## 2026-11-24 ? Media-first Studio reader integration
+
+- `js/shared/media-layout.js` exports `MediaLayout.compactMosaic()` and `solveOrganicMasonry()` for reader cards and both canvases. Home stays primary-story scoped; the unified Media view consumes all loaded published posts.
+- `js/shared/media-storage.js` resolves only authorized Studio object paths into short-lived signed URLs; failures do not fall back to a public object URL. `backend.js` uses `setMediaFeedRows()` and `scheduleMediaFeedRefresh()` for refresh on Home/Media; account switches clear rows and overlays.
+- `mediaPostCanViewMature()` accounts for authorized Studio attachments as well as the existing gallery entitlement. Display preference remains separate from backend access.
+
+## 2026-11-23 — Media Posts Split Column & Unified Stream (Phase 1)
+
+| File | Function | Purpose |
+|---|---|---|
+| `views/media-stream.js` | `buildHomeMediaPosts(story)` | Groups existing `character_gallery_images` by character and 30-minute upload window (max 9 items) into chronological Media Posts. |
+| `views/media-stream.js` | `homeMediaPostCard(post)` | Renders compact Split Column mosaic cards with `NEW` stamp, tier badge, and vote count. |
+| `views/media-stream.js` | `VIEWS.media()` / `setupMediaStream()` | Full-width infinite-scroll Media Stream (`#/media`) with uncropped in-place organic masonry (`solveOrganicMasonry`), right-edge glassmorphic Heart/Comment dock, translucent Comment Drawer (WIP), and Fullscreen Inspector. |
+| `views/media-stream.js` | `openMediaStreamFromCard()` / `backFromMediaStream()` | Smooth 620ms card-to-post expand and reverse de-transition back to Split Column. |
+
 ## 2026-11-09 — Multi-site pilot
 
 | File | Function | Purpose |

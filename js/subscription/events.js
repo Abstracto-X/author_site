@@ -234,6 +234,8 @@ function afterRender(){
     if (route.name === "home" && typeof sizeHomeGalleryTiles === "function") sizeHomeGalleryTiles();
   }
   if (typeof setupHomeArchive === "function") setupHomeArchive();
+  if (route.name === "media" && typeof setupMediaStream === "function") setupMediaStream();
+  if (typeof scheduleMediaFeedRefresh === "function") scheduleMediaFeedRefresh();
   if (isReader){ setupReader(); }
   if (window.ReaderGuides && typeof window.ReaderGuides.afterRender === "function") window.ReaderGuides.afterRender();
   maybeShowWhatsNew();
@@ -298,7 +300,7 @@ function delegate(){
   });
   document.addEventListener("click",(e)=>{
     const t=e.target.closest("[data-nav],[data-read],[data-preview],[data-lock],[data-sheet],[data-reader-preferences],[data-set-reader-theme],[data-follow],[data-react],[data-persona],[data-toggle],[data-filter],[data-act],[data-toast-action],[data-dismiss],[data-fig],[data-para],[data-copy],[data-set-theme],[data-set-preset],[data-set-reader-font],[data-shelf-view],[data-chapter-sort],[data-site-theme],[data-studio-state],[data-set-bg-mode],[data-set-bg-url],[data-set-width]");
-    if(!t) return;
+    if(!t) { if (typeof handleMediaStreamClick === "function") handleMediaStreamClick(e); return; }
     if (t.dataset.siteTheme!=null){ setTheme(t.dataset.siteTheme); openSheet(currentSheet?currentSheet.builder:sheetSettings, currentSheet?currentSheet.opts:null); toast("Theme: "+(THEMES.find(x=>x.id===t.dataset.siteTheme)?.name), null, {icon:"palette"}); render(); return; }
 
     if (t.dataset.studioState!=null){ const p=t.closest(".state-pills"); if(p) p.querySelectorAll(".state-pill").forEach(b=>b.classList.remove("active")); t.classList.add("active"); toast("Access state set", "Chapter will be "+t.textContent.trim()+" on publish.", {icon:"lock"}); return; }
@@ -370,6 +372,10 @@ function delegate(){
       return;
     }
     if(e.key==="Escape" && readerPreferencesOpen){ closeReaderPreferences(); return; }
+    if(e.key==="Escape" && route.name === "media"){
+      if (document.getElementById("mp-fs-modal")?.classList.contains("open")) { closeMediaFullscreen(); return; }
+      if (document.getElementById("mp-comment-drawer")?.classList.contains("open")) { closeMediaComments(); return; }
+    }
     if(State.lightboxIndex >= 0){
       if(e.key==="Escape"){ e.preventDefault(); closeGalleryLightbox(); }
       else if(e.key==="ArrowLeft"){ e.preventDefault(); openGalleryLightbox(Math.max(0, State.lightboxIndex - 1)); }
@@ -400,6 +406,19 @@ function delegate(){
       return;
     }
     if(f.dataset.redeemForm!=null){ e.preventDefault(); const v=f.querySelector("[name=key]").value; const ok=await redeemKey(v); if(ok===false){ /* error shown */ } return; }
+    if(f.id==="mp-comment-form"){
+      e.preventDefault();
+      const inp=f.querySelector("#mp-comment-input");
+      const text=inp?.value?.trim();
+      if(!text) return;
+      try {
+        await submitMediaComment(text);
+        if(inp) inp.value="";
+      } catch(err){
+        toast("Comment not posted", err.message || "Please try again.", {icon:"alert", kind:"bad"});
+      }
+      return;
+    }
 
     if(f.dataset.profileNameForm!=null){
       e.preventDefault();
@@ -585,6 +604,86 @@ function handleAct(act, el){
       State.homeGalleryLimit = (Number(State.homeGalleryLimit || 18)) + 12;
       render({preserveScroll:true});
       break;
+    case "home-media-load-more":
+      State.homeMediaPostLimit = (Number(State.homeMediaPostLimit || 4)) + 4;
+      render({preserveScroll:true});
+      break;
+    case "open-media-post":
+      if (typeof openMediaStreamFromCard === "function") openMediaStreamFromCard(el.dataset.postId, el);
+      break;
+    case "expand-media-stream":
+      if (typeof openMediaStreamFromCard === "function") openMediaStreamFromCard(null, document.getElementById("home-gallery-panel"));
+      break;
+    case "media-back-home":
+      if (typeof backFromMediaStream === "function") backFromMediaStream();
+      break;
+    case "media-filter":
+      if (window.MediaStreamState) {
+        MediaStreamState.filter = el.dataset.mpFilter || "all";
+        MediaStreamState.visibleCount = 8;
+        render({preserveScroll:false});
+      }
+      break;
+    case "media-load-more":
+      if (window.MediaStreamState) {
+        MediaStreamState.visibleCount += 8;
+        render({preserveScroll:true});
+      }
+      break;
+    case "media-like": {
+      const pid = el.dataset.mpPost;
+      const post = window.MediaStreamState?.posts?.find(p => p.id === pid);
+      const ui = typeof getMediaPostUI === "function" ? getMediaPostUI(pid) : null;
+      if (post && ui) {
+        if (post.isBackend) {
+          el.disabled = true;
+          toggleMediaPostLikeBackend(pid).then(res => {
+            ui.liked = !!res?.liked;
+            post.likes = Number(res?.like_count ?? post.likes);
+            el.classList.toggle("liked", ui.liked);
+            const cnt = el.querySelector(`[data-mp-like-count="${CSS.escape(pid)}"]`);
+            if (cnt) cnt.textContent = String(post.likes);
+            if (ui.liked) {
+              el.classList.remove("popping");
+              void el.offsetWidth;
+              el.classList.add("popping");
+            }
+          }).catch(err => {
+            toast("Like not saved", err.message || "Try again.", { icon:"alert", kind:"bad" });
+          }).finally(() => { el.disabled = false; });
+        } else {
+          ui.liked = !ui.liked;
+          el.classList.toggle("liked", ui.liked);
+          const cnt = el.querySelector(`[data-mp-like-count="${CSS.escape(pid)}"]`);
+          if (cnt) cnt.textContent = String(post.likes + (ui.liked ? 1 : 0));
+          if (ui.liked) {
+            el.classList.remove("popping");
+            void el.offsetWidth;
+            el.classList.add("popping");
+            toast("Preview like", "Publish via Media Studio to persist likes.", { icon:"heart", ms:2200 });
+          }
+        }
+      }
+      break;
+    }
+    case "media-comments":
+      if (typeof openMediaComments === "function") openMediaComments(el.dataset.mpPost);
+      break;
+    case "media-close-comments":
+      if (typeof closeMediaComments === "function") closeMediaComments();
+      break;
+    case "media-inspect":
+      if (typeof openMediaFullscreen === "function") openMediaFullscreen(el.dataset.mpPost, Number(el.dataset.mpIdx || 0));
+      break;
+    case "media-inspect-active": {
+      const pid = el.dataset.mpPost;
+      const ui = typeof getMediaPostUI === "function" ? getMediaPostUI(pid) : null;
+      if (typeof openMediaFullscreen === "function") openMediaFullscreen(pid, Math.max(0, ui ? ui.activeIndex : 0));
+      break;
+    }
+    case "media-close-fs":
+      if (typeof closeMediaFullscreen === "function") closeMediaFullscreen();
+      break;
     case "home-layout":
       store.homeLayout = el.dataset.homeLayout === "traditional" ? "traditional" : "multigrid";
       saveStore();
@@ -631,6 +730,9 @@ function handleAct(act, el){
     case "share-chapter": shareChapterLink(el.dataset.chapterId || currentChapter?.ch.id); break;
     case "open-notification": openReaderNotification(el.dataset.notificationId, el.dataset.chapterId, el.dataset.notificationUrl); break;
     case "refresh-notifications": refreshReaderNotifications({browser:false}).then(()=>toast("Notifications refreshed",null,{icon:"bell"})).catch(err=>toast("Refresh failed",err.message||"Unable to load alerts.",{icon:"alert",kind:"bad"})); break;
+    case "toggle-media-r18":
+      if (!window.mediaPostCanViewMature?.()) { openSheet(matureArtworkAccessSheet); break; }
+      State.showR18 = !State.showR18; render({preserveScroll:true}); break;
     case "toggle-r18":
       if (!homeCanViewMatureGallery()) { openSheet(matureArtworkAccessSheet); break; }
       State.showR18 = !State.showR18; render({preserveScroll:true}); break;

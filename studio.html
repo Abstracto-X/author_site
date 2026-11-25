@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Author Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles/studio.css?v=4">
+</head>
+<body class="studio-host">
+  <a class="studio-skip" href="#studio-main">Skip to workspace</a>
+  <div class="studio-shell" id="studio-shell">
+    <!-- Collapsible Slim Studio Rail (Tobto Neutral Obsidian DNA) -->
+    <aside class="studio-rail" aria-label="Studio navigation">
+      <a class="studio-monogram" href="#/media" aria-label="Author Studio home" data-tip="Author Studio">
+        <span class="monogram-mark">E</span>
+        <span class="rail-label">Author Studio</span>
+      </a>
+
+      <nav class="studio-rail-nav">
+        <a class="studio-rail-link" href="#/media" aria-current="page" data-tip="Media Posts">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg>
+          <span class="rail-label">Media</span>
+        </a>
+        <a class="studio-rail-link" href="writer.html" data-tip="Chapter Writer">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span class="rail-label">Writer</span>
+        </a>
+        <a class="studio-rail-link" href="admin.html" data-tip="Admin CMS">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="rail-label">Admin CMS</span>
+        </a>
+        <a class="studio-rail-link" href="index.html#/media" data-tip="Open Live Reader">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <span class="rail-label">Live Reader</span>
+        </a>
+      </nav>
+
+      <div class="studio-rail-bottom">
+        <button type="button" class="studio-rail-link" id="rail-collapse-btn" aria-label="Toggle sidebar" data-tip="Expand sidebar">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          <span class="rail-label">Collapse</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="studio-main" id="studio-main" tabindex="-1">
+      <header class="studio-header">
+        <div class="studio-heading">
+          <button id="back-posts" type="button" class="studio-back" aria-label="Back to All Posts" hidden data-tip="Back to All Posts">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 6-6 6 6 6"/></svg>
+          </button>
+          <h1 id="page-title" tabindex="-1">All Posts</h1>
+          <span id="editor-state" class="studio-tag" hidden>Draft</span>
+        </div>
+
+        <button class="btn story" type="button" id="new-post" hidden>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New post
+        </button>
+
+        <div class="studio-actions" id="editor-actions" hidden>
+          <a class="btn ghost" id="view-live-post" href="index.html#/media" target="_blank" rel="noopener" hidden>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>View live
+          </a>
+          <button type="button" class="btn ghost" id="toggle-settings" aria-controls="post-settings" aria-expanded="false">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M15 5v14"/></svg>Details
+          </button>
+          <button type="button" class="btn ghost" id="save-draft">Save draft</button>
+          <button type="button" class="btn ghost" id="unpublish-post" hidden>Unpublish</button>
+          <button type="button" class="btn story" id="save-live">Publish post</button>
+        </div>
+      </header>
+
+      <!-- Floating Toast Notice (never shifts header height!) -->
+      <p id="studio-notice" class="studio-notice" role="status" aria-live="polite" hidden></p>
+
+      <!-- Auth / Setup Gate -->
+      <section id="studio-gate" class="studio-panel" aria-labelledby="gate-heading">
+        <h2 id="gate-heading">Checking access</h2>
+        <p id="gate-message" role="status">Checking your administrator session…</p>
+        <div class="gate-actions">
+          <a href="admin.html" id="gate-signin" class="btn story" hidden>Open Admin sign-in</a>
+          <button type="button" class="btn ghost" id="gate-retry" hidden>Reload Studio</button>
+        </div>
+      </section>
+
+      <!-- ALL POSTS LIBRARY -->
+      <section id="studio-library" hidden aria-label="All media posts">
+        <div class="studio-tools studio-library-tools">
+          <div class="studio-library-left">
+            <!-- Sliding Segmented Filter (syncs hidden #post-filter) -->
+            <div class="studio-seg" data-sync-select="post-filter" role="tablist" aria-label="Filter posts">
+              <span class="seg-thumb" aria-hidden="true"></span>
+              <button type="button" data-value="all" class="is-active" role="tab" aria-selected="true">All posts</button>
+              <button type="button" data-value="published" role="tab" aria-selected="false">Published</button>
+              <button type="button" data-value="draft" role="tab" aria-selected="false">Drafts</button>
+            </div>
+            <p id="library-count" class="studio-muted" aria-live="polite"></p>
+            <select id="post-filter" class="studio-sr" aria-hidden="true" tabindex="-1">
+              <option value="all">All posts</option>
+              <option value="draft">Drafts</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+
+          <!-- Grid Density Switcher (from Tobto reference!) -->
+          <div class="density-group" id="grid-density" role="group" aria-label="Grid density">
+            <button type="button" data-density="compact" title="Compact grid" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="3" width="4.5" height="4.5" rx="1"/><rect x="16.5" y="3" width="4.5" height="4.5" rx="1"/><rect x="3" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="16.5" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="3" y="16.5" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="16.5" width="4.5" height="4.5" rx="1"/><rect x="16.5" y="16.5" width="4.5" height="4.5" rx="1"/></svg>
+            </button>
+            <button type="button" data-density="medium" title="Balanced grid" aria-pressed="true" class="is-active">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+            </button>
+            <button type="button" data-density="large" title="Large cards" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="post-grid" class="studio-card-grid" data-density="medium"></div>
+        <button type="button" class="btn ghost studio-load-more" id="load-more-posts" hidden>Load more posts</button>
+      </section>
+
+      <!-- OPENED POST EDITOR -->
+      <section id="studio-editor" hidden aria-label="Edit media post">
+        <fieldset id="editor-fields" class="studio-editor-grid">
+          <legend class="studio-sr">Post editor</legend>
+
+          <section class="studio-work" id="studio-upload" aria-labelledby="attachments-heading">
+            <!-- Quiet Single-Row Command Bar (no nested boxes, zero native selects!) -->
+            <div class="studio-tools studio-canvas-heading">
+              <div class="studio-canvas-title">
+                <h2 id="attachments-heading">Media</h2>
+                <span id="attachment-count">0 attachments</span>
+              </div>
+
+              <div class="studio-canvas-controls">
+                <span class="ctrl-label">Preview</span>
+                <div class="studio-seg compact" data-sync-select="viewer" role="group" aria-label="Preview as">
+                  <span class="seg-thumb" aria-hidden="true"></span>
+                  <button type="button" data-value="author" class="is-active">Author</button>
+                  <button type="button" data-value="guest">Guest</button>
+                  <button type="button" data-value="registered">Signed-in</button>
+                  <button type="button" data-value="paid">Paid</button>
+                </div>
+                <select id="viewer" class="studio-sr" aria-hidden="true" tabindex="-1">
+                  <option value="author">Author</option>
+                  <option value="guest">Guest</option>
+                  <option value="registered">Signed-in</option>
+                  <option value="paid">Eligible paid member</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Sleek Upload Bar (expands into inviting canvas dropzone only when empty) -->
+            <div class="studio-upload">
+              <div class="studio-upload-prompt">
+                <input class="studio-sr" id="media-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" aria-describedby="canvas-empty">
+                <label for="media-files" class="btn ghost sm studio-file-label">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4M5 15v5h14v-5"/></svg>Add media
+                </label>
+                <span id="canvas-empty">Drop images or videos onto the canvas</span>
+              </div>
+
+              <div class="studio-batch-control">
+                <span class="ctrl-label">Upload as</span>
+                <div class="studio-seg compact" data-sync-select="batch-label" role="group" aria-label="Starting content label">
+                  <span class="seg-thumb" aria-hidden="true"></span>
+                  <button type="button" data-value="sfw" class="is-active">SFW</button>
+                  <button type="button" data-value="nsfw">NSFW</button>
+                  <button type="button" data-value="nsfw-extreme">Extreme</button>
+                </div>
+                <select id="batch-label" class="studio-sr" aria-hidden="true" tabindex="-1">
+                  <option value="sfw">SFW</option>
+                  <option value="nsfw">NSFW</option>
+                  <option value="nsfw-extreme">NSFW Extreme</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Living Uncropped Masonry Canvas -->
+            <div id="studio-canvas" class="studio-canvas" aria-describedby="canvas-help"></div>
+            <p id="canvas-help" class="studio-muted" hidden>Click to select · Shift for range · Space for Quick Look · Drag from a gap to marquee-select.</p>
+
+            <!-- Floating Contextual Bottom Glass Pill (slides up ONLY when tiles are selected!) -->
+            <div class="studio-bulk" id="studio-bulk" hidden>
+              <span id="selected-count" aria-live="polite">0 selected</span>
+              <span class="bulk-sep" aria-hidden="true"></span>
+              <button type="button" class="btn ghost sm" id="select-all">Select all</button>
+              <button type="button" class="btn ghost sm" id="clear-selection" hidden>Clear</button>
+
+              <!-- Custom Popover: Content Label -->
+              <div class="studio-popover-wrap" id="bulk-label-wrap" hidden>
+                <button type="button" class="btn ghost sm popover-trigger" data-popover="pop-label">
+                  Label <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="studio-popover" id="pop-label" data-sync-action="bulk-label">
+                  <button type="button" data-value="sfw">SFW</button>
+                  <button type="button" data-value="nsfw">NSFW (Blur Teaser)</button>
+                  <button type="button" data-value="nsfw-extreme">NSFW Extreme (Hard Lock)</button>
+                </div>
+                <select id="bulk-label" class="studio-sr" aria-hidden="true" tabindex="-1">
+                  <option value="">Content label…</option>
+                  <option value="sfw">SFW</option>
+                  <option value="nsfw">NSFW</option>
+                  <option value="nsfw-extreme">NSFW Extreme</option>
+                </select>
+              </div>
+
+              <!-- Custom Popover: Audience -->
+              <div class="studio-popover-wrap" id="bulk-audience-wrap" hidden>
+                <button type="button" class="btn ghost sm popover-trigger" data-popover="pop-audience">
+                  Audience <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="studio-popover" id="pop-audience" data-sync-action="bulk-audience">
+                  <button type="button" data-value="public">Public (Everyone)</button>
+                  <button type="button" data-value="registered">Signed-in Readers</button>
+                  <button type="button" data-value="paid">Paid Subscribers</button>
+                </div>
+                <select id="bulk-audience" class="studio-sr" aria-hidden="true" tabindex="-1">
+                  <option value="">Audience…</option>
+                  <option value="public">Public</option>
+                  <option value="registered">Signed-in</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+
+              <button type="button" class="btn ghost sm" id="play-selected" hidden>Play video</button>
+              <button type="button" class="btn ghost sm danger" id="remove-media" hidden>Remove</button>
+            </div>
+          </section>
+
+          <!-- Smooth Right Inspector Panel -->
+          <aside id="post-settings" class="studio-panel studio-settings" aria-labelledby="settings-heading" hidden>
+            <div class="studio-settings-head">
+              <h2 id="settings-heading" tabindex="-1">Post details</h2>
+              <button type="button" class="studio-back" id="close-settings" aria-label="Close post settings">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
+            <label for="post-title">Title<input id="post-title" maxlength="180" placeholder="Untitled drop…" required></label>
+            <label for="post-story">Story<select id="post-story"></select></label>
+            <label for="post-caption">Caption<textarea id="post-caption" rows="5" maxlength="10000" placeholder="Optional scene notes…"></textarea></label>
+            <label for="post-tier">Required paid tier<select id="post-tier" aria-describedby="tier-help"></select></label>
+            <p id="tier-help" class="studio-muted">Applies only to paid attachments.</p>
+          </aside>
+        </fieldset>
+      </section>
+    </main>
+  </div>
+
+  <!-- Glassmorphic Right-Click Context Menu -->
+  <div class="studio-ctx-menu" id="studio-ctx-menu" role="menu" hidden>
+    <button type="button" role="menuitem" data-ctx="toggle-multi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+      <span id="ctx-multi-label">Select &amp; Multi-select mode</span>
+    </button>
+    <button type="button" role="menuitem" data-ctx="quicklook">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>Quick Look</span><kbd>Space</kbd>
+    </button>
+    <button type="button" role="menuitem" data-ctx="play-video" id="ctx-play-video" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>Play / Pause video</span>
+    </button>
+    <div class="ctx-sep"></div>
+    <div class="ctx-section-label">Content label</div>
+    <button type="button" role="menuitem" data-ctx="label" data-val="sfw">SFW</button>
+    <button type="button" role="menuitem" data-ctx="label" data-val="nsfw">NSFW (Blur Teaser)</button>
+    <button type="button" role="menuitem" data-ctx="label" data-val="nsfw-extreme">NSFW Extreme (Hard Lock)</button>
+    <div class="ctx-sep"></div>
+    <div class="ctx-section-label">Audience</div>
+    <button type="button" role="menuitem" data-ctx="audience" data-val="public">Public (Everyone)</button>
+    <button type="button" role="menuitem" data-ctx="audience" data-val="registered">Signed-in Readers</button>
+    <button type="button" role="menuitem" data-ctx="audience" data-val="paid">Paid Subscribers</button>
+    <div class="ctx-sep"></div>
+    <button type="button" role="menuitem" class="danger" data-ctx="remove" id="ctx-remove">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <span>Remove selected</span><kbd>Del</kbd>
+    </button>
+  </div>
+
+  <!-- Quick Look Overlay (Space or Double-Click on any tile) -->
+  <div class="studio-quicklook" id="studio-quicklook" hidden>
+    <div class="ql-bar">
+      <span id="ql-caption"></span>
+      <button type="button" class="btn ghost sm" id="ql-close">Close (Esc)</button>
+    </div>
+    <div class="ql-stage" id="ql-stage"></div>
+  </div>
+
+  <noscript>JavaScript is required to use Author Studio.</noscript>
+  <script src="js/subscription/site-config.js?v=20261109.28"></script>
+  <script src="js/subscription/site-settings.js?v=20261109.28"></script>
+  <script src="js/subscription/site-bootstrap.js?v=20261109.28"></script>
+  <script src="vendor/supabase/supabase-2.111.0.min.js"></script>
+  <script src="js/author-session.js?v=20261109.26"></script>
+  <script src="js/shared/media-layout.js?v=1"></script>
+  <script src="js/shared/media-storage.js?v=20261124.2"></script>
+  <script src="js/studio/media-model.js?v=1"></script>
+  <script src="js/studio/shell.js?v=2"></script>
+  <script src="js/studio/media.js?v=3"></script>
+  <script src="js/studio/ui-polish.js?v=1"></script>
+</body>
+</html>

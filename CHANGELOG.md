@@ -1,5 +1,107 @@
 # Changelog
 
+## 2026-11-25 05:37 Asia/Kolkata — Group Writer "Copy access list" output by tier
+
+Area: writer
+
+- Updated `chapterAccessListEntries`, `chapterAccessListGroups`, `chapterAccessListText`, and `chapterAccessListHtml` in `writer.html` so **Copy access list** groups selected published chapters by access tier (highest tier rank first down to `everyone`, with descending `chapter_order` inside each group) under an `Unlocked for <audience>:` heading instead of repeating `unlocked for <audience>` on every line.
+- Rich clipboard HTML now outputs `<p><strong>Unlocked for ...:</strong></p><ul><li><a href="...">...</a></li></ul>`, and plain-text Markdown outputs `Unlocked for ...:` followed by `- [Title](url)` bullets.
+- Updated `tests/writer-access-list.test.js` and `docs/CODEBASE_OVERVIEW.md`.
+- Files: `writer.html`, `tests/writer-access-list.test.js`, `docs/CODEBASE_OVERVIEW.md`, `CHANGELOG.md`.
+- Validation: `node --test tests/writer-access-list.test.js tests/writer-safety.test.js` passed (36/36).
+
+## 2026-11-24 18:15 Asia/Kolkata — Overhaul Author Studio (`studio.html`) in neutral obsidian/white craft system
+
+Area: admin / author studio / design
+
+- Replaced the blue-green/gold boxy Studio styling in `styles/studio.css` with a neutral obsidian/charcoal and crisp white palette (`#111113` / `#18181b` / `#222226` / `#ffffff` primary CTA) modeled after the owner's Tobto reference so artwork colors stay true.
+- Removed nested border soup and replaced toolbar native `<select>` dropdowns (`#post-filter`, `#viewer`, `#batch-label`, `#bulk-label`, `#bulk-audience`) with sliding segmented pill controls and custom animated popovers synced to the underlying `js/studio/media.js` contracts.
+- Added `js/studio/ui-polish.js`: collapsible left icon rail with hover tooltips (`Media`, `Writer`, `Admin CMS`, `Live Reader`), All Posts grid density switcher (`Compact | Balanced | Large`), floating glassmorphic bottom selection bar, smooth masonry tile reflow transitions, hover-revealed tile badges, Quick Look (`Space` / double-click), floating toast notices, and keyboard shortcuts (`Ctrl+S`, `Esc`, `Delete`).
+- Files: `studio.html`, `styles/studio.css`, `js/studio/ui-polish.js`, `DESIGN.md`, `CHANGELOG.md`.
+- Validation: `node --check` passed on `js/studio/ui-polish.js`, `js/studio/media.js`, `js/studio/shell.js`, and `js/studio/media-model.js`.
+
+## 2026-11-24 17:30 Asia/Kolkata — Make Studio canvas-first
+
+Area: Studio
+
+- Open on the All Posts media mosaic. Give attachments the opened-post workspace, accept files across the canvas, and show bulk edits beside the selected tiles.
+- Put save/publish in the sticky header and move metadata to a collapsible inspector that opens on validation. No public reader, backend, or shared-module changes.
+- Files: `studio.html`, `styles/studio.css`, `js/studio/media.js`, `js/studio/shell.js`, `tests/studio-layout-browser.py`, `docs/CODEBASE_OVERVIEW.md`, `DESIGN.md`, `.impeccable/surfaces/studio.md`, `PROJECT_STATE.md`.
+
+## 2026-11-24 17:08 Asia/Kolkata - Isolate Studio styling
+
+Area: Studio / design tooling
+
+- Keep Studio on the reader palette and mosaic layout without loading reader-only CSS. Document the existing Gallery Montserrat variant and scope the setup-notice radius exception to the reader entrypoint.
+- Files: `studio.html`, `styles/studio.css`, `DESIGN.md`, `.impeccable/design.json`, `.impeccable/config.json`, `docs/CODEBASE_OVERVIEW.md`, `tests/media-first-studio.test.js`.
+
+## 2026-11-24 17:07 Asia/Kolkata ? Build the Media-first Studio slice
+
+Area: Studio / reader / database
+
+- Added a parallel administrator workspace for browsing media posts, batch upload and visual selection, audience simulation, draft and live saves, and unpublishing. Writer and Admin stay in place; the legacy Media Studio remains for legacy posts.
+- Shared the compact mosaic recipe and opened-post masonry with the reader. Added a staged private Storage boundary and a transactional save RPC for Public, Signed-in and Paid attachments, independent of pre-blurred teasers and solid blockers.
+- Files: `studio.html`, `styles/studio.css`, `js/studio/`, `js/shared/media-*.js`, `index.html`, reader state/backend/events/Home/Media modules and media CSS, `media-studio.html`, `supabase/migrations/20261124164700_studio_media_private_access.sql`, Studio/reader tests, surface brief, implementation plan and project docs.
+- Local tests cover reader behavior and a disposable database access matrix. Supabase Storage API and signed-in browser verification still require owner staging; no production changes.
+
+## 2026-11-24 05:33 Asia/Kolkata — Document the incumbent visual system
+
+Area: docs / design tooling
+
+- Recorded the public archive's actual tokens and components, responsive shell, and chapter/Admin/Writer styling boundaries. Added Impeccable panel metadata and examples derived from the existing CSS. No runtime or UI changes.
+- Files: `DESIGN.md`, `.impeccable/design.json`, `CHANGELOG.md`.
+
+## 2026-11-24 05:18 Asia/Kolkata — Record Impeccable product context
+
+Area: docs / design tooling
+
+- Added the owner-confirmed product brief: reader and author workflows have equal weight, the public reader prioritizes returning supporters, and the archive combines serial fiction, related artwork, and reading activity.
+- Configured Impeccable Live for the main static entrypoints without changing HTML or CSP. Left the build-path preference unset so it can be decided per project.
+- Files: `PRODUCT.md`, `.impeccable/live/config.json`, `CHANGELOG.md`.
+
+## 2026-11-23 23:30 Asia/Kolkata — Close Media Posts SQL access gaps
+
+Area: database
+
+- Preserve explicit item tier overrides when the referenced tier is removed; reserve inheritance for items intentionally using the post tier.
+- Make likes RPC-only. Shield raw media comments from readers, enforce published targets and server-owned attribution/timestamps, and serialize guest and registered comment rate limits without changing existing chapter comment reads/edits.
+- Ran the staged migration twice on disposable PostgreSQL and verified the feed, deleted tier override, guest engagement, comment privacy/rate limit, unpublished comment denial and chapter comment compatibility. No production apply; Studio changes and staging QA remain.
+- Files: `supabase/migrations/20261123225500_media_posts_and_storage.sql`, `docs/DATABASE_CONTEXT.md`, `PROJECT_STATE.md`, `CHANGELOG.md`.
+
+## 2026-11-23 23:14 Asia/Kolkata — Harden Media Posts gating, Storage listing, and lazy anonymous guest engagement
+
+Area: reader / admin / database
+
+- Hardened `supabase/migrations/20261123225500_media_posts_and_storage.sql`:
+  - Removed broad `media-posts` `storage.objects` public `SELECT` policy so bucket listing is admin-only while keeping public object URLs.
+  - Made `get_media_post_feed()` fail closed (only `access_mode = 'public'` is open to everyone; `blur_teaser`/`hard_lock` require an active non-null tier and non-anonymous `has_active_entitlement()`).
+  - Restricted `media_post_likes` raw rows to admin/own row and serialized `toggle_media_post_like()` with `pg_advisory_xact_lock` on published posts only.
+  - Added restrictive `INSERT` policy + `validate_media_post_comment_insert()` trigger (1–1000 chars, max 5 per 60s, published posts only, blocks anonymous sessions from non-`media_post` comments) plus `get_media_post_comments()` (displays guests as `Guest` without `user_id`) and `post_media_post_comment()`.
+- Updated `media-studio.html` to use `crypto.randomUUID()` object paths and block `hard_lock` / draft items from Gallery sync (auto-tagging `blur_teaser` stills as `nsfw`).
+- Added lazy `ensureMediaGuestSession()` in `js/subscription/auth.js` (`signInAnonymously()` on first media like/comment only, keeping anonymous sessions on the Guest path across all other UI) and wired `backend.js`, `media-stream.js`, and `events.js`.
+- Validation: `node --check` passed on `auth.js`, `backend.js`, `media-stream.js`, `events.js`, `router.js`, and `home-library.js`. Staging acceptance checks & owner apply pending.
+
+## 2026-11-23 22:54 Asia/Kolkata — Media Posts Phase 2 (Schema Migration, Media Studio, Video & Live Comments/Likes)
+
+Area: reader / admin / database
+
+- Added idempotent SQL migration `supabase/migrations/20261123225500_media_posts_and_storage.sql` creating `public.media_posts`, `public.media_post_items` (per-item `public | blur_teaser | hard_lock` gating + `blur_thumb_url`), `public.media_post_likes`, `get_media_post_feed()` RPC (strips locked `media_url` server-side while returning `blur_thumb_url` for `blur_teaser`), `toggle_media_post_like()` RPC, and the `media-posts` storage bucket (100MB, images + MP4/WebM).
+- Built standalone admin `media-studio.html` with drag-and-drop image/video upload, in-browser video poster capture, pre-baked blurred teaser thumbnail generation (`blur_thumb_url`), per-item access/tier controls, and optional Character Gallery sync.
+- Wired `js/subscription/backend.js`, `js/subscription/views/media-stream.js`, `js/subscription/events.js`, and `styles/media-posts.css` to render live `media_posts` (HTML5 `<video>` playback with preserved timestamp, blur-teaser/hard-lock tiles, persistent Hearts, and `public.comments` with `target_type = 'media_post'` + Discord-ready metadata), falling back to auto-grouped gallery sets until posts are published.
+- Added native View Transitions (`document.startViewTransition`) in `js/subscription/router.js` with `mp-active-hero` morphing between Split Column cards and `#/media`.
+- Files: `supabase/migrations/20261123225500_media_posts_and_storage.sql`, `media-studio.html`, `js/subscription/backend.js`, `js/subscription/views/media-stream.js`, `js/subscription/events.js`, `js/subscription/router.js`, `styles/media-posts.css`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: `node --check` passed on `backend.js`, `media-stream.js`, `events.js`, `router.js`, and `home-library.js`. Owner migration apply + live browser QA pending.
+
+## 2026-11-23 19:12 Asia/Kolkata — Integrate Media Posts Split Column & Unified Infinite Stream (Phase 1 UI)
+
+Area: subscription reader / Home & Media Stream
+
+- Replaced the Home Split Archive right-column masonry sampler with chronological Media Post cards (`buildHomeMediaPosts()`), auto-grouped from existing `character_gallery_images` by character and 30-minute upload window (capped at 9 items per post) with `NEW` stamps and `Expand Stream ↗` / `Gallery` header controls.
+- Added `Split archive | Media feed | Multigrid` in the Home switcher and registered the `#/media` route (`VIEWS.media()`) for the full-width infinite-scroll Media Stream.
+- Implemented the uncropped in-place living masonry (`solveOrganicMasonry`), 620ms card-to-post expand and reverse de-transition, right-edge glassmorphic Heart/Comment dock, translucent Comment Drawer (honest WIP pending Phase 2 DB), and Fullscreen Inspector in `js/subscription/views/media-stream.js` + scoped `styles/media-posts.css`.
+- Files: `index.html`, `js/subscription/router.js`, `js/subscription/views/home-library.js`, `js/subscription/views/media-stream.js`, `js/subscription/events.js`, `styles/media-posts.css`, `docs/SUBSCRIPTION_FUNCTION_INDEX.md`, `CHANGELOG.md`, `PROJECT_STATE.md`.
+- Validation: `node --check` passed on `router.js`, `home-library.js`, `media-stream.js`, `events.js`, and `aether-app.js`. Browser visual/interaction QA pending.
+
 ## 2026-11-09 13:50 Asia/Kolkata — Bounded multi-site configuration pilot
 
 Area: reader / shared configuration

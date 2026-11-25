@@ -475,6 +475,10 @@ async function loadBackendLibrary(options = {}){
         .map(w => ({ id: w.id, image_url: w.image_url, name: w.label || "" }));
     }));
     if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return false;
+    const mediaPosts = stories.length ? await loadMediaPostsFeed(null, 40, 0) : [];
+    if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return false;
+    setMediaFeedRows(mediaPosts);
+    if (typeof window.resetMediaStreamData === "function") window.resetMediaStreamData(false);
     if (stories.length) {
       D.STORIES = stories;
       D.UPDATES = buildBackendUpdates(stories);
@@ -537,6 +541,8 @@ async function loadBackendLibrary(options = {}){
     }
   } catch (err) {
     if (store !== requestStore || (authState.user?.id || null) !== requestUserId) return false;
+    setMediaFeedRows([]);
+    if (typeof window.resetMediaStreamData === "function") window.resetMediaStreamData(false);
     backendState.error = err;
     console.error("Subscription backend library load failed; no local content fallback will be used.", err);
     backendState.usingFixtures = false;
@@ -915,4 +921,88 @@ async function loadCharacterGalleryImages(charId) {
     }
   }
   return D.GALLERY_IMAGES.filter(img => img.character_id === charId);
+}
+
+/* ============ Media Posts backend (Phase 2) ============ */
+let mediaLinksUntil = 0;
+let mediaLinkHardRefreshAt = 0;
+let mediaLinkRefreshTimer = 0;
+function setMediaFeedRows(rows) {
+  D.MEDIA_POSTS = rows;
+  const managed = rows.some(post => post.items?.some(item => item.studio_private));
+  mediaLinksUntil = managed && window.MediaStorage
+    ? Date.now() + ((window.MediaStorage.lifetimeSeconds - 90) * 1000)
+    : 0;
+  mediaLinkHardRefreshAt = mediaLinksUntil ? mediaLinksUntil + 60000 : 0;
+}
+function scheduleMediaFeedRefresh() {
+  clearTimeout(mediaLinkRefreshTimer);
+  if (!mediaLinksUntil || !D.MEDIA_POSTS?.length || !["home","media"].includes(route.name)) return;
+  const delay = Math.max(500, mediaLinksUntil - Date.now());
+  mediaLinkRefreshTimer = setTimeout(async () => {
+    if (document.visibilityState === "hidden" || (Date.now() < mediaLinkHardRefreshAt && [...document.querySelectorAll(".mp-tile-media, #mp-fs-stage video")].some(el => el.tagName === "VIDEO" && !el.paused))) {
+      mediaLinksUntil = Date.now() + 15000;
+      scheduleMediaFeedRefresh();
+      return;
+    }
+    const activeStore = store;
+    const userId = authState.user?.id || null;
+    const previousRows = D.MEDIA_POSTS;
+    const rows = await loadMediaPostsFeed(null,40,0);
+    if (store !== activeStore || (authState.user?.id || null) !== userId || D.MEDIA_POSTS !== previousRows) return;
+    setMediaFeedRows(rows);
+    if (typeof window.resetMediaStreamData === "function") window.resetMediaStreamData(false);
+    if (["home","media"].includes(route.name)) render({preserveScroll:true,noTransition:true});
+  }, delay);
+}
+async function loadMediaPostsFeed(storyId = null, limit = 40, offset = 0){
+  const client = getSupabase();
+  if (!client) return [];
+  try {
+    const { data, error } = await client.rpc("get_media_post_feed", {
+      p_story_id: storyId || null,
+      p_limit: limit,
+      p_offset: offset
+    });
+    if (error || !Array.isArray(data)) return [];
+    return await window.MediaStorage.signFeed(client, data);
+  } catch (_) {
+    return [];
+  }
+}
+
+async function toggleMediaPostLikeBackend(postId){
+  const client = getSupabase();
+  if (!client) throw new Error("Supabase unavailable.");
+  await ensureMediaGuestSession();
+  const { data, error } = await client.rpc("toggle_media_post_like", { p_post_id: postId });
+  if (error) throw error;
+  return data;
+}
+
+async function loadMediaPostComments(postId){
+  const client = getSupabase();
+  if (!client || !postId) return [];
+  const { data, error } = await client.rpc("get_media_post_comments", { p_post_id: postId });
+  if (error) throw error;
+  return (data || []).map(row => ({
+    id: row.id,
+    author: row.is_guest ? "Guest" : (row.author_label || "Reader"),
+    is_guest: !!row.is_guest,
+    source: row.source || "web",
+    text: row.content || "",
+    created_at: row.created_at || ""
+  }));
+}
+
+async function postMediaPostComment(postId, text){
+  const client = getSupabase();
+  if (!client) throw new Error("Supabase unavailable.");
+  await ensureMediaGuestSession();
+  const { error } = await client.rpc("post_media_post_comment", {
+    p_post_id: postId,
+    p_content: text
+  });
+  if (error) throw error;
+  return loadMediaPostComments(postId);
 }

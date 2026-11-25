@@ -4,6 +4,12 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 
 ## Architecture
 
+### Pending owner-reviewed Media-first Studio migration (2026-11-24)
+
+`supabase/migrations/20261124164700_studio_media_private_access.sql` follows the pending 2026-11-23 Media Posts migration. It adds a private `studio-media` bucket and a separate content label and audience per attachment. Published parent story and post are required for reader file access. Public is open without an account; Registered excludes anonymous Auth sessions; Paid requires the specific active tier. Only separate pre-blurred NSFW teasers are available outside the attachment audience. Extreme attachments have no teaser.
+
+`save_studio_media_post()` is admin-only and atomically updates the header and ordered items with an expected update timestamp. Direct legacy writes cannot mutate Studio-managed posts. Original, poster and teaser paths are independent and immutable. The feed returns authorized paths only; Storage RLS independently controls signing, and the reader obtains ten-minute signed URLs. Old public-bucket rows and links are not converted. Owner review and actual Supabase Auth/Storage API staging tests are required before rollout.
+
 - Backend: Supabase PostgreSQL/Auth/Storage.
 - Application schema: `public`; storage metadata/policies live under `storage`.
 - Browser clients use the anon key only. Admin writes are protected by RLS policies and `public.is_admin()`.
@@ -15,6 +21,18 @@ Generated from the linked Supabase project on 2026-06-29. This is the compact so
 - Patreon provider mappings can match Patreon membership tiers by actual Patreon tier ID or by exact tier title via `provider_tier_id` / `provider_tier_label`; current live mappings use Patreon tier IDs.
 - Patreon OAuth/manual sync requests member fields including `currently_entitled_tiers`, `next_charge_date`, `last_charge_date`, `pledge_cadence`, and `will_pay_amount_cents`. Renewing patrons keep normal active entitlements; canceled/non-renewing patrons who are still covered by a Patreon-reported paid period receive bounded `valid_until` access through the current period. Provider grants are idempotent: the highest matched internal tier is kept as the single active provider entitlement for a reader/provider, existing rows are refreshed instead of duplicated, and a partial unique index prevents concurrent duplicate active provider rows. Patreon free/zero-dollar tiers are treated as connected accounts without paid access and are not written as noisy `*_no_matching_tier` audit failures. Provider revoke/expired webhooks preserve access only to a future paid-through timestamp supplied by the provider payload or already stored entitlement metadata; otherwise they expire access immediately.
 - After durable schema changes, run `NOTIFY pgrst, 'reload schema';`.
+
+### Pending owner-reviewed Media Posts migration (2026-11-23)
+
+`supabase/migrations/20261123225500_media_posts_and_storage.sql` is **staged, not applied**. Published post headers are public; item URLs are exposed only through the entitlement-aware `get_media_post_feed()` RPC for readers. `public` items are open to everyone, `blur_teaser` exposes a separate blur thumbnail to ineligible readers, and `hard_lock` exposes no asset URL to them. The `has_tier_override` marker distinguishes intentional post-tier inheritance from a deleted item override: a missing explicit tier stays locked. A browser cannot read or write `media_post_likes` directly; use the feed's count/own status and serialized `toggle_media_post_like()` on a published post.
+
+Media comments reuse `public.comments`: restrictive SELECT/INSERT/UPDATE policies prevent raw reader access to media comment rows and preserve existing non-media comment behavior for permanent users. `post_media_post_comment()` derives ownership from Auth; the trigger sets the timestamp and guest attribution server-side, validates 1–1000 characters, and serializes the limit of five submissions per identity per minute. The read RPC shows published comments without user IDs and displays anonymous authors as **Guest**. Discord attribution and sync require a future trusted write path.
+
+The `media-posts` bucket retains public known URLs and admin-only listing. Independent paths for teasers, posters and originals, no restricted Gallery mirrors, and preservation of the tier-override marker on Studio edits are still required before release; see `PROJECT_STATE.md`.
+
+Owner setup required in Supabase Dashboard before guest likes/comments go live:
+- **Authentication → Providers → Anonymous Sign-Ins:** Enable **Allow anonymous sign-ins** (guests only trigger `signInAnonymously()` lazily on their first media like or comment, never on page load).
+- **Authentication → Attack Protection / Bot & Abuse Protection:** Enable **CAPTCHA** (Cloudflare Turnstile or hCaptcha) if desired to protect anonymous sign-ins from automated abuse.
 
 ### Pending owner-reviewed test-account override migration (2026-11-03)
 

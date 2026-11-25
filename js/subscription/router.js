@@ -23,6 +23,7 @@ function parseHash(){
   else if (p[0]==="benefits") r.name="benefits";
   else if (p[0]==="onboarding") r.name="onboarding";
   else if (p[0]==="help") r.name="help";
+  else if (p[0]==="media") r.name="media";
   else if (p[0]==="support"){ r.name = { "check-access":"checkAccess","wrong-account":"wrongAccount","contact":"contact" }[p[1]] || "help"; }
   else if (p[0]==="gallery"){
     if (p.length >= 3) { r.name = "galleryChar"; r.params.slug = p[1]; r.params.charId = p[2]; }
@@ -74,7 +75,7 @@ function render(options = {}){
     } else if (inStudio){
       main.innerHTML = `<div class="vt studio-body">${html}</div>`;
     } else {
-      main.innerHTML = `<div class="vt">${html}</div>`;
+      main.innerHTML = `<div class="${typeof document.startViewTransition === "function" && !prefersReducedMotion() ? "" : "vt"}">${html}</div>`;
     }
     if (inStudio && isAdmin()){ ensureStudioChrome(); }
     else if (!inReader){ ensureChrome(); }
@@ -83,9 +84,21 @@ function render(options = {}){
       const match = [...main.querySelectorAll("button[data-act]")].find(el=>focusData.every(([key,value])=>el.dataset[key]===value));
       if (match) match.focus({preventScroll:true});
     }
-    if (window.scrollTo) { try { window.scrollTo(0,options.preserveScroll ? scrollY : 0); } catch(e){} }
+    if (window.scrollTo && !window._mediaSkipScrollReset) { try { window.scrollTo(0,options.preserveScroll ? scrollY : 0); } catch(e){} }
+    window._mediaSkipScrollReset = false;
   };
-  apply();
+  if (typeof document.startViewTransition === "function" && !prefersReducedMotion() && !inReader && !inStudio && !options.noTransition) {
+    try {
+      const vt = document.startViewTransition(apply);
+      vt.finished.finally(() => {
+        document.querySelectorAll('[style*="mp-active-hero"]').forEach(el => { el.style.viewTransitionName = ""; });
+      });
+    } catch (_) {
+      apply();
+    }
+  } else {
+    apply();
+  }
 }
 function adminGate(){
   return `<div class="empty" style="padding-top:90px"><div class="em">${I.shield}</div><h3>Admin access required</h3><p>The author studio is only visible to profiles with the <code>admin</code> role. Use the main admin CMS for production access controls.</p>${authState.user?`<a class="btn story" href="admin.html">${I.external}Open admin CMS</a>`:`<button class="btn story" data-sheet="persona">${I.user}Sign in</button>`}<button class="btn ghost" data-nav="/">Back to reader</button></div>`;
@@ -107,7 +120,7 @@ function ensureChrome(){
   topEl.outerHTML = topbar();
   let navEl = document.querySelector(".bottomnav");
   if (!navEl){ navEl=document.createElement("nav"); app.appendChild(navEl); }
-  const active = {home:"home",library:"library",story:"library",chapters:"library",recap:"library",extras:"library",storyUpdates:"library",collections:"library",collection:"library",gallery:"gallery",galleryChar:"gallery",updates:"feed",calendar:"feed",shelf:"shelf",bookmarks:"shelf",quotes:"shelf",history:"shelf",vault:"vault",benefits:"vault",settings:"cog",help:"help",checkAccess:"help",wrongAccount:"help",contact:"help"}[route.name] || "";
+  const active = {home:"home",media:"home",library:"library",story:"library",chapters:"library",recap:"library",extras:"library",storyUpdates:"library",collections:"library",collection:"library",gallery:"gallery",galleryChar:"gallery",updates:"feed",calendar:"feed",shelf:"shelf",bookmarks:"shelf",quotes:"shelf",history:"shelf",vault:"vault",benefits:"vault",settings:"cog",help:"help",checkAccess:"help",wrongAccount:"help",contact:"help"}[route.name] || "";
   navEl.outerHTML = bottomnav(active);
   let sideEl = document.querySelector(".sidenav");
   if (!sideEl){ sideEl=document.createElement("nav"); app.appendChild(sideEl); }

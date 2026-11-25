@@ -2509,25 +2509,53 @@
                         : `Chapter ${chapter.chapter_order || '?'}${rawTitle ? `: ${rawTitle}` : ''}`;
                     const url = new URL(readerBaseUrl);
                     url.hash = `/read/${encodeURIComponent(chapter.id)}`;
+                    const tierRank = tier ? rankOf(tier) : -Infinity;
                     const audience = !tier ? 'everyone'
                         : tiers.some(other => other.is_active !== false && Number(other.tier_rank ?? other.rank) > Number(tier.tier_rank ?? tier.rank))
                             ? `${tier.name} and higher tiers`
                             : tier.name;
-                    return { title: displayTitle, url: url.href, audience };
+                    return {
+                        title: displayTitle,
+                        url: url.href,
+                        audience,
+                        tierRank,
+                        groupKey: tier ? String(tier.id) : '__free__'
+                    };
                 });
         }
+        function chapterAccessListGroups(entries) {
+            const groups = [];
+            const byKey = new Map();
+            for (const entry of entries) {
+                const key = entry.groupKey || entry.audience;
+                let group = byKey.get(key);
+                if (!group) {
+                    group = { audience: entry.audience, tierRank: entry.tierRank ?? -Infinity, entries: [] };
+                    byKey.set(key, group);
+                    groups.push(group);
+                }
+                group.entries.push(entry);
+            }
+            return groups.sort((a, b) => b.tierRank - a.tierRank);
+        }
         function chapterAccessListText(entries) {
-            return entries.map(({ title, url, audience }) => {
-                const markdownTitle = title.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
-                return `[${markdownTitle}](${url}) unlocked for ${audience}`;
-            }).join('\n');
+            return chapterAccessListGroups(entries).map(group => {
+                const lines = group.entries.map(({ title, url }) => {
+                    const markdownTitle = title.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+                    return `- [${markdownTitle}](${url})`;
+                });
+                return `Unlocked for ${group.audience}:\n${lines.join('\n')}`;
+            }).join('\n\n');
         }
         function chapterAccessListHtml(entries) {
             const escape = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            return entries.map(({ title, url, audience }) =>
-                `<p><a href="${escape(url)}">[${escape(title)}]</a> unlocked for ${escape(audience)}</p>`
-            ).join('');
+            return chapterAccessListGroups(entries).map(group => {
+                const items = group.entries.map(({ title, url }) =>
+                    `<li><a href="${escape(url)}">${escape(title)}</a></li>`
+                ).join('');
+                return `<p><strong>Unlocked for ${escape(group.audience)}:</strong></p><ul>${items}</ul>`;
+            }).join('');
         }
         function wordCountFromHtml(html) {
             const div = document.createElement('div');
@@ -5296,7 +5324,7 @@
                             'text/html': new Blob([chapterAccessListHtml(entries)], { type: 'text/html' }),
                             'text/plain': new Blob([text], { type: 'text/plain' })
                         })]);
-                        UI.showToast(`${selected.length} linked chapter ${selected.length === 1 ? 'line' : 'lines'} copied.`, 'success');
+                        UI.showToast(`${selected.length} linked ${selected.length === 1 ? 'chapter' : 'chapters'} copied.`, 'success');
                     } else {
                         await navigator.clipboard.writeText(text);
                         UI.showToast('Copied plain text only. This browser cannot copy formatted links.', 'info');

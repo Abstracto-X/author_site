@@ -768,6 +768,9 @@ VIEWS.home = function(){
   const adultCount = primary.chapters.filter(ch => ch.is_nsfw).length;
   const summary = String(primary.premise || primary.tagline || "").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
   const gallery = homeGalleryItems(primary);
+  const mediaPosts = typeof buildHomeMediaPosts === "function" ? buildHomeMediaPosts(primary) : [];
+  const canViewMatureMedia = typeof window.mediaPostCanViewMature === "function" && window.mediaPostCanViewMature();
+  const mediaPostLimit = Math.max(4, Number(State.homeMediaPostLimit || 4));
   const chapterItems = homeFeedItems(primary).filter(item => item.type === "chapter");
   const tierMap = new Map();
   chapterItems.forEach(({chapter:ch}) => tierMap.set(ch.required_tier_id || "free", !ch.required_tier_id ? "Free access" : (ch.required_tier_name || ch.tier || "Member access")));
@@ -806,13 +809,13 @@ VIEWS.home = function(){
       </aside>
     </section>
     <div class="rh-switcher">
-      <div><div class="rh-kicker">Story index + visual archive</div><h2>Continue exploring</h2></div>
+      <div><div class="rh-kicker">Story index + media drops</div><h2>Continue exploring</h2></div>
       <div class="rh-switch-controls">
-        <div class="rh-segmented" role="group" aria-label="Home archive layout">${[["traditional","Split archive"],["multigrid","Multigrid"]].map(([value,label])=>`<button data-act="home-layout" data-home-layout="${value}" aria-pressed="${layout===value}" class="${layout===value?"active":""}">${label}</button>`).join("")}</div>
+        <div class="rh-segmented" role="group" aria-label="Home archive layout">${[["traditional","Split archive"],["media","Media feed"],["multigrid","Multigrid"]].map(([value,label])=> value === "media" ? `<button data-act="expand-media-stream" aria-pressed="false">${label}</button>` : `<button data-act="home-layout" data-home-layout="${value}" aria-pressed="${layout===value}" class="${layout===value?"active":""}">${label}</button>`).join("")}</div>
       </div>
     </div>
     ${layout==="traditional"?`
-      <div class="rh-mobile-tabs" role="group" aria-label="Home panels">${["chapters","gallery"].map(value=>`<button data-act="home-mobile-tab" data-home-tab="${value}" aria-pressed="${mobileTab===value}" class="${mobileTab===value?"active":""}">${value==="chapters"?"Chapters":"Gallery"}</button>`).join("")}</div>
+      <div class="rh-mobile-tabs" role="group" aria-label="Home panels">${["chapters","gallery"].map(value=>`<button data-act="home-mobile-tab" data-home-tab="${value}" aria-pressed="${mobileTab===value}" class="${mobileTab===value?"active":""}">${value==="chapters"?"Chapters":"Media Posts"}</button>`).join("")}</div>
       <div class="rh-split">
         <section class="rh-panel rh-chapters" id="home-chapters-panel">
           <header class="rh-panel-head"><div><div class="rh-kicker">Story index</div><h2>Latest Chapters</h2></div><span>${chapters.length} chapters</span></header>
@@ -822,10 +825,10 @@ VIEWS.home = function(){
           <button class="rh-panel-link" data-nav="/story/${esc(primary.slug)}/chapters">Browse every chapter ${I.chevR}</button>
         </section>
         <section class="rh-panel rh-gallery" id="home-gallery-panel">
-          <header class="rh-panel-head"><div><div class="rh-kicker">Visual archive</div><h2>Artwork</h2></div><span>${gallery.length} images</span></header>
-          <div class="rh-gallery-alert"><button class="btn ghost" data-act="toggle-r18" aria-pressed="${homeCanViewMatureGallery() && !!State.showR18}">${homeCanViewMatureGallery() && State.showR18?"BLUR NSFW":"SHOW NSFW"}</button><button class="btn primary" data-nav="/gallery/${esc(primary.slug)}">Open Gallery ${I.external}</button></div>
-          <div class="rh-masonry">${gallery.slice(0,galleryLimit).map(homeTraditionalGalleryCard).join("") || `<div class="rh-empty"><h3>No artwork yet</h3><p>Published artwork will appear here.</p></div>`}</div>
-          ${gallery.length>galleryLimit?`<button class="rh-panel-link" data-act="home-gallery-load-more">Load more artwork (${gallery.length-galleryLimit} remaining) ${I.chevR}</button>`:""}
+          <header class="rh-panel-head"><div><div class="rh-kicker">Visual drops</div><h2>Media Posts</h2></div><span>${mediaPosts.length} posts</span></header>
+          <div class="rh-gallery-alert"><button class="btn ghost" data-act="toggle-media-r18" aria-pressed="${canViewMatureMedia && !!State.showR18}">${canViewMatureMedia && State.showR18?"BLUR NSFW":"SHOW NSFW"}</button><button class="btn primary" data-act="expand-media-stream">Expand Stream ↗</button><button class="btn ghost" data-nav="/gallery/${esc(primary.slug)}">Gallery ${I.external}</button></div>
+          <div class="mp-split-stack">${mediaPosts.slice(0,mediaPostLimit).map(homeMediaPostCard).join("") || `<div class="rh-empty"><h3>No media posts yet</h3><p>Published artwork sets will appear here.</p></div>`}</div>
+          ${mediaPosts.length>mediaPostLimit?`<button class="rh-panel-link" data-act="home-media-load-more">Load more posts (${mediaPosts.length-mediaPostLimit} remaining) ${I.chevR}</button>`:""}
         </section>
       </div>`:`
       <div class="rh-filters" role="group" aria-label="Mixed feed filter"><button data-act="toggle-r18" aria-pressed="${homeCanViewMatureGallery() && !!State.showR18}">${homeCanViewMatureGallery() && State.showR18?"BLUR NSFW":"SHOW NSFW"}</button>${mixedFilters.map(([value,label])=>`<button data-act="home-feed-filter" data-feed-filter="${esc(value)}" class="${filter===value?"active":""}" aria-pressed="${filter===value}">${esc(label)}</button>`).join("")}</div>
@@ -866,6 +869,7 @@ function setupHomeArchive(){
   const sync = () => { gallery.style.height = window.innerWidth>920 ? chapters.getBoundingClientRect().height+"px" : ""; };
   sync();
   if (typeof ResizeObserver !== "undefined") { homePanelObserver = new ResizeObserver(sync); homePanelObserver.observe(chapters); }
+  if (typeof applyHomeReturnAnim === "function") applyHomeReturnAnim();
 }
 
 function bookHero(s, o){

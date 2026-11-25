@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Studio | Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="js/subscription/site-config.js?v=20261109.28"></script>
+  <script src="js/subscription/site-settings.js?v=20261109.28"></script>
+  <script src="js/subscription/site-bootstrap.js?v=20261109.28"></script>
+  <script src="js/subscription/site-storage.js?v=20261109.28"></script>
+  <script src="js/author-session.js?v=20261109.26"></script>
+  <script src="vendor/supabase/supabase-2.111.0.min.js?v=20260915.3"></script>
+  <style>
+    :root {
+      --ui: 'Manrope', system-ui, sans-serif;
+      --serif: 'Cinzel', Georgia, serif;
+      --bg: #071014;
+      --surface: #0c161b;
+      --surface-2: #142026;
+      --surface-3: #1c2c34;
+      --text: #f6f1e8;
+      --text-dim: #c1ccce;
+      --text-faint: #899da2;
+      --border: rgba(255, 255, 255, 0.10);
+      --border-2: rgba(255, 255, 255, 0.22);
+      --accent: #e9c66c;
+      --accent-soft: rgba(233, 198, 108, 0.14);
+      --on-accent: #18140a;
+      --good: #75e7c7;
+      --bad: #ff7f78;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ui);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; background: none; border: none; }
+
+    .topbar {
+      height: 58px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand strong { font-family: var(--serif); color: var(--accent); letter-spacing: .12em; font-size: 14px; }
+    .brand span { font-size: 12px; color: var(--text-faint); }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+
+    .btn {
+      min-height: 36px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-dim);
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn:hover { border-color: var(--border-2); color: var(--text); }
+    .btn.primary { background: linear-gradient(135deg, #e9c66c, #f4df9e); color: var(--on-accent); border-color: #efd296; }
+    .btn.good { background: rgba(117, 231, 199, 0.16); color: var(--good); border-color: rgba(117, 231, 199, 0.4); }
+    .btn.bad { background: rgba(255, 127, 120, 0.14); color: var(--bad); border-color: rgba(255, 127, 120, 0.4); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    /* Left Rail */
+    .rail {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 58px);
+      overflow-y: auto;
+    }
+    .rail-search {
+      width: 100%;
+      padding: 8px 11px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 12.5px;
+    }
+    .post-list { display: flex; flex-direction: column; gap: 8px; }
+    .post-row {
+      text-align: left;
+      padding: 10px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .post-row:hover { border-color: var(--border-2); }
+    .post-row.active { border-color: var(--accent); background: var(--accent-soft); }
+    .post-row-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .post-row-meta { font-size: 11px; color: var(--text-faint); display: flex; justify-content: space-between; gap: 8px; }
+    .pill {
+      font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+      padding: 2px 6px; border-radius: 5px;
+    }
+    .pill.pub { background: rgba(117, 231, 199, 0.16); color: var(--good); }
+    .pill.draft { background: rgba(255, 255, 255, 0.08); color: var(--text-faint); }
+
+    /* Main Composer */
+    .composer {
+      padding: 20px 24px 60px;
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 16px;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); }
+    .field input, .field select, .field textarea {
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 13px;
+    }
+    .field textarea { min-height: 74px; resize: vertical; }
+
+    .dropzone {
+      border: 2px dashed var(--border-2);
+      border-radius: var(--radius);
+      padding: 26px 18px;
+      text-align: center;
+      background: rgba(20, 32, 38, 0.45);
+      transition: border-color 150ms, background 150ms;
+      cursor: pointer;
+    }
+    .dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+    .dropzone strong { display: block; font-size: 14px; color: var(--accent); margin-bottom: 4px; }
+    .dropzone span { font-size: 12px; color: var(--text-faint); }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .item-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .item-preview {
+      height: 170px;
+      background: #050a0d;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+    .item-preview img, .item-preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .item-type {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      background: rgba(7, 16, 20, 0.85);
+      border: 1px solid var(--border);
+      color: var(--accent);
+    }
+    .item-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .item-body select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 11.5px;
+    }
+    .item-controls { display: flex; justify-content: space-between; gap: 6px; }
+    .mini-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mini-btn.del:hover { border-color: var(--bad); color: var(--bad); }
+
+    .status-bar {
+      font-size: 12px;
+      color: var(--text-dim);
+      padding: 8px 12px;
+      border-radius: 9px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+    .gate-box {
+      max-width: 460px;
+      margin: 80px auto;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; }
+      .rail { max-height: 260px; border-right: 0; border-bottom: 1px solid var(--border); }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <strong>MEDIA STUDIO</strong>
+      <span>Standalone Media Post Uploader &amp; Blur-Teaser Generator</span>
+    </div>
+    <div class="top-actions">
+      <a class="btn" href="index.html#/media" target="_blank" rel="noopener">View Media Stream ↗</a>
+      <a class="btn" href="admin.html">Admin CMS</a>
+      <a class="btn" href="writer.html">Writer</a>
+    </div>
+  </header>
+
+  <div id="auth-gate" class="gate-box hidden">
+    <h2 style="font-family:var(--serif);color:var(--accent)">Admin Access Required</h2>
+    <p id="gate-msg" style="font-size:13px;color:var(--text-dim)">Checking your admin session…</p>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <a class="btn primary" href="admin.html">Sign in via Admin CMS</a>
+      <a class="btn" href="index.html">Back to Reader</a>
+    </div>
+  </div>
+
+  <div id="studio-app" class="workspace hidden">
+    <aside class="rail">
+      <button type="button" class="btn primary" id="btn-new-post">+ New Media Post</button>
+      <input type="search" class="rail-search" id="rail-search" placeholder="Filter posts…">
+      <div class="post-list" id="post-list"></div>
+    </aside>
+
+    <main class="composer">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+        <div class="status-bar" id="status-bar">Ready.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn" id="btn-save-draft">Save Draft</button>
+          <button type="button" class="btn good" id="btn-publish">Publish Post</button>
+          <button type="button" class="btn bad hidden" id="btn-delete-post">Delete</button>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="grid-2" style="margin-bottom:12px">
+          <div class="field">
+            <label for="f-title">Post Title</label>
+            <input id="f-title" type="text" placeholder="e.g. Rebecca × Licker : Poolside Encounter">
+          </div>
+          <div class="field">
+            <label for="f-slug">Slug</label>
+            <input id="f-slug" type="text" placeholder="rebecca-licker-poolside">
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:12px">
+          <div class="field">
+            <label for="f-story">Story</label>
+            <select id="f-story"></select>
+          </div>
+          <div class="field">
+            <label for="f-tier">Default Post Tier</label>
+            <select id="f-tier"></select>
+          </div>
+          <div class="field">
+            <label for="f-tags">Tags (comma separated)</label>
+            <input id="f-tags" type="text" placeholder="Rebecca Chambers, Licker, NSFW">
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:12px">
+          <label for="f-caption">Caption / Scene Note</label>
+          <textarea id="f-caption" placeholder="Optional scene context shown above the media canvas…"></textarea>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;font-size:13px">
+          <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+            <input id="f-nsfw" type="checkbox" checked> Mark post as NSFW (respects Blur NSFW toggle)
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+            <input id="f-sync-gallery" type="checkbox"> Also mirror public stills to Character Gallery:
+            <select id="f-gallery-char" style="padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:var(--bg)"></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="dropzone" id="dropzone">
+          <strong>Drop Images &amp; Short Videos Here (or Click to Browse)</strong>
+          <span>Supports PNG, JPG, WEBP, AVIF, GIF, MP4, WEBM · Auto-generates pre-baked blurry teaser thumbnails &amp; video posters</span>
+          <input id="file-input" type="file" multiple accept="image/*,video/mp4,video/webm" class="hidden">
+        </div>
+        <div class="items-grid" id="items-grid"></div>
+      </section>
+    </main>
+  </div>
+
+<script>
+(() => {
+  const cfg = window.SUBSCRIPTION_SITE_CONFIG || {};
+  const sbUrl = cfg.supabase?.url;
+  const sbKey = cfg.supabase?.anonKey;
+  if (window.SITE_CONFIGURATION_STATUS?.ok !== true || !sbUrl || !sbKey || !window.supabase) {
+    document.getElementById('auth-gate').classList.remove('hidden');
+    document.getElementById('gate-msg').textContent = 'Supabase configuration is missing.';
+    return;
+  }
+
+  const client = window.supabase.createClient(sbUrl, sbKey, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: 'pkce' }
+  });
+
+  const state = {
+    user: null,
+    stories: [],
+    tiers: [],
+    characters: [],
+    posts: [],
+    currentPost: null,
+    items: [] // { id?, media_type, media_url, poster_url, blur_thumb_url, access_mode, required_tier_id, width, height, duration_seconds, gallery_image_id }
+  };
+
+  const statusEl = document.getElementById('status-bar');
+  const setStatus = (msg, isErr = false) => {
+    statusEl.textContent = msg;
+    statusEl.style.color = isErr ? 'var(--bad)' : 'var(--text-dim)';
+  };
+
+  function slugify(str) {
+    return String(str || '').toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('post-' + Date.now());
+  }
+
+  async function init() {
+    const { data: { session } } = await client.auth.getSession();
+    if (!session?.user) {
+      document.getElementById('auth-gate').classList.remove('hidden');
+      document.getElementById('gate-msg').textContent = 'Sign in with your admin account first.';
+      return;
+    }
+    const { data: prof } = await client.from('profiles').select('id, role').eq('id', session.user.id).maybeSingle();
+    if (!prof || prof.role !== 'admin') {
+      document.getElementById('auth-gate').classList.remove('hidden');
+      document.getElementById('gate-msg').textContent = 'This account does not have admin privileges.';
+      return;
+    }
+    state.user = session.user;
+    document.getElementById('studio-app').classList.remove('hidden');
+
+    const [stRes, trRes, chRes] = await Promise.all([
+      client.from('stories').select('id, title, slug').order('created_at', { ascending: false }),
+      client.from('reader_access_tiers').select('id, slug, name, tier_rank').eq('is_active', true).order('tier_rank', { ascending: true }),
+      client.from('characters').select('id, name, story_id').order('sort_order', { ascending: true })
+    ]);
+    state.stories = stRes.data || [];
+    state.tiers = trRes.data || [];
+    state.characters = chRes.data || [];
+
+    populateSelectors();
+    await loadPosts();
+    startNewPost();
+  }
+
+  function populateSelectors() {
+    document.getElementById('f-story').innerHTML = state.stories.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+    const tierOpts = `<option value="">Free Access (Public)</option>` +
+      state.tiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    document.getElementById('f-tier').innerHTML = tierOpts;
+    document.getElementById('f-gallery-char').innerHTML =
+      `<option value="">— Select Character —</option>` +
+      state.characters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  function defaultLickerTierId() {
+    return state.tiers.find(t => t.slug === 'resident-licker')?.id || state.tiers[0]?.id || '';
+  }
+
+  async function loadPosts() {
+    const { data, error } = await client
+      .from('media_posts')
+      .select('*, media_post_items(*)')
+      .order('created_at', { ascending: false });
+    if (error) { setStatus('Could not load media_posts: ' + error.message, true); return; }
+    state.posts = (data || []).filter(post => !post.studio_managed);
+    renderRail();
+  }
+
+  function renderRail() {
+    const q = document.getElementById('rail-search').value.trim().toLowerCase();
+    const list = state.posts.filter(p => !q || (p.title || '').toLowerCase().includes(q));
+    document.getElementById('post-list').innerHTML = list.map(p => `
+      <button type="button" class="post-row ${state.currentPost?.id === p.id ? 'active' : ''}" data-select-post="${p.id}">
+        <div class="post-row-title">${p.title || 'Untitled'}</div>
+        <div class="post-row-meta">
+          <span>${(p.media_post_items || []).length} items</span>
+          <span class="pill ${p.is_published ? 'pub' : 'draft'}">${p.is_published ? 'Published' : 'Draft'}</span>
+        </div>
+      </button>`).join('') || `<div style="font-size:12px;color:var(--text-faint);padding:10px">No posts yet.</div>`;
+  }
+
+  function startNewPost() {
+    state.currentPost = null;
+    state.items = [];
+    document.getElementById('f-title').value = '';
+    document.getElementById('f-slug').value = '';
+    document.getElementById('f-caption').value = '';
+    document.getElementById('f-tags').value = '';
+    document.getElementById('f-nsfw').checked = true;
+    document.getElementById('f-tier').value = defaultLickerTierId();
+    document.getElementById('btn-publish').textContent = 'Publish Post';
+    document.getElementById('btn-delete-post').classList.add('hidden');
+    renderItems();
+    renderRail();
+    setStatus('Creating new Media Post (default tier: Resident Licker).');
+  }
+
+  function openPost(id) {
+    const post = state.posts.find(p => p.id === id);
+    if (!post) return;
+    state.currentPost = post;
+    document.getElementById('f-title').value = post.title || '';
+    document.getElementById('f-slug').value = post.slug || '';
+    document.getElementById('f-story').value = post.story_id || (state.stories[0]?.id || '');
+    document.getElementById('f-tier').value = post.required_tier_id || '';
+    document.getElementById('f-caption').value = post.caption || '';
+    document.getElementById('f-tags').value = (post.tags || []).join(', ');
+    document.getElementById('f-nsfw').checked = !!post.is_nsfw;
+    document.getElementById('btn-publish').textContent = post.is_published ? 'Update & Keep Live' : 'Publish Post';
+    document.getElementById('btn-delete-post').classList.remove('hidden');
+    state.items = (post.media_post_items || []).slice().sort((a, b) => a.sort_order - b.sort_order).map(x => ({ ...x }));
+    renderItems();
+    renderRail();
+    setStatus(`Editing "${post.title}".`);
+  }
+
+  function renderItems() {
+    const tierOpts = `<option value="">Inherit Post Tier</option>` +
+      state.tiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    document.getElementById('items-grid').innerHTML = state.items.map((it, idx) => `
+      <div class="item-card" data-item-idx="${idx}">
+        <div class="item-preview">
+          <span class="item-type">${it.media_type === 'video' ? '▶ VIDEO' : 'IMAGE'} · ${idx + 1}</span>
+          ${it.media_type === 'video'
+            ? `<video src="${it.media_url}" poster="${it.poster_url || ''}" muted playsinline></video>`
+            : `<img src="${it.media_url}" alt="">`}
+        </div>
+        <div class="item-body">
+          <select data-item-access="${idx}" aria-label="Access mode">
+            <option value="blur_teaser" ${it.access_mode === 'blur_teaser' ? 'selected' : ''}>Blur Teaser (for non-paid)</option>
+            <option value="public" ${it.access_mode === 'public' ? 'selected' : ''}>Public / Free Preview</option>
+            <option value="hard_lock" ${it.access_mode === 'hard_lock' ? 'selected' : ''}>Hard Lock (no thumbnail)</option>
+          </select>
+          <select data-item-tier="${idx}" aria-label="Item tier override">${tierOpts}</select>
+          <div class="item-controls">
+            <div>
+              <button type="button" class="mini-btn" data-move-item="${idx}" data-dir="-1">↑</button>
+              <button type="button" class="mini-btn" data-move-item="${idx}" data-dir="1">↓</button>
+            </div>
+            <button type="button" class="mini-btn del" data-del-item="${idx}">Remove</button>
+          </div>
+        </div>
+      </div>`).join('');
+
+    state.items.forEach((it, idx) => {
+      const sel = document.querySelector(`[data-item-tier="${idx}"]`);
+      if (!sel) return;
+      if (it.has_tier_override && !it.required_tier_id) {
+        const opt = document.createElement('option');
+        opt.value = '__deleted__';
+        opt.textContent = 'Deleted tier (stays locked)';
+        sel.appendChild(opt);
+        sel.value = '__deleted__';
+      } else {
+        sel.value = it.required_tier_id || '';
+      }
+    });
+  }
+
+  // Generate pre-baked blurry teaser thumbnail in-browser so non-paid users never receive the sharp file URL
+  function makeBlurredBlob(sourceEl, srcW, srcH) {
+    return new Promise((resolve) => {
+      const targetW = Math.min(260, srcW || 260);
+      const targetH = Math.max(120, Math.round(targetW * ((srcH || 320) / (srcW || 260))));
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = 'blur(18px) brightness(0.76)';
+      ctx.drawImage(sourceEl, -12, -12, targetW + 24, targetH + 24);
+      canvas.toBlob(blob => resolve(blob), 'image/webp', 0.68);
+    });
+  }
+
+  function makePosterBlob(videoEl) {
+    return new Promise((resolve) => {
+      const w = videoEl.videoWidth || 960;
+      const h = videoEl.videoHeight || 540;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(videoEl, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob), 'image/webp', 0.85);
+    });
+  }
+
+  async function uploadToBucket(path, fileOrBlob, contentType) {
+    const { error } = await client.storage.from('media-posts').upload(path, fileOrBlob, {
+      cacheControl: '31536000',
+      upsert: false,
+      contentType
+    });
+    if (error) throw error;
+    return client.storage.from('media-posts').getPublicUrl(path).data.publicUrl;
+  }
+
+  function newObjectId() {
+    return (window.crypto && typeof window.crypto.randomUUID === 'function')
+      ? window.crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+  }
+
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setStatus(`Uploading ${files.length} file(s)…`);
+
+    for (const file of files) {
+      try {
+        const isVideo = file.type.startsWith('video/');
+        const ext = (file.name.split('.').pop() || (isVideo ? 'mp4' : 'webp')).toLowerCase();
+        const mainPath = `posts/${newObjectId()}.${ext}`;
+
+        let width = null, height = null, duration = null, posterUrl = null, blurThumbUrl = null;
+        const objUrl = URL.createObjectURL(file);
+
+        if (isVideo) {
+          const vid = document.createElement('video');
+          vid.muted = true;
+          vid.src = objUrl;
+          await new Promise((res) => {
+            vid.onloadeddata = () => { vid.currentTime = Math.min(0.4, (vid.duration || 1) / 3); };
+            vid.onseeked = res;
+            vid.onerror = res;
+          });
+          width = vid.videoWidth || null;
+          height = vid.videoHeight || null;
+          duration = Number.isFinite(vid.duration) ? Number(vid.duration.toFixed(2)) : null;
+          const posterBlob = await makePosterBlob(vid);
+          if (posterBlob) {
+            posterUrl = await uploadToBucket(`posters/${newObjectId()}.webp`, posterBlob, 'image/webp');
+            const blurBlob = await makeBlurredBlob(vid, width, height);
+            if (blurBlob) blurThumbUrl = await uploadToBucket(`blur/${newObjectId()}.webp`, blurBlob, 'image/webp');
+          }
+        } else {
+          const img = new Image();
+          img.src = objUrl;
+          await new Promise((res) => { img.onload = res; img.onerror = res; });
+          width = img.naturalWidth || null;
+          height = img.naturalHeight || null;
+          const blurBlob = await makeBlurredBlob(img, width, height);
+          if (blurBlob) blurThumbUrl = await uploadToBucket(`blur/${newObjectId()}.webp`, blurBlob, 'image/webp');
+        }
+        URL.revokeObjectURL(objUrl);
+
+        const mediaUrl = await uploadToBucket(mainPath, file, file.type);
+        state.items.push({
+          media_type: isVideo ? 'video' : 'image',
+          media_url: mediaUrl,
+          poster_url: posterUrl,
+          blur_thumb_url: blurThumbUrl,
+          access_mode: 'blur_teaser',
+          required_tier_id: null,
+          has_tier_override: false,
+          width,
+          height,
+          duration_seconds: duration
+        });
+        renderItems();
+      } catch (err) {
+        setStatus(`Upload failed for ${file.name}: ${err.message}`, true);
+      }
+    }
+    setStatus(`Uploaded ${files.length} file(s) with pre-baked blur teasers.`);
+  }
+
+  async function savePost(publish) {
+    const title = document.getElementById('f-title').value.trim();
+    if (!title) { setStatus('Post title is required.', true); return; }
+    if (!state.items.length) { setStatus('Add at least one image or video first.', true); return; }
+
+    const slugInput = document.getElementById('f-slug').value.trim();
+    const slug = slugInput || slugify(title);
+    document.getElementById('f-slug').value = slug;
+
+    const payload = {
+      story_id: document.getElementById('f-story').value || null,
+      title,
+      slug,
+      caption: document.getElementById('f-caption').value.trim(),
+      required_tier_id: document.getElementById('f-tier').value || null,
+      is_nsfw: document.getElementById('f-nsfw').checked,
+      is_published: publish,
+      published_at: publish ? (state.currentPost?.published_at || new Date().toISOString()) : null,
+      tags: document.getElementById('f-tags').value.split(',').map(s => s.trim()).filter(Boolean),
+      created_by: state.user.id,
+      updated_at: new Date().toISOString()
+    };
+
+    setStatus(publish ? 'Publishing post…' : 'Saving draft…');
+    try {
+      let postId = state.currentPost?.id;
+      if (postId) {
+        const { error } = await client.from('media_posts').update(payload).eq('id', postId);
+        if (error) throw error;
+        await client.from('media_post_items').delete().eq('post_id', postId);
+      } else {
+        const { data, error } = await client.from('media_posts').insert(payload).select('id').single();
+        if (error) throw error;
+        postId = data.id;
+      }
+
+      const itemRows = state.items.map((it, idx) => ({
+        post_id: postId,
+        media_type: it.media_type,
+        media_url: it.media_url,
+        poster_url: it.poster_url || null,
+        blur_thumb_url: it.blur_thumb_url || null,
+        access_mode: it.access_mode || 'blur_teaser',
+        required_tier_id: it.required_tier_id || null,
+        has_tier_override: !!(it.has_tier_override || it.required_tier_id),
+        width: it.width || null,
+        height: it.height || null,
+        duration_seconds: it.duration_seconds || null,
+        sort_order: idx,
+        show_in_strip: true,
+        gallery_image_id: it.gallery_image_id || null
+      }));
+      const { error: itemsErr } = await client.from('media_post_items').insert(itemRows);
+      if (itemsErr) throw itemsErr;
+
+      // Optional one-click sync of explicitly PUBLIC image stills to Character Gallery
+      // Never mirror drafts or restricted (blur_teaser / hard_lock) originals to Gallery.
+      const syncGallery = document.getElementById('f-sync-gallery').checked;
+      const charId = document.getElementById('f-gallery-char').value;
+      if (publish && syncGallery && charId) {
+        const newGalleryRows = state.items
+          .filter(it => it.media_type === 'image' && it.access_mode === 'public' && !it.gallery_image_id)
+          .map((it, idx) => ({
+            character_id: charId,
+            image_url: it.media_url,
+            caption: title,
+            image_tags: payload.is_nsfw ? [...new Set([...payload.tags, 'nsfw'])] : payload.tags,
+            is_published: true,
+            sort_order: idx
+          }));
+        if (newGalleryRows.length) {
+          await client.from('character_gallery_images').insert(newGalleryRows);
+        }
+      }
+
+      await loadPosts();
+      openPost(postId);
+      setStatus(publish ? 'Post published live!' : 'Draft saved.');
+    } catch (err) {
+      setStatus('Save failed: ' + err.message, true);
+    }
+  }
+
+  // Events
+  document.getElementById('f-title').addEventListener('input', (e) => {
+    if (!state.currentPost) document.getElementById('f-slug').value = slugify(e.target.value);
+  });
+  document.getElementById('btn-new-post').addEventListener('click', startNewPost);
+  document.getElementById('rail-search').addEventListener('input', renderRail);
+  document.getElementById('btn-save-draft').addEventListener('click', () => savePost(false));
+  document.getElementById('btn-publish').addEventListener('click', () => savePost(true));
+
+  document.getElementById('btn-delete-post').addEventListener('click', async () => {
+    if (!state.currentPost?.id) return;
+    if (!confirm(`Delete "${state.currentPost.title}" permanently?`)) return;
+    const { error } = await client.from('media_posts').delete().eq('id', state.currentPost.id);
+    if (error) { setStatus('Delete failed: ' + error.message, true); return; }
+    await loadPosts();
+    startNewPost();
+  });
+
+  const dz = document.getElementById('dropzone');
+  const fi = document.getElementById('file-input');
+  dz.addEventListener('click', () => fi.click());
+  fi.addEventListener('change', (e) => { handleFiles(e.target.files); fi.value = ''; });
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+
+  document.body.addEventListener('click', (e) => {
+    const row = e.target.closest('[data-select-post]');
+    if (row) { openPost(row.dataset.selectPost); return; }
+    const mv = e.target.closest('[data-move-item]');
+    if (mv) {
+      const idx = Number(mv.dataset.moveItem);
+      const dir = Number(mv.dataset.dir);
+      const next = idx + dir;
+      if (next >= 0 && next < state.items.length) {
+        [state.items[idx], state.items[next]] = [state.items[next], state.items[idx]];
+        renderItems();
+      }
+      return;
+    }
+    const del = e.target.closest('[data-del-item]');
+    if (del) {
+      state.items.splice(Number(del.dataset.delItem), 1);
+      renderItems();
+    }
+  });
+
+  document.body.addEventListener('change', (e) => {
+    if (e.target.dataset.itemAccess != null) {
+      state.items[Number(e.target.dataset.itemAccess)].access_mode = e.target.value;
+    }
+    if (e.target.dataset.itemTier != null) {
+      const it = state.items[Number(e.target.dataset.itemTier)];
+      const val = e.target.value;
+      if (val === '__deleted__') {
+        it.required_tier_id = null;
+        it.has_tier_override = true;
+      } else if (!val) {
+        it.required_tier_id = null;
+        it.has_tier_override = false;
+      } else {
+        it.required_tier_id = val;
+        it.has_tier_override = true;
+      }
+    }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

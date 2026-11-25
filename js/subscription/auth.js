@@ -5,7 +5,32 @@
 const SUPABASE_URL = (CONFIG.supabase && CONFIG.supabase.url) || "";
 const SUPABASE_ANON_KEY = (CONFIG.supabase && CONFIG.supabase.anonKey) || "";
 let sbClient = null;
-const authState = { user:null, session:null, profile:null, entitlements:[], providerConnections:[], ready:false, error:null, passwordRecovery:false };
+const authState = { user:null, anonymousUser:null, session:null, profile:null, entitlements:[], providerConnections:[], ready:false, error:null, passwordRecovery:false };
+function isAnonymousSession(user){
+  return !!(user && (user.is_anonymous === true || user.app_metadata?.provider === "anonymous"));
+}
+async function ensureMediaGuestSession(){
+  const client = getSupabase();
+  if (!client) throw new Error("Supabase client unavailable.");
+  if (authState.user) return authState.user;
+  if (authState.anonymousUser) return authState.anonymousUser;
+  const { data: existing } = await client.auth.getSession();
+  if (existing?.session?.user) {
+    authState.session = existing.session;
+    if (isAnonymousSession(existing.session.user)) {
+      authState.anonymousUser = existing.session.user;
+      return authState.anonymousUser;
+    }
+    authState.user = existing.session.user;
+    return authState.user;
+  }
+  if (!client.auth.signInAnonymously) throw new Error("Anonymous sign-in is not supported by this Supabase client.");
+  const { data, error } = await client.auth.signInAnonymously();
+  if (error) throw error;
+  authState.session = data?.session || null;
+  authState.anonymousUser = data?.user || data?.session?.user || null;
+  return authState.anonymousUser;
+}
 function getSupabase(){
   if (sbClient) return sbClient;
   if (window.SITE_CONFIGURATION_STATUS?.ok !== true) return null;
@@ -331,7 +356,9 @@ async function initAuth(){
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
     authState.session = callbackSession || data?.session || null;
-    authState.user = authState.session?.user || null;
+    const initRawUser = authState.session?.user || null;
+    authState.anonymousUser = isAnonymousSession(initRawUser) ? initRawUser : null;
+    authState.user = isAnonymousSession(initRawUser) ? null : initRawUser;
     if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
     if (!authState.user) authState.passwordRecovery = false;
     store.email = authState.user?.email || "";
@@ -359,11 +386,18 @@ async function initAuth(){
       setTimeout(() => pendingAction === "connect-patreon" ? connectPatreonGo() : connectBoostyDiscordGo(), 450);
     }
     client.auth.onAuthStateChange((event, session) => {
-      if ((event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") && session?.user?.id === authState.user?.id) {
+      const rawUser = session?.user || null;
+      const effectiveUser = isAnonymousSession(rawUser) ? null : rawUser;
+      authState.anonymousUser = isAnonymousSession(rawUser) ? rawUser : null;
+      if ((event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") && (effectiveUser?.id || null) === (authState.user?.id || null)) {
         authState.session = session || authState.session;
-        authState.user = authState.session?.user || null;
+        authState.user = effectiveUser;
         if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
         store.email = authState.user?.email || "";
+        return;
+      }
+      if (!authState.user && !effectiveUser) {
+        authState.session = session || null;
         return;
       }
       const sameSession = authState.session?.access_token && authState.session.access_token === session?.access_token;
@@ -371,7 +405,7 @@ async function initAuth(){
       const revision = ++readerAuthRevision;
       const previousUserId = authState.user?.id;
       authState.session = session || null;
-      authState.user = session?.user || null;
+      authState.user = effectiveUser;
       if (typeof switchReaderAccount === "function") switchReaderAccount(authState.user?.id);
       if (previousUserId !== authState.user?.id) {
         authState.profile = null;
