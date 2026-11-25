@@ -782,6 +782,19 @@
       const ui = getPostUI(pid);
       ui.activeIndex = (ui.activeIndex === idx) ? -1 : idx;
       layoutStreamPostCanvas(pid, false);
+      if (ui.activeIndex >= 0) {
+        const canvas = tile.closest(".mp-media-canvas");
+        const topVal = parseFloat(tile.style.top || "0");
+        const hVal = parseFloat(tile.style.height || "0");
+        if (canvas && Number.isFinite(topVal) && Number.isFinite(hVal)) {
+          const canvasDocTop = canvas.getBoundingClientRect().top + window.scrollY;
+          const targetCenterY = canvasDocTop + topVal + hVal / 2;
+          window.scrollTo({
+            top: Math.max(0, targetCenterY - window.innerHeight / 2),
+            behavior: prefersReducedMotion() ? "auto" : "smooth"
+          });
+        }
+      }
       return true;
     }
     return false;
