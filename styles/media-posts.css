@@ -710,6 +710,11 @@ body:not(.in-reader):not(.in-studio) .mp-play-badge {
   place-items: center;
   background: radial-gradient(circle, rgb(0 0 0 / .42), transparent 64%);
   pointer-events: none;
+  z-index: 4;
+}
+body:not(.in-reader):not(.in-studio) .mp-media-tile.is-active .mp-tile-play {
+  opacity: 0;
+  transition: opacity 180ms ease;
 }
 body:not(.in-reader):not(.in-studio) .mp-play-circle {
   width: 42px;

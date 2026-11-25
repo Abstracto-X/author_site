@@ -227,7 +227,7 @@
       return `
         <div class="mp-m-cell ${item.isNsfw && !item.locked ? "mp-mature" : ""} ${item.locked ? "is-locked-teaser" : ""}">
           ${src ? `<img src="${esc(src)}" data-full-src="${!item.locked && src !== item.src ? esc(item.src) : ""}" alt="${esc(item.label)}" loading="lazy" decoding="async" onerror="homeThumbnailFailed(this)">` : ""}
-          ${item.type === "video" && !item.locked ? `<div class="mp-play-badge"><div class="mp-play-circle">▶</div></div>` : ""}
+          ${item.type === "video" ? `<div class="mp-play-badge"><div class="mp-play-circle">▶</div></div>` : ""}
           ${item.locked ? `<span class="mp-lock-pill">🔒</span>` : ""}
           ${isLastWithMore ? `<div class="mp-m-more">+${remaining} more<small>attachments</small></div>` : ""}
         </div>`;
@@ -360,6 +360,7 @@
       <span class="mp-tile-expand-hint">Click to expand</span>
       ${isVid
         ? `<video class="mp-tile-media" data-mp-vid="${esc(item.id)}" src="${esc(item.src)}" ${item.poster ? `poster="${esc(item.poster)}"` : ""} loop muted playsinline preload="metadata"></video>
+           <div class="mp-play-badge mp-tile-play"><div class="mp-play-circle">▶</div></div>
            <div class="mp-video-hud">
              <button type="button" class="mp-v-play" data-mp-toggle-vid="${esc(item.id)}">❚❚</button>
              <div class="mp-v-track" data-mp-scrub="${esc(item.id)}"><div class="mp-v-fill" data-mp-fill="${esc(item.id)}"></div></div>

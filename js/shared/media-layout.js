@@ -10,7 +10,27 @@
     const colW = (W - gap * (cols - 1)) / cols;
     const colY = new Array(cols).fill(0);
 
+    const isVideoItem = (idx) => items[idx]?.type === 'video' || items[idx]?.media_type === 'video';
+
+    const placeSpan = (idx, spanCount, preferredCol = 0) => {
+      const ar = Math.max(0.55, Math.min(2.2, items[idx].ratio || (isVideoItem(idx) ? 16 / 9 : 0.75)));
+      const sCols = Math.max(1, Math.min(spanCount, cols));
+      const sCol = Math.max(0, Math.min(preferredCol, cols - sCols));
+      const spanW = Math.round(colW * sCols + gap * (sCols - 1));
+      const spanH = Math.round(spanW / ar);
+      const spanX = Math.round(sCol * (colW + gap));
+      let spanY = colY[sCol];
+      for (let c = sCol + 1; c < sCol + sCols; c++) spanY = Math.max(spanY, colY[c]);
+      rects.set(idx, { x: spanX, y: spanY, w: spanW, h: spanH });
+      nextCols.set(idx, sCol);
+      for (let c = sCol; c < sCol + sCols; c++) colY[c] = spanY + spanH + gap;
+    };
+
     const placeSingle = (idx, preferredCol = -1) => {
+      if (isVideoItem(idx)) {
+        placeSpan(idx, cols, 0);
+        return;
+      }
       const ar = Math.max(0.45, Math.min(2.2, items[idx].ratio || 0.75));
       let c = preferredCol;
       if (c < 0 || c >= cols) {
@@ -31,15 +51,15 @@
       return { rects, nextCols, totalH: Math.max(0, Math.max(...colY) - gap) };
     }
 
-    const spanCols = Math.min(2, cols);
+    const spanCols = isVideoItem(focusIdx) ? cols : Math.min(2, cols);
     const prevCol = lastTileCol.has(focusIdx) ? lastTileCol.get(focusIdx) : (focusIdx % cols);
-    let spanCol = Math.min(prevCol, cols - spanCols);
-    if (prevCol >= cols - 1) spanCol = cols - spanCols;
+    let spanCol = isVideoItem(focusIdx) ? 0 : Math.min(prevCol, cols - spanCols);
+    if (!isVideoItem(focusIdx) && prevCol >= cols - 1) spanCol = cols - spanCols;
 
     const placed = new Set();
     const takeNext = (startIdx) => {
       for (let j = startIdx; j < n; j++) {
-        if (j !== focusIdx && !placed.has(j)) return j;
+        if (j !== focusIdx && !placed.has(j) && !isVideoItem(j)) return j;
       }
       return -1;
     };
@@ -50,7 +70,7 @@
       placed.add(i);
     }
 
-    if (spanCols >= 2) {
+    if (spanCols >= 2 && !isVideoItem(focusIdx)) {
       const cA = spanCol, cB = spanCol + 1;
       if (Math.abs(colY[cA] - colY[cB]) > 150) {
         const shorter = colY[cA] < colY[cB] ? cA : cB;
@@ -62,16 +82,7 @@
       }
     }
 
-    const fAr = Math.max(0.55, Math.min(2.2, items[focusIdx].ratio || 0.75));
-    const spanW = Math.round(colW * spanCols + gap * (spanCols - 1));
-    const spanH = Math.round(spanW / fAr);
-    const spanX = Math.round(spanCol * (colW + gap));
-    let spanY = colY[spanCol];
-    for (let c = spanCol + 1; c < spanCol + spanCols; c++) spanY = Math.max(spanY, colY[c]);
-
-    rects.set(focusIdx, { x: spanX, y: spanY, w: spanW, h: spanH });
-    nextCols.set(focusIdx, spanCol);
-    for (let c = spanCol; c < spanCol + spanCols; c++) colY[c] = spanY + spanH + gap;
+    placeSpan(focusIdx, spanCols, spanCol);
     placed.add(focusIdx);
 
     for (let i = 0; i < n; i++) {
