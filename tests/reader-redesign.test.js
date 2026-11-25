@@ -309,6 +309,6 @@ test('mobile story sidebar retains metadata, progress and Follow for populated a
 
 test('the unified media stream includes posts beyond the primary story while home remains scoped',()=>{
   const h=harness();
-  const result=h.run(`D.MEDIA_POSTS=[{id:'primary',story_id:'s1',title:'Primary',items:[{id:'one',media_url:'https://example.com/a.jpg'}]},{id:'secondary',story_id:'s2',title:'Secondary',items:[{id:'two',media_url:'https://example.com/b.jpg'}]}]; [window.buildHomeMediaPosts(D.STORIES[0]).length,window.buildHomeMediaPosts(null,true).length]`);
+  const result=h.run(`D.GALLERY_IMAGES=[];D.MEDIA_POSTS=[{id:'primary',story_id:'s1',title:'Primary',items:[{id:'one',media_url:'https://example.com/a.jpg'}]},{id:'secondary',story_id:'s2',title:'Secondary',items:[{id:'two',media_url:'https://example.com/b.jpg'}]}]; [window.buildHomeMediaPosts(D.STORIES[0]).length,window.buildHomeMediaPosts(null,true).length]`);
   assert.deepEqual(Array.from(result),[1,2]);
 });

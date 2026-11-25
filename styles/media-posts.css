@@ -439,7 +439,8 @@ body:not(.in-reader):not(.in-studio) .mp-tile-media {
 body:not(.in-reader):not(.in-studio) .mp-media-canvas.nsfw-blurred .mp-media-tile.mp-mature .mp-tile-media {
   filter: blur(22px) brightness(.72);
 }
-body:not(.in-reader):not(.in-studio) .mp-media-canvas.nsfw-blurred .mp-media-tile.mp-mature:hover .mp-tile-media {
+body:not(.in-reader):not(.in-studio) .mp-media-canvas.nsfw-blurred .mp-media-tile.mp-mature:hover .mp-tile-media,
+body:not(.in-reader):not(.in-studio) .mp-media-canvas.nsfw-blurred .mp-media-tile.mp-mature.is-active .mp-tile-media {
   filter: none;
 }
 @media(hover:none) {

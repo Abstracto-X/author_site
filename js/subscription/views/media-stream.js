@@ -63,8 +63,9 @@
       ? dbPosts.filter(p => !p.story_id || p.story_id === targetStory.id)
       : dbPosts;
 
+    let dbMappedPosts = [];
     if (storyDbPosts.length) {
-      const posts = storyDbPosts.map((row, idx) => {
+      dbMappedPosts = storyDbPosts.map((row, idx) => {
         const ts = new Date(row.published_at || row.created_at || 0).getTime() || 0;
         const isNew = (ts && (nowMs - ts <= sevenDaysMs)) || idx < 2;
         const rawItems = Array.isArray(row.items) ? row.items : [];
@@ -100,6 +101,7 @@
           title: row.title || "Untitled Drop",
           caption: row.caption || "",
           date: formatPostDate(row.published_at || row.created_at) || "Recent",
+          sortTs: ts,
           isNew,
           isNsfw: !!row.is_nsfw,
           hasVideo: items.some(x => x.type === "video"),
@@ -113,87 +115,89 @@
           items
         };
       });
-      MediaStreamState.posts = posts;
-      return posts;
     }
 
-    // Fallback: auto-group existing character_gallery_images when media_posts is empty
-    if (!targetStory) return [];
-    const canViewMature = mediaPostCanViewMature();
-    const charById = new Map((D.CHARACTERS || []).map(c => [c.id, c]));
+    // Mix auto-grouped character_gallery_images alongside published media_posts
+    let autoGroupedPosts = [];
+    if (allStories || targetStory) {
+      const canViewMature = mediaPostCanViewMature();
+      const charById = new Map((D.CHARACTERS || []).map(c => [c.id, c]));
 
-    const rawImages = (D.GALLERY_IMAGES || [])
-      .filter(img => (!img.story_id || img.story_id === targetStory.id) && (canViewMature || !mediaPostIsMature(img)))
-      .filter(img => !!homeSafeMediaUrl(img.image_url))
-      .slice()
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      const rawImages = (D.GALLERY_IMAGES || [])
+        .filter(img => (allStories || !targetStory || !img.story_id || img.story_id === targetStory.id) && (canViewMature || !mediaPostIsMature(img)))
+        .filter(img => !!homeSafeMediaUrl(img.image_url))
+        .slice()
+        .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-    const WINDOW_MS = 30 * 60 * 1000;
-    const MAX_PER_POST = 9;
-    const batches = [];
+      const WINDOW_MS = 30 * 60 * 1000;
+      const MAX_PER_POST = 9;
+      const batches = [];
 
-    rawImages.forEach(img => {
-      const charId = img.character_id || "general";
-      const ts = new Date(img.created_at || 0).getTime() || 0;
-      const match = batches.find(b =>
-        b.charId === charId &&
-        b.items.length < MAX_PER_POST &&
-        Math.abs(b.anchorTs - ts) <= WINDOW_MS
-      );
-      if (match) match.items.push(img);
-      else batches.push({ charId, anchorTs: ts, createdAt: img.created_at || "", items: [img] });
-    });
+      rawImages.forEach(img => {
+        const charId = img.character_id || "general";
+        const ts = new Date(img.created_at || 0).getTime() || 0;
+        const match = batches.find(b =>
+          b.charId === charId &&
+          b.items.length < MAX_PER_POST &&
+          Math.abs(b.anchorTs - ts) <= WINDOW_MS
+        );
+        if (match) match.items.push(img);
+        else batches.push({ charId, anchorTs: ts, createdAt: img.created_at || "", items: [img] });
+      });
 
-    const posts = batches.map((batch, idx) => {
-      const ch = charById.get(batch.charId);
-      const charName = ch?.name || batch.items[0]?.character_name || "Archive Drop";
-      const firstCaption = String(batch.items.find(i => i.caption)?.caption || "").trim();
-      const dateStr = formatPostDate(batch.createdAt);
-      const title = firstCaption || `${charName}${dateStr ? ` · ${dateStr}` : " Set"}`;
-      const isNsfw = batch.items.some(mediaPostIsMature);
-      const tags = [...new Set([
-        charName,
-        ...batch.items.flatMap(i => Array.isArray(i.image_tags) ? i.image_tags : [])
-      ])].filter(Boolean).slice(0, 6);
+      autoGroupedPosts = batches.map((batch, idx) => {
+        const ch = charById.get(batch.charId);
+        const charName = ch?.name || batch.items[0]?.character_name || "Archive Drop";
+        const firstCaption = String(batch.items.find(i => i.caption)?.caption || "").trim();
+        const dateStr = formatPostDate(batch.createdAt);
+        const title = firstCaption || `${charName}${dateStr ? ` · ${dateStr}` : " Set"}`;
+        const isNsfw = batch.items.some(mediaPostIsMature);
+        const tags = [...new Set([
+          charName,
+          ...batch.items.flatMap(i => Array.isArray(i.image_tags) ? i.image_tags : [])
+        ])].filter(Boolean).slice(0, 6);
 
-      const totalVotes = batch.items.reduce((sum, img) => {
-        const v = State.imageVotes?.[img.id];
-        return sum + (v && Number.isFinite(v.score) ? Number(v.score) : 0);
-      }, 0);
+        const totalVotes = batch.items.reduce((sum, img) => {
+          const v = State.imageVotes?.[img.id];
+          return sum + (v && Number.isFinite(v.score) ? Number(v.score) : 0);
+        }, 0);
 
-      const ageMs = batch.anchorTs ? (nowMs - batch.anchorTs) : Infinity;
-      const isNew = ageMs <= sevenDaysMs || idx < 2;
+        const ageMs = batch.anchorTs ? (nowMs - batch.anchorTs) : Infinity;
+        const isNew = ageMs <= sevenDaysMs || (dbMappedPosts.length === 0 && idx < 2);
 
-      return {
-        id: `mp-${batch.charId}-${batch.anchorTs || idx}-${idx}`,
-        isBackend: false,
-        title,
-        caption: "",
-        charName,
-        date: dateStr || "Recent",
-        isNew,
-        isNsfw,
-        hasVideo: false,
-        tierLabel: isNsfw ? "Resident Licker+" : "Free Access",
-        tierFree: !isNsfw,
-        cardLayout: (batch.items.length >= 5 && idx % 2 === 1) ? "layout-collage-5" : "layout-lead-2",
-        tags,
-        likes: Math.max(0, totalVotes),
-        commentCount: 0,
-        items: batch.items.map((img, i) => ({
-          id: img.id || `item-${idx}-${i}`,
-          type: "image",
-          locked: false,
-          accessMode: "public",
-          src: homeSafeMediaUrl(img.image_url),
-          thumb: homeThumbnailUrl(img.image_url, 720),
-          ratio: 0.75,
-          label: img.caption || `${charName} #${i + 1}`,
-          isNsfw: mediaPostIsMature(img)
-        }))
-      };
-    });
+        return {
+          id: `mp-${batch.charId}-${batch.anchorTs || idx}-${idx}`,
+          isBackend: false,
+          title,
+          caption: "",
+          charName,
+          date: dateStr || "Recent",
+          sortTs: batch.anchorTs,
+          isNew,
+          isNsfw,
+          hasVideo: false,
+          tierLabel: isNsfw ? "Resident Licker+" : "Free Access",
+          tierFree: !isNsfw,
+          cardLayout: (batch.items.length >= 5 && (dbMappedPosts.length + idx) % 2 === 1) ? "layout-collage-5" : "layout-lead-2",
+          tags,
+          likes: Math.max(0, totalVotes),
+          commentCount: 0,
+          items: batch.items.map((img, i) => ({
+            id: img.id || `item-${idx}-${i}`,
+            type: "image",
+            locked: false,
+            accessMode: "public",
+            src: homeSafeMediaUrl(img.image_url),
+            thumb: homeThumbnailUrl(img.image_url, 720),
+            ratio: 0.75,
+            label: img.caption || `${charName} #${i + 1}`,
+            isNsfw: mediaPostIsMature(img)
+          }))
+        };
+      });
+    }
 
+    const posts = [...dbMappedPosts, ...autoGroupedPosts].sort((a, b) => (b.sortTs || 0) - (a.sortTs || 0));
     MediaStreamState.posts = posts;
     return posts;
   }

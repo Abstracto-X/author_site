@@ -116,7 +116,7 @@ const State = window.State || {
   gallerySort: "shuffle",
   galleryViewMode: "grid",
   filterTag: "All",
-  showR18: false,
+  showR18: true,
   currentStory: null,
   currentChars: [],
   currentGalleryImages: [],
